@@ -39,11 +39,11 @@ $config = [
         ],
         'db' => require(__DIR__ . '/db.php'),
 		
-		// clean up the Url
-		'urlManager' => [
-			'enablePrettyUrl' => true,
-			'showScriptName' => false,
-		],
+		// // clean up the Url
+		// 'urlManager' => [
+			// 'enablePrettyUrl' => true,
+			// 'showScriptName' => false,
+		// ],
     ],
     'params' => $params,
 ];
@@ -53,13 +53,16 @@ if (YII_ENV_DEV) {
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
+		//TO DO add dynamic IPs 
+		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
 		//Allow IPs to access gii: server, local host
-		'allowedIPs' => ['127.0.0.1', '::1', '192.168.1.*', '192.168.20.46'],
+		//TO DO add dynamic IPs 
+		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
 }
 
