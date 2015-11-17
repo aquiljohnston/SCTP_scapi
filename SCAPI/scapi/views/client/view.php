@@ -44,9 +44,11 @@ $this->params['breadcrumbs'][] = $this->title;
             'ClientTerritory',
             'ClientActiveFlag',
             'ClientDivisionsFlag',
+            'ClientComment',
+            'ClientCreateDate',
             'ClientCreatorUserID',
-            'ClientCreateDt',
-            'ClientModifiedDt',
+            'ClientModifiedDate',
+            'ClientModifiedBy',
         ],
     ]) ?>
 

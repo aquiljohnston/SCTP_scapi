@@ -13,12 +13,12 @@ use Yii;
  * @property string $UserLastName
  * @property string $UserLoginID
  * @property string $UserEmployeeType
- * @property string $UserEmployeePhone
+ * @property string $UserPhone
  * @property string $UserCompanyName
  * @property string $UserCompanyPhone
  * @property string $UserAppRoleType
  * @property string $UserComments
- * @property resource $UserKey
+ * @property integer $UserKey
  * @property integer $UserActiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
@@ -30,6 +30,7 @@ use Yii;
  *
  * @property EquipmentTb[] $equipmentTbs
  * @property KeyTb[] $keyTbs
+ * @property ProjectUserTb[] $projectUserTbs
  */
 class User extends \yii\db\ActiveRecord
 {
@@ -48,8 +49,8 @@ class User extends \yii\db\ActiveRecord
     {
         return [
             [['UserID'], 'required'],
-            [['UserID', 'UserActiveFlag', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'UserLoginID', 'UserEmployeeType', 'UserEmployeePhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserKey', 'UserCreatedBy', 'UserModifiedBy', 'UserCreateDTLTOffset'], 'string'],
+            [['UserID', 'UserKey', 'UserActiveFlag', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'integer'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'UserLoginID', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedBy', 'UserModifiedBy', 'UserCreateDTLTOffset'], 'string'],
             [['UserCreatedDate', 'UserModifiedDate'], 'safe']
         ];
     }
@@ -66,7 +67,7 @@ class User extends \yii\db\ActiveRecord
             'UserLastName' => 'User Last Name',
             'UserLoginID' => 'User Login ID',
             'UserEmployeeType' => 'User Employee Type',
-            'UserEmployeePhone' => 'User Employee Phone',
+            'UserPhone' => 'User Phone',
             'UserCompanyName' => 'User Company Name',
             'UserCompanyPhone' => 'User Company Phone',
             'UserAppRoleType' => 'User App Role Type',
@@ -97,5 +98,13 @@ class User extends \yii\db\ActiveRecord
     public function getKeyTbs()
     {
         return $this->hasMany(KeyTb::className(), ['KeyUserID' => 'UserID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectUserTbs()
+    {
+        return $this->hasMany(ProjectUserTb::className(), ['ProjUserUserID' => 'UserID']);
     }
 }

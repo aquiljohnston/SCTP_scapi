@@ -23,9 +23,11 @@ use Yii;
  * @property string $ClientTerritory
  * @property integer $ClientActiveFlag
  * @property integer $ClientDivisionsFlag
+ * @property string $ClientComment
+ * @property string $ClientCreateDate
  * @property string $ClientCreatorUserID
- * @property string $ClientCreateDt
- * @property string $ClientModifiedDt
+ * @property string $ClientModifiedDate
+ * @property string $ClientModifiedBy
  *
  * @property ProjectTb $projectTb
  */
@@ -45,10 +47,10 @@ class Client extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['ClientID', 'ClientName'], 'required'],
-            [['ClientID', 'ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
-            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientCreatorUserID'], 'string'],
-            [['ClientCreateDt', 'ClientModifiedDt'], 'safe']
+            [['ClientName'], 'required'],
+            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientCreatorUserID', 'ClientModifiedBy'], 'string'],
+            [['ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
+            [['ClientCreateDate', 'ClientModifiedDate'], 'safe']
         ];
     }
 
@@ -74,9 +76,11 @@ class Client extends \yii\db\ActiveRecord
             'ClientTerritory' => 'Client Territory',
             'ClientActiveFlag' => 'Client Active Flag',
             'ClientDivisionsFlag' => 'Client Divisions Flag',
+            'ClientComment' => 'Client Comment',
+            'ClientCreateDate' => 'Client Create Date',
             'ClientCreatorUserID' => 'Client Creator User ID',
-            'ClientCreateDt' => 'Client Create Dt',
-            'ClientModifiedDt' => 'Client Modified Dt',
+            'ClientModifiedDate' => 'Client Modified Date',
+            'ClientModifiedBy' => 'Client Modified By',
         ];
     }
 
