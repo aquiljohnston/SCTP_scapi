@@ -38,9 +38,11 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'ClientTerritory',
             // 'ClientActiveFlag',
             // 'ClientDivisionsFlag',
+            // 'ClientComment',
+            // 'ClientCreateDate',
             // 'ClientCreatorUserID',
-            // 'ClientCreateDt',
-            // 'ClientModifiedDt',
+            // 'ClientModifiedDate',
+            // 'ClientModifiedBy',
 
             ['class' => 'yii\grid\ActionColumn'],
         ],

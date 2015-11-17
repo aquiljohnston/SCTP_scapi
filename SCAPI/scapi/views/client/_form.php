@@ -12,8 +12,6 @@ use yii\widgets\ActiveForm;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'ClientID')->textInput() ?>
-
     <?= $form->field($model, 'ClientName')->textInput() ?>
 
     <?= $form->field($model, 'ClientContactTitle')->textInput() ?>
@@ -44,11 +42,15 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'ClientDivisionsFlag')->textInput() ?>
 
+    <?= $form->field($model, 'ClientComment')->textInput() ?>
+
+    <?= $form->field($model, 'ClientCreateDate')->textInput() ?>
+
     <?= $form->field($model, 'ClientCreatorUserID')->textInput() ?>
 
-    <?= $form->field($model, 'ClientCreateDt')->textInput() ?>
+    <?= $form->field($model, 'ClientModifiedDate')->textInput() ?>
 
-    <?= $form->field($model, 'ClientModifiedDt')->textInput() ?>
+    <?= $form->field($model, 'ClientModifiedBy')->textInput() ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>

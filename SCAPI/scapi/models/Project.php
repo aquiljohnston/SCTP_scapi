@@ -18,6 +18,9 @@ use Yii;
  * @property string $ProjectEndDate
  *
  * @property EquipmentTb[] $equipmentTbs
+ * @property ProjectEmployeeTb[] $projectEmployeeTbs
+ * @property ProjectUserTb[] $projectUserTbs
+ * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
  * @property ClientTb $project
  */
 class Project extends \yii\db\ActiveRecord
@@ -67,6 +70,30 @@ class Project extends \yii\db\ActiveRecord
     public function getEquipmentTbs()
     {
         return $this->hasMany(EquipmentTb::className(), ['EquipmentProjectID' => 'ProjectID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectEmployeeTbs()
+    {
+        return $this->hasMany(ProjectEmployeeTb::className(), ['PE_ProjectID' => 'ProjectID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectUserTbs()
+    {
+        return $this->hasMany(ProjectUserTb::className(), ['ProjUserProjectID' => 'ProjectID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectOQRequirementsTbs()
+    {
+        return $this->hasMany(ProjectOQRequirementsTb::className(), ['ProjectOQRequirementsProjectID' => 'ProjectID']);
     }
 
     /**
