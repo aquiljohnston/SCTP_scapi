@@ -15,4 +15,11 @@ use yii\filters\VerbFilter;
 class UserController extends ActiveController
 {
 	public $modelClass = 'app\models\User'; 
+	
+	public function actionView($id)
+	{
+		$model = $this->findModel($id);
+		$arrayUser = (array) $model;
+		return json_encode($arrayUser);
+	}
 }
