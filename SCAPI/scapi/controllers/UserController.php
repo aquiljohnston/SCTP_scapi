@@ -26,11 +26,8 @@ class UserController extends ActiveController
 	
 	public function actionView($id)
 	{
-		$user = User::findOne($id);
-		//$arrayUser = (array) $user;
-		//return json_encode($arrayUser);
-		//return $model;
 		//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
+		$user = User::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $user;
