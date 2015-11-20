@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "EquipmentTb".
  *
- * @property integer $EquipmentID
+ * @property string $EquipmentID
  * @property string $EquipmentName
  * @property string $EquipmentSerialNumber
  * @property string $EquipmentDetails
@@ -24,13 +24,13 @@ use Yii;
  * @property integer $EquipmentProjectID
  * @property string $EquipmentAnnualCalibrationDate
  * @property string $EquipmentAnnualCalibrationStatus
- * @property integer $EquipmentAssignedUserID
+ * @property string $EquipmentAssignedUserID
  * @property string $EquipmentCreatedByUser
  * @property string $EquipmentCreateDate
  * @property string $EquipmentModifiedBy
  * @property string $EquipmentModifiedDate
  *
- * @property ProjectTb $equipmentProject
+ * @property ClientTb $equipmentClient
  * @property UserTb $equipmentAssignedUser
  */
 class Equipment extends \yii\db\ActiveRecord
@@ -49,9 +49,8 @@ class Equipment extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentID'], 'required'],
-            [['EquipmentID', 'EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID'], 'integer'],
             [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'string'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
     }
@@ -90,9 +89,9 @@ class Equipment extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getEquipmentProject()
+    public function getEquipmentClient()
     {
-        return $this->hasOne(ProjectTb::className(), ['ProjectID' => 'EquipmentProjectID']);
+        return $this->hasOne(ClientTb::className(), ['ClientID' => 'EquipmentClientID']);
     }
 
     /**
