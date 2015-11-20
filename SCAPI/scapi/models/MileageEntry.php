@@ -8,7 +8,7 @@ use Yii;
  * This is the model class for table "MileageEntryTb".
  *
  * @property string $MileageEntryID
- * @property string $MIleageEntryStartingMileage
+ * @property string $MileageEntryStartingMileage
  * @property string $MileageEntryEndingMileage
  * @property integer $MileageEntryMileageCardID
  * @property integer $MileageEntryActivityID
@@ -39,7 +39,7 @@ class MileageEntry extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['MIleageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
+            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
             [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus'], 'integer'],
             [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'string'],
             [['MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
@@ -53,7 +53,7 @@ class MileageEntry extends \yii\db\ActiveRecord
     {
         return [
             'MileageEntryID' => 'Mileage Entry ID',
-            'MIleageEntryStartingMileage' => 'Mileage Entry Starting Mileage',
+            'MileageEntryStartingMileage' => 'Mileage Entry Starting Mileage',
             'MileageEntryEndingMileage' => 'Mileage Entry Ending Mileage',
             'MileageEntryMileageCardID' => 'Mileage Entry Mileage Card ID',
             'MileageEntryActivityID' => 'Mileage Entry Activity ID',
