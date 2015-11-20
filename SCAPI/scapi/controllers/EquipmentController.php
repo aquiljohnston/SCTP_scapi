@@ -64,4 +64,27 @@ class EquipmentController extends ActiveController
         $equipment = Equipment::findOne($id);
 		$equipment -> delete(); 
     }  */
+	
+	//return json array of all equipment for a project.
+	public function actionViewByProject($projectID)
+	{
+		//$criteria->select = new CDbCriteria();
+		//$criteria->condition = "equipmentProject = $projectID";
+		//$equipArray = Equipment::findAll($criteria);
+		$equipArray = Equipment::findAll(['EquipmentProjectID'=>$projectID]);
+		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $equipData;
+	}
+
+	//return json array of all equipment.
+	public function actionViewAll()
+	{
+		$equipArray = Equipment::find()->all();
+		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $equipData;
+	}
 }
