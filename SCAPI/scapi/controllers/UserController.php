@@ -45,18 +45,5 @@ class UserController extends ActiveController
 
 		$user->link('projects',$project);
 	}
-	
-	public function actionViewUsersByProject($projectID)
-	{
-		//$criteria->select = new CDbCriteria();
-		//$criteria->condition = "equipmentProject = $projectID";
-		//$equipArray = Equipment::findAll($criteria);
-		//$userArray = User::findAll(['ProjUserProjectID'=>$projectID]);
-		$project = Project::findOne($projectID);
-		$userArray = $project->users;
-		$userData = array_map(function ($model) {return $model->attributes;},$userArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $userData;
-	}
+
 }
