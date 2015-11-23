@@ -4,10 +4,13 @@ namespace app\controllers;
 
 use Yii;
 use app\models\Project;
+use app\models\User;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Response;
+use yii\web\Link;
 
 /**
  * ProjectController implements the CRUD actions for Project model.
@@ -118,4 +121,18 @@ class ProjectController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
     }
+	
+	//return json array of all users attached to a specific project ID
+	public function actionViewAllUsers($projectID)
+	{
+		//$criteria->select = new CDbCriteria();
+		//$criteria->condition = "equipmentProject = $projectID";
+		//$equipArray = Equipment::findAll($criteria);
+		$project = Project::findOne($projectID);
+		$userArray = $project->users;
+		$userData = array_map(function ($model) {return $model->attributes;},$userArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $userData;
+	}
 }
