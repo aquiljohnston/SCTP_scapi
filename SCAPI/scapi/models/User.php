@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "UserTb".
  *
- * @property integer $UserID
+ * @property string $UserID
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
@@ -18,7 +18,7 @@ use Yii;
  * @property string $UserCompanyPhone
  * @property string $UserAppRoleType
  * @property string $UserComments
- * @property integer $UserKey
+ * @property string $UserKey
  * @property integer $UserActiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
@@ -29,8 +29,8 @@ use Yii;
  * @property integer $UserInactiveDTLTOffset
  *
  * @property EquipmentTb[] $equipmentTbs
- * @property KeyTb[] $keyTbs
  * @property ProjectUserTb[] $projectUserTbs
+ * @property KeyTb $userKey
  */
 class User extends \yii\db\ActiveRecord
 {
@@ -48,9 +48,8 @@ class User extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['UserID'], 'required'],
-            [['UserID', 'UserKey', 'UserActiveFlag', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'integer'],
             [['UserName', 'UserFirstName', 'UserLastName', 'UserLoginID', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedBy', 'UserModifiedBy', 'UserCreateDTLTOffset'], 'string'],
+            [['UserKey', 'UserActiveFlag', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'integer'],
             [['UserCreatedDate', 'UserModifiedDate'], 'safe']
         ];
     }
@@ -95,16 +94,34 @@ class User extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getKeyTbs()
+    public function getProjectUserTbs()
     {
-        return $this->hasMany(KeyTb::className(), ['KeyUserID' => 'UserID']);
+        return $this->hasMany(ProjectUser::className(), ['ProjUserUserID' => 'UserID']);
     }
+
+	/**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjects()
+    {
+        return $this->hasMany(Project::className(), ['ProjectID' => 'ProjUserProjectID'])
+			->via('projectUserTbs');
+    }
+	
+	// /**
+     // * @return \yii\db\ActiveQuery
+     // */
+    // public function getProjects()
+    // {
+        // return $this->hasMany(ProjectTb::className(), ['ProjectID' => 'ProjUserProjectID'])
+			// ->viaTable('projectUserTbs', ['ProjUserUserID' => 'UserID']);
+    // }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getProjectUserTbs()
+    public function getUserKey()
     {
-        return $this->hasMany(ProjectUserTb::className(), ['ProjUserUserID' => 'UserID']);
+        return $this->hasOne(KeyTb::className(), ['KeyID' => 'UserKey']);
     }
 }
