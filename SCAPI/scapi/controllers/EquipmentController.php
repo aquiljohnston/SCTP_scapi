@@ -66,7 +66,7 @@ class EquipmentController extends ActiveController
     }  */
 	
 	//return json array of all equipment for a project.
-	public function actionViewByProject($projectID)
+	public function actionViewEquipmentByProject($projectID)
 	{
 		//$criteria->select = new CDbCriteria();
 		//$criteria->condition = "equipmentProject = $projectID";

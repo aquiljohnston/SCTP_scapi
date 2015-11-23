@@ -85,9 +85,27 @@ class Project extends \yii\db\ActiveRecord
      */
     public function getProjectUserTbs()
     {
-        return $this->hasMany(ProjectUserTb::className(), ['ProjUserProjectID' => 'ProjectID']);
+        return $this->hasMany(ProjectUser::className(), ['ProjUserProjectID' => 'ProjectID']);
     }
-
+	
+	/**
+     * @return \yii\db\ActiveQuery
+     */
+	public function getUsers()
+    {
+        return $this->hasMany(User::className(), ['UserID' => 'ProjUserUserID'])
+			->via('projectUserTbs');
+    }
+		
+	// /**
+     // * @return \yii\db\ActiveQuery
+     // */
+	// public function getUsers()
+    // {
+        // return $this->hasMany(UserTb::className(), ['UserID' => 'ProjUserUserID'])
+			// ->viaTable('projectUserTbs',['ProjUserProjectID' => 'ProjectID']);
+    // }
+	
     /**
      * @return \yii\db\ActiveQuery
      */
