@@ -35,7 +35,7 @@ class EquipmentController extends ActiveController
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'delete' => ['post'],
+                    'delete' => ['delete'],
                 ],
             ],
         ]);
