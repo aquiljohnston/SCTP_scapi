@@ -1,5 +1,6 @@
 <?php 
 $I = new ApiTester($scenario);
+$I->wantTo('Add Equipment to Project');
  
 //Create Equipment
 $I->wantTo('Create Equipment via API');

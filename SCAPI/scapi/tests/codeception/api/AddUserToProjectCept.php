@@ -1,5 +1,6 @@
 <?php 
 $I = new ApiTester($scenario);
+$I->wantTo('Add a User to Project');
 
 //Create User
 $I->wantTo('Create User via API');
@@ -31,7 +32,7 @@ $projUserId = $I->grabDataFromResponseByJsonPath('$.ProjUserID');
 
 
 //Get User Project Relation
-$I->wantTo('Issue Equipment to User');
+$I->wantTo('View Project User Relation');
 //$I->amHttpAuthenticated('user', 'password');
 $I->sendGET('?r=project-user%2Fview&id='.$projUserId [0]);
 $I->seeResponseCodeIs(200);
