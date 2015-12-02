@@ -70,7 +70,7 @@ $I->wantTo('DELETE Equipment by ID');
 $I->sendDELETE('?r=equipment%2Fdelete&id='.$equipmentId[0]);
 $I->seeResponseCodeIs(204);
 
-//Delete User to do
+//Delete User
 $I->wantTo('DELETE User by ID');
 //$I->amHttpAuthenticated('user', 'password');
 $I->sendDELETE('?r=user%2Fdelete&id='.$userId[0]);
