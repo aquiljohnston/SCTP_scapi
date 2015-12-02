@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\User;
 use app\models\Project;
+use app\models\ProjectUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
@@ -44,6 +45,13 @@ class UserController extends ActiveController
 		$project = Project::findOne($projectID);
 
 		$user->link('projects',$project);
+
+		$projUser = ProjectUser::find()
+			->where(['and', "ProjUserUserID = $userID","ProjUserProjectID = $projectID"])
+			->one();
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $projUser;
 	}
 
 }
