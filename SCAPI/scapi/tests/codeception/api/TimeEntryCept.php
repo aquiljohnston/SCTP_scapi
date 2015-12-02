@@ -21,9 +21,30 @@ $I->seeResponseContainsJson([
 ]);
 
 $I->wantTo('set end of work day');
-$I->sendPUT('?r=time-entry%2Fupdate&id='.$timeEntryId[0],['TimeEntryEndTime' => '2015-12-02 11:30:50.000']);
+$I->sendPUT('?r=time-entry%2Fupdate&id='.$timeEntryId[0],['TimeEntryEndTime' => '11:30:50.0000000']);
 $I->seeResponseCodeIs(200);
 $I->seeResponseIsJson();
+$I->seeResponseContainsJson([
+		'TimeEntryID' => $timeEntryId[0],
+		'TimeEntryStartTime' => '09:30:50.0000000',
+		'TimeEntryEndTime' => '11:30:50.0000000',
+		'TimeEntryDate' => '2015-12-02 00:00:00.000',
+]);
+// grab start time
+$timeEntryEndTime = $I->grabDataFromResponseByJsonPath('$.TimeEntryEndTime');
+// grab end time
+$timeEntryStartDate = $I->grabDataFromResponseByJsonPath('$.TimeEntryStartTime');
+// assert end-start = 2
+date_default_timezone_set("America/New_York");
+$endTime = new DateTime("2015-12-02 ".$timeEntryEndTime[0]);
+$startTime = new DateTime("2015-12-02 ".$timeEntryStartDate[0]);
+codecept_debug('Time Difference');
+codecept_debug($endTime->diff($startTime));
+$difference = $endTime->diff($startTime);
+$hour = $difference->h;
+codecept_debug('Difference in Hours');
+codecept_debug($hour);
+$I->assertEquals($hour,2);
 
 
 $I->wantTo('delete time entry by id');

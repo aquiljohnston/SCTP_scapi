@@ -15,7 +15,7 @@ $I->seeResponseCodeIs(200);
 $I->seeResponseIsJson();
 $I->seeResponseContainsJson([
 		'UserID' => $userId[0],
-		'UserName' => 'Yasmin',
+		'UserName' => 'Yasmin'
 ]);
 
 $I->wantTo('delete user by id');

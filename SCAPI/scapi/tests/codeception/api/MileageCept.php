@@ -23,6 +23,10 @@ $I->wantTo('set end mileage');
 $I->sendPUT('?r=mileage-entry%2Fupdate&id='.$mileageId[0],['MileageEntryEndingMileage' => '5010.00']);
 $I->seeResponseCodeIs(200);
 $I->seeResponseIsJson();
+$I->seeResponseContainsJson([
+		'MileageEntryID' => $mileageId[0],
+		'MileageEntryEndingMileage' => '5010.00'
+]);
 
 
 $I->wantTo('delete mileage entry by id');
