@@ -27,7 +27,7 @@ class MileageEntryController extends ActiveController
 	public function actionView($id)
 	{
 		//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-		$mileage = User::findOne($id);
+		$mileage = MileageEntry::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $mileage;
