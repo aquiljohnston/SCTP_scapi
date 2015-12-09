@@ -12,6 +12,7 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\web\Link;
+use yii\filters\auth\HttpBasicAuth;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -26,6 +27,24 @@ class UserController extends ActiveController
 		unset($actions['view']);
 		return $actions;
 	}
+	
+	public function behaviors()
+    {
+		$behaviors = parent::behaviors();
+		//Implements HttpBasicAuthentication to check for Auth Token in Json Header
+		$behaviors['authenticator'] = 
+		[
+			'class' => HttpBasicAuth::className(),
+		];
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['delete'],
+                ],
+            ];
+		return $behaviors;
+    }
 	
 	public function actionView($id)
 	{
