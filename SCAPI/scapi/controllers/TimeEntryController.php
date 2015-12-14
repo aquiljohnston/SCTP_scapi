@@ -4,8 +4,8 @@ namespace app\controllers;
 
 use Yii;
 use app\models\TimeEntry;
+use app\authentication\BaseActiveController;
 use yii\data\ActiveDataProvider;
-use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -13,7 +13,7 @@ use yii\web\Response;
 /**
  * TimeEntryController implements the CRUD actions for TimeEntry model.
  */
-class TimeEntryController extends ActiveController
+class TimeEntryController extends BaseActiveController
 {
     public $modelClass = 'app\models\TimeEntry'; 
 

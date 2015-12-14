@@ -73,6 +73,6 @@ class ProjectUser extends \yii\db\ActiveRecord
      */
     public function getProjUserUser()
     {
-        return $this->hasOne(UserTb::className(), ['UserID' => 'ProjUserUserID']);
+        return $this->hasOne(SCUser::className(), ['UserID' => 'ProjUserUserID']);
     }
 }

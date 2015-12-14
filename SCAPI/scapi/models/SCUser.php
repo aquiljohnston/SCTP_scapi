@@ -3,6 +3,8 @@
 namespace app\models;
 
 use Yii;
+use yii\web\IdentityInterface;
+use app\models\Auth;
 
 /**
  * This is the model class for table "UserTb".
@@ -32,7 +34,7 @@ use Yii;
  * @property ProjectUserTb[] $projectUserTbs
  * @property KeyTb $userKey
  */
-class User extends \yii\db\ActiveRecord
+class SCUser extends \yii\db\ActiveRecord  implements IdentityInterface
 {
     /**
      * @inheritdoc
@@ -123,5 +125,57 @@ class User extends \yii\db\ActiveRecord
     public function getUserKey()
     {
         return $this->hasOne(KeyTb::className(), ['KeyID' => 'UserKey']);
+    }
+	
+	/**
+     * Finds an identity by the given ID.
+     *
+     * @param string|integer $id the ID to be looked for
+     * @return IdentityInterface|null the identity object that matches the given ID.
+     */
+    public static function findIdentity($id)
+    {
+        return static::findOne($id);
+    }
+
+    /**
+     * Finds an identity by the given token.
+     *
+     * @param string $token the token to be looked for
+     * @return IdentityInterface|null the identity object that matches the given token.
+     */
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+		$userID = Auth::find()
+			->where(['AuthToken' => $token])
+			->one();
+        return static::findOne(['UserID' => $userID->UserID]);
+    }
+
+    /**
+     * @return int|string current user ID
+     */
+    public function getId()
+    {
+        return $this->UserID;
+    }
+
+    /**
+     * @return string current user auth key
+     */
+	//todo change to work with auth table
+    public function getAuthKey()
+    {
+		//$authToken = Auth::findOne(['auth_token' => $this->UserID]);
+        //return $authToken;
+    }
+
+    /**
+     * @param string $authKey
+     * @return boolean if auth key is valid for current user
+     */
+    public function validateAuthKey($authKey)
+    {
+        return $this->getAuthKey() === $authKey;
     }
 }
