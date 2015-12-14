@@ -4,8 +4,8 @@ namespace app\controllers;
 
 use Yii;
 use app\models\MileageEntry;
+use app\authentication\BaseActiveController;
 use yii\data\ActiveDataProvider;
-use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -13,7 +13,7 @@ use yii\web\Response;
 /**
  * MileageEntryController implements the CRUD actions for MileageEntry model.
  */
-class MileageEntryController extends ActiveController
+class MileageEntryController extends BaseActiveController
 {
     public $modelClass = 'app\models\MileageEntry'; 
 

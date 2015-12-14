@@ -1,5 +1,7 @@
 <?php
 
+use app\authentication\CTUser;
+
 $params = require(__DIR__ . '/params.php');
 
 $config = [
@@ -18,8 +20,10 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
+			'class' => 'app\authentication\CTUser',
+            'identityClass' => 'app\models\SCUser',
+            'enableAutoLogin' => false,
+			'authTimeout' => 5
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -36,7 +40,7 @@ $config = [
             'targets' => [
                 [
                     'class' => 'yii\log\FileTarget',
-                    'levels' => ['error', 'warning'],
+                    'levels' => ['error', 'warning','trace'],
                 ],
             ],
         ],

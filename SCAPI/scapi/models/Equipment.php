@@ -99,6 +99,6 @@ class Equipment extends \yii\db\ActiveRecord
      */
     public function getEquipmentAssignedUser()
     {
-        return $this->hasOne(UserTb::className(), ['UserID' => 'EquipmentAssignedUserID']);
+        return $this->hasOne(SCUser::className(), ['UserID' => 'EquipmentAssignedUserID']);
     }
 }

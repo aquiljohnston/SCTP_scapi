@@ -4,13 +4,15 @@ namespace app\controllers;
 
 use Yii;
 use app\models\Project;
-use app\models\User;
+use app\models\SCUser;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\web\Link;
+use yii\filters\auth\TokenAuth;
+
 
 /**
  * ProjectController implements the CRUD actions for Project model.
@@ -19,14 +21,15 @@ class ProjectController extends Controller
 {
     public function behaviors()
     {
-        return [
-            'verbs' => [
+		$behaviors = parent::behaviors();
+		$behaviors['verbs'] = 
+			[
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['post'],
                 ],
-            ],
-        ];
+            ];
+		return $behaviors;
     }
 
     /**
