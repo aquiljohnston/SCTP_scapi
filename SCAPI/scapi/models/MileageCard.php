@@ -17,6 +17,8 @@ use Yii;
  * @property string $MileageCardCreatedBy
  * @property string $MileageCardModifiedDate
  * @property string $MileageCardModifiedBy
+ * @property integer $MileagCardBusinessMiles
+ * @property integer $MileagCardPersonalMiles
  *
  * @property EmployeeTb $mileageCardEmp
  * @property MileageEntryTb[] $mileageEntryTbs
@@ -37,7 +39,7 @@ class MileageCard extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['MileageCardEmpID', 'MileageCardTechID', 'MileageCardProjectID', 'MileageCardAppStatus'], 'integer'],
+            [['MileageCardEmpID', 'MileageCardTechID', 'MileageCardProjectID', 'MileageCardAppStatus', 'MileagCardBusinessMiles', 'MileagCardPersonalMiles'], 'integer'],
             [['MileageCardType', 'MileageCardCreatedBy', 'MileageCardModifiedBy'], 'string'],
             [['MileageCardCreateDate', 'MileageCardModifiedDate'], 'safe']
         ];
@@ -59,6 +61,8 @@ class MileageCard extends \yii\db\ActiveRecord
             'MileageCardCreatedBy' => 'Mileage Card Created By',
             'MileageCardModifiedDate' => 'Mileage Card Modified Date',
             'MileageCardModifiedBy' => 'Mileage Card Modified By',
+            'MileagCardBusinessMiles' => 'Mileag Card Business Miles',
+            'MileagCardPersonalMiles' => 'Mileag Card Personal Miles',
         ];
     }
 
