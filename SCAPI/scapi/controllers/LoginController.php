@@ -44,6 +44,9 @@ class LoginController extends ActiveController
 	
 	public function actionUserLogin()
 	{
+		$iv = "abcdefghijklmnop";
+		$secretKey= "sparus";
+		$testHash= '$2y$12$yYwybpR.JabbAOKTx6/I1uZgSg4lJZ5x12RT33I4LYF8cqG1/V5qC';
 		//read the post input (use this technique if you have no post variable name):
 		$post = file_get_contents("php://input");
 
@@ -55,15 +58,32 @@ class LoginController extends ActiveController
 
 		//load json data into model:
 		$user->attributes = $data;  
-		$userloginID = SCUser::findOne(['UserLoginID'=>$user->UserLoginID]);
+		$userName = SCUser::findOne(['UserName'=>$user->UserName]);
+		$securedPass = $data["Password"];
+		Yii::trace('securedPass: '.$securedPass);
 		
 		//Check password for authentication with try catch
+		$decodedPass = base64_decode($securedPass);
+		Yii::trace('decodedPass: '.$decodedPass);
+		//mcrypt_decrypt ( string $cipher , string $key , string $data , string $mode [, string $iv ] )
+		//$decryptedPass = mcrypt_decrypt ( MCRYPT_RIJNDAEL_128 , "sparusholdings12" , $decodedPass , MCRYPT_MODE_CBC, "abcdefghijklmnop");
+		//$decryptedPass = mcrypt_decrypt ( MCRYPT_RIJNDAEL_128 , "sparusholdings12" , $securedPass , MCRYPT_MODE_CBC, "abcdefghijklmnop");
+		$decryptedPass = openssl_decrypt($decodedPass,  'AES-256-CBC', "sparusholdings12", OPENSSL_RAW_DATA, $iv);
+		//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
+		Yii::trace('decryptedPass: '.$decryptedPass);
+		//Check the Hash
+		if (password_verify($decryptedPass, $testHash)) {
+			Yii::trace('Password is valid.');
+		} else {
+			Yii::trace('Password is invalid.');
+		}
+		
 		
 		//Pass
-		Yii::$app->user->login($userloginID);
+		Yii::$app->user->login($userName);
 		//Generate Auth Token
 		$auth = new Auth();
-        $userID = $userloginID->UserID;
+        $userID = $userName->UserID;
 		$auth->UserID = $userID;
 		$auth-> beforeSave(true);
 		//Store Auth Token
