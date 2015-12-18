@@ -45,12 +45,24 @@ class BaseActiveController extends ActiveController
 
 		$model = new $this->modelClass(); 
 		$model->attributes = $data;  
-		$model-> save();
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $model; 
+		
+		if($model-> save())
+		{
+			$response->setStatusCode(201);
+			return $response;
+		}
+		else
+		{
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+		}
+		
+		
 	  
-		return $response;
+
     }
 }
