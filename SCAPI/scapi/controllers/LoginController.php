@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\SCUser;
 use app\models\Auth;
+use app\models\Key;
 use yii\data\ActiveDataProvider;
 use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
@@ -44,9 +45,9 @@ class LoginController extends ActiveController
 	
 	public function actionUserLogin()
 	{
+		//ic and secret key of openssl
 		$iv = "abcdefghijklmnop";
-		$secretKey= "sparus";
-		$testHash= '$2y$12$yYwybpR.JabbAOKTx6/I1uZgSg4lJZ5x12RT33I4LYF8cqG1/V5qC';
+		$secretKey= "sparusholdings12";
 		//read the post input (use this technique if you have no post variable name):
 		$post = file_get_contents("php://input");
 
@@ -65,14 +66,13 @@ class LoginController extends ActiveController
 		//Check password for authentication with try catch
 		$decodedPass = base64_decode($securedPass);
 		Yii::trace('decodedPass: '.$decodedPass);
-		//mcrypt_decrypt ( string $cipher , string $key , string $data , string $mode [, string $iv ] )
-		//$decryptedPass = mcrypt_decrypt ( MCRYPT_RIJNDAEL_128 , "sparusholdings12" , $decodedPass , MCRYPT_MODE_CBC, "abcdefghijklmnop");
-		//$decryptedPass = mcrypt_decrypt ( MCRYPT_RIJNDAEL_128 , "sparusholdings12" , $securedPass , MCRYPT_MODE_CBC, "abcdefghijklmnop");
-		$decryptedPass = openssl_decrypt($decodedPass,  'AES-256-CBC', "sparusholdings12", OPENSSL_RAW_DATA, $iv);
+		$decryptedPass = openssl_decrypt($decodedPass,  'AES-256-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
 		//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
 		Yii::trace('decryptedPass: '.$decryptedPass);
+		$hash = Key::findOne(['KeyID'=>$user->UserKey]);
 		//Check the Hash
-		if (password_verify($decryptedPass, $testHash)) {
+		if (password_verify($decryptedPass, $hash)) 
+		{
 			Yii::trace('Password is valid.');
 		} else {
 			Yii::trace('Password is invalid.');
