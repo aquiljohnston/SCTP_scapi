@@ -5,7 +5,7 @@ use app\authentication\CTUser;
 $params = require(__DIR__ . '/params.php');
 
 $config = [
-    'id' => 'basic',
+    'id' => 'scapi',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'components' => [
