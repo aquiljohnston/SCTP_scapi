@@ -32,7 +32,7 @@ class BaseActiveController extends ActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['delete'],
-                ],
+                ],  
             ];
 		return $behaviors;		
 	}

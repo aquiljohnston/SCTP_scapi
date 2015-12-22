@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "ActivityTb".
  *
- * @property integer $ActivtyID
+ * @property integer $ActivityID
  * @property string $ActivityStartTime
  * @property string $ActivityEndTime
  * @property string $ActivityTitle
@@ -50,7 +50,7 @@ class Activity extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'ActivtyID' => 'Activty ID',
+            'ActivityID' => 'Activity ID',
             'ActivityStartTime' => 'Activity Start Time',
             'ActivityEndTime' => 'Activity End Time',
             'ActivityTitle' => 'Activity Title',
@@ -76,7 +76,7 @@ class Activity extends \yii\db\ActiveRecord
      */
     public function getMileageEntryTbs()
     {
-        return $this->hasMany(MileageEntryTb::className(), ['MileageEntryActivityID' => 'ActivtyID']);
+        return $this->hasMany(MileageEntryTb::className(), ['MileageEntryActivityID' => 'ActivityID']);
     }
 
     /**
@@ -84,6 +84,6 @@ class Activity extends \yii\db\ActiveRecord
      */
     public function getTimeEntryTbs()
     {
-        return $this->hasMany(TimeEntryTb::className(), ['TimeEntryActivityID' => 'ActivtyID']);
+        return $this->hasMany(TimeEntryTb::className(), ['TimeEntryActivityID' => 'ActivityID']);
     }
 }
