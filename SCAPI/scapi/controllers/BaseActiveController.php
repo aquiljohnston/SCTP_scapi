@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\authentication\TokenAuth;
 use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
