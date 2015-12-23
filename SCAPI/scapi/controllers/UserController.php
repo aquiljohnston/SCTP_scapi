@@ -7,7 +7,7 @@ use app\models\SCUser;
 use app\models\Project;
 use app\models\ProjectUser;
 use app\models\Key;
-use app\authentication\BaseActiveController;
+use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;

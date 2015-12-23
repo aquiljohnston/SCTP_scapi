@@ -4,7 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use app\models\MileageCard;
-use app\authentication\BaseActiveController;
+use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;

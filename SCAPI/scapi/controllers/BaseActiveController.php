@@ -1,6 +1,6 @@
 <?php
 
-namespace app\authentication;
+namespace app\controllers;
 
 use Yii;
 use yii\db\ActiveRecord;
