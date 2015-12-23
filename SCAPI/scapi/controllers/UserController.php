@@ -50,6 +50,7 @@ class UserController extends BaseActiveController
 		$decodedPass = base64_decode($securedPass);
 		//decrypt with openssl using the key and iv
 		$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
+		Yii::trace('decryptedPass: '.$decryptedPass);
 		//hash pass with bcrypt
 		$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 		

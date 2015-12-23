@@ -48,6 +48,10 @@ class LoginController extends ActiveController
 		//ic and secret key of openssl
 		$iv = "abcdefghijklmnop";
 		$secretKey= "sparusholdings12";
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
 		//read the post input (use this technique if you have no post variable name):
 		$post = file_get_contents("php://input");
 
@@ -66,35 +70,36 @@ class LoginController extends ActiveController
 		//Check password for authentication with try catch
 		$decodedPass = base64_decode($securedPass);
 		Yii::trace('decodedPass: '.$decodedPass);
-		$decryptedPass = openssl_decrypt($decodedPass,  'AES-256-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
+		$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
 		//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
 		Yii::trace('decryptedPass: '.$decryptedPass);
-		$hash = Key::findOne(['KeyID'=>$user->UserKey]);
+		$key = Key::findOne(['KeyID'=>$userName->UserKey]);
+		$hash = $key->Key1;
+		Yii::trace('Hash: '.$hash);
 		//Check the Hash
 		if (password_verify($decryptedPass, $hash)) 
 		{
 			Yii::trace('Password is valid.');
-		} else {
+			
+			//Pass
+			Yii::$app->user->login($userName);
+			//Generate Auth Token
+			$auth = new Auth();
+			$userID = $userName->UserID;
+			$auth->UserID = $userID;
+			$auth-> beforeSave(true);
+			//Store Auth Token
+			$auth-> save();
+		} else 
+		{
+			$response->data = "Password is invalid.";
+			return $response;
 			Yii::trace('Password is invalid.');
 		}
-		
-		
-		//Pass
-		Yii::$app->user->login($userName);
-		//Generate Auth Token
-		$auth = new Auth();
-        $userID = $userName->UserID;
-		$auth->UserID = $userID;
-		$auth-> beforeSave(true);
-		//Store Auth Token
-		$auth-> save();
-		
 		//Fail
 		//Send error
 		
 		//add auth token to response
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
 		$response->data = $auth;
 		return $response;
 	}

@@ -48,6 +48,13 @@ class Auth extends \yii\db\ActiveRecord
         if (parent::beforeSave($insert)) {
             if ($this->isNewRecord) {
 				//review the algorithm for generateRandomString
+				$authArray = Auth::find()
+					->where(['UserID' => $this->UserID])
+					->all();
+				foreach($authArray as $a)
+				{
+					$a -> delete();
+				}
                 $this->AuthToken = \Yii::$app->security->generateRandomString();
             }
             return true;
