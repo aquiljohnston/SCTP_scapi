@@ -4,7 +4,7 @@ namespace app\controllers;
 use Yii;
 use app\models\ProjectUser;
 use yii\data\ActiveDataProvider;
-use yii\authentication\BaseActiveController;
+use yii\controllers\BaseActiveController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
