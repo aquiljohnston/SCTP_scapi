@@ -26,11 +26,14 @@ class UserController extends BaseActiveController
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
+		unset($actions['delete']);
 		return $actions;
 	}
 	
 	public function actionCreate()
 	{
+		//create response
+		$response = Yii::$app->response;
 		//iv and key for openssl
 		$iv = "abcdefghijklmnop";
 		$sKey ="sparusholdings12";
@@ -65,10 +68,12 @@ class UserController extends BaseActiveController
 		//maps the data to a new user model and save
 		$user = new SCUser();
 		$user->attributes = $data;  
-		$user-> save();
+		if($user-> save())
+		{
+			$response->setStatusCode(201);
+		}
 		
 		//response json
-		$response = Yii::$app->response;
 		$response->data = $user;
 		return $response;
 	}
@@ -98,6 +103,25 @@ class UserController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $projUser;
+	}
+	
+	public function actionDelete($userID)
+	{
+		//may need to add a try catch here in case of no content
+		//create response
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		//find user model
+		$user = SCUser::findOne($userID);
+		//find associated key model
+		$key = Key::findOne($user->UserKey);
+		//delete user and key in that order
+		if($user->delete() && $key->delete())
+		{
+			$response->setStatusCode(204);
+		}
+		//response data
+		return $response;
 	}
 
 }
