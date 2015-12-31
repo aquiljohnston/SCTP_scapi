@@ -105,14 +105,14 @@ class UserController extends BaseActiveController
 		$response->data = $projUser;
 	}
 	
-	public function actionDelete($userID)
+	public function actionDelete($id)
 	{
 		//may need to add a try catch here in case of no content
 		//create response
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		//find user model
-		$user = SCUser::findOne($userID);
+		$user = SCUser::findOne($id);
 		//find associated key model
 		$key = Key::findOne($user->UserKey);
 		//delete user and key in that order
