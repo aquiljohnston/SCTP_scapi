@@ -6,6 +6,7 @@ use Yii;
 use app\models\SCUser;
 use app\models\Auth;
 use app\models\Key;
+use app\authentication\CTUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
@@ -121,11 +122,11 @@ class LoginController extends ActiveController
 	// Yii::$app->user->login($identity);
 	
 	// User logout
-	public function actionUserLogout()
+	public function actionUserLogout($userID)
 	{
 		Yii::trace('Logout has been called');
 		$response = Yii::$app->response;
-		Yii::$app->user->logout();
+		Yii::$app->user->logout($destroySession = true, $userID);
 		$response->data = 'Logout Successful!';
 		return $response;
 	}
