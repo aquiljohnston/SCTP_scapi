@@ -13,13 +13,13 @@ class TokenAuth extends AuthMethod
 	 
     public function authenticate($user, $request, $response)
     {
-        $username = $request->getAuthUser();
+        $token = $request->getAuthUser();
 		
-		if ($username !== null) {
-			Yii::$app->user->checkTimeout();
+		if ($token !== null) {
+			Yii::$app->user->checkTimeout($token);
 			try 
 			{
-				$identity = SCUser::findIdentityByAccessToken($username);
+				$identity = SCUser::findIdentityByAccessToken($token);
 				if ($identity === null) 
 				{
 					$this->handleFailure($response);
