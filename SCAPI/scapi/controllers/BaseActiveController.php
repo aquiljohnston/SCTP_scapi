@@ -38,7 +38,6 @@ class BaseActiveController extends ActiveController
 		return $behaviors;		
 	}
 	
-	
 	public function actionCreate()
     {
 		$post = file_get_contents("php://input");
@@ -61,9 +60,18 @@ class BaseActiveController extends ActiveController
 			$response->setStatusCode(400);
 			$response->data = "Http:400 Bad Request";
 		}
-		
-		
-	  
-
     }
+	
+	public function actionGetAll()
+	{
+		$modelClass = $this->modelClass;	
+        $models = $modelClass::find()
+			->all();
+		
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $models;
+		
+		return $response;
+	}
 }
