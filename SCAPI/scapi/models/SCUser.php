@@ -149,7 +149,7 @@ class SCUser extends \yii\db\ActiveRecord  implements IdentityInterface
 		$userID = Auth::find()
 			->where(['AuthToken' => $token])
 			->one();
-        return static::findOne(['UserID' => $userID->UserID]);
+        return static::findOne(['UserID' => $userID->AuthUserID]);
     }
 
     /**

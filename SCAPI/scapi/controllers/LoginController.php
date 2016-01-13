@@ -87,7 +87,7 @@ class LoginController extends ActiveController
 			//Generate Auth Token
 			$auth = new Auth();
 			$userID = $userName->UserID;
-			$auth->UserID = $userID;
+			$auth->AuthUserID = $userID;
 			$auth-> beforeSave(true);
 			//Store Auth Token
 			$auth-> save();

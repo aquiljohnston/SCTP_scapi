@@ -16,7 +16,7 @@ class CTUser extends User
 		$session = Yii::$app->getSession();
 		Yii::trace('Id of token is '.$userID);
 					$auth = Auth::find()
-						->where(['UserID' => $userID])
+						->where(['AuthUserID' => $userID])
 						->one();
 					if ($auth !== null)
 					{
@@ -76,7 +76,7 @@ class CTUser extends User
 						->one();
 					if ($auth !== null)
 					{
-						$userID = $auth->UserID;
+						$userID = $auth->AuthUserID;
 					}
 		Yii::trace('The current user id is'.$userID);
 
