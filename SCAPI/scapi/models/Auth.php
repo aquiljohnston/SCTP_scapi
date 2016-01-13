@@ -8,7 +8,7 @@ use yii\base\Security;
 /**
  * This is the model class for table "AuthTb".
  *
- * @property integer $UserID
+ * @property integer $AuthUserID
  * @property string $AuthToken
  */
 class Auth extends \yii\db\ActiveRecord
@@ -27,7 +27,7 @@ class Auth extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['UserID'], 'integer'],
+            [['AuthUserID'], 'integer'],
             [['AuthToken'], 'string']
         ];
     }
@@ -38,7 +38,7 @@ class Auth extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'UserId' => 'User ID',
+            'AuthUserId' => 'Auth User ID',
             'AuthToken' => 'Auth Token',
         ];
     }
@@ -49,7 +49,7 @@ class Auth extends \yii\db\ActiveRecord
             if ($this->isNewRecord) {
 				//review the algorithm for generateRandomString
 				$authArray = Auth::find()
-					->where(['UserID' => $this->UserID])
+					->where(['AuthUserID' => $this->AuthUserID])
 					->all();
 				foreach($authArray as $a)
 				{
