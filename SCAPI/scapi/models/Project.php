@@ -39,7 +39,7 @@ class Project extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['ProjectID', 'ProjectName'], 'required'],
+            [['ProjectName'], 'required'],
             [['ProjectID', 'ProjectStatus', 'ProjectClientID'], 'integer'],
             [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType'], 'string'],
             [['ProjectStartDate', 'ProjectEndDate'], 'safe']
