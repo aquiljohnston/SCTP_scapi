@@ -13,7 +13,6 @@ use app\models\Auth;
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
- * @property string $UserLoginID
  * @property string $UserEmployeeType
  * @property string $UserPhone
  * @property string $UserCompanyName
@@ -50,7 +49,7 @@ class SCUser extends \yii\db\ActiveRecord  implements IdentityInterface
     public function rules()
     {
         return [
-            [['UserName', 'UserFirstName', 'UserLastName', 'UserLoginID', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedBy', 'UserModifiedBy', 'UserCreateDTLTOffset'], 'string'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedBy', 'UserModifiedBy', 'UserCreateDTLTOffset'], 'string'],
             [['UserKey', 'UserActiveFlag', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'integer'],
             [['UserCreatedDate', 'UserModifiedDate'], 'safe']
         ];
@@ -66,7 +65,6 @@ class SCUser extends \yii\db\ActiveRecord  implements IdentityInterface
             'UserName' => 'User Name',
             'UserFirstName' => 'User First Name',
             'UserLastName' => 'User Last Name',
-            'UserLoginID' => 'User Login ID',
             'UserEmployeeType' => 'User Employee Type',
             'UserPhone' => 'User Phone',
             'UserCompanyName' => 'User Company Name',
