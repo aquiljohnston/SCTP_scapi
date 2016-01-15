@@ -11,7 +11,6 @@ use Yii;
  * @property string $TimeEntryStartTime
  * @property string $TimeEntryEndTime
  * @property string $TimeEntryDate
- * @property integer $TimeEntryCardID
  * @property string $TimeEntryTimeCardID
  * @property integer $TimeEntryActivityID
  * @property string $TimeEntryComment
@@ -40,7 +39,7 @@ class TimeEntry extends \yii\db\ActiveRecord
     {
         return [
             [['TimeEntryStartTime', 'TimeEntryEndTime', 'TimeEntryDate', 'TimeEntryCreateDate', 'TimeEntryModifiedDate'], 'safe'],
-            [['TimeEntryCardID', 'TimeEntryTimeCardID', 'TimeEntryActivityID'], 'integer'],
+            [['TimeEntryTimeCardID', 'TimeEntryActivityID'], 'integer'],
             [['TimeEntryComment', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy'], 'string']
         ];
     }
@@ -55,7 +54,6 @@ class TimeEntry extends \yii\db\ActiveRecord
             'TimeEntryStartTime' => 'Time Entry Start Time',
             'TimeEntryEndTime' => 'Time Entry End Time',
             'TimeEntryDate' => 'Time Entry Date',
-            'TimeEntryCardID' => 'Time Entry Card ID',
             'TimeEntryTimeCardID' => 'Time Entry Time Card ID',
             'TimeEntryActivityID' => 'Time Entry Activity ID',
             'TimeEntryComment' => 'Time Entry Comment',
