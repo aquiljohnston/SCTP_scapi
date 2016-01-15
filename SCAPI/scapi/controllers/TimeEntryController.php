@@ -33,4 +33,13 @@ class TimeEntryController extends BaseActiveController
 		
 		return $response;
 	}
+	
+	public function actionGetEntriesByTimeCard($id)
+	{
+		$entriesArray = TimeEntry::findAll(['TimeEntryTimeCardID'=>$id]);
+		$entryData = array_map(function ($model) {return $model->attributes;},$entriesArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $entryData;
+	}
 }
