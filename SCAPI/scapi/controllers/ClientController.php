@@ -33,4 +33,24 @@ class ClientController extends BaseActiveController
 		
 		return $response;
 	}
+	
+	public function actionGetClientDropdowns()
+	{	
+        $clients = Client::find()
+			->all();
+		$namePairs = [];
+		$clientSize = count($clients);
+		
+		for($i=0; $i < $clientSize; $i++)
+		{
+			$namePairs[$clients[$i]->ClientID]= $clients[$i]->ClientName;
+		}
+			
+		
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $namePairs;
+		
+		return $response;
+	}
 }
