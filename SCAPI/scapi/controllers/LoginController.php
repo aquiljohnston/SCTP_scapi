@@ -64,7 +64,16 @@ class LoginController extends ActiveController
 
 		//load json data into model:
 		$user->attributes = $data;  
+		try
+		{
 		$userName = SCUser::findOne(['UserName'=>$user->UserName]);
+		}
+		catch
+		{
+			$response = "User not Found.";
+			$response->setStatusCode(401);
+			return $response;
+		}
 		$securedPass = $data["Password"];
 		Yii::trace('securedPass: '.$securedPass);
 		
