@@ -64,48 +64,48 @@ class LoginController extends ActiveController
 
 		//load json data into model:
 		$user->attributes = $data;  
-		try
-		{
-		$userName = SCUser::findOne(['UserName'=>$user->UserName]);
-		}
-		catch
-		{
-			$response = "User not Found.";
-			$response->setStatusCode(401);
-			return $response;
-		}
-		$securedPass = $data["Password"];
-		Yii::trace('securedPass: '.$securedPass);
-		
-		//Check password for authentication with try catch
-		$decodedPass = base64_decode($securedPass);
-		Yii::trace('decodedPass: '.$decodedPass);
-		$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
-		//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
-		Yii::trace('decryptedPass: '.$decryptedPass);
-		$key = Key::findOne(['KeyID'=>$userName->UserKey]);
-		$hash = $key->Key1;
-		Yii::trace('Hash: '.$hash);
-		//Check the Hash
-		if (password_verify($decryptedPass, $hash)) 
-		{
-			Yii::trace('Password is valid.');
+
+		if($userName = SCUser::findOne(['UserName'=>$user->UserName]))
+			{
+			$securedPass = $data["Password"];
+			Yii::trace('securedPass: '.$securedPass);
 			
-			//Pass
-			Yii::$app->user->login($userName);
-			//Generate Auth Token
-			$auth = new Auth();
-			$userID = $userName->UserID;
-			$auth->AuthUserID = $userID;
-			$auth-> beforeSave(true);
-			//Store Auth Token
-			$auth-> save();
-		} else 
+			//Check password for authentication with try catch
+			$decodedPass = base64_decode($securedPass);
+			Yii::trace('decodedPass: '.$decodedPass);
+			$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
+			//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
+			Yii::trace('decryptedPass: '.$decryptedPass);
+			$key = Key::findOne(['KeyID'=>$userName->UserKey]);
+			$hash = $key->Key1;
+			Yii::trace('Hash: '.$hash);
+			//Check the Hash
+			if (password_verify($decryptedPass, $hash)) 
+			{
+				Yii::trace('Password is valid.');
+				
+				//Pass
+				Yii::$app->user->login($userName);
+				//Generate Auth Token
+				$auth = new Auth();
+				$userID = $userName->UserID;
+				$auth->AuthUserID = $userID;
+				$auth-> beforeSave(true);
+				//Store Auth Token
+				$auth-> save();
+			} else 
+			{
+				$response->data = "Password is invalid.";
+				$response->setStatusCode(401);
+				return $response;
+				Yii::trace('Password is invalid.');
+			}
+		}
+		else
 		{
-			$response->data = "Password is invalid.";
+			$response->data = "User not Found.";
 			$response->setStatusCode(401);
 			return $response;
-			Yii::trace('Password is invalid.');
 		}
 		//Fail
 		//Send error
