@@ -124,4 +124,24 @@ class UserController extends BaseActiveController
 		return $response;
 	}
 
+	public function actionGetUserDropdowns()
+	{	
+        $users = SCUser::find()
+			->all();
+		$namePairs = [];
+		$userSize = count($users);
+		
+		for($i=0; $i < $userSize; $i++)
+		{
+			$namePairs[$users[$i]->UserID]= $users[$i]->UserLastName. ", ". $users[$i]->UserFirstName;
+		}
+			
+		
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $namePairs;
+		
+		return $response;
+	}
+	
 }
