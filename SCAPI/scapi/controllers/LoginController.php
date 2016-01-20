@@ -94,7 +94,7 @@ class LoginController extends ActiveController
 		} else 
 		{
 			$response->data = "Password is invalid.";
-			$response->serStatusCode(401);
+			$response->setStatusCode(401);
 			return $response;
 			Yii::trace('Password is invalid.');
 		}
