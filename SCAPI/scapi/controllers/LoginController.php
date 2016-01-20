@@ -125,9 +125,11 @@ class LoginController extends ActiveController
 	public function actionUserLogout($userID)
 	{
 		Yii::trace('Logout has been called');
+		$logoutString = 'Logout Successful!';
 		$response = Yii::$app->response;
+		$response->headers->add('Content-Length', strlen($logoutString));
 		Yii::$app->user->logout($destroySession = true, $userID);
-		$response->data = 'Logout Successful!';
+		$response->data = $logoutString;
 		return $response;
 	}
 	

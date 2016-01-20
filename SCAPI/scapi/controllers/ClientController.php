@@ -34,6 +34,8 @@ class ClientController extends BaseActiveController
 		return $response;
 	}
 	
+	
+	//return a json containing pairs of ClientID and ClientName
 	public function actionGetClientDropdowns()
 	{	
         $clients = Client::find()
