@@ -1,4 +1,4 @@
-<?php<?php
+<?php
 
 namespace app\authentication;
 
