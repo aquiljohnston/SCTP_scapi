@@ -36,10 +36,16 @@ class EquipmentController extends BaseActiveController
 	//return json array of all equipment for a project.
 	public function actionViewEquipmentByProject($projectID)
 	{
-		//$criteria->select = new CDbCriteria();
-		//$criteria->condition = "equipmentProject = $projectID";
-		//$equipArray = Equipment::findAll($criteria);
 		$equipArray = Equipment::findAll(['EquipmentProjectID'=>$projectID]);
+		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $equipData;
+	}
+	
+	public function actionViewEquipmentByUser($userID)
+	{
+		$equipArray = Equipment::findAll(['EquipmentAssignedUserID'=>$userID]);
 		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
