@@ -48,4 +48,25 @@ class ProjectController extends BaseActiveController
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $userData;
 	}
+	
+	//return a json containing pairs of ProjectID and ProjectName
+	public function actionGetProjectDropdowns()
+	{	
+        $projects = Project::find()
+			->all();
+		$namePairs = [];
+		$projectSize = count($projects);
+		
+		for($i=0; $i < $projectSize; $i++)
+		{
+			$namePairs[$projects[$i]->ProjectID]= $projects[$i]->ProjectName;
+		}
+			
+		
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $namePairs;
+		
+		return $response;
+	}
 }
