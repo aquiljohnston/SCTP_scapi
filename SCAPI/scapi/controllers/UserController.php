@@ -26,6 +26,7 @@ class UserController extends BaseActiveController
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
+		unset($actions['update']);
 		unset($actions['delete']);
 		return $actions;
 	}
@@ -66,15 +67,64 @@ class UserController extends BaseActiveController
 		$data["UserKey"] = $keyData -> KeyID;
 		
 		//maps the data to a new user model and save
-		$user = new SCUser();
-		$user->attributes = $data;  
-		if($user-> save())
+		$model = new SCUser();
+		$model->attributes = $data;  
+		
+		//created by
+		if ($user = SCUSer::findOne(['UserID'=>$model->UserCreatedBy]))
 		{
-			$response->setStatusCode(201);
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$model->UserCreatedBy = $lname.", ".$fname;
 		}
 		
-		//response json
-		$response->data = $user;
+		//created date
+		$model->UserCreatedDate = date('Y-m-d H:i:s');
+		
+		if($model-> save())
+		{
+			$response->setStatusCode(201);
+			$response->data = $model;
+		}
+		else
+		{
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+		}
+		return $response;
+	}
+	
+	public function actionUpdate($id)
+	{
+		$put = file_get_contents("php://input");
+		$data = json_decode($put, true);
+
+		$model = SCUSer::findOne($id);
+		
+		$model->attributes = $data;  
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		if ($user = SCUSer::findOne(['UserID'=>$model->UserModifiedBy]))
+		{
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$model->UserModifiedBy = $lname.", ".$fname;
+		}
+		
+		$model->UserModifiedDate = date('Y-m-d H:i:s');
+		
+		if($model-> update())
+		{
+			$response->setStatusCode(201);
+			$response->data = $model; 
+		}
+		else
+		{
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+		}
 		return $response;
 	}
 	
@@ -135,8 +185,7 @@ class UserController extends BaseActiveController
 		{
 			$namePairs[$users[$i]->UserID]= $users[$i]->UserLastName. ", ". $users[$i]->UserFirstName;
 		}
-			
-		
+
 		$response = Yii::$app ->response;
 		$response -> format = Response::FORMAT_JSON;
 		$response -> data = $namePairs;
