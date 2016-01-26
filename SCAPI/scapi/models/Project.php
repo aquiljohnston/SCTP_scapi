@@ -16,14 +16,12 @@ use Yii;
  * @property integer $ProjectClientID
  * @property string $ProjectStartDate
  * @property string $ProjectEndDate
- * @property string $ProjectCreateDate
- * @property string $ProjectCreatedBy
- * @property string $ProjectModifiedDate
- * @property string $ProjectModifiedBy
  *
+ * @property EquipmentTb[] $equipmentTbs
+ * @property ProjectEmployeeTb[] $projectEmployeeTbs
  * @property ProjectUserTb[] $projectUserTbs
- * @property ProjectOQRequirementstb[] $projectOQRequirementstbs
- * @property ClientTb $projectClient
+ * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
+ * @property ClientTb $project
  */
 class Project extends \yii\db\ActiveRecord
 {
@@ -42,9 +40,9 @@ class Project extends \yii\db\ActiveRecord
     {
         return [
             [['ProjectName'], 'required'],
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectCreatedBy', 'ProjectModifiedBy'], 'string'],
-            [['ProjectStatus', 'ProjectClientID'], 'integer'],
-            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate'], 'safe']
+            [['ProjectID', 'ProjectStatus', 'ProjectClientID'], 'integer'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType'], 'string'],
+            [['ProjectStartDate', 'ProjectEndDate'], 'safe']
         ];
     }
 
@@ -63,11 +61,23 @@ class Project extends \yii\db\ActiveRecord
             'ProjectClientID' => 'Project Client ID',
             'ProjectStartDate' => 'Project Start Date',
             'ProjectEndDate' => 'Project End Date',
-            'ProjectCreateDate' => 'Project Create Date',
-            'ProjectCreatedBy' => 'Project Created By',
-            'ProjectModifiedDate' => 'Project Modified Date',
-            'ProjectModifiedBy' => 'Project Modified By',
         ];
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getEquipmentTbs()
+    {
+        return $this->hasMany(EquipmentTb::className(), ['EquipmentProjectID' => 'ProjectID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectEmployeeTbs()
+    {
+        return $this->hasMany(ProjectEmployeeTb::className(), ['PE_ProjectID' => 'ProjectID']);
     }
 
     /**
@@ -75,22 +85,40 @@ class Project extends \yii\db\ActiveRecord
      */
     public function getProjectUserTbs()
     {
-        return $this->hasMany(ProjectUserTb::className(), ['ProjUserProjectID' => 'ProjectID']);
+        return $this->hasMany(ProjectUser::className(), ['ProjUserProjectID' => 'ProjectID']);
+    }
+	
+	/**
+     * @return \yii\db\ActiveQuery
+     */
+	public function getUsers()
+    {
+        return $this->hasMany(SCUser::className(), ['UserID' => 'ProjUserUserID'])
+			->via('projectUserTbs');
+    }
+		
+	// /**
+     // * @return \yii\db\ActiveQuery
+     // */
+	// public function getUsers()
+    // {
+        // return $this->hasMany(UserTb::className(), ['UserID' => 'ProjUserUserID'])
+			// ->viaTable('projectUserTbs',['ProjUserProjectID' => 'ProjectID']);
+    // }
+	
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectOQRequirementsTbs()
+    {
+        return $this->hasMany(ProjectOQRequirementsTb::className(), ['ProjectOQRequirementsProjectID' => 'ProjectID']);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getProjectOQRequirementstbs()
+    public function getProject()
     {
-        return $this->hasMany(ProjectOQRequirementstb::className(), ['ProjectOQRequirementsProjectID' => 'ProjectID']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getProjectClient()
-    {
-        return $this->hasOne(ClientTb::className(), ['ClientID' => 'ProjectClientID']);
+        return $this->hasOne(ClientTb::className(), ['ClientID' => 'ProjectID']);
     }
 }
