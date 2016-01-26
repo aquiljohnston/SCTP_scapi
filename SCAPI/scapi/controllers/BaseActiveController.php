@@ -33,11 +33,12 @@ class BaseActiveController extends ActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['delete'],
+					'update' => ['put'],
                 ],  
             ];
 		return $behaviors;		
 	}
-	
+
 	public function actionCreate()
     {
 		$post = file_get_contents("php://input");
