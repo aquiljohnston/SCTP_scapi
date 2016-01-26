@@ -48,11 +48,11 @@ class BaseActiveController extends ActiveController
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $model; 
 		
 		if($model-> save())
 		{
 			$response->setStatusCode(201);
+			$response->data = $model; 
 			return $response;
 		}
 		else
