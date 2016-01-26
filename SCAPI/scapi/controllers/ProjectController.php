@@ -25,6 +25,7 @@ class ProjectController extends BaseActiveController
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
+		unset($actions['update']);
 		return $actions;
 	}
 
@@ -37,6 +38,75 @@ class ProjectController extends BaseActiveController
 		
 		return $response;
 	} 
+	
+	public function actionCreate()
+	{
+		$post = file_get_contents("php://input");
+		$data = json_decode($post, true);
+
+		$model = new Project(); 
+		$model->attributes = $data;  
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		//created by
+		if ($user = SCUSer::findOne(['UserID'=>$model->ProjectCreatedBy]))
+		{
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$model->ProjectCreatedBy = $lname.", ".$fname;
+		}
+		
+		//create date
+		$model->ProjectCreateDate = date('Y-m-d H:i:s');
+		
+		if($model-> save())
+		{
+			$response->setStatusCode(201);
+			$response->data = $model; 
+		}
+		else
+		{
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+		}
+		return $response;
+	}
+	
+	public function actionUpdate($id)
+	{
+		$put = file_get_contents("php://input");
+		$data = json_decode($put, true);
+
+		$model = Project::findOne($id);
+		
+		$model->attributes = $data;  
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		if ($user = SCUSer::findOne(['UserID'=>$model->ProjectModifiedBy]))
+		{
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$model->ProjectModifiedBy = $lname.", ".$fname;
+		}
+		
+		$model->ProjectModifiedDate = date('Y-m-d H:i:s');
+		
+		if($model-> update())
+		{
+			$response->setStatusCode(201);
+			$response->data = $model; 
+		}
+		else
+		{
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+		}
+		return $response;
+	}
 	
 	//return json array of all users attached to a specific project ID
 	public function actionViewAllUsers($projectID)
