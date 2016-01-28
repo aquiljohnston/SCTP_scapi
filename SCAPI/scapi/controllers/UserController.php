@@ -35,9 +35,11 @@ class UserController extends BaseActiveController
 	{
 		//create response
 		$response = Yii::$app->response;
+		
 		//iv and key for openssl
 		$iv = "abcdefghijklmnop";
 		$sKey ="sparusholdings12";
+	
 		//options for bcrypt
 		$options = [
 			'cost' => 12,
@@ -98,9 +100,45 @@ class UserController extends BaseActiveController
 	{
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
-
+		
+		//get model to be updated
 		$model = SCUSer::findOne($id);
 		
+		//iv and key for openssl
+		$iv = "abcdefghijklmnop";
+		$sKey ="sparusholdings12";
+		
+		//options for bcrypt
+		$options = [
+			'cost' => 12,
+		];
+		//handle the password
+		//get pass from data
+		$securedPass = $data["UserKey"];
+		//decode the base 64 encoding
+		$decodedPass = base64_decode($securedPass);
+		//decrypt with openssl using the key and iv
+		$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
+		
+		//check if new passowrd
+		if($decryptedPass != $model->UserKey)
+		{
+			//hash pass with bcrypt
+			$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
+			
+			//create row in the db to hold the hashedPass
+			$keyData = Key::findOne($model->UserKey);
+			$keyData->Key1 = $hashedPass;
+			$keyData-> update();
+			//Replace the encoded pass with the ID for the new KeyTb row
+			$data["UserKey"] = $keyData -> KeyID;
+		}
+		else
+		{
+			$data["UserKey"] = $decryptedPass;
+		}
+		
+		//pass new data to model
 		$model->attributes = $data;  
 		
 		$response = Yii::$app->response;
