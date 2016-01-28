@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use app\models\TimeEntry;
+use app\models\SCUser;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -31,6 +32,41 @@ class TimeEntryController extends BaseActiveController
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $timeEntry;
 		
+		return $response;
+	}
+	
+	public function actionCreate()
+	{
+		$post = file_get_contents("php://input");
+		$data = json_decode($post, true);
+
+		$model = new TimeEntry(); 
+		$model->attributes = $data;  
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		//created by
+		if ($user = SCUser::findOne(['UserID'=>$model->TimeEntryCreatedBy]))
+		{
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$model->TimeEntryCreatedBy = $lname.", ".$fname;
+		}
+		
+		//create date
+		$model->TimeEntryCreateDate = date('Y-m-d H:i:s');
+		
+		if($model-> save())
+		{
+			$response->setStatusCode(201);
+			$response->data = $model; 
+		}
+		else
+		{
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+		}
 		return $response;
 	}
 	

@@ -8,6 +8,7 @@ use Yii;
  * This is the model class for table "TimeEntryTb".
  *
  * @property integer $TimeEntryID
+ * @property integer $TimeEntryUserID
  * @property string $TimeEntryStartTime
  * @property string $TimeEntryEndTime
  * @property string $TimeEntryDate
@@ -39,7 +40,7 @@ class TimeEntry extends \yii\db\ActiveRecord
     {
         return [
             [['TimeEntryStartTime', 'TimeEntryEndTime', 'TimeEntryDate', 'TimeEntryCreateDate', 'TimeEntryModifiedDate'], 'safe'],
-            [['TimeEntryTimeCardID', 'TimeEntryActivityID'], 'integer'],
+            [['TimeEntryUserID', 'TimeEntryTimeCardID', 'TimeEntryActivityID'], 'integer'],
             [['TimeEntryComment', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy'], 'string']
         ];
     }
@@ -51,6 +52,7 @@ class TimeEntry extends \yii\db\ActiveRecord
     {
         return [
             'TimeEntryID' => 'Time Entry ID',
+			'TimeEntryUserID' => 'Time Entry User ID',
             'TimeEntryStartTime' => 'Time Entry Start Time',
             'TimeEntryEndTime' => 'Time Entry End Time',
             'TimeEntryDate' => 'Time Entry Date',
