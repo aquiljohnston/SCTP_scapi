@@ -188,22 +188,6 @@ class TimeCardController extends BaseActiveController
 			return $response;
 			
 		}
-		
-		// $model = new timeCard();
-		
-		// if ($model->updateAll(['TimeCardAprovedFlag' => 1], ['TimeCardID'=>[$cardArray]])
-			// &&$model->updateAll(['TimeCardAprovedBy' => $approvedID], ['TimeCardID'=>[$cardArray]]))
-		// {
-			// $response->setStatusCode(201);
-			// $response->data = $cardIDArray; 
-			// return $response;
-		// }
-		// else
-		// {
-			// $response->setStatusCode(400);
-			// $response->data = "Http:400 Bad Request";
-			// return $response;
-		// }
 	}
 	
 }
