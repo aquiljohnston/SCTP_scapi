@@ -5,7 +5,9 @@ namespace app\controllers;
 use Yii;
 use app\models\TimeCard;
 use app\models\TimeEntry;
+use app\models\SCUser;
 use app\controllers\BaseActiveController;
+use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -19,6 +21,18 @@ use \DateTime;
 class TimeCardController extends BaseActiveController
 {
 	public $modelClass = 'app\models\TimeCard';
+	
+	public function behaviors()
+	{
+		return [
+			'verbs' => [
+				'class' => \yii\filters\VerbFilter::className(),
+				'actions' => [
+					'approve-time-cards'  => ['put'],
+				],
+			],
+		];
+	}
 	
 	public function actions()
 	{
@@ -49,6 +63,7 @@ class TimeCardController extends BaseActiveController
 		$sundayStr = $sundayDate->format('Y-m-d H:i:s');
 		$sundayEntries = TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$sundayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 		
 		//get all time entries for Monday
@@ -56,6 +71,7 @@ class TimeCardController extends BaseActiveController
 		$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
 		$mondayEntries =TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$mondayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 			
 		//get all time entries for Tuesday	
@@ -63,6 +79,7 @@ class TimeCardController extends BaseActiveController
 		$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
 		$tuesdayEntries =TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 			
 		//get all time entries for Wednesday	
@@ -70,6 +87,7 @@ class TimeCardController extends BaseActiveController
 		$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
 		$wednesdayEntries =TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 			
 		//get all time entries for Thursday
@@ -77,6 +95,7 @@ class TimeCardController extends BaseActiveController
 		$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
  		$thursdayEntries =TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$thursdayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 			
 		//get all time entries for Friday
@@ -84,6 +103,7 @@ class TimeCardController extends BaseActiveController
 		$fridayStr = $fridayDate->format('Y-m-d H:i:s');
 		$fridayEntries =TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$fridayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 			
 		//get all time entries for Saturday
@@ -91,6 +111,7 @@ class TimeCardController extends BaseActiveController
 		$satudayStr = $satudayDate->format('Y-m-d H:i:s');
 		$saturdayEntries =TimeEntry::find()
 			->where("TimeEntryDate ="."'"."$satudayStr". "'")
+			->andWhere("TimeEntryTimeCardID = $id")
 			->all();
 			
 		//load data into array
@@ -110,6 +131,79 @@ class TimeCardController extends BaseActiveController
 		
 		$response -> format = Response::FORMAT_JSON;
 		$response -> data = $dataArray;
+	}
+	
+	public function actionApproveTimeCards()
+	{
+		//capture put body
+		$put = file_get_contents("php://input");
+		$data = json_decode($put, true);
+		
+		//create response
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		//parse json
+		$approvedBy = $data["approvedByID"];
+		$cardIDs = $data["cardIDArray"];
+		
+		//get timecards
+		foreach($cardIDs as $id)
+		{
+			$approvedCards[]= TimeCard::findOne($id);
+		}
+		
+		//get user's name by ID
+		if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
+		{
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$approvedBy = $lname.", ".$fname;
+		}
+		
+		//try to approve time cards
+		try
+		{
+			//create transaction
+			$connection = \Yii::$app->db;
+			$transaction = $connection->beginTransaction(); 
+		
+			foreach($approvedCards as $card)
+			{
+				$card-> TimeCardApprovedFlag = 1;
+				$card-> TimeCardApprovedBy = $approvedBy;
+				$card->update();
+			}
+			$transaction->commit();
+			$response->setStatusCode(200);
+			$response->data = $approvedCards; 
+			return $response;
+		}
+		//if transaction fails rollback changes and send error
+		catch(Exception $e)
+		{
+			$transaction->rollBack();
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+			return $response;
+			
+		}
+		
+		// $model = new timeCard();
+		
+		// if ($model->updateAll(['TimeCardAprovedFlag' => 1], ['TimeCardID'=>[$cardArray]])
+			// &&$model->updateAll(['TimeCardAprovedBy' => $approvedID], ['TimeCardID'=>[$cardArray]]))
+		// {
+			// $response->setStatusCode(201);
+			// $response->data = $cardIDArray; 
+			// return $response;
+		// }
+		// else
+		// {
+			// $response->setStatusCode(400);
+			// $response->data = "Http:400 Bad Request";
+			// return $response;
+		// }
 	}
 	
 }
