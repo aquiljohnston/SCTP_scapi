@@ -8,17 +8,20 @@ use Yii;
  * This is the model class for table "MileageCardTb".
  *
  * @property integer $MileageCardID
- * @property string $MileageCardEmpID
  * @property integer $MileageCardTechID
  * @property integer $MileageCardProjectID
- * @property string $MileageCardType
- * @property integer $MileageCardAppStatus
+ * @property string $MileageStartDate
+ * @property string $MileageEndDate
+ * @property integer $MileageCardBusinessMiles
+ * @property integer $MileageCardPersonalMiles
+ * @property integer $MileageCardApprovedFlag
+ * @property string $MileageCardApprovedBy
+ * @property string $MileageCardSupervisorName
  * @property string $MileageCardCreateDate
  * @property string $MileageCardCreatedBy
  * @property string $MileageCardModifiedDate
  * @property string $MileageCardModifiedBy
- * @property integer $MileagCardBusinessMiles
- * @property integer $MileagCardPersonalMiles
+
  *
  * @property EmployeeTb $mileageCardEmp
  * @property MileageEntryTb[] $mileageEntryTbs
@@ -39,9 +42,9 @@ class MileageCard extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['MileageCardEmpID', 'MileageCardTechID', 'MileageCardProjectID', 'MileageCardAppStatus', 'MileagCardBusinessMiles', 'MileagCardPersonalMiles'], 'integer'],
-            [['MileageCardType', 'MileageCardCreatedBy', 'MileageCardModifiedBy'], 'string'],
-            [['MileageCardCreateDate', 'MileageCardModifiedDate'], 'safe']
+            [['MileageCardTechID', 'MileageCardProjectID', 'MileageCardApprovedFlag', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles'], 'integer'],
+            [['MileageCardApprovedBy', 'MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy'], 'string'],
+            [['MileageStartDate', 'MileageEndDate', 'MileageCardCreateDate', 'MileageCardModifiedDate'], 'safe']
         ];
     }
 
@@ -52,17 +55,20 @@ class MileageCard extends \yii\db\ActiveRecord
     {
         return [
             'MileageCardID' => 'Mileage Card ID',
-            'MileageCardEmpID' => 'Mileage Card Emp ID',
             'MileageCardTechID' => 'Mileage Card Tech ID',
             'MileageCardProjectID' => 'Mileage Card Project ID',
-            'MileageCardType' => 'Mileage Card Type',
-            'MileageCardAppStatus' => 'Mileage Card App Status',
+			'MileageStartDate' => 'Mileage Start Date',
+			'MileageEndDate' => 'Mileage End Date',
+			'MileageCardBusinessMiles' => 'Mileage Card Business Miles',
+            'MileageCardPersonalMiles' => 'Mileage Card Personal Miles',
+            'MileageCardApprovedFlag' => 'Mileage Card Approved Flag',
+			'MileageCardApprovedBy' => 'Mileage Card Approved By',
+			'MileageCardSupervisorName' => 'Mileage Card Supervisor Name',
             'MileageCardCreateDate' => 'Mileage Card Create Date',
             'MileageCardCreatedBy' => 'Mileage Card Created By',
             'MileageCardModifiedDate' => 'Mileage Card Modified Date',
             'MileageCardModifiedBy' => 'Mileage Card Modified By',
-            'MileagCardBusinessMiles' => 'Mileag Card Business Miles',
-            'MileagCardPersonalMiles' => 'Mileag Card Personal Miles',
+
         ];
     }
 

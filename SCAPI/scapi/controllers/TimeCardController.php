@@ -6,6 +6,10 @@ use Yii;
 use app\models\TimeCard;
 use app\models\TimeEntry;
 use app\models\SCUser;
+use app\models\AllTimeCardsCurrentWeek;
+use app\models\AllTimeCardsPriorWeek;
+use app\models\AllApprovedTimeCardsCurrentWeek;
+use app\models\AllUnapprovedTimeCardsCurrentWeek;
 use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -29,6 +33,10 @@ class TimeCardController extends BaseActiveController
 				'class' => \yii\filters\VerbFilter::className(),
 				'actions' => [
 					'approve-time-cards'  => ['put'],
+					'view-all-time-cards-current-week' => ['get'],
+					'view-all-time-cards-prior-week' => ['get'],
+					'view-all-approved-time-cards-current-week' => ['get'],
+					'view-all-unapproved-time-cards-current-week' => ['get'],
 				],
 			],
 		];
@@ -49,6 +57,50 @@ class TimeCardController extends BaseActiveController
 		$response -> data = $timeCard;
 		
 		return $response;
+	}
+	
+	public function actionViewAllTimeCardsCurrentWeek()
+	{
+		$timecardArray = AllTimeCardsCurrentWeek::find()->all();
+		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timecardData;
+	}
+	
+	public function actionViewAllTimeCardsPriorWeek()
+	{
+		$timecardArray = AllTimeCardsPriorWeek::find()->all();
+		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timecardData;
+	}
+	
+	public function actionViewAllApprovedTimeCardsCurrentWeek()
+	{
+		$timecardArray = AllApprovedTimeCardsCurrentWeek::find()->all();
+		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timecardData;
+	}
+	
+	public function actionViewAllUnapprovedTimeCardsCurrentWeek()
+	{
+		$timecardArray = AllUnapprovedTimeCardsCurrentWeek::find()->all();
+		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timecardData;
+	}
+	
+	public function actionGetTimeCardCurrentWeek($id)
+	{
+		$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$id]);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timeCard;
 	}
 	
 	public function actionViewTimeEntries($id)
