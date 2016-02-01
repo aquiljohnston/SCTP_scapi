@@ -172,7 +172,7 @@ class TimeCardController extends BaseActiveController
 			{
 				$card-> TimeCardApprovedFlag = 1;
 				$card-> TimeCardApprovedBy = $approvedBy;
-				$card->update();
+				$card-> update();
 			}
 			$transaction->commit();
 			$response->setStatusCode(200);
