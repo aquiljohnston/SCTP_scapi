@@ -11,6 +11,7 @@ use app\models\AllTimeCardsPriorWeek;
 use app\models\AllApprovedTimeCardsCurrentWeek;
 use app\models\AllUnapprovedTimeCardsCurrentWeek;
 use app\controllers\BaseActiveController;
+use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -28,18 +29,26 @@ class TimeCardController extends BaseActiveController
 	
 	public function behaviors()
 	{
-		return [
-			'verbs' => [
-				'class' => \yii\filters\VerbFilter::className(),
-				'actions' => [
+		$behaviors = parent::behaviors();
+		//Implements Token Authentication to check for Auth Token in Json Header
+		$behaviors['authenticator'] = 
+		[
+			'class' => TokenAuth::className(),
+		];
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['delete'],
+					'update' => ['put'],
 					'approve-time-cards'  => ['put'],
 					'view-all-time-cards-current-week' => ['get'],
 					'view-all-time-cards-prior-week' => ['get'],
 					'view-all-approved-time-cards-current-week' => ['get'],
 					'view-all-unapproved-time-cards-current-week' => ['get'],
-				],
-			],
-		];
+                ],  
+            ];
+		return $behaviors;	
 	}
 	
 	public function actions()
@@ -100,7 +109,17 @@ class TimeCardController extends BaseActiveController
 		$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$id]);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timeCard;
+		if ($timeCard != null)
+		{
+			$response->setStatusCode(200);
+			$response->data = $timeCard;
+			return $response;
+		}
+		else
+		{
+			$response->setStatusCode(404);
+			return $response;
+		}
 	}
 	
 	public function actionViewTimeEntries($id)
