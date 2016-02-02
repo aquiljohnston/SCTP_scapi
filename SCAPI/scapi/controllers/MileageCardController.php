@@ -11,6 +11,7 @@ use app\models\AllMileageCardsPriorWeek;
 use app\models\AllApprovedMileageCardsCurrentWeek;
 use app\models\AllUnApprovedMileageCardsCurrentWeek;
 use app\controllers\BaseActiveController;
+use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -28,18 +29,26 @@ class MileageCardController extends BaseActiveController
 	
 	public function behaviors()
 	{
-		return [
-			'verbs' => [
-				'class' => \yii\filters\VerbFilter::className(),
-				'actions' => [
+		$behaviors = parent::behaviors();
+		//Implements Token Authentication to check for Auth Token in Json Header
+		$behaviors['authenticator'] = 
+		[
+			'class' => TokenAuth::className(),
+		];
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['delete'],
+					'update' => ['put'],
 					'approve-mileage-cards'  => ['put'],
 					'view-all-mileage-cards-current-week' => ['get'],
 					'view-all-mileage-cards-prior-week' => ['get'],
 					'view-all-approved-mileage-cards-current-week' => ['get'],
 					'view-all-unapproved-mileage-cards-current-week' => ['get'],
-				],
-			],
-		];
+                ],  
+            ];
+		return $behaviors;	
 	}
 	 
 	public function actions()
