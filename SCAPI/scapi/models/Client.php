@@ -8,6 +8,7 @@ use Yii;
  * This is the model class for table "ClientTb".
  *
  * @property integer $ClientID
+ * @property integer $ClientAccountID
  * @property string $ClientName
  * @property string $ClientContactTitle
  * @property string $ClientContactFName
@@ -49,7 +50,7 @@ class Client extends \yii\db\ActiveRecord
         return [
             [['ClientName'], 'required'],
             [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientCreatorUserID', 'ClientModifiedBy'], 'string'],
-            [['ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
+            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
             [['ClientCreateDate', 'ClientModifiedDate'], 'safe']
         ];
     }
@@ -61,6 +62,7 @@ class Client extends \yii\db\ActiveRecord
     {
         return [
             'ClientID' => 'Client ID',
+			'ClientAccountID' => 'Client Account ID',
             'ClientName' => 'Client Name',
             'ClientContactTitle' => 'Client Contact Title',
             'ClientContactFName' => 'Client Contact Fname',
