@@ -25,7 +25,7 @@ class ClientAccountsController extends BaseActiveController
 		
 		for($i=0; $i < $clientSize; $i++)
 		{
-			$namePairs[$clientAccounts[$i]->ClientAccountID]= $clientAccounts[$i]->ClientAccountName;
+			$namePairs[$clientAccounts[$i]->ClientAccountNumber]= $clientAccounts[$i]->ClientAccountName;
 		}
 			
 		
