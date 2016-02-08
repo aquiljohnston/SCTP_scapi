@@ -13,6 +13,7 @@ use Yii;
  * @property string $MileageEntryStartDate
  * @property string $MileageEntryEndDate
  * @property string $MileageEntryDate
+ * @property string $MileageEntryType
  * @property integer $MileageEntryMileageCardID
  * @property integer $MileageEntryActivityID
  * @property string $MileageEntryApprovedBy
@@ -43,7 +44,7 @@ class MileageEntry extends \yii\db\ActiveRecord
     {
         return [
             [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
-            [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus'], 'integer'],
+            [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus'], 'integer'],
             [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'string'],
             [['MileageEntryDate', 'MileageEntryStartDate', 'MileageEntryEndDate',  'MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
         ];
@@ -61,6 +62,7 @@ class MileageEntry extends \yii\db\ActiveRecord
 			'MileageEntryStartDate' => 'Mileage Entry Start Date',
 			'MileageEntryEndDate' => 'Mileage Entry End Date',
 			'MileageEntryDate' => 'Mileage Entry Date',
+			'MileageEntryType' => 'Mileage Entry Type',
             'MileageEntryMileageCardID' => 'Mileage Entry Mileage Card ID',
             'MileageEntryActivityID' => 'Mileage Entry Activity ID',
             'MileageEntryApprovedBy' => 'Mileage Entry Approved By',

@@ -185,7 +185,7 @@ class MileageCardController extends BaseActiveController
 			"Friday" => $fridayEntries,
 			"Saturday" => $saturdayEntries,
 		];
-		$dataArray["TimeEntries"] = [$dayArray];
+		$dataArray["MileageEntries"] = [$dayArray];
 		
 		$response -> format = Response::FORMAT_JSON;
 		$response -> data = $dataArray;
