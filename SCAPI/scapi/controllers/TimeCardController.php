@@ -30,7 +30,7 @@ class TimeCardController extends BaseActiveController
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
-		//Implements Token Authentication to check for Auth Token in Json Header
+		//Implements Token Authentication to check for Auth Token in Json  Header
 		$behaviors['authenticator'] = 
 		[
 			'class' => TokenAuth::className(),
