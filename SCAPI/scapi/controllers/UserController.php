@@ -7,6 +7,8 @@ use app\models\SCUser;
 use app\models\Project;
 use app\models\ProjectUser;
 use app\models\Key;
+use app\models\JobCode;
+use app\models\Equipment;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -193,24 +195,33 @@ class UserController extends BaseActiveController
 		$response->data = $projUser;
 	}
 	
-	public function actionDelete($id)
+	public function actionDelete()
 	{
-		//may need to add a try catch here in case of no content
-		//create response
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		//find user model
-		$user = SCUser::findOne($id);
-		//find associated key model
-		$key = Key::findOne($user->UserKey);
-		//delete user and key in that order
-		if($user->delete() && $key->delete())
-		{
-			$response->setStatusCode(204);
-		}
-		//response data
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
 		return $response;
 	}
+	
+	// public function actionDelete($id)
+	// {
+		// //may need to add a try catch here in case of no content
+		// //create response
+		// $response = Yii::$app->response;
+		// $response ->format = Response::FORMAT_JSON;
+		// //find user model
+		// $user = SCUser::findOne($id);
+		// //find associated key model
+		// $key = Key::findOne($user->UserKey);
+		// //delete user and key in that order
+		// if($user->delete() && $key->delete())
+		// {
+			// $response->setStatusCode(204);
+		// }
+		// //response data
+		// return $response;
+	// }
 
 	public function actionGetUserDropdowns()
 	{	
@@ -231,4 +242,8 @@ class UserController extends BaseActiveController
 		return $response;
 	}
 	
+	public function getMe($userID)
+	{
+		
+	}
 }

@@ -23,7 +23,17 @@ class ClientController extends BaseActiveController
 		$actions = parent::actions();
 		unset($actions['view']);
 		unset($actions['update']);
+		unset($actions['delete']);
 		return $actions;
+	}
+	
+	public function actionDelete()
+	{
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
+		return $response;
 	}
 	
 	public function actionView($id)
@@ -35,6 +45,7 @@ class ClientController extends BaseActiveController
 		
 		return $response;
 	}
+	
 	
 	public function actionCreate()
 	{
