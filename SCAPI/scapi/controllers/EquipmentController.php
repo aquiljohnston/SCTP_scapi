@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use Yii;
 use app\models\Equipment;
+use app\models\Project;
+use app\models\Client;
 use app\models\SCUser;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
@@ -27,7 +29,7 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionView($id)
     {
-		$equipment = Equipment::findOne($id);
+		$equipment = Equipment::findOne($id);		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $equipment;

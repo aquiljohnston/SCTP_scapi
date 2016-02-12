@@ -14,6 +14,21 @@ class ClientAccountsController extends BaseActiveController
 {
 	public $modelClass = 'app\models\ClientAccounts'; 
 	
+	public function actions()
+	{
+		$actions = parent::actions();
+		unset($actions['delete']);
+		return $actions;
+	}
+	
+	public function actionDelete()
+	{
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
+		return $response;
+	}
 	
 	//return a json containing pairs of ClientAccountIDs and ClientNames
 	public function actionGetClientAccountDropdowns()

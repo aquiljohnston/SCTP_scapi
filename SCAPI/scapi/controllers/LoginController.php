@@ -27,14 +27,14 @@ class LoginController extends ActiveController
      }
 	 */
 	 
-	 public function actions()
+	public function actions()
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
 		return $actions;
 	}
 		
-	  public function actionView($Username)
+	public function actionView($Username)
     {
 		$Login = Login::findOne($Username);
 		$response = Yii::$app->response;
