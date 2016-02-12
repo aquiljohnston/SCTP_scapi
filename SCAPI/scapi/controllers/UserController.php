@@ -242,8 +242,53 @@ class UserController extends BaseActiveController
 		return $response;
 	}
 	
-	public function getMe($userID)
+	public function actionGetMe($userID)
 	{
+		//get user
+		$user = SCUser::findOne($userID);
 		
+		//get equipment for user
+		$equipment = Equipment::find()
+			->where("EquipmentAssignedUserID = $userID")
+			->all();
+		
+		//get users realtionship to projects
+		$projectUser = ProjectUser::find()
+			->where("ProjUserUserID = $userID")
+			->all();
+
+		//get projects based on relationship
+		$projectUserLength = count($projectUser);
+		$projects  = [];
+		for($i=0; $i < $projectUserLength; $i++)
+		{
+			//get job codes for project, for now just getting all job codes
+			$jobCodes = JobCode::find()
+			->all();
+			$jobCodesArray = array_map(function ($model) {return $model->attributes;},$jobCodes);
+			$jobCodesLength = count($jobCodesArray);
+			for($j=0; $j < $jobCodesLength; $j++)
+			{
+				//get payroll code
+				$jobCodesArray[$j]["PayrollCode"] = "TODO";
+			}
+			$projectID = $projectUser[0]->ProjUserProjectID ;
+			$projectModel = Project::findOne($projectID);
+			$projectData["ProjectID"]= $projectModel->ProjectID;  
+			$projectData["ProjectName"]= $projectModel->ProjectName;  
+			$projectData["ProjectClientID"]= $projectModel->ProjectClientID;  
+			$projectData["JobCodes"]= $jobCodesArray; 
+			$projects[] = $projectData;
+		}
+		
+		//load data into array
+		$dataArray = [];
+		$dataArray["User"] = $user;
+		$dataArray["Projects"] = $projects;
+		$dataArray["Equipment"] = $equipment;
+		
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $dataArray;
 	}
 }
