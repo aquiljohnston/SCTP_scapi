@@ -7,6 +7,7 @@ use app\models\Equipment;
 use app\models\Project;
 use app\models\Client;
 use app\models\SCUser;
+use app\models\GetEquipmentByClientProjectVw;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -129,6 +130,16 @@ class EquipmentController extends BaseActiveController
 	public function actionViewAll()
 	{
 		$equipArray = Equipment::find()->all();
+		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $equipData;
+	}
+	
+	//return db view for equipment index
+	public function actionEquipmentView()
+	{
+		$equipArray = GetEquipmentByClientProjectVw::find()->all();
 		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
