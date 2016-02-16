@@ -10,11 +10,13 @@ use app\models\Key;
 use app\models\JobCode;
 use app\models\Equipment;
 use app\controllers\BaseActiveController;
+use yii\db\Connection;
 use yii\data\ActiveDataProvider;
-use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\Link;
+use yii\db\mssql\PDO;
 
 
 /**
@@ -87,6 +89,24 @@ class UserController extends BaseActiveController
 		
 		if($model-> save())
 		{
+			//run sp to create Time and Mileage cards for a new user
+			try
+			{
+				$userID = $model->UserID;
+				$connection = \Yii::$app->db;
+				$transaction = $connection-> beginTransaction();
+				$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForNewUserCatchErrors_proc :PARAMETER1");
+				$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				$timeCardCommand->execute();
+				$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForNewUserCatchErrors_proc :PARAMETER1");
+				$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				$mileageCardCommand->execute();
+				$transaction->commit();
+			}
+			catch(Exception $e)
+			{
+				$transaction->rollBack();
+			}
 			$response->setStatusCode(201);
 			$response->data = $model;
 		}
@@ -195,33 +215,33 @@ class UserController extends BaseActiveController
 		$response->data = $projUser;
 	}
 	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	// public function actionDelete($id)
+	// public function actionDelete()
 	// {
-		// //may need to add a try catch here in case of no content
-		// //create response
 		// $response = Yii::$app->response;
 		// $response ->format = Response::FORMAT_JSON;
-		// //find user model
-		// $user = SCUser::findOne($id);
-		// //find associated key model
-		// $key = Key::findOne($user->UserKey);
-		// //delete user and key in that order
-		// if($user->delete() && $key->delete())
-		// {
-			// $response->setStatusCode(204);
-		// }
-		// //response data
+		// $response->data = "Method Not Allowed";
+		// $response->setStatusCode(405);
 		// return $response;
 	// }
+	
+	public function actionDelete($id)
+	{
+		//may need to add a try catch here in case of no content
+		//create response
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		//find user model
+		$user = SCUser::findOne($id);
+		//find associated key model
+		$key = Key::findOne($user->UserKey);
+		//delete user and key in that order
+		if($user->delete() && $key->delete())
+		{
+			$response->setStatusCode(204);
+		}
+		//response data
+		return $response;
+	}
 
 	public function actionGetUserDropdowns()
 	{	
