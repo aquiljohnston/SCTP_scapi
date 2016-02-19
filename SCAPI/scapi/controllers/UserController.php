@@ -7,8 +7,9 @@ use app\models\SCUser;
 use app\models\Project;
 use app\models\ProjectUser;
 use app\models\Key;
-use app\models\JobCode;
+use app\models\ActivityCode;
 use app\models\Equipment;
+use app\models\PayCode;
 use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -283,21 +284,26 @@ class UserController extends BaseActiveController
 		for($i=0; $i < $projectUserLength; $i++)
 		{
 			//get job codes for project, for now just getting all job codes
-			$jobCodes = JobCode::find()
+			$activityCodes = ActivityCode::find()
 			->all();
-			$jobCodesArray = array_map(function ($model) {return $model->attributes;},$jobCodes);
-			$jobCodesLength = count($jobCodesArray);
-			for($j=0; $j < $jobCodesLength; $j++)
+			$activityCodesArray = array_map(function ($model) {return $model->attributes;},$activityCodes);
+			$activityCodesLength = count($activityCodesArray);
+			$payCodes = PayCode::find()
+			->all();
+			$payCodesArray = array_map(function ($model) {return $model->attributes;},$payCodes);
+			for($j=0; $j < $activityCodesLength; $j++)
 			{
 				//get payroll code
-				$jobCodesArray[$j]["PayrollCode"] = "TODO";
+				$activityCodesArray[$j]["PayrollCode"] = "TODO";
 			}
 			$projectID = $projectUser[0]->ProjUserProjectID ;
 			$projectModel = Project::findOne($projectID);
 			$projectData["ProjectID"]= $projectModel->ProjectID;  
 			$projectData["ProjectName"]= $projectModel->ProjectName;  
 			$projectData["ProjectClientID"]= $projectModel->ProjectClientID;  
-			$projectData["JobCodes"]= $jobCodesArray; 
+			$projectData["ActivityCodes"]= $activityCodesArray; 
+			$projectData["PayCodes"]= $payCodesArray; 
+			
 			$projects[] = $projectData;
 		}
 		
