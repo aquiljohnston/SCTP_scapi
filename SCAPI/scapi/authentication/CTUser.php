@@ -71,34 +71,35 @@ class CTUser extends User
 		$session = Yii::$app->getSession();
         // $id = $session->getHasSessionId() || $session->getIsActive() ? $session->get($this->idParam) : null;
 		
-		$auth = Auth::find()
+		if ($auth = Auth::find()
 						->where(['AuthToken' => $token])
-						->one();
-					if ($auth !== null)
-					{
-						$userID = $auth->AuthUserID;
-					}
-		Yii::trace('The current user id is'.$userID);
+						->one())
+		{
+			if ($auth !== null)
+			{
+				$userID = $auth->AuthUserID;
+			}
 
-        if ($userID === null) {
-            $identity = null;
-        } else {
-            /* @var $class IdentityInterface */
-            $class = $this->identityClass;
-            $identity = $class::findIdentity($userID);
-        }
+			if ($userID === null) {
+				$identity = null;
+			} else {
+				/* @var $class IdentityInterface */
+				$class = $this->identityClass;
+				$identity = $class::findIdentity($userID);
+			}
 
-        $this->setIdentity($identity);
+			$this->setIdentity($identity);
 
-        if ($identity !== null && ($this->authTimeout !== null || $this->absoluteAuthTimeout !== null)) {
-            $expire = $this->authTimeout !== null ? $session->get($this->authTimeoutParam) : null;
-            $expireAbsolute = $this->absoluteAuthTimeout !== null ? $session->get($this->absoluteAuthTimeoutParam) : null;
-            if ($expire !== null && $expire < time() || $expireAbsolute !== null && $expireAbsolute < time()) {
-				Yii::trace('AuthTimeout has expired and the user will now be logged out');
-				$this->logout(true, $userID);
-            } elseif ($this->authTimeout !== null) {
-                $session->set($this->authTimeoutParam, time() + $this->authTimeout);
-            }
-        }
+			if ($identity !== null && ($this->authTimeout !== null || $this->absoluteAuthTimeout !== null)) {
+				$expire = $this->authTimeout !== null ? $session->get($this->authTimeoutParam) : null;
+				$expireAbsolute = $this->absoluteAuthTimeout !== null ? $session->get($this->absoluteAuthTimeoutParam) : null;
+				if ($expire !== null && $expire < time() || $expireAbsolute !== null && $expireAbsolute < time()) {
+					Yii::trace('AuthTimeout has expired and the user will now be logged out');
+					$this->logout(true, $userID);
+				} elseif ($this->authTimeout !== null) {
+					$session->set($this->authTimeoutParam, time() + $this->authTimeout);
+				}
+			}
+		}
 	}
 }
