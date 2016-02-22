@@ -90,13 +90,13 @@ class NotificationController extends Controller
 			$mileageCardCount = count($mileageCards);
 			
 			$equipmentData["Project"]= $projectName;
-			$equipmentData["Total"]= $equipmentCount;
+			$equipmentData["Number of Items"]= $equipmentCount;
 			
 			$timeCardData["Project"]= $projectName;
-			$timeCardData["Total"]= $timeCardCount;
+			$timeCardData["Number of Items"]= $timeCardCount;
 			
 			$mileageCardData["Project"]= $projectName;
-			$mileageCardData["Total"]= $mileageCardCount;
+			$mileageCardData["Number of Items"]= $mileageCardCount;
 
 			$notifications["equipment"][] = $equipmentData;
 			$notifications["timeCards"][] = $timeCardData;
@@ -108,13 +108,13 @@ class NotificationController extends Controller
 		}
 		
 		$equipmentData["Project"]= "Total";
-		$equipmentData["Total"]= $equipmentTotal;
+		$equipmentData["Number of Items"]= $equipmentTotal;
 		
 		$timeCardData["Project"]= "Total";
-		$timeCardData["Total"]= $timeCardTotal;
+		$timeCardData["Number of Items"]= $timeCardTotal;
 		
 		$mileageCardData["Project"]= "Total";
-		$mileageCardData["Total"]= $mileageCardTotal;
+		$mileageCardData["Number of Items"]= $mileageCardTotal;
 		
 		$notifications["equipment"][] = $equipmentData;
 		$notifications["timeCards"][] = $timeCardData;
