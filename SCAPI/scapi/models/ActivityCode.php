@@ -10,6 +10,10 @@ use Yii;
  * @property integer $ActivityCodeID
  * @property string $ActivityCodeType
  * @property string $ActivityCodeDescription
+ * @property string $ActivityCodeCreateDate
+ * @property string $ActivityCodeCreatedBy
+ * @property string $ActivityModifiedDate
+ * @property string $ActivityModifiedBy
  */
 class ActivityCode extends \yii\db\ActiveRecord
 {
@@ -27,9 +31,8 @@ class ActivityCode extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['ActivityCodeID'], 'required'],
-            [['ActivityCodeID'], 'integer'],
-            [['ActivityCodeType', 'ActivityCodeDescription'], 'string']
+            [['ActivityCodeType', 'ActivityCodeDescription', 'ActivityCodeCreatedBy', 'ActivityModifiedBy'], 'string'],
+            [['ActivityCodeCreateDate', 'ActivityModifiedDate'], 'safe']
         ];
     }
 
@@ -42,6 +45,10 @@ class ActivityCode extends \yii\db\ActiveRecord
             'ActivityCodeID' => 'Activity Code ID',
             'ActivityCodeType' => 'Activity Code Type',
             'ActivityCodeDescription' => 'Activity Code Description',
+            'ActivityCodeCreateDate' => 'Activity Code Create Date',
+            'ActivityCodeCreatedBy' => 'Activity Code Created By',
+            'ActivityModifiedDate' => 'Activity Modified Date',
+            'ActivityModifiedBy' => 'Activity Modified By',
         ];
     }
 }
