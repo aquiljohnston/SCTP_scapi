@@ -271,7 +271,7 @@ class TimeCardController extends BaseActiveController
 		
 			foreach($approvedCards as $card)
 			{
-				$card-> TimeCardApprovedFlag = 1;
+				$card-> TimeCardApprovedFlag = "yes";
 				$card-> TimeCardApprovedBy = $approvedBy;
 				$card-> update();
 			}
