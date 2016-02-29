@@ -9,6 +9,7 @@ use app\models\Client;
 use app\models\SCUser;
 use app\models\GetEquipmentByClientProjectVw;
 use app\controllers\BaseActiveController;
+use app\authentication\TokenAuth;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -19,7 +20,25 @@ class EquipmentController extends BaseActiveController
 {
 	public $modelClass = 'app\models\Equipment'; 
 	public $equipment;
-	 
+	
+	public function behaviors()
+	{
+		$behaviors = parent::behaviors();
+		//Implements Token Authentication to check for Auth Token in Json  Header
+		$behaviors['authenticator'] = 
+		[
+			'class' => TokenAuth::className(),
+		];
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+					'accept-equipment'  => ['put']
+                ],  
+            ];
+		return $behaviors;	
+	}
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -144,5 +163,62 @@ class EquipmentController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $equipData;
+	}
+	
+	public function actionAcceptEquipment()
+	{
+		//capture put body
+		$put = file_get_contents("php://input");
+		$data = json_decode($put, true);
+		
+		//create response
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		//parse json
+		$approvedBy = $data["approvedByID"];
+		$equipmentIDs = $data["equipmentIDArray"];
+		
+		//get timecards
+		foreach($equipmentIDs as $id)
+		{
+			$approvedEquipment[]= Equipment::findOne($id);
+		}
+		
+		//get user's name by ID
+		if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
+		{
+			$fname = $user->UserFirstName;
+			$lname = $user->UserLastName;
+			$approvedBy = $lname.", ".$fname;
+		}
+		
+		//try to approve time cards
+		try
+		{
+			//create transaction
+			$connection = \Yii::$app->db;
+			$transaction = $connection->beginTransaction(); 
+		
+			foreach($approvedEquipment as $equipment)
+			{
+				$equipment-> EquipmentAcceptedFlag = 1;
+				$equipment-> EquipmentAcceptedBy = $approvedBy;
+				$equipment-> update();
+			}
+			$transaction->commit();
+			$response->setStatusCode(200);
+			$response->data = $approvedEquipment; 
+			return $response;
+		}
+		//if transaction fails rollback changes and send error
+		catch(Exception $e)
+		{
+			$transaction->rollBack();
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+			return $response;
+			
+		}
 	}
 }
