@@ -14,7 +14,7 @@ use Yii;
  * @property string $MileageEndDate
  * @property integer $MileageCardBusinessMiles
  * @property integer $MileageCardPersonalMiles
- * @property integer $MileageCardApprovedFlag
+ * @property string $MileageCardApprovedFlag
  * @property string $MileageCardApprovedBy
  * @property string $MileageCardSupervisorName
  * @property string $MileageCardCreateDate
@@ -42,8 +42,8 @@ class MileageCard extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['MileageCardTechID', 'MileageCardProjectID', 'MileageCardApprovedFlag', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles'], 'integer'],
-            [['MileageCardApprovedBy', 'MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy'], 'string'],
+            [['MileageCardTechID', 'MileageCardProjectID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles'], 'integer'],
+            [['MileageCardApprovedBy', 'MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy', 'MileageCardApprovedFlag'], 'string'],
             [['MileageStartDate', 'MileageEndDate', 'MileageCardCreateDate', 'MileageCardModifiedDate'], 'safe']
         ];
     }
