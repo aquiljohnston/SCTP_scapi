@@ -10,6 +10,10 @@ use Yii;
  * @property integer $PayCodeID
  * @property string $PayCodeType
  * @property string $PayCodeDescription
+ * @property string $PayCodeCreateDate
+ * @property string $PayCodeCreatedBy
+ * @property string $PayCodeModifiedDate
+ * @property string $PayCodeModifiedBy
  */
 class PayCode extends \yii\db\ActiveRecord
 {
@@ -27,8 +31,8 @@ class PayCode extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['PayCodeID'], 'integer'],
-            [['PayCodeType', 'PayCodeDescription'], 'string']
+            [['PayCodeType', 'PayCodeDescription', 'PayCodeCreatedBy', 'PayCodeModifiedBy'], 'string'],
+            [['PayCodeCreateDate', 'PayCodeModifiedDate'], 'safe']
         ];
     }
 
@@ -41,6 +45,10 @@ class PayCode extends \yii\db\ActiveRecord
             'PayCodeID' => 'Pay Code ID',
             'PayCodeType' => 'Pay Code Type',
             'PayCodeDescription' => 'Pay Code Description',
+            'PayCodeCreateDate' => 'Pay Code Create Date',
+            'PayCodeCreatedBy' => 'Pay Code Created By',
+            'PayCodeModifiedDate' => 'Pay Code Modified Date',
+            'PayCodeModifiedBy' => 'Pay Code Modified By',
         ];
     }
 }
