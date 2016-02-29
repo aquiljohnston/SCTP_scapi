@@ -25,6 +25,8 @@ use Yii;
  * @property string $EquipmentAnnualCalibrationDate
  * @property string $EquipmentAnnualCalibrationStatus
  * @property string $EquipmentAssignedUserID
+ * @property integer $EquipmentAcceptedFlag
+ * @property string $EquipmentAcceptedBy
  * @property string $EquipmentCreatedByUser
  * @property string $EquipmentCreateDate
  * @property string $EquipmentModifiedBy
@@ -49,8 +51,8 @@ class Equipment extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'string'],
-            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID'], 'integer'],
+            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedBy', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'string'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentAcceptedFlag'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
     }
@@ -79,6 +81,8 @@ class Equipment extends \yii\db\ActiveRecord
             'EquipmentAnnualCalibrationDate' => 'Equipment Annual Calibration Date',
             'EquipmentAnnualCalibrationStatus' => 'Equipment Annual Calibration Status',
             'EquipmentAssignedUserID' => 'Equipment Assigned User ID',
+			'EquipmentAcceptedFlag' => 'Equipment Accepted Flag',
+			'EquipmentAcceptedBy' => 'Equipment Accepted By',
             'EquipmentCreatedByUser' => 'Equipment Created By User',
             'EquipmentCreateDate' => 'Equipment Create Date',
             'EquipmentModifiedBy' => 'Equipment Modified By',
