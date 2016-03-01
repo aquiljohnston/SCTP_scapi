@@ -75,10 +75,7 @@ class CTUser extends User
 						->where(['AuthToken' => $token])
 						->one())
 		{
-			if ($auth !== null)
-			{
-				$userID = $auth->AuthUserID;
-			}
+			$userID = $auth->AuthUserID;
 
 			if ($userID === null) {
 				$identity = null;
@@ -100,6 +97,10 @@ class CTUser extends User
 					$session->set($this->authTimeoutParam, time() + $this->authTimeout);
 				}
 			}
+		}
+		else
+		{
+			//TODO deny access and send response
 		}
 	}
 }
