@@ -29,7 +29,7 @@ class ActivityCodeController extends BaseActiveController
 		
 		for($i=0; $i < $codesSize; $i++)
 		{
-			$namePairs[$codes[$i]->ActivityCodeType]= $codes[$i]->ActivityCodeType;
+			$namePairs[$codes[$i]->ActivityCodeID]= $codes[$i]->ActivityCodeType;
 		}
 			
 		
