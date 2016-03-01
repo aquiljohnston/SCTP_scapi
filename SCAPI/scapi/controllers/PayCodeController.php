@@ -29,7 +29,7 @@ class PayCodeController extends BaseActiveController
 		
 		for($i=0; $i < $codesSize; $i++)
 		{
-			$namePairs[$codes[$i]->PayCodeType]= $codes[$i]->PayCodeType;
+			$namePairs[$codes[$i]->PayCodeID]= $codes[$i]->PayCodeType;
 		}
 			
 		
