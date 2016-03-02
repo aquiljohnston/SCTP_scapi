@@ -12,13 +12,13 @@ use Yii;
  * @property string $ActivityEndTime
  * @property string $ActivityTitle
  * @property string $ActivityBillingCode
- * @property integer $ActivityJobCodeID
+ * @property integer $ActivityCode
+ * @property integer $ActivityPayCode
  * @property string $ActivityCreateDate
  * @property string $ActivityCreatedBy
  * @property string $ActivityModifiedDate
  * @property string $ActivityModifiedBy
  *
- * @property JobCodeTb $activityJobCode
  * @property MileageEntryTb[] $mileageEntryTbs
  * @property TimeEntryTb[] $timeEntryTbs
  */
@@ -40,7 +40,7 @@ class Activity extends \yii\db\ActiveRecord
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate'], 'safe'],
             [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedBy', 'ActivityModifiedBy'], 'string'],
-            [['ActivityJobCodeID'], 'integer']
+            [['ActivityCode', 'ActivityPayCode'], 'integer']
         ];
     }
 
@@ -55,20 +55,13 @@ class Activity extends \yii\db\ActiveRecord
             'ActivityEndTime' => 'Activity End Time',
             'ActivityTitle' => 'Activity Title',
             'ActivityBillingCode' => 'Activity Billing Code',
-            'ActivityJobCodeID' => 'Activity Job Code ID',
+            'ActivityCode' => 'Activity Code',
+            'ActivityPayCode' => 'Activity Pay Code',
             'ActivityCreateDate' => 'Activity Create Date',
             'ActivityCreatedBy' => 'Activity Created By',
             'ActivityModifiedDate' => 'Activity Modified Date',
             'ActivityModifiedBy' => 'Activity Modified By',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getActivityJobCode()
-    {
-        return $this->hasOne(JobCodeTb::className(), ['JobCodeID' => 'ActivityJobCodeID']);
     }
 
     /**
