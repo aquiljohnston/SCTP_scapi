@@ -14,7 +14,7 @@ use Yii;
  * @property string $Type
  * @property string $Client Name
  * @property string $Project Name
- * @property integer $Accepted Flag
+ * @property string $Accepted Flag
  */
 class GetEquipmentByClientProjectVw extends \yii\db\ActiveRecord
 {
@@ -33,8 +33,8 @@ class GetEquipmentByClientProjectVw extends \yii\db\ActiveRecord
     {
         return [
             [['EquipmentID'], 'required'],
-            [['EquipmentID', 'Accepted Flag'], 'integer'],
-            [['Name', 'Serial Number', 'Details', 'Type', 'Client Name', 'Project Name'], 'string']
+            [['EquipmentID'], 'integer'],
+            [['Name', 'Serial Number', 'Details', 'Type', 'Client Name', 'Project Name', 'Accepted Flag'], 'string']
         ];
     }
 
