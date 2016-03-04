@@ -176,7 +176,7 @@ class EquipmentController extends BaseActiveController
 		$response ->format = Response::FORMAT_JSON;
 		
 		//parse json
-		$approvedBy = $data["approvedByID"];
+		$acceptedBy = $data["acceptedByID"];
 		$equipmentIDs = $data["equipmentIDArray"];
 		
 		//get timecards
@@ -186,11 +186,11 @@ class EquipmentController extends BaseActiveController
 		}
 		
 		//get user's name by ID
-		if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
+		if ($user = SCUser::findOne(['UserID'=>$acceptedBy]))
 		{
 			$fname = $user->UserFirstName;
 			$lname = $user->UserLastName;
-			$approvedBy = $lname.", ".$fname;
+			$acceptedBy = $lname.", ".$fname;
 		}
 		
 		//try to approve time cards
@@ -203,7 +203,7 @@ class EquipmentController extends BaseActiveController
 			foreach($approvedEquipment as $equipment)
 			{
 				$equipment-> EquipmentAcceptedFlag = 1;
-				$equipment-> EquipmentAcceptedBy = $approvedBy;
+				$equipment-> EquipmentAcceptedBy = $acceptedBy;
 				$equipment-> update();
 			}
 			$transaction->commit();
