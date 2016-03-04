@@ -277,4 +277,22 @@ class MileageCardController extends BaseActiveController
 			
 		}
 	}
+	
+	public function actionGetMileageCardCurrentWeek($id)
+	{
+		$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$id]);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		if ($mileageCard != null)
+		{
+			$response->setStatusCode(200);
+			$response->data = $mileageCard;
+			return $response;
+		}
+		else
+		{
+			$response->setStatusCode(404);
+			return $response;
+		}
+	}
 }
