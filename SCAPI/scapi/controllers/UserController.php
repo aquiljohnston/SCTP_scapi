@@ -27,6 +27,21 @@ class UserController extends BaseActiveController
 {
 	public $modelClass = 'app\models\SCUser'; 
 	
+	public function behaviors()
+	{
+		$behaviors = parent::behaviors();
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+					'get-user-dropdowns'  => ['get'],
+					'get-me'  => ['get'],
+					'get-all-projects'  => ['get']
+                ],  
+            ];
+		return $behaviors;	
+	}
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -297,7 +312,7 @@ class UserController extends BaseActiveController
 				//get payroll code
 				$activityCodesArray[$j]["PayrollCode"] = "TODO";
 			}
-			$projectID = $projectUser[0]->ProjUserProjectID ;
+			$projectID = $projectUser[$i]->ProjUserProjectID ;
 			$projectModel = Project::findOne($projectID);
 			$projectData["ProjectID"]= $projectModel->ProjectID;  
 			$projectData["ProjectName"]= $projectModel->ProjectName;  
@@ -318,4 +333,36 @@ class UserController extends BaseActiveController
 		$response -> format = Response::FORMAT_JSON;
 		$response -> data = $dataArray;
 	}
+	
+	// Route: getAllProjects
+	// Param: userID
+	// Client: clientID
+	// Returns: JSON of:
+	// Project Name, Project ID, Client ID]
+	public function actionGetAllProjects($userID)
+	{
+		//get users realtionship to projects
+		$projectUser = ProjectUser::find()
+			->where("ProjUserUserID = $userID")
+			->all();
+			
+		//get projects based on relationship
+		$projectUserLength = count($projectUser);
+		$projects  = [];
+		for($i=0; $i < $projectUserLength; $i++)
+		{
+			$projectID = $projectUser[$i]->ProjUserProjectID ;
+			$projectModel = Project::findOne($projectID);
+			$projectData["ProjectID"]= $projectModel->ProjectID;  
+			$projectData["ProjectName"]= $projectModel->ProjectName;  
+			$projectData["ProjectClientID"]= $projectModel->ProjectClientID;  
+			
+			$projects[] = $projectData;
+		}
+		
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $projects;
+	}
+
 }
