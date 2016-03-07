@@ -25,7 +25,7 @@ use Yii;
  * @property string $EquipmentAnnualCalibrationDate
  * @property string $EquipmentAnnualCalibrationStatus
  * @property string $EquipmentAssignedUserID
- * @property integer $EquipmentAcceptedFlag
+ * @property string $EquipmentAcceptedFlag
  * @property string $EquipmentAcceptedBy
  * @property string $EquipmentCreatedByUser
  * @property string $EquipmentCreateDate
@@ -51,8 +51,8 @@ class Equipment extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedBy', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'string'],
-            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentAcceptedFlag'], 'integer'],
+            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedBy', 'EquipmentCreatedByUser', 'EquipmentModifiedBy', 'EquipmentAcceptedFlag'], 'string'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
     }
