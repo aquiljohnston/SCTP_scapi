@@ -35,7 +35,7 @@ use Yii;
  * @property ClientTb $equipmentClient
  * @property UserTb $equipmentAssignedUser
  */
-class Equipment extends \yii\db\ActiveRecord
+class Equipment extends BaseActiveRecord
 {
     /**
      * @inheritdoc

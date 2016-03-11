@@ -49,6 +49,10 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionView($id)
     {
+		$headers = getallheaders();
+		//Yii::trace($headers);
+		//Yii::trace($headers['X-Client']);
+		Equipment::setClient($headers['X-Client']);
 		$equipment = Equipment::findOne($id);		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
