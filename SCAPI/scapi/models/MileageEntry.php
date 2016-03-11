@@ -8,6 +8,7 @@ use Yii;
  * This is the model class for table "MileageEntryTb".
  *
  * @property string $MileageEntryID
+ * @property string $MileageEntryUserID
  * @property string $MileageEntryStartingMileage
  * @property string $MileageEntryEndingMileage
  * @property string $MileageEntryStartDate
@@ -44,7 +45,7 @@ class MileageEntry extends \yii\db\ActiveRecord
     {
         return [
             [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
-            [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus'], 'integer'],
+            [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus', 'MileageEntryUserID'], 'integer'],
             [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'string'],
             [['MileageEntryDate', 'MileageEntryStartDate', 'MileageEntryEndDate',  'MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
         ];
@@ -57,6 +58,7 @@ class MileageEntry extends \yii\db\ActiveRecord
     {
         return [
             'MileageEntryID' => 'Mileage Entry ID',
+			'MileageEntryUserID' => 'Mileage Entry User ID',
             'MileageEntryStartingMileage' => 'Mileage Entry Starting Mileage',
             'MileageEntryEndingMileage' => 'Mileage Entry Ending Mileage',
 			'MileageEntryStartDate' => 'Mileage Entry Start Date',

@@ -11,8 +11,7 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 
 class BaseActiveController extends ActiveController
-{
-	
+{	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -24,19 +23,19 @@ class BaseActiveController extends ActiveController
     {
 		$behaviors = parent::behaviors();
 		//Implements Token Authentication to check for Auth Token in Json Header
-		$behaviors['authenticator'] = 
+		$behaviors['authenticator'] =
 		[
 			'class' => TokenAuth::className(),
 		];
-		$behaviors['verbs'] = 
+		$behaviors['verbs'] =
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['delete'],
 					'update' => ['put'],
-                ],  
+                ],
             ];
-		return $behaviors;		
+		return $behaviors;
 	}
 
 	public function actionCreate()
@@ -44,12 +43,12 @@ class BaseActiveController extends ActiveController
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 
-		$model = new $this->modelClass(); 
-		$model->attributes = $data;  
+		$model = new $this->modelClass();
+		$model->attributes = $data;
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $model; 
+		$response->data = $model;
 		
 		if($model-> save())
 		{
@@ -65,7 +64,7 @@ class BaseActiveController extends ActiveController
 	
 	public function actionGetAll()
 	{
-		$modelClass = $this->modelClass;	
+		$modelClass = $this->modelClass;
         $models = $modelClass::find()
 			->all();
 		
