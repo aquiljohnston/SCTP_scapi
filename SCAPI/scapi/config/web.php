@@ -45,8 +45,22 @@ $config = [
                 ],
             ],
         ],
-        'db' => require(__DIR__ . '/db.php'),
-		
+        //'db' => require(__DIR__ . '/db.php'),
+		'db' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CometTrackerDb',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'scanaQADb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CT_SCANAQADb',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+	
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,
