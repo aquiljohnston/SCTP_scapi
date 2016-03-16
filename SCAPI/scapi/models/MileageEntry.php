@@ -28,7 +28,7 @@ use Yii;
  * @property ActivityTb $mileageEntryActivity
  * @property MileageCardTb $mileageEntryMileageCard
  */
-class MileageEntry extends \yii\db\ActiveRecord
+class MileageEntry extends BaseActiveRecord
 {
     /**
      * @inheritdoc

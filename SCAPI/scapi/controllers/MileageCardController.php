@@ -68,6 +68,10 @@ class MileageCardController extends BaseActiveController
      */
     public function actionView($id)
     {
+		//set db target
+		$headers = getallheaders();
+		MileageCard::setClient($headers['X-Client']);
+		
         $mileageCard = MileageCard::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -105,6 +109,10 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionViewAllMileageCardsCurrentWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$mileagecardArray = AllMileageCardsCurrentWeek::find()->all();
 		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
 		$response = Yii::$app->response;
@@ -114,6 +122,10 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionViewAllMileageCardsPriorWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllMileageCardsPriorWeek::setClient($headers['X-Client']);
+		
 		$mileagecardArray = AllMileageCardsPriorWeek::find()->all();
 		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
 		$response = Yii::$app->response;
@@ -123,6 +135,10 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionViewAllApprovedMileageCardsCurrentWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$mileagecardArray = AllApprovedMileageCardsCurrentWeek::find()->all();
 		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
 		$response = Yii::$app->response;
@@ -132,6 +148,10 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionViewAllUnapprovedMileageCardsCurrentWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllUnApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$mileagecardArray = AllUnApprovedMileageCardsCurrentWeek::find()->all();
 		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
 		$response = Yii::$app->response;
@@ -141,6 +161,11 @@ class MileageCardController extends BaseActiveController
 
 	public function actionViewMileageEntries($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		MileageCard::setClient($headers['X-Client']);
+		MileageEntry::setClient($headers['X-Client']);
+		
 		$response = Yii::$app ->response;
 		$dataArray = [];
 		$mileageCard = MileageCard::findOne($id);
@@ -223,6 +248,11 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionApproveMileageCards()
 	{
+		//set db target
+		$headers = getallheaders();
+		MileageCard::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		//capture put body
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
@@ -280,6 +310,10 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionGetMileageCardCurrentWeek($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$id]);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;

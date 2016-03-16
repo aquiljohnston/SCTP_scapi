@@ -32,7 +32,7 @@ use Yii;
  *
  * @property ProjectTb $projectTb
  */
-class Client extends \yii\db\ActiveRecord
+class Client extends BaseActiveRecord
 {
     /**
      * @inheritdoc

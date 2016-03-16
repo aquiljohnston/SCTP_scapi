@@ -25,7 +25,7 @@ use Yii;
  * @property ProjectOQRequirementstb[] $projectOQRequirementstbs
  * @property ClientTb $projectClient
  */
-class Project extends \yii\db\ActiveRecord
+class Project extends BaseActiveRecord
 {
     /**
      * @inheritdoc

@@ -47,6 +47,10 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		MileageEntry::setClient($headers['X-Client']);
+		
 		//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
 		$mileage = MileageEntry::findOne($id);
 		$response = Yii::$app->response;
@@ -58,6 +62,11 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		MileageEntry::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 

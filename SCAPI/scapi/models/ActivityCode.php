@@ -15,7 +15,7 @@ use Yii;
  * @property string $ActivityModifiedDate
  * @property string $ActivityModifiedBy
  */
-class ActivityCode extends \yii\db\ActiveRecord
+class ActivityCode extends BaseActiveRecord
 {
     /**
      * @inheritdoc

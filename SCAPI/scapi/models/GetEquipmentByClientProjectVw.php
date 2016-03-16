@@ -16,7 +16,7 @@ use Yii;
  * @property string $Project Name
  * @property string $Accepted Flag
  */
-class GetEquipmentByClientProjectVw extends \yii\db\ActiveRecord
+class GetEquipmentByClientProjectVw extends BaseActiveRecord
 {
     /**
      * @inheritdoc

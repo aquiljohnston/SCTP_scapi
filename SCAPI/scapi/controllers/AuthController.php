@@ -28,46 +28,67 @@ class AuthController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		$activity = Activity::findOne($id);
+		//set db target
+		$headers = getallheaders();
+		Activity::setClient($headers['X-Client']);
+		
+		$auth = Auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $activity;
+		$response->data = $auth;
 		
 		return $response;
 	}
 	
 	public function actionCreate($id)
 	{
-		$activity = Activity::findOne($id);
+		//set db target
+		$headers = getallheaders();
+		Auth::setClient($headers['X-Client']);
+		
+		$auth = Auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $activity;
+		$response->data = $auth;
 		
 		return $response;
 	}
 	
 	public function actionUpdate($id)
 	{
-		$activity = Activity::findOne($id);
+		//set db target
+		$headers = getallheaders();
+		Auth::setClient($headers['X-Client']);
+		
+		$auth = auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $activity;
+		$response->data = $auth;
 		
 		return $response;
 	}
 	
 	public function actionDelete($id)
 	{
-		$activity = Activity::findOne($id);
+		//set db target
+		$headers = getallheaders();
+		Auth::setClient($headers['X-Client']);
+		
+		$auth = Auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $activity;
+		$response->data = $Auth;
 		
 		return $response;
 	}
 	
 	public function actionGetUserByToken($token)
     {
+		//set db target
+		$headers = getallheaders();
+		Auth::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$auth = Auth::findOne(['AuthToken'=>$token]);
 		$userID = $auth->AuthUserID;
 		$user = SCUser::findOne($userID);
@@ -80,6 +101,10 @@ class AuthController extends BaseActiveController
 	
 	public function actionValidateAuthKey($token)
 	{
+		//set db target
+		$headers = getallheaders();
+		Auth::setClient($headers['X-Client']);
+		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		if($auth = Auth::findOne(['AuthToken'=>$token]))

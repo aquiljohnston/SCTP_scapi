@@ -19,7 +19,7 @@ use Yii;
  *
  * @property ActivityTb[] $activityTbs
  */
-class JobCode extends \yii\db\ActiveRecord
+class JobCode extends BaseActiveRecord
 {
     /**
      * @inheritdoc

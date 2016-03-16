@@ -22,6 +22,10 @@ class ActivityCodeController extends BaseActiveController
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetCodeDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		ActivityCode::setClient($headers['X-Client']);
+	
         $codes = ActivityCode::find()
 			->all();
 		$namePairs = [];

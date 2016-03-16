@@ -53,6 +53,11 @@ class UserController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Key::setClient($headers['X-Client']);
+		
 		//create response
 		$response = Yii::$app->response;
 		
@@ -93,7 +98,7 @@ class UserController extends BaseActiveController
 		$model->attributes = $data;  
 		
 		//created by
-		if ($user = SCUSer::findOne(['UserID'=>$model->UserCreatedBy]))
+		if ($user = SCUser::findOne(['UserID'=>$model->UserCreatedBy]))
 		{
 			$fname = $user->UserFirstName;
 			$lname = $user->UserLastName;
@@ -109,7 +114,7 @@ class UserController extends BaseActiveController
 			try
 			{
 				$userID = $model->UserID;
-				$connection = \Yii::$app->db;
+				$connection = SCUser::getDb();
 				$transaction = $connection-> beginTransaction();
 				$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForNewUserCatchErrors_proc :PARAMETER1");
 				$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
@@ -136,11 +141,16 @@ class UserController extends BaseActiveController
 	
 	public function actionUpdate($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Key::setClient($headers['X-Client']);
+		
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
 		
 		//get model to be updated
-		$model = SCUSer::findOne($id);
+		$model = SCUser::findOne($id);
 		
 		//iv and key for openssl
 		$iv = "abcdefghijklmnop";
@@ -206,6 +216,10 @@ class UserController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		
 		//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
 		$user = SCUser::findOne($id);
 		$response = Yii::$app->response;
@@ -217,6 +231,12 @@ class UserController extends BaseActiveController
 
 	public function actionAddUserToProject($userID,$projectID)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Project::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
 		$user = SCUser::findOne($userID);
 		
 		$project = Project::findOne($projectID);
@@ -261,6 +281,10 @@ class UserController extends BaseActiveController
 
 	public function actionGetUserDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+	
         $users = SCUser::find()
 			->all();
 		$namePairs = [];
@@ -280,6 +304,15 @@ class UserController extends BaseActiveController
 	
 	public function actionGetMe($userID)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Project::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		Equipment::setClient($headers['X-Client']);
+		ActivityCode::setClient($headers['X-Client']);
+		PayCode::setClient($headers['X-Client']);
+		
 		//get user
 		$user = SCUser::findOne($userID);
 		
@@ -341,6 +374,12 @@ class UserController extends BaseActiveController
 	// Project Name, Project ID, Client ID]
 	public function actionGetAllProjects($userID)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Project::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
 		//get users realtionship to projects
 		$projectUser = ProjectUser::find()
 			->where("ProjUserUserID = $userID")

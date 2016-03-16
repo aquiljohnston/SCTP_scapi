@@ -19,7 +19,7 @@ use Yii;
  * @property string $TimeCardApproved
  * @property string $UserStatus
  */
-class AllUnapprovedTimeCardsCurrentWeek extends \yii\db\ActiveRecord
+class AllUnapprovedTimeCardsCurrentWeek extends BaseActiveRecord
 {
     /**
      * @inheritdoc

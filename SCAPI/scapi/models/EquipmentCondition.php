@@ -11,7 +11,7 @@ use Yii;
  * @property string $EquipmentCondition
  * @property string $EquipmentConditionDescription
  */
-class EquipmentCondition extends \yii\db\ActiveRecord
+class EquipmentCondition extends BaseActiveRecord
 {
     /**
      * @inheritdoc

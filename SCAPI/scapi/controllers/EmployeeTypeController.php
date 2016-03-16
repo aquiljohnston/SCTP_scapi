@@ -22,6 +22,10 @@ class EmployeeTypeController extends BaseActiveController
 	//return a json containing pairs of EmployeeTypes
 	public function actionGetTypeDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		EmployeeType::setClient($headers['X-Client']);
+	
         $types = EmployeeType::find()
 			->all();
 		$namePairs = [];

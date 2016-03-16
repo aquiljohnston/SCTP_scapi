@@ -11,7 +11,7 @@ use Yii;
  * @property string $EmployeeType
  * @property string $EmployeeTypeDescription
  */
-class EmployeeType extends \yii\db\ActiveRecord
+class EmployeeType extends BaseActiveRecord
 {
     /**
      * @inheritdoc

@@ -18,7 +18,7 @@ use Yii;
  * @property string $AppRoleModifiedDate
  * @property string $AppRoleModifiedBy
  */
-class AppRoles extends \yii\db\ActiveRecord
+class AppRoles extends BaseActiveRecord
 {
     /**
      * @inheritdoc

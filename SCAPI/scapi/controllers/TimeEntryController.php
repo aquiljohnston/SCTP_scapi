@@ -47,6 +47,10 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		TimeEntry::setClient($headers['X-Client']);
+		
 		$timeEntry = TimeEntry::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -57,6 +61,11 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		TimeEntry::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 
@@ -92,6 +101,10 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionGetEntriesByTimeCard($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		TimeEntry::setClient($headers['X-Client']);
+		
 		$entriesArray = TimeEntry::findAll(['TimeEntryTimeCardID'=>$id]);
 		$entryData = array_map(function ($model) {return $model->attributes;},$entriesArray);
 		$response = Yii::$app->response;

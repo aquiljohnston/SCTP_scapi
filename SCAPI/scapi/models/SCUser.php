@@ -33,7 +33,7 @@ use app\models\Auth;
  * @property ProjectUserTb[] $projectUserTbs
  * @property KeyTb $userKey
  */
-class SCUser extends \yii\db\ActiveRecord  implements IdentityInterface
+class SCUser extends BaseActiveRecord  implements IdentityInterface
 {
     /**
      * @inheritdoc

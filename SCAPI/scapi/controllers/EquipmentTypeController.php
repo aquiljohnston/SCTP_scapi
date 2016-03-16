@@ -22,6 +22,10 @@ class EquipmentTypeController extends BaseActiveController
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetTypeDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		EquipmentType::setClient($headers['X-Client']);
+	
         $types = EquipmentType::find()
 			->all();
 		$namePairs = [];

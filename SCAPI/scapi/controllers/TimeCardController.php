@@ -90,6 +90,10 @@ class TimeCardController extends BaseActiveController
 	
     public function actionView($id)
     {
+		//set db target
+		$headers = getallheaders();
+		TimeCard::setClient($headers['X-Client']);
+		
 		$timeCard = TimeCard::findOne($id);
 		$response = Yii::$app ->response;
 		$response -> format = Response::FORMAT_JSON;
@@ -100,6 +104,10 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionViewAllTimeCardsCurrentWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$timecardArray = AllTimeCardsCurrentWeek::find()->all();
 		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 		$response = Yii::$app->response;
@@ -109,6 +117,10 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionViewAllTimeCardsPriorWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllTimeCardsPriorWeek::setClient($headers['X-Client']);
+		
 		$timecardArray = AllTimeCardsPriorWeek::find()->all();
 		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 		$response = Yii::$app->response;
@@ -118,6 +130,10 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionViewAllApprovedTimeCardsCurrentWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllApprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$timecardArray = AllApprovedTimeCardsCurrentWeek::find()->all();
 		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 		$response = Yii::$app->response;
@@ -127,6 +143,10 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionViewAllUnapprovedTimeCardsCurrentWeek()
 	{
+		//set db target
+		$headers = getallheaders();
+		AllUnapprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$timecardArray = AllUnapprovedTimeCardsCurrentWeek::find()->all();
 		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 		$response = Yii::$app->response;
@@ -136,6 +156,10 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionGetTimeCardCurrentWeek($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+		
 		$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$id]);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -154,6 +178,11 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionViewTimeEntries($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		TimeCard::setClient($headers['X-Client']);
+		TimeEntry::setClient($headers['X-Client']);
+		
 		$response = Yii::$app ->response;
 		$dataArray = [];
 		$timeCard = TimeCard::findOne($id);
@@ -236,6 +265,11 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionApproveTimeCards()
 	{
+		//set db target
+		$headers = getallheaders();
+		TimeCard::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		//capture put body
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);

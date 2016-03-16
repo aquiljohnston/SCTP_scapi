@@ -38,6 +38,10 @@ class ClientController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		Client::setClient($headers['X-Client']);
+		
 		$client = Client::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -49,6 +53,11 @@ class ClientController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		Client::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 
@@ -59,7 +68,7 @@ class ClientController extends BaseActiveController
 		$response ->format = Response::FORMAT_JSON;
 		
 		//created by
-		if ($user = SCUSer::findOne(['UserID'=>$model->ClientCreatorUserID]))
+		if ($user = SCUser::findOne(['UserID'=>$model->ClientCreatorUserID]))
 		{
 			$fname = $user->UserFirstName;
 			$lname = $user->UserLastName;
@@ -84,6 +93,11 @@ class ClientController extends BaseActiveController
 	
 	public function actionUpdate($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		Client::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
 
@@ -120,6 +134,10 @@ class ClientController extends BaseActiveController
 	//return a json containing pairs of ClientID and ClientName
 	public function actionGetClientDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		Client::setClient($headers['X-Client']);
+	
         $clients = Client::find()
 			->all();
 		$namePairs = [];

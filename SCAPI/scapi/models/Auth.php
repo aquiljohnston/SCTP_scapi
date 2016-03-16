@@ -11,7 +11,7 @@ use yii\base\Security;
  * @property integer $AuthUserID
  * @property string $AuthToken
  */
-class Auth extends \yii\db\ActiveRecord
+class Auth extends BaseActiveRecord
 {
     /**
      * @inheritdoc
