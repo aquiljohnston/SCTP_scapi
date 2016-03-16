@@ -21,7 +21,7 @@ use Yii;
  * @property string $MileageCardApprove
  * @property string $UserStatus
  */
-class AllMileageCardsCurrentWeek extends \yii\db\ActiveRecord
+class AllMileageCardsCurrentWeek extends BaseActiveRecord
 {
     /**
      * @inheritdoc

@@ -33,6 +33,10 @@ class ClientAccountsController extends BaseActiveController
 	//return a json containing pairs of ClientAccountIDs and ClientNames
 	public function actionGetClientAccountDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		ClientAccounts::setClient($headers['X-Client']);
+	
         $clientAccounts = ClientAccounts::find()
 			->all();
 		$namePairs = [];

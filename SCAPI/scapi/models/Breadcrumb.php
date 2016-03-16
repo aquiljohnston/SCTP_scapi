@@ -34,7 +34,7 @@ use Yii;
  * @property integer $Map_ID_Num
  * @property integer $Shape
  */
-class Breadcrumb extends \yii\db\ActiveRecord
+class Breadcrumb extends BaseActiveRecord
 {
     /**
      * @inheritdoc

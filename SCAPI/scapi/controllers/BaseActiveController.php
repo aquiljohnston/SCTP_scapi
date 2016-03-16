@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\models\BaseActiveRecord;
 use app\authentication\TokenAuth;
 use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
@@ -40,6 +41,10 @@ class BaseActiveController extends ActiveController
 
 	public function actionCreate()
     {
+		//set db target
+		$headers = getallheaders();
+		BaseActiveRecord::setClient($headers['X-Client']);
+		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 
@@ -64,6 +69,10 @@ class BaseActiveController extends ActiveController
 	
 	public function actionGetAll()
 	{
+		//set db target
+		$headers = getallheaders();
+		BaseActiveRecord::setClient($headers['X-Client']);
+		
 		$modelClass = $this->modelClass;
         $models = $modelClass::find()
 			->all();

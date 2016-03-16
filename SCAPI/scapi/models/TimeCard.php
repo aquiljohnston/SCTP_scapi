@@ -26,7 +26,7 @@ use Yii;
  * @property ProjectTb $timeCardProject
  * @property TimeEntryTb[] $timeEntryTbs
  */
-class TimeCard extends \yii\db\ActiveRecord
+class TimeCard extends BaseActiveRecord
 {
     /**
      * @inheritdoc

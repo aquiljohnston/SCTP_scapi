@@ -14,14 +14,14 @@ use Yii;
  * @property string $ClientAccountComment
  * @property double $ClientAccountStatus
  */
-class ClientAccounts extends \yii\db\ActiveRecord
+class ClientAccounts extends BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'ClientAccounts';
+        return 'ClientAccountsTb';
     }
 
     /**

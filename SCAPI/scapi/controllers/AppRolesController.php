@@ -22,6 +22,10 @@ class AppRolesController extends BaseActiveController
 	//return a json containing pairs of AppRoleNames
 	public function actionGetRolesDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		AppRoles::setClient($headers['X-Client']);
+	
         $roles = AppRoles::find()
 			->all();
 		$namePairs = [];

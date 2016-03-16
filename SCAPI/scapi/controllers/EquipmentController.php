@@ -49,10 +49,10 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionView($id)
     {
+		//set db target
 		$headers = getallheaders();
-		//Yii::trace($headers);
-		//Yii::trace($headers['X-Client']);
 		Equipment::setClient($headers['X-Client']);
+		
 		$equipment = Equipment::findOne($id);		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -63,6 +63,11 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 
@@ -98,6 +103,11 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionUpdate($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
 
@@ -133,6 +143,10 @@ class EquipmentController extends BaseActiveController
 	//return json array of all equipment for a project.
 	public function actionViewEquipmentByProject($projectID)
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		
 		$equipArray = Equipment::findAll(['EquipmentProjectID'=>$projectID]);
 		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
@@ -142,6 +156,10 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionViewEquipmentByUser($userID)
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		
 		$equipArray = Equipment::findAll(['EquipmentAssignedUserID'=>$userID]);
 		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
@@ -152,6 +170,10 @@ class EquipmentController extends BaseActiveController
 	//return json array of all equipment.
 	public function actionViewAll()
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		
 		$equipArray = Equipment::find()->all();
 		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
@@ -162,6 +184,10 @@ class EquipmentController extends BaseActiveController
 	//return db view for equipment index
 	public function actionEquipmentView()
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		
 		$equipArray = GetEquipmentByClientProjectVw::find()->all();
 		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
@@ -171,6 +197,11 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionAcceptEquipment()
 	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		//capture put body
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
@@ -206,7 +237,7 @@ class EquipmentController extends BaseActiveController
 		
 			foreach($approvedEquipment as $equipment)
 			{
-				$equipment-> EquipmentAcceptedFlag = 1;
+				$equipment-> EquipmentAcceptedFlag = "Yes";
 				$equipment-> EquipmentAcceptedBy = $acceptedBy;
 				$equipment-> update();
 			}

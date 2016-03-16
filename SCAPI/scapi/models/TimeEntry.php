@@ -24,7 +24,7 @@ use Yii;
  * @property ActivityTb $timeEntryActivity
  * @property TimeCardTb $timeEntryTimeCard
  */
-class TimeEntry extends \yii\db\ActiveRecord
+class TimeEntry extends BaseActiveRecord
 {
     /**
      * @inheritdoc

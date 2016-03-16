@@ -32,6 +32,10 @@ class ActivityController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		Activity::setClient($headers['X-Client']);
+		
 		$activity = Activity::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -60,6 +64,13 @@ class ActivityController extends BaseActiveController
 
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		Activity::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		TimeEntry::setClient($headers['X-Client']);
+		MileageEntry::setClient($headers['X-Client']);
+		
 		//capture and decode the input json
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);

@@ -22,6 +22,10 @@ class EquipmentConditionController extends BaseActiveController
 	//return a json containing pairs of EquipmentConditions
 	public function actionGetConditionDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		EquipmentCondition::setClient($headers['X-Client']);
+		
         $condition = EquipmentCondition::find()
 			->all();
 		$namePairs = [];

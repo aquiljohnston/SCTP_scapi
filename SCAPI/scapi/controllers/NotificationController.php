@@ -46,6 +46,15 @@ class NotificationController extends Controller
 	
 	public function actionGetNotifications($userID)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		Project::setClient($headers['X-Client']);
+		GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
+		AllTimeCardsPriorWeek::setClient($headers['X-Client']);
+		AllMileageCardsPriorWeek::setClient($headers['X-Client']);
+		
 		//get user
 		$user = SCUser::findOne($userID);
 		

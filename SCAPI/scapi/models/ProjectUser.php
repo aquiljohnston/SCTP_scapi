@@ -20,7 +20,7 @@ use Yii;
  * @property ProjectTb $projUserProject
  * @property UserTb $projUserUser
  */
-class ProjectUser extends \yii\db\ActiveRecord
+class ProjectUser extends BaseActiveRecord
 {
     /**
      * @inheritdoc

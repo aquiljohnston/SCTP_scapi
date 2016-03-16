@@ -22,6 +22,10 @@ class PayCodeController extends BaseActiveController
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetCodeDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		PayCode::setClient($headers['X-Client']);
+	
         $codes = PayCode::find()
 			->all();
 		$namePairs = [];

@@ -46,6 +46,12 @@ class LoginController extends ActiveController
 	
 	public function actionUserLogin()
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Key::setClient($headers['X-Client']);
+		Auth::setClient($headers['X-Client']);
+		
 		//ic and secret key of openssl
 		$iv = "abcdefghijklmnop";
 		$secretKey= "sparusholdings12";
@@ -134,6 +140,10 @@ class LoginController extends ActiveController
 	// User logout
 	public function actionUserLogout($userID)
 	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		
 		Yii::trace('Logout has been called');
 		$logoutString = 'Logout Successful!';
 		$response = Yii::$app->response;

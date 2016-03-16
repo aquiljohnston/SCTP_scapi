@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Project;
 use app\models\SCUser;
+use app\models\ProjectUser;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -41,6 +42,10 @@ class ProjectController extends BaseActiveController
 
 	public function actionView($id)
     {
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
+		
 		$project = Project::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -51,6 +56,11 @@ class ProjectController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
 
@@ -86,6 +96,11 @@ class ProjectController extends BaseActiveController
 	
 	public function actionUpdate($id)
 	{
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		
 		$put = file_get_contents("php://input");
 		$data = json_decode($put, true);
 
@@ -121,6 +136,12 @@ class ProjectController extends BaseActiveController
 	//return json array of all users attached to a specific project ID
 	public function actionViewAllUsers($projectID)
 	{
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
+		SCUser::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
 		$project = Project::findOne($projectID);
 		$userArray = $project->users;
 		$userData = array_map(function ($model) {return $model->attributes;},$userArray);
@@ -132,6 +153,10 @@ class ProjectController extends BaseActiveController
 	//return a json containing pairs of ProjectID and ProjectName
 	public function actionGetProjectDropdowns()
 	{	
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
+	
         $projects = Project::find()
 			->all();
 		$namePairs = [];

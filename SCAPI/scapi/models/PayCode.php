@@ -15,7 +15,7 @@ use Yii;
  * @property string $PayCodeModifiedDate
  * @property string $PayCodeModifiedBy
  */
-class PayCode extends \yii\db\ActiveRecord
+class PayCode extends BaseActiveRecord
 {
     /**
      * @inheritdoc

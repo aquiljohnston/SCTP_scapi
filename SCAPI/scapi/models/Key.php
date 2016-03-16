@@ -20,7 +20,7 @@ use Yii;
  *
  * @property UserTb[] $userTbs
  */
-class Key extends \yii\db\ActiveRecord
+class Key extends BaseActiveRecord
 {
     /**
      * @inheritdoc
