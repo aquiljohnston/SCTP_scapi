@@ -6,6 +6,7 @@ use Yii;
 use app\models\MileageCard;
 use app\models\MileageEntry;
 use app\models\SCUser;
+use app\models\ProjectUser;
 use app\models\AllMileageCardsCurrentWeek;
 use app\models\AllMileageCardsPriorWeek;
 use app\models\AllApprovedMileageCardsCurrentWeek;
@@ -46,6 +47,7 @@ class MileageCardController extends BaseActiveController
 					'view-all-mileage-cards-prior-week' => ['get'],
 					'view-all-approved-mileage-cards-current-week' => ['get'],
 					'view-all-unapproved-mileage-cards-current-week' => ['get'],
+					'get-mileage-card-current-week-by-manager' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -328,5 +330,49 @@ class MileageCardController extends BaseActiveController
 			$response->setStatusCode(404);
 			return $response;
 		}
+	}
+	
+	public function actionGetMileageCardCurrentWeekByManager($userID)
+	{
+		//set db target
+		$headers = getallheaders();
+		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
+		//get all projects for manager
+		$projects = ProjectUser::find()
+			->where("ProjUserUserID = $userID")
+			->all();
+		$projectsSize = count($projects);
+		
+		$users = [];
+		$mileageCards = [];
+		
+		//get all users associated with projects
+		for($i = 0; $i < $projectsSize; $i++)
+		{
+			$projectID = $projects[$i]->ProjUserProjectID; 
+			$newUsers = ProjectUser::find()
+				->where("ProjUserProjectID = $projectID")
+				->all();
+			$users = array_merge($users, $newUsers);
+		}
+		$usersSize = count($users);
+		
+		//get all mileage cards for current week for users
+		for($i = 0; $i < $usersSize; $i++)
+		{
+			$userID = $users[$i]->ProjUserUserID;
+			$newCards = AllMileageCardsCurrentWeek::find()
+				->where("UserID = $userID")
+				->all();
+			$mileageCards = array_unique(array_merge($mileageCards, $newCards), SORT_REGULAR);
+		}
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->setStatusCode(200);
+		$response->data = $mileageCards;
+		return $response;
 	}
 }
