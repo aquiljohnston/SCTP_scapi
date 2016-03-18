@@ -272,10 +272,9 @@ class EquipmentController extends BaseActiveController
 			->all();
 		$projectsSize = count($projects);
 		
-		$users = [];
 		$equipment = [];
 		
-		//get all users associated with projects
+		//get all equipment associated with projects
 		for($i = 0; $i < $projectsSize; $i++)
 		{
 			$projectID = $projects[$i]->ProjUserProjectID; 
