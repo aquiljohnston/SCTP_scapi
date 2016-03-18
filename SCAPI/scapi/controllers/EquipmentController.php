@@ -7,6 +7,7 @@ use app\models\Equipment;
 use app\models\Project;
 use app\models\Client;
 use app\models\SCUser;
+use app\models\ProjectUser;
 use app\models\GetEquipmentByClientProjectVw;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
@@ -33,7 +34,8 @@ class EquipmentController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'accept-equipment'  => ['put']
+					'accept-equipment'  => ['put'],
+					'get-equipment-by-manager' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -255,5 +257,38 @@ class EquipmentController extends BaseActiveController
 			return $response;
 			
 		}
+	}
+	
+	public function actionGetEquipmentByManager($userID)
+	{
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
+		//get all projects for manager
+		$projects = ProjectUser::find()
+			->where("ProjUserUserID = $userID")
+			->all();
+		$projectsSize = count($projects);
+		
+		$users = [];
+		$equipment = [];
+		
+		//get all users associated with projects
+		for($i = 0; $i < $projectsSize; $i++)
+		{
+			$projectID = $projects[$i]->ProjUserProjectID; 
+			$newEquipment = Equipment::find()
+				->where("EquipmentProjectID = $projectID")
+				->all();
+			$equipment = array_merge($equipment, $newEquipment);
+		}
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->setStatusCode(200);
+		$response->data = $equipment;
+		return $response;
 	}
 }
