@@ -36,7 +36,8 @@ class UserController extends BaseActiveController
                 'actions' => [
 					'get-user-dropdowns'  => ['get'],
 					'get-me'  => ['get'],
-					'get-all-projects'  => ['get']
+					'get-all-projects'  => ['get'],
+					'get-users-by-manager' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -402,6 +403,50 @@ class UserController extends BaseActiveController
 		$response = Yii::$app ->response;
 		$response -> format = Response::FORMAT_JSON;
 		$response -> data = $projects;
+	}
+	
+	public function actionGetUsersByManager($userID)
+	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
+		//get all projects for manager
+		$projects = ProjectUser::find()
+			->where("ProjUserUserID = $userID")
+			->all();
+		$projectsSize = count($projects);
+		
+		$users = [];
+		$userData = [];
+		
+		//get all users associated with projects
+		for($i = 0; $i < $projectsSize; $i++)
+		{
+			$projectID = $projects[$i]->ProjUserProjectID; 
+			$newUsers = ProjectUser::find()
+				->where("ProjUserProjectID = $projectID")
+				->all();
+			$users = array_merge($users, $newUsers);
+		}
+		$usersSize = count($users);
+		
+		//get all mileage cards for current week for users
+		for($i = 0; $i < $usersSize; $i++)
+		{
+			$userID = $users[$i]->ProjUserUserID;
+			$newUserData = SCUser::find()
+				->where("UserID = $userID")
+				->all();
+			$userData = array_unique(array_merge($userData, $newUserData), SORT_REGULAR);
+		}
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->setStatusCode(200);
+		$response->data = $userData;
+		return $response;
 	}
 
 }
