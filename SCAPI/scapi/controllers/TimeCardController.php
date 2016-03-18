@@ -6,6 +6,7 @@ use Yii;
 use app\models\TimeCard;
 use app\models\TimeEntry;
 use app\models\SCUser;
+use app\models\ProjectUser;
 use app\models\AllTimeCardsCurrentWeek;
 use app\models\AllTimeCardsPriorWeek;
 use app\models\AllApprovedTimeCardsCurrentWeek;
@@ -48,6 +49,7 @@ class TimeCardController extends BaseActiveController
 					'view-all-approved-time-cards-current-week' => ['get'],
 					'view-all-unapproved-time-cards-current-week' => ['get'],
 					'view-time-card-hours-worked' => ['get'],
+					'get-time-cards-current-week-by-manager' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -338,6 +340,51 @@ class TimeCardController extends BaseActiveController
 			return $response;
 			
 		}
+	}
+	
+	// function to get all timecards for the current week associated with a project manager
+	public function actionGetTimeCardsCurrentWeekByManager($userID)
+	{
+		//set db target
+		$headers = getallheaders();
+		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
+		//get all projects for manager
+		$projects = ProjectUser::find()
+			->where("ProjUserUserID = $userID")
+			->all();
+		$projectsSize = count($projects);
+		
+		$users = [];
+		$timeCards = [];
+		
+		//get all users associated with projects
+		for($i = 0; $i < $projectsSize; $i++)
+		{
+			$projectID = $projects[$i]->ProjUserProjectID; 
+			$newUsers = ProjectUser::find()
+				->where("ProjUserProjectID = $projectID")
+				->all();
+			$users = array_merge($users, $newUsers);
+		}
+		$usersSize = count($users);
+		
+		//get all mileage cards for current week for users
+		for($i = 0; $i < $usersSize; $i++)
+		{
+			$userID = $users[$i]->ProjUserUserID;
+			$newCards = AllTimeCardsCurrentWeek::find()
+				->where("UserID = $userID")
+				->all();
+			$timeCards = array_unique(array_merge($timeCards, $newCards), SORT_REGULAR);
+		}
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->setStatusCode(200);
+		$response->data = $timeCards;
+		return $response;
 	}
 	
 }
