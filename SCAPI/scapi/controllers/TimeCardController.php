@@ -10,6 +10,7 @@ use app\models\AllTimeCardsCurrentWeek;
 use app\models\AllTimeCardsPriorWeek;
 use app\models\AllApprovedTimeCardsCurrentWeek;
 use app\models\AllUnapprovedTimeCardsCurrentWeek;
+use app\models\TimeCardHoursWorked;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -46,6 +47,7 @@ class TimeCardController extends BaseActiveController
 					'view-all-time-cards-prior-week' => ['get'],
 					'view-all-approved-time-cards-current-week' => ['get'],
 					'view-all-unapproved-time-cards-current-week' => ['get'],
+					'view-time-card-hours-worked' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -148,6 +150,19 @@ class TimeCardController extends BaseActiveController
 		AllUnapprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
 		
 		$timecardArray = AllUnapprovedTimeCardsCurrentWeek::find()->all();
+		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timecardData;
+	}
+	
+	public function actionViewTimeCardHoursWorked()
+	{
+		//set db target
+		$headers = getallheaders();
+		TimeCardHoursWorked::setClient($headers['X-Client']);
+		
+		$timecardArray = TimeCardHoursWorked::find()->all();
 		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;

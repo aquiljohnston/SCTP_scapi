@@ -18,7 +18,7 @@ use Yii;
  * @property integer $MileageCardPersonalMiles
  * @property integer $MileageCardAllMileage_calc
  * @property string $MileageCardApprovedBy
- * @property string $MileageCardApprove
+ * @property string $MileageCardApproved
  * @property string $UserStatus
  */
 class AllMileageCardsCurrentWeek extends BaseActiveRecord
@@ -39,7 +39,7 @@ class AllMileageCardsCurrentWeek extends BaseActiveRecord
         return [
             [['UserID', 'MileageCardID', 'UserStatus'], 'required'],
             [['UserID', 'MileageCardID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles', 'MileageCardAllMileage_calc'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'MileageCardApprovedBy', 'MileageCardApprove', 'UserStatus'], 'string'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'MileageCardApprovedBy', 'MileageCardApproved', 'UserStatus'], 'string'],
             [['MileageStartDate', 'MileageEndtDate'], 'safe']
         ];
     }
@@ -61,7 +61,7 @@ class AllMileageCardsCurrentWeek extends BaseActiveRecord
             'MileageCardPersonalMiles' => 'Mileage Card Personal Miles',
             'MileageCardAllMileage_calc' => 'Mileage Card All Mileage Calc',
             'MileageCardApprovedBy' => 'Mileage Card Approved By',
-            'MileageCardApprove' => 'Mileage Card Approve',
+            'MileageCardApproved' => 'Mileage Card Approve',
             'UserStatus' => 'User Status',
         ];
     }
