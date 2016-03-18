@@ -94,7 +94,7 @@ class NotificationController extends Controller
 			
 			//get unapproved mileage cards from last week for project
 			$mileageCards = AllMileageCardsPriorWeek::find()
-				->where(['and', "MileageCardProjectID = $projectID","MileageCardApprove = 'No'"])
+				->where(['and', "MileageCardProjectID = $projectID","MileageCardApproved = 'No'"])
 				->all();	
 			$mileageCardCount = count($mileageCards);
 			
