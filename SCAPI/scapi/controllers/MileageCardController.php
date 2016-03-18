@@ -288,7 +288,7 @@ class MileageCardController extends BaseActiveController
 		
 			foreach($approvedCards as $card)
 			{
-				$card-> MileageCardApprovedFlag = "yes";
+				$card-> MileageCardApprovedFlag = "Yes";
 				$card-> MileageCardApprovedBy = $approvedBy;
 				$card-> update();
 			}
