@@ -47,7 +47,7 @@ class MileageCardController extends BaseActiveController
 					'view-all-mileage-cards-prior-week' => ['get'],
 					'view-all-approved-mileage-cards-current-week' => ['get'],
 					'view-all-unapproved-mileage-cards-current-week' => ['get'],
-					'get-mileage-card-current-week-by-manager' => ['get'],
+					'get-mileage-cards-current-week-by-manager' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -332,7 +332,9 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetMileageCardCurrentWeekByManager($userID)
+	
+	//function to get all milage cards for the current week associated with a project manager
+	public function actionGetMileageCardsCurrentWeekByManager($userID)
 	{
 		//set db target
 		$headers = getallheaders();
