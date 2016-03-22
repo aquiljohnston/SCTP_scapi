@@ -55,10 +55,18 @@ class EquipmentController extends BaseActiveController
 		$headers = getallheaders();
 		Equipment::setClient($headers['X-Client']);
 		
-		$equipment = Equipment::findOne($id);		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $equipment;
+		
+		if($equipment = Equipment::findOne($id))
+		{
+			$response->data = $equipment;
+			$response->setStatusCode(200);
+		}
+		else
+		{
+			$response->setStatusCode(404);
+		}
 		
 		return $response;
 	} 
@@ -131,7 +139,7 @@ class EquipmentController extends BaseActiveController
 		
 		if($model-> update())
 		{
-			$response->setStatusCode(201);
+			$response->setStatusCode(200);
 			$response->data = $model; 
 		}
 		else
@@ -149,11 +157,20 @@ class EquipmentController extends BaseActiveController
 		$headers = getallheaders();
 		Equipment::setClient($headers['X-Client']);
 		
-		$equipArray = Equipment::findAll(['EquipmentProjectID'=>$projectID]);
-		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $equipData;
+		
+		if($equipArray = Equipment::findAll(['EquipmentProjectID'=>$projectID]))
+		{
+			$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+			$response->data = $equipData;
+			$response->setStatusCode(200);
+		}
+		else
+		{
+			$response->setStatusCode(404);
+		}
+		return $response;
 	}
 	
 	public function actionViewEquipmentByUser($userID)
@@ -162,11 +179,20 @@ class EquipmentController extends BaseActiveController
 		$headers = getallheaders();
 		Equipment::setClient($headers['X-Client']);
 		
-		$equipArray = Equipment::findAll(['EquipmentAssignedUserID'=>$userID]);
-		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $equipData;
+		
+		if($equipArray = Equipment::findAll(['EquipmentAssignedUserID'=>$userID]))
+		{
+			$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+			$response->data = $equipData;
+			$response->setStatusCode(200);
+		}
+		else
+		{
+			$response->setStatusCode(404);
+		}
+		return $response;
 	}
 
 	//return json array of all equipment.
@@ -176,11 +202,20 @@ class EquipmentController extends BaseActiveController
 		$headers = getallheaders();
 		Equipment::setClient($headers['X-Client']);
 		
-		$equipArray = Equipment::find()->all();
-		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $equipData;
+		
+		if($equipArray = Equipment::find()->all())
+		{
+			$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+			$response->data = $equipData;
+			$response->setStatusCode(200);
+		}
+		else
+		{
+			$response->setStatusCode(404);
+		}
+		return $response;
 	}
 	
 	//return db view for equipment index
@@ -190,11 +225,20 @@ class EquipmentController extends BaseActiveController
 		$headers = getallheaders();
 		Equipment::setClient($headers['X-Client']);
 		
-		$equipArray = GetEquipmentByClientProjectVw::find()->all();
-		$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $equipData;
+		
+		if($equipArray = GetEquipmentByClientProjectVw::find()->all())
+		{
+			$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
+			$response->data = $equipData;
+			$response->setStatusCode(200);
+		}
+		else
+		{
+			$response->setStatusCode(404);
+		}
+		return $response;
 	}
 	
 	public function actionAcceptEquipment()
