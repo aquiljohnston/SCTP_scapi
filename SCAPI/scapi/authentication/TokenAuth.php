@@ -7,6 +7,7 @@ use yii\filters\auth\AuthMethod;
 use app\models\SCUser;
 use app\models\Auth;
 use yii\base\ErrorException;
+use yii\web\Response;
 
 class TokenAuth extends AuthMethod
 {
@@ -15,9 +16,17 @@ class TokenAuth extends AuthMethod
     public function authenticate($user, $request, $response)
     {
         $token = $request->getAuthUser();
-		$headers = getAllHeaders();
-		SCUser::setClient($headers['X-Client']);
-		Auth::setClient($headers['X-Client']);
+		try
+		{
+			$headers = getAllHeaders();
+			SCUser::setClient($headers['X-Client']);
+			Auth::setClient($headers['X-Client']);
+		}
+		catch(ErrorException $e)
+		{
+			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
+		}	
+		
 		
 		if ($token !== null) {
 			Yii::$app->user->checkTimeout($token);
