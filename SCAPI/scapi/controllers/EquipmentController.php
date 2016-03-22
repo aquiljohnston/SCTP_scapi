@@ -16,6 +16,7 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
+use yii\base\ErrorException;
 
 class EquipmentController extends BaseActiveController
 {
@@ -51,13 +52,13 @@ class EquipmentController extends BaseActiveController
 	
 	public function actionView($id)
     {
-		//set db target
-		$headers = getallheaders();
-		Equipment::setClient($headers['X-Client']);
-		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
+		//set db target
+		$headers = getallheaders();
+		Equipment::setClient($headers['X-Client']);
+			
 		if($equipment = Equipment::findOne($id))
 		{
 			$response->data = $equipment;

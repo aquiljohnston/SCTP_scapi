@@ -47,10 +47,18 @@ class LoginController extends ActiveController
 	public function actionUserLogin()
 	{
 		//set db target
-		$headers = getallheaders();
-		SCUser::setClient($headers['X-Client']);
-		Key::setClient($headers['X-Client']);
-		Auth::setClient($headers['X-Client']);
+		try
+		{
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			Key::setClient($headers['X-Client']);
+			Auth::setClient($headers['X-Client']);
+		}
+		catch(ErrorException $e)
+		{
+			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
+		}	
+		
 		
 		//ic and secret key of openssl
 		$iv = "abcdefghijklmnop";
@@ -141,8 +149,15 @@ class LoginController extends ActiveController
 	public function actionUserLogout($userID)
 	{
 		//set db target
-		$headers = getallheaders();
-		SCUser::setClient($headers['X-Client']);
+		try
+		{
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+		}
+		catch(ErrorException $e)
+		{
+			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
+		}	
 		
 		Yii::trace('Logout has been called');
 		$logoutString = 'Logout Successful!';
