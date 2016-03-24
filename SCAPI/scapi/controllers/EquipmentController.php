@@ -123,6 +123,7 @@ class EquipmentController extends BaseActiveController
 		$data = json_decode($put, true);
 
 		$model = Equipment::findOne($id);
+		$currentProject = $model->EquipmentProjectID;
 		
 		$model->attributes = $data;  
 		
@@ -137,6 +138,13 @@ class EquipmentController extends BaseActiveController
 		}
 		
 		$model->EquipmentModifiedDate = date('Y-m-d H:i:s');
+		
+		//TODO set flag to "Pending" when the project information is changed.
+		if($model->EquipmentProjectID != $currentProject)
+		{
+			$model-> EquipmentAcceptedFlag = "Pending";
+			$model-> EquipmentAcceptedBy = "Pending";
+		}
 		
 		if($model-> update())
 		{

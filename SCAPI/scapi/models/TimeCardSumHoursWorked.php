@@ -5,31 +5,32 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "TimeCardHoursWorked_vw".
+ * This is the model class for table "TimeCardSumHoursWorked_vw".
  *
- * @property string $Row
+ * @property integer $TimeCardID
  * @property integer $UserID
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
- * @property integer $TimeCardID
  * @property string $TimeCardStartDate
  * @property string $TimeCardEndDate
  * @property integer $TimeCardProjectID
  * @property integer $TimeCardTechID
- * @property integer $TimeCardHoursWorked
+ * @property string $SumHours
+ * @property integer $RemainderMinutes
+ * @property integer $Sums
  * @property string $TimeCardApprovedFlag
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardSupervisorName
  */
-class TimeCardHoursWorked extends BaseActiveRecord
+class TimeCardSumHoursWorked extends BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'TimeCardHoursWorked_vw';
+        return 'TimeCardSumHoursWorked_vw';
     }
 
     /**
@@ -38,9 +39,11 @@ class TimeCardHoursWorked extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['Row', 'UserID', 'TimeCardID', 'TimeCardProjectID', 'TimeCardTechID', 'TimeCardHoursWorked'], 'integer'],
+            [['TimeCardID', 'UserID', 'TimeCardProjectID', 'TimeCardTechID', 'RemainderMinutes', 'Sums'], 'integer'],
+            [['UserID'], 'required'],
             [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedFlag', 'TimeCardApprovedBy', 'TimeCardSupervisorName'], 'string'],
-            [['TimeCardStartDate', 'TimeCardEndDate'], 'safe']
+            [['TimeCardStartDate', 'TimeCardEndDate'], 'safe'],
+            [['SumHours'], 'number']
         ];
     }
 
@@ -50,17 +53,18 @@ class TimeCardHoursWorked extends BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'Row' => 'Row',
+            'TimeCardID' => 'Time Card ID',
             'UserID' => 'User ID',
             'UserName' => 'User Name',
             'UserFirstName' => 'User First Name',
             'UserLastName' => 'User Last Name',
-            'TimeCardID' => 'Time Card ID',
             'TimeCardStartDate' => 'Time Card Start Date',
             'TimeCardEndDate' => 'Time Card End Date',
             'TimeCardProjectID' => 'Time Card Project ID',
             'TimeCardTechID' => 'Time Card Tech ID',
-            'TimeCardHoursWorked' => 'Time Card Hours Worked',
+            'SumHours' => 'Sum Hours',
+            'RemainderMinutes' => 'Remainder Minutes',
+            'Sums' => 'Sums',
             'TimeCardApprovedFlag' => 'Time Card Approved Flag',
             'TimeCardApprovedBy' => 'Time Card Approved By',
             'TimeCardSupervisorName' => 'Time Card Supervisor Name',

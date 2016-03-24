@@ -159,7 +159,7 @@ class ProjectController extends BaseActiveController
 	
         $projects = Project::find()
 			->all();
-		$namePairs = [];
+		$namePairs = [null => "Unassigned"];
 		$projectSize = count($projects);
 		
 		for($i=0; $i < $projectSize; $i++)
