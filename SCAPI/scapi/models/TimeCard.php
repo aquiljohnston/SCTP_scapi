@@ -10,7 +10,6 @@ use Yii;
  * @property string $TimeCardID
  * @property string $TimeCardStartDate
  * @property string $TimeCardEndDate
- * @property string $TimeCardHoursWorked
  * @property string $TimeCardProjectID
  * @property string $TimeCardTechID
  * @property string $TimeCardApprovedFlag
@@ -43,7 +42,6 @@ class TimeCard extends BaseActiveRecord
     {
         return [
             [['TimeCardStartDate', 'TimeCardEndDate', 'TimeCardCreateDate', 'TimeCardModifiedDate'], 'safe'],
-            [['TimeCardHoursWorked'], 'number'],
             [['TimeCardProjectID', 'TimeCardTechID'], 'integer'],
             [['TimeCardApprovedBy','TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy', 'TimeCardApprovedFlag'], 'string']
         ];
@@ -58,7 +56,6 @@ class TimeCard extends BaseActiveRecord
             'TimeCardID' => 'Time Card ID',
             'TimeCardStartDate' => 'Time Card Start Date',
             'TimeCardEndDate' => 'Time Card End Date',
-            'TimeCardHoursWorked' => 'Time Card Hours Worked',
             'TimeCardProjectID' => 'Time Card Project ID',
             'TimeCardTechID' => 'Time Card Tech ID',
             'TimeCardApprovedFlag' => 'Time Card Approved Flag',

@@ -14,7 +14,6 @@ use Yii;
  * @property integer $TimeCardID
  * @property string $TimeCardStartDate
  * @property string $TimeCardEndDate
- * @property string $TimeCardHoursWorked
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardApproved
  * @property string $UserStatus
@@ -39,7 +38,6 @@ class AllTimeCardsPriorWeek extends BaseActiveRecord
             [['UserID', 'TimeCardID'], 'integer'],
             [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedBy', 'TimeCardApproved', 'UserStatus'], 'string'],
             [['TimeCardStartDate', 'TimeCardEndDate'], 'safe'],
-            [['TimeCardHoursWorked'], 'number']
         ];
     }
 
@@ -56,7 +54,6 @@ class AllTimeCardsPriorWeek extends BaseActiveRecord
             'TimeCardID' => 'Time Card ID',
             'TimeCardStartDate' => 'Time Card Start Date',
             'TimeCardEndDate' => 'Time Card End Date',
-            'TimeCardHoursWorked' => 'Time Card Hours Worked',
             'TimeCardApprovedBy' => 'Time Card Approved By',
             'TimeCardApproved' => 'Time Card Approved',
             'UserStatus' => 'User Status',

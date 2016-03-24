@@ -18,6 +18,8 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\Link;
 use yii\db\mssql\PDO;
+use yii\base\ErrorException;
+use yii\db\Exception;
 
 
 /**
@@ -241,8 +243,15 @@ class UserController extends BaseActiveController
 		$user = SCUser::findOne($userID);
 		
 		$project = Project::findOne($projectID);
-
-		$user->link('projects',$project);
+		
+		try
+		{
+			$user->link('projects',$project);
+		}
+		catch(Exception $e)
+		{
+			throw new \yii\web\HttpException(400, 'User cannot be added to this Project, relation may already exist.');
+		}
 
 		$projUser = ProjectUser::find()
 			->where(['and', "ProjUserUserID = $userID","ProjUserProjectID = $projectID"])

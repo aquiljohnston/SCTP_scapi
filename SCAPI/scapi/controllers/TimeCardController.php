@@ -11,7 +11,7 @@ use app\models\AllTimeCardsCurrentWeek;
 use app\models\AllTimeCardsPriorWeek;
 use app\models\AllApprovedTimeCardsCurrentWeek;
 use app\models\AllUnapprovedTimeCardsCurrentWeek;
-use app\models\TimeCardHoursWorked;
+use app\models\TimeCardSumHoursWorked;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -162,9 +162,9 @@ class TimeCardController extends BaseActiveController
 	{
 		//set db target
 		$headers = getallheaders();
-		TimeCardHoursWorked::setClient($headers['X-Client']);
+		TimeCardSumHoursWorked::setClient($headers['X-Client']);
 		
-		$timecardArray = TimeCardHoursWorked::find()->all();
+		$timecardArray = TimeCardSumHoursWorked::find()->all();
 		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;

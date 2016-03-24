@@ -83,6 +83,7 @@ class NotificationController extends Controller
 			//get unaccepted equipment for project
 			$equipment = GetEquipmentByClientProjectVw::find()
 				->where(['and', "ProjectID = $projectID","[Accepted Flag] = 'No'"])
+				->orWhere(['and', "ProjectID = $projectID","[Accepted Flag] = 'Pending'"])
 				->all();
 			$equipmentCount = count($equipment);
 
