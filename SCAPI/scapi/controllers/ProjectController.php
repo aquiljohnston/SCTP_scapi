@@ -201,45 +201,45 @@ class ProjectController extends BaseActiveController
 		
 		//get all users for the project
 		$project = Project::findOne($projectID);
-		$includedUsers = $project->users;
-		$includedPairs = [];
-		$includedSize = count($includedUsers);
+		$assignedUsers = $project->users;
+		$assignedPairs = [];
+		$assignedSize = count($assignedUsers);
 		
 		//create array of included user id/name pairs
-		for($i=0; $i < $includedSize; $i++)
+		for($i=0; $i < $assignedSize; $i++)
 		{
-			$includedPairs[$includedUsers[$i]->UserID]= $includedUsers[$i]->UserLastName. ", ". $includedUsers[$i]->UserFirstName;
+			$assignedPairs[$assignedUsers[$i]->UserID]= $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName;
 		}
 		
 		//get all users
 		$allUsers = SCUser::find()
 			->all();
 		
-		$excludedPairs = [];
-		$excludedSize = count($allUsers);
+		$unassignedPairs = [];
+		$unassignedSize = count($allUsers);
 		
 		//create array of all user id/name pairs
-		for($i=0; $i < $excludedSize; $i++)
+		for($i=0; $i < $unassignedSize; $i++)
 		{
-			$excludedPairs[$allUsers[$i]->UserID]= $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName;
+			$unassignedPairs[$allUsers[$i]->UserID]= $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName;
 		}
 		
 		//filter included pairs
-		foreach($excludedPairs as $ek => $ev)
+		foreach($unassignedPairs as $uk => $uv)
 		{
-			foreach($includedPairs as $ik => $iv)
+			foreach($assignedPairs as $ak => $av)
 			{
-				if($ek == $ik)
+				if($uk == $ak)
 				{
-					unset($excludedPairs[$ek]);
+					unset($unassignedPairs[$uk]);
 				}
 			}
 		}
 		
 		//build response json
 		$data = [];
-		$data["excludedUsers"] = $excludedPairs;
-		$data["includedUsers"] = $includedPairs; 
+		$data["unassignedUsers"] = $unassignedPairs;
+		$data["assignedUsers"] = $assignedPairs; 
 		$response = Yii::$app ->response;
 		$response -> format = Response::FORMAT_JSON;
 		$response -> data = $data;
