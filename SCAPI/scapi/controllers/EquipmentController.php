@@ -269,7 +269,7 @@ class EquipmentController extends BaseActiveController
 		$acceptedBy = $data["acceptedByID"];
 		$equipmentIDs = $data["equipmentIDArray"];
 		
-		//get timecards
+		//get equipment
 		foreach($equipmentIDs as $id)
 		{
 			$approvedEquipment[]= Equipment::findOne($id);
@@ -283,7 +283,7 @@ class EquipmentController extends BaseActiveController
 			$acceptedBy = $lname.", ".$fname;
 		}
 		
-		//try to approve time cards
+		//try to accept equipment
 		try
 		{
 			//create transaction

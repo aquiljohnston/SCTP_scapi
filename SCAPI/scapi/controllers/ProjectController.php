@@ -22,6 +22,21 @@ class ProjectController extends BaseActiveController
 {
 	public $modelClass = 'app\models\Project'; 
 	
+	public function behaviors()
+	{
+		$behaviors = parent::behaviors();
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+					'view-all-users'  => ['get'],
+					'get-project-dropdowns'  => ['get'],
+					'get-user-relationships'  => ['get'],
+                ],  
+            ];
+		return $behaviors;	
+	}
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -173,5 +188,60 @@ class ProjectController extends BaseActiveController
 		$response -> data = $namePairs;
 		
 		return $response;
+	}
+	
+	//returns json containing two arrays one of all users associated with a project the other of all users not associated with a project 
+	public function actionGetUserRelationships($projectID)
+	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Project::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
+		//get all users for the project
+		$project = Project::findOne($projectID);
+		$includedUsers = $project->users;
+		$includedPairs = [];
+		$includedSize = count($includedUsers);
+		
+		//create array of included user id/name pairs
+		for($i=0; $i < $includedSize; $i++)
+		{
+			$includedPairs[$includedUsers[$i]->UserID]= $includedUsers[$i]->UserLastName. ", ". $includedUsers[$i]->UserFirstName;
+		}
+		
+		//get all users
+		$allUsers = SCUser::find()
+			->all();
+		
+		$excludedPairs = [];
+		$excludedSize = count($allUsers);
+		
+		//create array of all user id/name pairs
+		for($i=0; $i < $excludedSize; $i++)
+		{
+			$excludedPairs[$allUsers[$i]->UserID]= $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName;
+		}
+		
+		//filter included pairs
+		foreach($excludedPairs as $ek => $ev)
+		{
+			foreach($includedPairs as $ik => $iv)
+			{
+				if($ek == $ik)
+				{
+					unset($excludedPairs[$ek]);
+				}
+			}
+		}
+		
+		//build response json
+		$data = [];
+		$data["excludedUsers"] = $excludedPairs;
+		$data["includedUsers"] = $includedPairs; 
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $data;
 	}
 }
