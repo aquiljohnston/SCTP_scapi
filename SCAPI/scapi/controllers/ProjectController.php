@@ -32,6 +32,7 @@ class ProjectController extends BaseActiveController
 					'view-all-users'  => ['get'],
 					'get-project-dropdowns'  => ['get'],
 					'get-user-relationships'  => ['get'],
+					'add-remove-users' => ['post'],
                 ],  
             ];
 		return $behaviors;	
@@ -208,7 +209,7 @@ class ProjectController extends BaseActiveController
 		//create array of included user id/name pairs
 		for($i=0; $i < $assignedSize; $i++)
 		{
-			$assignedPairs[$assignedUsers[$i]->UserID]= $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName;
+			$assignedPairs[$assignedUsers[$i]->UserID]=['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName];
 		}
 		
 		//get all users
@@ -221,7 +222,7 @@ class ProjectController extends BaseActiveController
 		//create array of all user id/name pairs
 		for($i=0; $i < $unassignedSize; $i++)
 		{
-			$unassignedPairs[$allUsers[$i]->UserID]= $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName;
+			$unassignedPairs[$allUsers[$i]->UserID]=['content' => $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName];
 		}
 		
 		//filter included pairs
@@ -242,6 +243,48 @@ class ProjectController extends BaseActiveController
 		$data["assignedUsers"] = $assignedPairs; 
 		$response = Yii::$app ->response;
 		$response -> format = Response::FORMAT_JSON;
+		$response -> data = $data;
+	}
+	
+	public function actionAddRemoveUsers($projectID)
+	{
+		//set db target
+		$headers = getallheaders();
+		SCUser::setClient($headers['X-Client']);
+		Project::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		
+		//get project from param
+		$project = Project::findOne($projectID);
+		
+		//decode post data
+		$post = file_get_contents("php://input");
+		$data = json_decode($post, true);
+		
+		//parse post data
+		$usersAdded = $data['usersAdded'];
+		$usersRemoved = $data['usersRemoved'];
+		
+		//loop usersAdded and create relationships
+		foreach($usersAdded as $i)
+		{
+			$user = SCUser::findOne($i);
+			$user->link('projects',$project);
+		}
+		
+		//loop usersRemoved and delete relationships
+		foreach($usersRemoved as $i)
+		{
+			$projUser = ProjectUser::find()
+			->where(['and', "ProjUserUserID = $i","ProjUserProjectID = $projectID"])
+			->one();
+			$projUser->delete();
+		}
+		
+		//build response 
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+		$response->setStatusCode(200);
 		$response -> data = $data;
 	}
 }
