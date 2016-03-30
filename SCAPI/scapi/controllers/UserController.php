@@ -428,7 +428,6 @@ class UserController extends BaseActiveController
 		$projectsSize = count($projects);
 		
 		$users = [];
-		$userData = [];
 		
 		//get all users associated with projects
 		for($i = 0; $i < $projectsSize; $i++)
@@ -437,24 +436,52 @@ class UserController extends BaseActiveController
 			$newUsers = ProjectUser::find()
 				->where("ProjUserProjectID = $projectID")
 				->all();
-			$users = array_merge($users, $newUsers);
+				
+			//get project name for array key
+			$project = Project::find()
+				->where("ProjectID = $projectID")
+				->one();
+			$projectName = $project->ProjectName;
+			
+			//pass users to project key
+			$users[$projectName] = $newUsers;
+			$newUsersSize = count($newUsers);
+			
+			//get user information
+			for($j = 0; $j < $newUsersSize; $j++)
+			{
+				$userID = $users[$projectName][$j]->ProjUserUserID;
+				$users[$projectName][$j] = SCUser::find()
+					->where("UserID = $userID")
+					->one();
+			}
 		}
-		$usersSize = count($users);
 		
-		//get all mileage cards for current week for users
-		for($i = 0; $i < $usersSize; $i++)
-		{
-			$userID = $users[$i]->ProjUserUserID;
-			$newUserData = SCUser::find()
-				->where("UserID = $userID")
-				->all();
-			$userData = array_unique(array_merge($userData, $newUserData), SORT_REGULAR);
-		}
+		// // Old code
+		// for($i = 0; $i < $projectsSize; $i++)
+		// {
+			// $projectID = $projects[$i]->ProjUserProjectID; 
+			// $newUsers = ProjectUser::find()
+				// ->where("ProjUserProjectID = $projectID")
+				// ->all();
+			// $users = array_merge($users, $newUsers);
+		// }
+		// $usersSize = count($users);
+		
+		// // get all user information 
+		// for($i = 0; $i < $usersSize; $i++)
+		// {
+			// $userID = $users[$i]->ProjUserUserID;
+			// $newUserData = SCUser::find()
+				// ->where("UserID = $userID")
+				// ->all();
+			// $userData = array_unique(array_merge($userData, $newUserData), SORT_REGULAR);
+		// }
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		$response->setStatusCode(200);
-		$response->data = $userData;
+		$response->data = $users;
 		return $response;
 	}
 

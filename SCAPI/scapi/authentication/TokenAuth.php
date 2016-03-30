@@ -35,7 +35,7 @@ class TokenAuth extends AuthMethod
 				$identity = SCUser::findIdentityByAccessToken($token);
 				if ($identity === null) 
 				{
-					$this->handleFailure($response);
+					throw new UnauthorizedHttpException('You are requesting with an invalid credential.');
 				}
 				return $identity;
 			}

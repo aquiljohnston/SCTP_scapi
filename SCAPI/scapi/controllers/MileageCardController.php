@@ -6,6 +6,7 @@ use Yii;
 use app\models\MileageCard;
 use app\models\MileageEntry;
 use app\models\SCUser;
+use app\models\Project;
 use app\models\ProjectUser;
 use app\models\AllMileageCardsCurrentWeek;
 use app\models\AllMileageCardsPriorWeek;
@@ -346,8 +347,7 @@ class MileageCardController extends BaseActiveController
 			->where("ProjUserUserID = $userID")
 			->all();
 		$projectsSize = count($projects);
-		
-		$users = [];
+
 		$mileageCards = [];
 		
 		//get all users associated with projects
@@ -357,19 +357,47 @@ class MileageCardController extends BaseActiveController
 			$newUsers = ProjectUser::find()
 				->where("ProjUserProjectID = $projectID")
 				->all();
-			$users = array_merge($users, $newUsers);
+				
+			//get project name for array key
+			$project = Project::find()
+				->where("ProjectID = $projectID")
+				->one();
+			$projectName = $project->ProjectName;
+			
+			//pass users to project key
+			$mileageCards[$projectName] = $newUsers;
+			$newUsersSize = count($newUsers);
+			
+			//get mileage card information
+			for($j = 0; $j < $newUsersSize; $j++)
+			{
+				$userID = $mileageCards[$projectName][$j]->ProjUserUserID;
+				$mileageCards[$projectName][$j] = AllMileageCardsCurrentWeek::find()
+					->where("UserID = $userID")
+					->one();
+			}
 		}
-		$usersSize = count($users);
 		
-		//get all mileage cards for current week for users
-		for($i = 0; $i < $usersSize; $i++)
-		{
-			$userID = $users[$i]->ProjUserUserID;
-			$newCards = AllMileageCardsCurrentWeek::find()
-				->where("UserID = $userID")
-				->all();
-			$mileageCards = array_unique(array_merge($mileageCards, $newCards), SORT_REGULAR);
-		}
+		// //get all users associated with projects
+		// for($i = 0; $i < $projectsSize; $i++)
+		// {
+			// $projectID = $projects[$i]->ProjUserProjectID; 
+			// $newUsers = ProjectUser::find()
+				// ->where("ProjUserProjectID = $projectID")
+				// ->all();
+			// $users = array_merge($users, $newUsers);
+		// }
+		// $usersSize = count($users);
+		
+		// //get all mileage cards for current week for users
+		// for($i = 0; $i < $usersSize; $i++)
+		// {
+			// $userID = $users[$i]->ProjUserUserID;
+			// $newCards = AllMileageCardsCurrentWeek::find()
+				// ->where("UserID = $userID")
+				// ->all();
+			// $mileageCards = array_unique(array_merge($mileageCards, $newCards), SORT_REGULAR);
+		// }
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
