@@ -6,6 +6,7 @@ use Yii;
 use app\models\TimeCard;
 use app\models\TimeEntry;
 use app\models\SCUser;
+use app\models\Project;
 use app\models\ProjectUser;
 use app\models\AllTimeCardsCurrentWeek;
 use app\models\AllTimeCardsPriorWeek;
@@ -370,7 +371,6 @@ class TimeCardController extends BaseActiveController
 			->all();
 		$projectsSize = count($projects);
 		
-		$users = [];
 		$timeCards = [];
 		
 		//get all users associated with projects
@@ -380,19 +380,47 @@ class TimeCardController extends BaseActiveController
 			$newUsers = ProjectUser::find()
 				->where("ProjUserProjectID = $projectID")
 				->all();
-			$users = array_merge($users, $newUsers);
+				
+			//get project name for array key
+			$project = Project::find()
+				->where("ProjectID = $projectID")
+				->one();
+			$projectName = $project->ProjectName;
+			
+			//pass users to project key
+			$timeCards[$projectName] = $newUsers;
+			$newUsersSize = count($newUsers);
+			
+			//get mileage card information
+			for($j = 0; $j < $newUsersSize; $j++)
+			{
+				$userID = $timeCards[$projectName][$j]->ProjUserUserID;
+				$timeCards[$projectName][$j] = AllTimeCardsCurrentWeek::find()
+					->where("UserID = $userID")
+					->one();
+			}
 		}
-		$usersSize = count($users);
 		
-		//get all mileage cards for current week for users
-		for($i = 0; $i < $usersSize; $i++)
-		{
-			$userID = $users[$i]->ProjUserUserID;
-			$newCards = AllTimeCardsCurrentWeek::find()
-				->where("UserID = $userID")
-				->all();
-			$timeCards = array_unique(array_merge($timeCards, $newCards), SORT_REGULAR);
-		}
+		// //get all users associated with projects
+		// for($i = 0; $i < $projectsSize; $i++)
+		// {
+			// $projectID = $projects[$i]->ProjUserProjectID; 
+			// $newUsers = ProjectUser::find()
+				// ->where("ProjUserProjectID = $projectID")
+				// ->all();
+			// $users = array_merge($users, $newUsers);
+		// }
+		// $usersSize = count($users);
+		
+		// //get all mileage cards for current week for users
+		// for($i = 0; $i < $usersSize; $i++)
+		// {
+			// $userID = $users[$i]->ProjUserUserID;
+			// $newCards = AllTimeCardsCurrentWeek::find()
+				// ->where("UserID = $userID")
+				// ->all();
+			// $timeCards = array_unique(array_merge($timeCards, $newCards), SORT_REGULAR);
+		// }
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;

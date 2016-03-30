@@ -331,10 +331,18 @@ class EquipmentController extends BaseActiveController
 		for($i = 0; $i < $projectsSize; $i++)
 		{
 			$projectID = $projects[$i]->ProjUserProjectID; 
+			
+			//get project name for array key
+			$project = Project::find()
+				->where("ProjectID = $projectID")
+				->one();
+			$projectName = $project->ProjectName;
+			
+			//get equipment info
 			$newEquipment = Equipment::find()
 				->where("EquipmentProjectID = $projectID")
 				->all();
-			$equipment = array_merge($equipment, $newEquipment);
+			$equipment[$projectName] = $newEquipment;
 		}
 		
 		$response = Yii::$app->response;
