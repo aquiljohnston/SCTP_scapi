@@ -28,57 +28,37 @@ class AuthController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Activity::setClient($headers['X-Client']);
-		
-		$auth = Auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $auth;
-		
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
 		return $response;
 	}
 	
 	public function actionCreate($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Auth::setClient($headers['X-Client']);
-		
-		$auth = Auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $auth;
-		
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
 		return $response;
 	}
 	
 	public function actionUpdate($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Auth::setClient($headers['X-Client']);
-		
-		$auth = auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $auth;
-		
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
 		return $response;
 	}
 	
 	public function actionDelete($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Auth::setClient($headers['X-Client']);
-		
-		$auth = Auth::findOne($id);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		$response->data = $Auth;
-		
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
 		return $response;
 	}
 	
