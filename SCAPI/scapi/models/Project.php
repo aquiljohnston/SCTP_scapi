@@ -14,6 +14,7 @@ use Yii;
  * @property string $ProjectType
  * @property integer $ProjectStatus
  * @property integer $ProjectClientID
+ * @property integer $ProjectState
  * @property string $ProjectStartDate
  * @property string $ProjectEndDate
  * @property string $ProjectCreateDate
@@ -42,7 +43,7 @@ class Project extends BaseActiveRecord
     {
         return [
             [['ProjectName'], 'required'],
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectCreatedBy', 'ProjectModifiedBy'], 'string'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectState'], 'string'],
             [['ProjectStatus', 'ProjectClientID'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate'], 'safe']
         ];
@@ -61,6 +62,7 @@ class Project extends BaseActiveRecord
             'ProjectType' => 'Project Type',
             'ProjectStatus' => 'Project Status',
             'ProjectClientID' => 'Project Client ID',
+			'ProjectState' => 'Project State',
             'ProjectStartDate' => 'Project Start Date',
             'ProjectEndDate' => 'Project End Date',
             'ProjectCreateDate' => 'Project Create Date',

@@ -10,11 +10,13 @@ use Yii;
  * @property string $EquipmentID
  * @property string $EquipmentName
  * @property string $EquipmentSerialNumber
+ * @property string $EquipmentSCNumber
  * @property string $EquipmentDetails
  * @property string $EquipmentType
  * @property string $EquipmentManufacturer
  * @property string $EquipmentManufactureYear
  * @property string $EquipmentCondition
+ * @property string $EquipmentStatus
  * @property string $EquipmentMACID
  * @property string $EquipmentModel
  * @property string $EquipmentColor
@@ -51,7 +53,7 @@ class Equipment extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedBy', 'EquipmentCreatedByUser', 'EquipmentModifiedBy', 'EquipmentAcceptedFlag'], 'string'],
+            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedBy', 'EquipmentCreatedByUser', 'EquipmentModifiedBy', 'EquipmentAcceptedFlag'], 'string'],
             [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
@@ -66,11 +68,13 @@ class Equipment extends BaseActiveRecord
             'EquipmentID' => 'Equipment ID',
             'EquipmentName' => 'Equipment Name',
             'EquipmentSerialNumber' => 'Equipment Serial Number',
+			'EquipmentSCNumber' => 'Equipment SC Number',
             'EquipmentDetails' => 'Equipment Details',
             'EquipmentType' => 'Equipment Type',
             'EquipmentManufacturer' => 'Equipment Manufacturer',
             'EquipmentManufactureYear' => 'Equipment Manufacture Year',
             'EquipmentCondition' => 'Equipment Condition',
+			'EquipmentStatus' => 'Equipment Status',
             'EquipmentMACID' => 'Equipment Macid',
             'EquipmentModel' => 'Equipment Model',
             'EquipmentColor' => 'Equipment Color',

@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\SCUser;
 use app\models\Project;
+use app\models\Client;
 use app\models\ProjectUser;
 use app\models\Key;
 use app\models\ActivityCode;
@@ -322,6 +323,7 @@ class UserController extends BaseActiveController
 		Equipment::setClient($headers['X-Client']);
 		ActivityCode::setClient($headers['X-Client']);
 		PayCode::setClient($headers['X-Client']);
+		Client::setClient($headers['X-Client']);
 		
 		//get user
 		$user = SCUser::findOne($userID);
@@ -357,9 +359,11 @@ class UserController extends BaseActiveController
 			}
 			$projectID = $projectUser[$i]->ProjUserProjectID ;
 			$projectModel = Project::findOne($projectID);
+			$clientModel = Client::findOne($projectModel->ProjectClientID);
 			$projectData["ProjectID"]= $projectModel->ProjectID;  
 			$projectData["ProjectName"]= $projectModel->ProjectName;  
 			$projectData["ProjectClientID"]= $projectModel->ProjectClientID;  
+			$projectData["ProjectClientPath"]= $clientModel->ClientFilesPath;  
 			$projectData["ActivityCodes"]= $activityCodesArray; 
 			$projectData["PayCodes"]= $payCodesArray; 
 			
