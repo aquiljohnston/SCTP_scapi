@@ -16,17 +16,15 @@ class TokenAuth extends AuthMethod
     public function authenticate($user, $request, $response)
     {
         $token = $request->getAuthUser();
-		try
-		{
-			$headers = getAllHeaders();
-			SCUser::setClient($headers['X-Client']);
-			Auth::setClient($headers['X-Client']);
-		}
-		catch(ErrorException $e)
+		
+		//check for client header
+		$headers = getAllHeaders();
+		if($headers['X-Client'] == null)
 		{
 			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
-		}	
-		
+		}
+		SCUser::setClient('CometTracker');
+		Auth::setClient('CometTracker');
 		
 		if ($token !== null) {
 			Yii::$app->user->checkTimeout($token);
