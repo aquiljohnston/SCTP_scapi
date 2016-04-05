@@ -298,13 +298,16 @@ class UserController extends BaseActiveController
 	
         $users = SCUser::find()
 			->all();
-		$namePairs = [];
+		$namePairs = [null => "Unassigned"];
+		$tempPairs = [];
 		$userSize = count($users);
 		
 		for($i=0; $i < $userSize; $i++)
 		{
-			$namePairs[$users[$i]->UserID]= $users[$i]->UserLastName. ", ". $users[$i]->UserFirstName;
+			$tempPairs[$users[$i]->UserID]= $users[$i]->UserLastName. ", ". $users[$i]->UserFirstName;
 		}
+		natcasesort($tempPairs);
+		$namePairs = $namePairs + $tempPairs;
 
 		$response = Yii::$app ->response;
 		$response -> format = Response::FORMAT_JSON;

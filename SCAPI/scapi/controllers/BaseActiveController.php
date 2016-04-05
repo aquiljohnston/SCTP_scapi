@@ -33,7 +33,9 @@ class BaseActiveController extends ActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['delete'],
+					'create' => ['create'],
 					'update' => ['put'],
+					'get-all' => ['get'],
                 ],
             ];
 		return $behaviors;
@@ -41,9 +43,13 @@ class BaseActiveController extends ActiveController
 
 	public function actionCreate()
     {
+		//set model class
+		$modelClass = $this->modelClass;
+		
 		//set db target
 		$headers = getallheaders();
 		BaseActiveRecord::setClient($headers['X-Client']);
+		$modelClass::setClient($headers['X-Client']);
 		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
@@ -69,11 +75,14 @@ class BaseActiveController extends ActiveController
 	
 	public function actionGetAll()
 	{
+		//set model class
+		$modelClass = $this->modelClass;
+		
 		//set db target
 		$headers = getallheaders();
 		BaseActiveRecord::setClient($headers['X-Client']);
+		$modelClass::setClient($headers['X-Client']);
 		
-		$modelClass = $this->modelClass;
         $models = $modelClass::find()
 			->all();
 		
