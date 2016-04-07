@@ -114,24 +114,25 @@ class UserController extends BaseActiveController
 		
 		if($model-> save())
 		{
-			//run sp to create Time and Mileage cards for a new user
-			try
-			{
-				$userID = $model->UserID;
-				$connection = SCUser::getDb();
-				$transaction = $connection-> beginTransaction();
-				$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForNewUserCatchErrors_proc :PARAMETER1");
-				$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-				$timeCardCommand->execute();
-				$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForNewUserCatchErrors_proc :PARAMETER1");
-				$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-				$mileageCardCommand->execute();
-				$transaction->commit();
-			}
-			catch(Exception $e)
-			{
-				$transaction->rollBack();
-			}
+			//moved sp calls to when a user is added to a project.
+			// //run sp to create Time and Mileage cards for a new user
+			// try
+			// {
+				// $userID = $model->UserID;
+				// $connection = SCUser::getDb();
+				// $transaction = $connection-> beginTransaction();
+				// $timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForNewUserCatchErrors_proc :PARAMETER1");
+				// $timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				// $timeCardCommand->execute();
+				// $mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForNewUserCatchErrors_proc :PARAMETER1");
+				// $mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				// $mileageCardCommand->execute();
+				// $transaction->commit();
+			// }
+			// catch(Exception $e)
+			// {
+				// $transaction->rollBack();
+			// }
 			$response->setStatusCode(201);
 			$response->data = $model;
 		}
