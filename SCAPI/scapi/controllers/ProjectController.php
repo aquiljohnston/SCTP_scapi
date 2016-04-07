@@ -270,6 +270,26 @@ class ProjectController extends BaseActiveController
 		{
 			$user = SCUser::findOne($i);
 			$user->link('projects',$project);
+			//call sps to create new time cards and mileage cards
+			try
+			{
+				$userID = $i;
+				$connection = SCUser::getDb();
+				$transaction = $connection-> beginTransaction();
+				$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :PARAMETER1,:PARAMETER2");
+				$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				$timeCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+				$timeCardCommand->execute();
+				$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :PARAMETER1,:PARAMETER2");
+				$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				$mileageCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+				$mileageCardCommand->execute();
+				$transaction->commit();
+			}
+			catch(Exception $e)
+			{
+				$transaction->rollBack();
+			}			
 		}
 		
 		//loop usersRemoved and delete relationships
