@@ -86,13 +86,14 @@ class ProjectController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
-		//created by
-		if ($user = SCUSer::findOne(['UserID'=>$model->ProjectCreatedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->ProjectCreatedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// //created by
+		// if ($user = SCUSer::findOne(['UserID'=>$model->ProjectCreatedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->ProjectCreatedBy = $lname.", ".$fname;
+		// }
 		
 		//create date
 		$model->ProjectCreateDate = date('Y-m-d H:i:s');
@@ -127,12 +128,13 @@ class ProjectController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
-		if ($user = SCUSer::findOne(['UserID'=>$model->ProjectModifiedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->ProjectModifiedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// if ($user = SCUSer::findOne(['UserID'=>$model->ProjectModifiedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->ProjectModifiedBy = $lname.", ".$fname;
+		// }
 		
 		$model->ProjectModifiedDate = date('Y-m-d H:i:s');
 		

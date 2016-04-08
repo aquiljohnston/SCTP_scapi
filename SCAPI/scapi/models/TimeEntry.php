@@ -41,8 +41,8 @@ class TimeEntry extends BaseActiveRecord
     {
         return [
             [['TimeEntryStartTime', 'TimeEntryEndTime', 'TimeEntryDate', 'TimeEntryCreateDate', 'TimeEntryModifiedDate'], 'safe'],
-            [['TimeEntryUserID', 'TimeEntryMinutes', 'TimeEntryTimeCardID', 'TimeEntryActivityID'], 'integer'],
-            [['TimeEntryComment', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy'], 'string']
+            [['TimeEntryUserID', 'TimeEntryMinutes', 'TimeEntryTimeCardID', 'TimeEntryActivityID', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy'], 'integer'],
+            [['TimeEntryComment'], 'string']
         ];
     }
 

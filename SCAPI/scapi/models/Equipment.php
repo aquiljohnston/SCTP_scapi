@@ -53,8 +53,8 @@ class Equipment extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedBy', 'EquipmentCreatedByUser', 'EquipmentModifiedBy', 'EquipmentAcceptedFlag'], 'string'],
-            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID'], 'integer'],
+            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag', 'EquipmentAcceptedBy', 'EquipmentModificationReason'], 'string'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
     }

@@ -49,8 +49,8 @@ class Client extends BaseActiveRecord
     {
         return [
             [['ClientName'], 'required'],
-            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientCreatorUserID', 'ClientModifiedBy'], 'string'],
-            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
+            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment'], 'string'],
+            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag',  'ClientCreatorUserID', 'ClientModifiedBy'], 'integer'],
             [['ClientCreateDate', 'ClientModifiedDate'], 'safe']
         ];
     }

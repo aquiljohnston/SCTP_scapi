@@ -101,13 +101,14 @@ class UserController extends BaseActiveController
 		$model = new SCUser();
 		$model->attributes = $data;  
 		
-		//created by
-		if ($user = SCUser::findOne(['UserID'=>$model->UserCreatedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->UserCreatedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// //created by
+		// if ($user = SCUser::findOne(['UserID'=>$model->UserCreatedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->UserCreatedBy = $lname.", ".$fname;
+		// }
 		
 		//created date
 		$model->UserCreatedDate = date('Y-m-d H:i:s');
@@ -139,7 +140,8 @@ class UserController extends BaseActiveController
 		else
 		{
 			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
+			$response->data = $model;
+			//$response->data = "Http:400 Bad Request";
 		}
 		return $response;
 	}
@@ -197,12 +199,13 @@ class UserController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
-		if ($user = SCUSer::findOne(['UserID'=>$model->UserModifiedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->UserModifiedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// if ($user = SCUSer::findOne(['UserID'=>$model->UserModifiedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->UserModifiedBy = $lname.", ".$fname;
+		// }
 		
 		$model->UserModifiedDate = date('Y-m-d H:i:s');
 		

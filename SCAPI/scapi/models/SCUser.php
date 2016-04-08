@@ -23,8 +23,8 @@ use app\models\Auth;
  * @property integer $UserActiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
- * @property string $UserCreatedBy
- * @property string $UserModifiedBy
+ * @property integer $UserCreatedBy
+ * @property integer $UserModifiedBy
  * @property string $UserCreateDTLTOffset
  * @property integer $UserModifiedDTLTOffset
  * @property integer $UserInactiveDTLTOffset
@@ -49,9 +49,9 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     public function rules()
     {
         return [
-            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedBy', 'UserModifiedBy', 'UserCreateDTLTOffset'], 'string'],
-            [['UserKey', 'UserActiveFlag', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'integer'],
-            [['UserCreatedDate', 'UserModifiedDate'], 'safe']
+            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments'], 'string'],
+            [['UserKey', 'UserActiveFlag', 'UserCreatedBy', 'UserModifiedBy'], 'integer'],
+            [['UserCreateDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate'], 'safe']
         ];
     }
 

@@ -76,13 +76,14 @@ class MileageEntryController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
-		//created by
-		if ($user = SCUser::findOne(['UserID'=>$model->MileageEntryCreatedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->MileageEntryCreatedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// //created by
+		// if ($user = SCUser::findOne(['UserID'=>$model->MileageEntryCreatedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->MileageEntryCreatedBy = $lname.", ".$fname;
+		// }
 		
 		//create date
 		$model->MileageEntryCreateDate = date('Y-m-d H:i:s');

@@ -77,7 +77,6 @@ class EquipmentController extends BaseActiveController
 		//set db target
 		$headers = getallheaders();
 		Equipment::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
 		
 		$post = file_get_contents("php://input");
 		$data = json_decode($post, true);
@@ -87,14 +86,6 @@ class EquipmentController extends BaseActiveController
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
-		
-		//created by
-		if ($user = SCUSer::findOne(['UserID'=>$model->EquipmentCreatedByUser]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->EquipmentCreatedByUser = $lname.", ".$fname;
-		}
 		
 		//create date
 		$model->EquipmentCreateDate = date('Y-m-d H:i:s');
@@ -130,12 +121,13 @@ class EquipmentController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
-		if ($user = SCUSer::findOne(['UserID'=>$model->EquipmentModifiedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->EquipmentModifiedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// if ($user = SCUSer::findOne(['UserID'=>$model->EquipmentModifiedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->EquipmentModifiedBy = $lname.", ".$fname;
+		// }
 		
 		$model->EquipmentModifiedDate = date('Y-m-d H:i:s');
 		
