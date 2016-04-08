@@ -214,6 +214,7 @@ class ProjectController extends BaseActiveController
 		
 		//get all users
 		$allUsers = SCUser::find()
+			->where(['UserActiveFlag' => 1])
 			->all();
 		
 		$unassignedPairs = [];
