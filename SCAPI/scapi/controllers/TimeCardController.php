@@ -391,36 +391,23 @@ class TimeCardController extends BaseActiveController
 			$timeCards[$projectName] = $newUsers;
 			$newUsersSize = count($newUsers);
 			
-			//get mileage card information
+			$tempCards = [];
+			
+			//get time card information
 			for($j = 0; $j < $newUsersSize; $j++)
 			{
 				$userID = $timeCards[$projectName][$j]->ProjUserUserID;
-				$timeCards[$projectName][$j] = AllTimeCardsCurrentWeek::find()
+				$tempCard = AllTimeCardsCurrentWeek::find()
 					->where("UserID = $userID")
+					->andWhere("TimeCardProjectID = $projectID")
 					->one();
+				if ($tempCard != null)
+				{
+					$tempCards[] = $tempCard;
+				}
 			}
+			$timeCards[$projectName] = $tempCards;
 		}
-		
-		// //get all users associated with projects
-		// for($i = 0; $i < $projectsSize; $i++)
-		// {
-			// $projectID = $projects[$i]->ProjUserProjectID; 
-			// $newUsers = ProjectUser::find()
-				// ->where("ProjUserProjectID = $projectID")
-				// ->all();
-			// $users = array_merge($users, $newUsers);
-		// }
-		// $usersSize = count($users);
-		
-		// //get all mileage cards for current week for users
-		// for($i = 0; $i < $usersSize; $i++)
-		// {
-			// $userID = $users[$i]->ProjUserUserID;
-			// $newCards = AllTimeCardsCurrentWeek::find()
-				// ->where("UserID = $userID")
-				// ->all();
-			// $timeCards = array_unique(array_merge($timeCards, $newCards), SORT_REGULAR);
-		// }
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
