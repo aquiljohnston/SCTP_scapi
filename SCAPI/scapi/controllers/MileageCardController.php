@@ -368,14 +368,22 @@ class MileageCardController extends BaseActiveController
 			$mileageCards[$projectName] = $newUsers;
 			$newUsersSize = count($newUsers);
 			
+			$tempCards = [];
+			
 			//get mileage card information
 			for($j = 0; $j < $newUsersSize; $j++)
 			{
 				$userID = $mileageCards[$projectName][$j]->ProjUserUserID;
-				$mileageCards[$projectName][$j] = AllMileageCardsCurrentWeek::find()
+				$tempCard = AllMileageCardsCurrentWeek::find()
 					->where("UserID = $userID")
+					->andWhere("MileageCardProjectID = $projectID")
 					->one();
+				if ($tempCard != null)
+				{
+					$tempCards[] = $tempCard;
+				}
 			}
+			$mileageCards[$projectName] = $tempCards;
 		}
 		
 		// //get all users associated with projects
