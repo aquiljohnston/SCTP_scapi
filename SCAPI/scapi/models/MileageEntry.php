@@ -45,8 +45,8 @@ class MileageEntry extends BaseActiveRecord
     {
         return [
             [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
-            [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus', 'MileageEntryUserID'], 'integer'],
-            [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'string'],
+            [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus', 'MileageEntryUserID', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'integer'],
+            [['MileageEntryApprovedBy', 'MileageEntryComment'], 'string'],
             [['MileageEntryDate', 'MileageEntryStartDate', 'MileageEntryEndDate',  'MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
         ];
     }

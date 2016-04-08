@@ -75,13 +75,14 @@ class TimeEntryController extends BaseActiveController
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
 		
-		//created by
-		if ($user = SCUser::findOne(['UserID'=>$model->TimeEntryCreatedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$model->TimeEntryCreatedBy = $lname.", ".$fname;
-		}
+		//removed to maintain data type
+		// //created by
+		// if ($user = SCUser::findOne(['UserID'=>$model->TimeEntryCreatedBy]))
+		// {
+			// $fname = $user->UserFirstName;
+			// $lname = $user->UserLastName;
+			// $model->TimeEntryCreatedBy = $lname.", ".$fname;
+		// }
 		
 		//create date
 		$model->TimeEntryCreateDate = date('Y-m-d H:i:s');

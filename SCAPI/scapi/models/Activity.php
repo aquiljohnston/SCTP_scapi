@@ -39,8 +39,8 @@ class Activity extends BaseActiveRecord
     {
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate'], 'safe'],
-            [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedBy', 'ActivityModifiedBy'], 'string'],
-            [['ActivityCode', 'ActivityPayCode'], 'integer']
+            [['ActivityTitle', 'ActivityBillingCode'], 'string'],
+            [['ActivityCode', 'ActivityPayCode' , 'ActivityCreatedBy', 'ActivityModifiedBy'], 'integer']
         ];
     }
 

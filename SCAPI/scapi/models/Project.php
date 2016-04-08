@@ -42,9 +42,8 @@ class Project extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectName'], 'required'],
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectState'], 'string'],
-            [['ProjectStatus', 'ProjectClientID'], 'integer'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState'], 'string'],
+            [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate'], 'safe']
         ];
     }

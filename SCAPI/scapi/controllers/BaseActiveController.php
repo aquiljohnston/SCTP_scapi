@@ -33,7 +33,7 @@ class BaseActiveController extends ActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['delete'],
-					'create' => ['create'],
+					'create' => ['post'],
 					'update' => ['put'],
 					'get-all' => ['get'],
                 ],
