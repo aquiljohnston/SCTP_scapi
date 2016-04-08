@@ -79,7 +79,7 @@ class LoginController extends ActiveController
 		//load json data into model:
 		$user->attributes = $data;  
 
-		if($userName = SCUser::findOne(['UserName'=>$user->UserName]))
+		if($userName = SCUser::findOne(['UserName'=>$user->UserName, 'UserActiveFlag'=>1]))
 			{
 			$securedPass = $data["Password"];
 			Yii::trace('securedPass: '.$securedPass);
@@ -107,7 +107,8 @@ class LoginController extends ActiveController
 				$auth-> beforeSave(true);
 				//Store Auth Token
 				$auth-> save();
-			} else 
+			}
+			else
 			{
 				$response->data = "Password is invalid.";
 				$response->setStatusCode(401);
@@ -117,7 +118,7 @@ class LoginController extends ActiveController
 		}
 		else
 		{
-			$response->data = "User not Found.";
+			$response->data = "User not found or inactive.";
 			$response->setStatusCode(401);
 			return $response;
 		}
