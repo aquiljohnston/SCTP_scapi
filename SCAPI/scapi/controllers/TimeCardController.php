@@ -47,6 +47,7 @@ class TimeCardController extends BaseActiveController
 					'update' => ['put'],
 					'approve-time-cards'  => ['put'],
 					'view-all-time-cards-current-week' => ['get'],
+					'view-all-time-cards-current-week-by-project' => ['get'],
 					'view-all-time-cards-prior-week' => ['get'],
 					'view-all-approved-time-cards-current-week' => ['get'],
 					'view-all-unapproved-time-cards-current-week' => ['get'],
@@ -108,6 +109,7 @@ class TimeCardController extends BaseActiveController
 		return $response;
 	}
 	
+	//get all time card for the current week based on db view
 	public function actionViewAllTimeCardsCurrentWeek()
 	{
 		//set db target
@@ -121,6 +123,23 @@ class TimeCardController extends BaseActiveController
 		$response->data = $timecardData;
 	}
 	
+	//get all time card for the current week that are associated with a projectID based on db view
+	public function actionViewAllTimeCardsCurrentWeekByProject($projectID)
+	{
+		//set db target
+		$headers = getallheaders();
+		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+		
+		$timecardArray = AllTimeCardsCurrentWeek::find()
+					->where("TimeCardProjectID = $projectID")
+					->all();
+		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $timecardData;
+	}
+	
+	//get all time card for the prior week that have the status of approved, based on db view
 	public function actionViewAllTimeCardsPriorWeek()
 	{
 		//set db target
@@ -134,6 +153,7 @@ class TimeCardController extends BaseActiveController
 		$response->data = $timecardData;
 	}
 	
+	//get all time card for the current week based on db view
 	public function actionViewAllApprovedTimeCardsCurrentWeek()
 	{
 		//set db target
@@ -147,6 +167,7 @@ class TimeCardController extends BaseActiveController
 		$response->data = $timecardData;
 	}
 	
+	//gets all time cards for the current week that have the status of unapproved, based on db view.
 	public function actionViewAllUnapprovedTimeCardsCurrentWeek()
 	{
 		//set db target
