@@ -22,25 +22,32 @@ class EquipmentConditionController extends BaseActiveController
 	//return a json containing pairs of EquipmentConditions
 	public function actionGetConditionDropdowns()
 	{	
-		//set db target
-		$headers = getallheaders();
-		EquipmentCondition::setClient($headers['X-Client']);
-		
-        $condition = EquipmentCondition::find()
-			->all();
-		$namePairs = [];
-		$conSize = count($condition);
-		
-		for($i=0; $i < $conSize; $i++)
+		try
 		{
-			$namePairs[$condition[$i]->EquipmentCondition]= $condition[$i]->EquipmentCondition;
-		}
+			//set db target
+			$headers = getallheaders();
+			EquipmentCondition::setClient($headers['X-Client']);
 			
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $namePairs;
-		
-		return $response;
+			$condition = EquipmentCondition::find()
+				->all();
+			$namePairs = [];
+			$conSize = count($condition);
+			
+			for($i=0; $i < $conSize; $i++)
+			{
+				$namePairs[$condition[$i]->EquipmentCondition]= $condition[$i]->EquipmentCondition;
+			}
+				
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

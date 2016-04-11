@@ -85,25 +85,32 @@ class ActivityCodeController extends BaseActiveController
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetCodeDropdowns()
 	{	
-		//set db target
-		$headers = getallheaders();
-		ActivityCode::setClient($headers['X-Client']);
-	
-        $codes = ActivityCode::find()
-			->all();
-		$namePairs = [];
-		$codesSize = count($codes);
-		
-		for($i=0; $i < $codesSize; $i++)
+		try
 		{
-			$namePairs[$codes[$i]->ActivityCodeID]= $codes[$i]->ActivityCodeType;
-		}
+			//set db target
+			$headers = getallheaders();
+			ActivityCode::setClient($headers['X-Client']);
+		
+			$codes = ActivityCode::find()
+				->all();
+			$namePairs = [];
+			$codesSize = count($codes);
 			
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $namePairs;
-		
-		return $response;
+			for($i=0; $i < $codesSize; $i++)
+			{
+				$namePairs[$codes[$i]->ActivityCodeID]= $codes[$i]->ActivityCodeType;
+			}
+				
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

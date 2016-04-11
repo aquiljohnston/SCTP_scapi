@@ -33,25 +33,32 @@ class ClientAccountsController extends BaseActiveController
 	//return a json containing pairs of ClientAccountIDs and ClientNames
 	public function actionGetClientAccountDropdowns()
 	{	
-		//set db target
-		$headers = getallheaders();
-		ClientAccounts::setClient($headers['X-Client']);
-	
-        $clientAccounts = ClientAccounts::find()
-			->all();
-		$namePairs = [];
-		$clientSize = count($clientAccounts);
-		
-		for($i=0; $i < $clientSize; $i++)
+		try
 		{
-			$namePairs[$clientAccounts[$i]->ClientAccountNumber]= $clientAccounts[$i]->ClientAccountNumber . " - " . $clientAccounts[$i]->ClientAccountName;
-		}
+			//set db target
+			$headers = getallheaders();
+			ClientAccounts::setClient($headers['X-Client']);
+		
+			$clientAccounts = ClientAccounts::find()
+				->all();
+			$namePairs = [];
+			$clientSize = count($clientAccounts);
 			
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $namePairs;
-		
-		return $response;
+			for($i=0; $i < $clientSize; $i++)
+			{
+				$namePairs[$clientAccounts[$i]->ClientAccountNumber]= $clientAccounts[$i]->ClientAccountNumber . " - " . $clientAccounts[$i]->ClientAccountName;
+			}
+				
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

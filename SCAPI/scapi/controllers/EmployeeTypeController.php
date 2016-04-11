@@ -22,25 +22,28 @@ class EmployeeTypeController extends BaseActiveController
 	//return a json containing pairs of EmployeeTypes
 	public function actionGetTypeDropdowns()
 	{	
-		//set db target
-		$headers = getallheaders();
-		EmployeeType::setClient($headers['X-Client']);
-	
-        $types = EmployeeType::find()
-			->all();
-		$namePairs = [];
-		$typesSize = count($types);
-		
-		for($i=0; $i < $typesSize; $i++)
+		try
 		{
-			$namePairs[$types[$i]->EmployeeType]= $types[$i]->EmployeeType;
-		}
+			//set db target
+			$headers = getallheaders();
+			EmployeeType::setClient($headers['X-Client']);
+		
+			$types = EmployeeType::find()
+				->all();
+			$namePairs = [];
+			$typesSize = count($types);
 			
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $namePairs;
-		
-		return $response;
+			for($i=0; $i < $typesSize; $i++)
+			{
+				$namePairs[$types[$i]->EmployeeType]= $types[$i]->EmployeeType;
+			}
+				
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
 	}
 }

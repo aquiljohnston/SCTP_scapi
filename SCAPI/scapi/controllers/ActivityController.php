@@ -32,16 +32,23 @@ class ActivityController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Activity::setClient($headers['X-Client']);
-		
-		$activity = Activity::findOne($id);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $activity;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			Activity::setClient($headers['X-Client']);
+			
+			$activity = Activity::findOne($id);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $activity;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionUpdate()
@@ -64,131 +71,138 @@ class ActivityController extends BaseActiveController
 
 	public function actionCreate()
 	{
-		//set db target
-		$headers = getallheaders();
-		Activity::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		TimeEntry::setClient($headers['X-Client']);
-		MileageEntry::setClient($headers['X-Client']);
-		
-		//capture and decode the input json
-		$post = file_get_contents("php://input");
-		$data = json_decode($post, true);
-		
-		//parse the individual arrays of the input json
-		$activityArray = $data["activity"];
-		
-		//create and format response json
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//handle $activityArray
-		if ($activityArray != null)
+		try
 		{
-			//get number of activities
-			$activitySize = count($activityArray);
+			//set db target
+			$headers = getallheaders();
+			Activity::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
+			TimeEntry::setClient($headers['X-Client']);
+			MileageEntry::setClient($headers['X-Client']);
 			
-			for($i = 0; $i < $activitySize; $i++)
+			//capture and decode the input json
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
+			
+			//parse the individual arrays of the input json
+			$activityArray = $data["activity"];
+			
+			//create and format response json
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//handle $activityArray
+			if ($activityArray != null)
 			{
-				$activity = new Activity();
-				//removed to maintain data type
-				// if ($user = SCUser::findOne(['UserID'=>$activityArray[$i]["ActivityCreatedBy"]]))
-				// {
-					// $fname = $user->UserFirstName;
-					// $lname = $user->UserLastName;
-					// $activityArray[$i]["ActivityCreatedBy"] = $lname.", ".$fname;
-				// }
-				$activityArray[$i]["ActivityCreateDate"] = date('Y-m-d H:i:s');
-				//check array data
-				$timeLength = 0;
-				$mileageLength = 0;
-				if ($activityArray[$i]["timeEntry"] != null)
-				{
-					$timeArray = $data["activity"][$i]["timeEntry"];
-					//Get first and last time entry from timeArray and pass to ActivityStartTime and ActivityEndTime
-					$timeLength = count($timeArray);
-					$activityArray[$i]["ActivityStartTime"] = $timeArray[0]["TimeEntryStartTime"];
-					$activityArray[$i]["ActivityEndTime"] = $timeArray[$timeLength-1]["TimeEntryEndTime"];
-				}
-				if ($activityArray[$i]["mileageEntry"] != null)
-				{
-					$mileageArray = $data["activity"][$i]["mileageEntry"];
-					$mileageLength = count($mileageArray);
-				}
+				//get number of activities
+				$activitySize = count($activityArray);
 				
-				//load attributes to model
-				$activity->attributes = $activityArray[$i];
-				
-				//save activity 
-				if($activity->save())
+				for($i = 0; $i < $activitySize; $i++)
 				{
-					$response->setStatusCode(201);
-					//convert the new activity back to an array so it can be loaded into the response
-					$savedActivity= $activity->toArray();
-					$activityArray[$i] = $savedActivity;
-					
-					//update response json with new activity data
-					$data["activity"][$i] = $activityArray[$i];
-				
-					//set up empty arrays
-					$data["activity"][$i]["timeEntry"] = array();
-					$data["activity"][$i]["mileageEntry"] = array();
-					
-					//add activityID to corrosponding time entries
-					if($timeLength > 0)
+					$activity = new Activity();
+					//removed to maintain data type
+					// if ($user = SCUser::findOne(['UserID'=>$activityArray[$i]["ActivityCreatedBy"]]))
+					// {
+						// $fname = $user->UserFirstName;
+						// $lname = $user->UserLastName;
+						// $activityArray[$i]["ActivityCreatedBy"] = $lname.", ".$fname;
+					// }
+					$activityArray[$i]["ActivityCreateDate"] = date('Y-m-d H:i:s');
+					//check array data
+					$timeLength = 0;
+					$mileageLength = 0;
+					if ($activityArray[$i]["timeEntry"] != null)
 					{
-						for($t = 0; $t < $timeLength; $t++)
-						{
-							$timeArray[$t]["TimeEntryActivityID"] = $activityArray[$i]["ActivityID"];
-							$timeEntry = new TimeEntry();
-							$timeEntry->attributes = $timeArray[$t];
-							$timeEntry-> TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
-							$timeEntry->TimeEntryCreateDate = date('Y-m-d H:i:s');
-							if($timeEntry->save())
-								{
-									$response->setStatusCode(201);
-									//update response json with new timeEntry data
-									$data["activity"][$i]["timeEntry"][$t] = $timeEntry;
-								}
-							else
-								{
-									//throw a bad request if any save fails
-									$response->setStatusCode(400);
-									$response->data = "Http:400 Bad Request";
-									return $response;
-								}
-						}
+						$timeArray = $data["activity"][$i]["timeEntry"];
+						//Get first and last time entry from timeArray and pass to ActivityStartTime and ActivityEndTime
+						$timeLength = count($timeArray);
+						$activityArray[$i]["ActivityStartTime"] = $timeArray[0]["TimeEntryStartTime"];
+						$activityArray[$i]["ActivityEndTime"] = $timeArray[$timeLength-1]["TimeEntryEndTime"];
 					}
-					//add activityID to corrosponding mileage entries
-					if($mileageLength > 0)
+					if ($activityArray[$i]["mileageEntry"] != null)
 					{
-						for($m = 0; $m < $mileageLength; $m++)
+						$mileageArray = $data["activity"][$i]["mileageEntry"];
+						$mileageLength = count($mileageArray);
+					}
+					
+					//load attributes to model
+					$activity->attributes = $activityArray[$i];
+					
+					//save activity 
+					if($activity->save())
+					{
+						$response->setStatusCode(201);
+						//convert the new activity back to an array so it can be loaded into the response
+						$savedActivity= $activity->toArray();
+						$activityArray[$i] = $savedActivity;
+						
+						//update response json with new activity data
+						$data["activity"][$i] = $activityArray[$i];
+					
+						//set up empty arrays
+						$data["activity"][$i]["timeEntry"] = array();
+						$data["activity"][$i]["mileageEntry"] = array();
+						
+						//add activityID to corrosponding time entries
+						if($timeLength > 0)
 						{
-							$mileageArray[$m]["MileageEntryActivityID"]= $activityArray[$i]["ActivityID"];
-							$mileageEntry = new MileageEntry();
-							$mileageEntry->attributes = $mileageArray[$m];
-							$mileageEntry-> MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
-							$mileageEntry->MileageEntryCreateDate = date('Y-m-d H:i:s');
-							if($mileageEntry->save())
-								{
-									$response->setStatusCode(201);
-									//update response json with new mileageEntry data
-									$data["activity"][$i]["mileageEntry"][$m] = $mileageEntry;
-								}
-							else
-								{
-									//throw a bad request if any save fails
-									$response->setStatusCode(400);
-									$response->data = "Http:400 Bad Request";
-									return $response;
-								}
+							for($t = 0; $t < $timeLength; $t++)
+							{
+								$timeArray[$t]["TimeEntryActivityID"] = $activityArray[$i]["ActivityID"];
+								$timeEntry = new TimeEntry();
+								$timeEntry->attributes = $timeArray[$t];
+								$timeEntry-> TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
+								$timeEntry->TimeEntryCreateDate = date('Y-m-d H:i:s');
+								if($timeEntry->save())
+									{
+										$response->setStatusCode(201);
+										//update response json with new timeEntry data
+										$data["activity"][$i]["timeEntry"][$t] = $timeEntry;
+									}
+								else
+									{
+										//throw a bad request if any save fails
+										$response->setStatusCode(400);
+										$response->data = "Http:400 Bad Request";
+										return $response;
+									}
+							}
+						}
+						//add activityID to corrosponding mileage entries
+						if($mileageLength > 0)
+						{
+							for($m = 0; $m < $mileageLength; $m++)
+							{
+								$mileageArray[$m]["MileageEntryActivityID"]= $activityArray[$i]["ActivityID"];
+								$mileageEntry = new MileageEntry();
+								$mileageEntry->attributes = $mileageArray[$m];
+								$mileageEntry-> MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
+								$mileageEntry->MileageEntryCreateDate = date('Y-m-d H:i:s');
+								if($mileageEntry->save())
+									{
+										$response->setStatusCode(201);
+										//update response json with new mileageEntry data
+										$data["activity"][$i]["mileageEntry"][$m] = $mileageEntry;
+									}
+								else
+									{
+										//throw a bad request if any save fails
+										$response->setStatusCode(400);
+										$response->data = "Http:400 Bad Request";
+										return $response;
+									}
+							}
 						}
 					}
 				}
 			}
+			//build and return the response json
+			$response->data = $data; 
+			return $response;
 		}
-		//build and return the response json
-		$response->data = $data; 
-		return $response;
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

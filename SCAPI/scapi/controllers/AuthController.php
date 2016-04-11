@@ -64,38 +64,52 @@ class AuthController extends BaseActiveController
 	
 	public function actionGetUserByToken($token)
     {
-		//set db target
-		$headers = getallheaders();
-		Auth::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		$auth = Auth::findOne(['AuthToken'=>$token]);
-		$userID = $auth->AuthUserID;
-		$user = SCUser::findOne($userID);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $user;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			Auth::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
+			
+			$auth = Auth::findOne(['AuthToken'=>$token]);
+			$userID = $auth->AuthUserID;
+			$user = SCUser::findOne($userID);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $user;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	} 
 	
 	public function actionValidateAuthKey($token)
 	{
-		//set db target
-		$headers = getallheaders();
-		Auth::setClient($headers['X-Client']);
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		if($auth = Auth::findOne(['AuthToken'=>$token]))
+		try
 		{
-			$response->data = true;
+			//set db target
+			$headers = getallheaders();
+			Auth::setClient($headers['X-Client']);
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			if($auth = Auth::findOne(['AuthToken'=>$token]))
+			{
+				$response->data = true;
+			}
+			else
+			{
+				$response->data = false;
+			}
+			
+			return $response;
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->data = false;
+			throw new \yii\web\HttpException(400);
 		}
-		
-		return $response;
 	}
 }

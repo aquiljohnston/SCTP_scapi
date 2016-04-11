@@ -72,16 +72,23 @@ class MileageCardController extends BaseActiveController
      */
     public function actionView($id)
     {
-		//set db target
-		$headers = getallheaders();
-		MileageCard::setClient($headers['X-Client']);
-		
-        $mileageCard = MileageCard::findOne($id);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileageCard;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
+			
+			$mileageCard = MileageCard::findOne($id);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileageCard;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
     }
 	
 	public function actionCreate()
@@ -113,239 +120,294 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionViewAllMileageCardsCurrentWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$mileagecardArray = AllMileageCardsCurrentWeek::find()->all();
-		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileagecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$mileagecardArray = AllMileageCardsCurrentWeek::find()->all();
+			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileagecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionViewAllMileageCardsCurrentWeekByProject($projectID)
 	{
-		//set db target
-		$headers = getallheaders();
-		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$mileagecardArray = AllMileageCardsCurrentWeek::find()
-					->where("MileageCardProjectID = $projectID")
-					->all();
-		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileagecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$mileagecardArray = AllMileageCardsCurrentWeek::find()
+						->where("MileageCardProjectID = $projectID")
+						->all();
+			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileagecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionViewAllMileageCardsPriorWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllMileageCardsPriorWeek::setClient($headers['X-Client']);
-		
-		$mileagecardArray = AllMileageCardsPriorWeek::find()->all();
-		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileagecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllMileageCardsPriorWeek::setClient($headers['X-Client']);
+			
+			$mileagecardArray = AllMileageCardsPriorWeek::find()->all();
+			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileagecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionViewAllApprovedMileageCardsCurrentWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$mileagecardArray = AllApprovedMileageCardsCurrentWeek::find()->all();
-		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileagecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$mileagecardArray = AllApprovedMileageCardsCurrentWeek::find()->all();
+			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileagecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionViewAllUnapprovedMileageCardsCurrentWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllUnApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$mileagecardArray = AllUnApprovedMileageCardsCurrentWeek::find()->all();
-		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileagecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllUnApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$mileagecardArray = AllUnApprovedMileageCardsCurrentWeek::find()->all();
+			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileagecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 
 	public function actionViewMileageEntries($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		MileageCard::setClient($headers['X-Client']);
-		MileageEntry::setClient($headers['X-Client']);
-		
-		$response = Yii::$app ->response;
-		$dataArray = [];
-		$mileageCard = MileageCard::findOne($id);
-		$date = new DateTime($mileageCard-> MileageStartDate);
-		
-		//get all time entries for Sunday
-		$sundayDate = $date;
-		$sundayStr = $sundayDate->format('Y-m-d H:i:s');
-		$sundayEntries = MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$sundayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
-		
-		//get all time entries for Monday
-		$mondayDate = $date->modify('+1 day');	
-		$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
-		$mondayEntries =MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$mondayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
+			MileageEntry::setClient($headers['X-Client']);
 			
-		//get all time entries for Tuesday	
-		$tuesdayDate = $date->modify('+1 day');
-		$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
-		$tuesdayEntries =MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
+			$response = Yii::$app ->response;
+			$dataArray = [];
+			$mileageCard = MileageCard::findOne($id);
+			$date = new DateTime($mileageCard-> MileageStartDate);
 			
-		//get all time entries for Wednesday	
-		$wednesdayDate = $date->modify('+1 day');
-		$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
-		$wednesdayEntries =MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
+			//get all time entries for Sunday
+			$sundayDate = $date;
+			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
+			$sundayEntries = MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$sundayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
 			
-		//get all time entries for Thursday
-		$thursdayDate = $date->modify('+1 day');
-		$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
- 		$thursdayEntries =MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$thursdayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
+			//get all time entries for Monday
+			$mondayDate = $date->modify('+1 day');	
+			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
+			$mondayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$mondayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
+				
+			//get all time entries for Tuesday	
+			$tuesdayDate = $date->modify('+1 day');
+			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
+			$tuesdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
+				
+			//get all time entries for Wednesday	
+			$wednesdayDate = $date->modify('+1 day');
+			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
+			$wednesdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
+				
+			//get all time entries for Thursday
+			$thursdayDate = $date->modify('+1 day');
+			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
+			$thursdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
+				
+			//get all time entries for Friday
+			$fridayDate = $date->modify('+1 day');
+			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
+			$fridayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$fridayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
+				
+			//get all time entries for Saturday
+			$satudayDate = $date->modify('1 day');
+			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
+			$saturdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$satudayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $id")
+				->all();
+				
+			//load data into array
+			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
+			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
+			$dayArray =
+			[
+				"Sunday" => $sundayEntries,
+				"Monday" => $mondayEntries,
+				"Tuesday" => $tuesdayEntries,
+				"Wednesday" => $wednesdayEntries,
+				"Thursday" => $thursdayEntries,
+				"Friday" => $fridayEntries,
+				"Saturday" => $saturdayEntries,
+			];
+			$dataArray["MileageEntries"] = [$dayArray];
 			
-		//get all time entries for Friday
-		$fridayDate = $date->modify('+1 day');
-		$fridayStr = $fridayDate->format('Y-m-d H:i:s');
-		$fridayEntries =MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$fridayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
-			
-		//get all time entries for Saturday
-		$satudayDate = $date->modify('1 day');
-		$satudayStr = $satudayDate->format('Y-m-d H:i:s');
-		$saturdayEntries =MileageEntry::find()
-			->where("MileageEntryDate ="."'"."$satudayStr". "'")
-			->andWhere("MileageEntryMileageCardID = $id")
-			->all();
-			
-		//load data into array
-		$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
-		$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
-		$dayArray =
-		[
-			"Sunday" => $sundayEntries,
-			"Monday" => $mondayEntries,
-			"Tuesday" => $tuesdayEntries,
-			"Wednesday" => $wednesdayEntries,
-			"Thursday" => $thursdayEntries,
-			"Friday" => $fridayEntries,
-			"Saturday" => $saturdayEntries,
-		];
-		$dataArray["MileageEntries"] = [$dayArray];
-		
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $dataArray;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $dataArray;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionApproveMileageCards()
 	{
-		//set db target
-		$headers = getallheaders();
-		MileageCard::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		//capture put body
-		$put = file_get_contents("php://input");
-		$data = json_decode($put, true);
-		
-		//create response
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//parse json
-		$approvedBy = $data["approvedByID"];
-		$cardIDs = $data["cardIDArray"];
-		
-		//get timecards
-		foreach($cardIDs as $id)
-		{
-			$approvedCards[]= MileageCard::findOne($id);
-		}
-		
-		//get user's name by ID
-		if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$approvedBy = $lname.", ".$fname;
-		}
-		
-		//try to approve time cards
 		try
 		{
-			//create transaction
-			$connection = \Yii::$app->db;
-			$transaction = $connection->beginTransaction(); 
-		
-			foreach($approvedCards as $card)
-			{
-				$card-> MileageCardApprovedFlag = "Yes";
-				$card-> MileageCardApprovedBy = $approvedBy;
-				$card-> update();
-			}
-			$transaction->commit();
-			$response->setStatusCode(200);
-			$response->data = $approvedCards; 
-			return $response;
-		}
-		//if transaction fails rollback changes and send error
-		catch(Exception $e)
-		{
-			$transaction->rollBack();
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
-			return $response;
+			//set db target
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//parse json
+			$approvedBy = $data["approvedByID"];
+			$cardIDs = $data["cardIDArray"];
+			
+			//get timecards
+			foreach($cardIDs as $id)
+			{
+				$approvedCards[]= MileageCard::findOne($id);
+			}
+			
+			//get user's name by ID
+			if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
+			{
+				$fname = $user->UserFirstName;
+				$lname = $user->UserLastName;
+				$approvedBy = $lname.", ".$fname;
+			}
+			
+			//try to approve time cards
+			try
+			{
+				//create transaction
+				$connection = \Yii::$app->db;
+				$transaction = $connection->beginTransaction(); 
+			
+				foreach($approvedCards as $card)
+				{
+					$card-> MileageCardApprovedFlag = "Yes";
+					$card-> MileageCardApprovedBy = $approvedBy;
+					$card-> update();
+				}
+				$transaction->commit();
+				$response->setStatusCode(200);
+				$response->data = $approvedCards; 
+				return $response;
+			}
+			//if transaction fails rollback changes and send error
+			catch(Exception $e)
+			{
+				$transaction->rollBack();
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				return $response;
+			}
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
 	public function actionGetMileageCardCurrentWeek($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$id]);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		if ($mileageCard != null)
+		try
 		{
-			$response->setStatusCode(200);
-			$response->data = $mileageCard;
-			return $response;
+			//set db target
+			$headers = getallheaders();
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$id]);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			if ($mileageCard != null)
+			{
+				$response->setStatusCode(200);
+				$response->data = $mileageCard;
+				return $response;
+			}
+			else
+			{
+				$response->setStatusCode(404);
+				return $response;
+			}
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(404);
-			return $response;
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
@@ -353,59 +415,66 @@ class MileageCardController extends BaseActiveController
 	//function to get all milage cards for the current week associated with a project manager
 	public function actionGetMileageCardsCurrentWeekByManager($userID)
 	{
-		//set db target
-		$headers = getallheaders();
-		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-		ProjectUser::setClient($headers['X-Client']);
-		
-		//get all projects for manager
-		$projects = ProjectUser::find()
-			->where("ProjUserUserID = $userID")
-			->all();
-		$projectsSize = count($projects);
-
-		$mileageCards = [];
-		
-		//get all users associated with projects
-		for($i = 0; $i < $projectsSize; $i++)
+		try
 		{
-			$projectID = $projects[$i]->ProjUserProjectID; 
-			$newUsers = ProjectUser::find()
-				->where("ProjUserProjectID = $projectID")
+			//set db target
+			$headers = getallheaders();
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//get all projects for manager
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
 				->all();
-				
-			//get project name for array key
-			$project = Project::find()
-				->where("ProjectID = $projectID")
-				->one();
-			$projectName = $project->ProjectName;
+			$projectsSize = count($projects);
+
+			$mileageCards = [];
 			
-			//pass users to project key
-			$mileageCards[$projectName] = $newUsers;
-			$newUsersSize = count($newUsers);
-			
-			$tempCards = [];
-			
-			//get mileage card information
-			for($j = 0; $j < $newUsersSize; $j++)
+			//get all users associated with projects
+			for($i = 0; $i < $projectsSize; $i++)
 			{
-				$userID = $mileageCards[$projectName][$j]->ProjUserUserID;
-				$tempCard = AllMileageCardsCurrentWeek::find()
-					->where("UserID = $userID")
-					->andWhere("MileageCardProjectID = $projectID")
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				$newUsers = ProjectUser::find()
+					->where("ProjUserProjectID = $projectID")
+					->all();
+					
+				//get project name for array key
+				$project = Project::find()
+					->where("ProjectID = $projectID")
 					->one();
-				if ($tempCard != null)
+				$projectName = $project->ProjectName;
+				
+				//pass users to project key
+				$mileageCards[$projectName] = $newUsers;
+				$newUsersSize = count($newUsers);
+				
+				$tempCards = [];
+				
+				//get mileage card information
+				for($j = 0; $j < $newUsersSize; $j++)
 				{
-					$tempCards[] = $tempCard;
+					$userID = $mileageCards[$projectName][$j]->ProjUserUserID;
+					$tempCard = AllMileageCardsCurrentWeek::find()
+						->where("UserID = $userID")
+						->andWhere("MileageCardProjectID = $projectID")
+						->one();
+					if ($tempCard != null)
+					{
+						$tempCards[] = $tempCard;
+					}
 				}
+				$mileageCards[$projectName] = $tempCards;
 			}
-			$mileageCards[$projectName] = $tempCards;
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $mileageCards;
+			return $response;
 		}
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->setStatusCode(200);
-		$response->data = $mileageCards;
-		return $response;
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }
