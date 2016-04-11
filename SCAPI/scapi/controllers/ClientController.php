@@ -38,123 +38,151 @@ class ClientController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Client::setClient($headers['X-Client']);
-		
-		$client = Client::findOne($id);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $client;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
+			
+			$client = Client::findOne($id);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $client;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	
 	public function actionCreate()
 	{
-		//set db target
-		$headers = getallheaders();
-		Client::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		$post = file_get_contents("php://input");
-		$data = json_decode($post, true);
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
+			
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
 
-		$model = new Client(); 
-		$model->attributes = $data;  
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//removed to maintain data type
-		// //created by
-		// if ($user = SCUser::findOne(['UserID'=>$model->ClientCreatorUserID]))
-		// {
-			// $fname = $user->UserFirstName;
-			// $lname = $user->UserLastName;
-			// $model->ClientCreatorUserID = $lname.", ".$fname;
-		// }
-		
-		//create date
-		$model->ClientCreateDate = date('Y-m-d H:i:s');
-		
-		if($model-> save())
-		{
-			$response->setStatusCode(201);
-			$response->data = $model; 
+			$model = new Client(); 
+			$model->attributes = $data;  
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//removed to maintain data type
+			// //created by
+			// if ($user = SCUser::findOne(['UserID'=>$model->ClientCreatorUserID]))
+			// {
+				// $fname = $user->UserFirstName;
+				// $lname = $user->UserLastName;
+				// $model->ClientCreatorUserID = $lname.", ".$fname;
+			// }
+			
+			//create date
+			$model->ClientCreateDate = date('Y-m-d H:i:s');
+			
+			if($model-> save())
+			{
+				$response->setStatusCode(201);
+				$response->data = $model; 
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
+			throw new \yii\web\HttpException(400);
 		}
-		return $response;
 	}
 	
 	public function actionUpdate($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Client::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		$put = file_get_contents("php://input");
-		$data = json_decode($put, true);
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
+			
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
 
-		$model = Client::findOne($id);
-		
-		$model->attributes = $data;  
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//removed to maintain data type
-		// if ($user = SCUSer::findOne(['UserID'=>$model->ClientModifiedBy]))
-		// {
-			// $fname = $user->UserFirstName;
-			// $lname = $user->UserLastName;
-			// $model->ClientModifiedBy = $lname.", ".$fname;
-		// }
-		
-		$model->ClientModifiedDate = date('Y-m-d H:i:s');
-		
-		if($model-> update())
-		{
-			$response->setStatusCode(201);
-			$response->data = $model; 
+			$model = Client::findOne($id);
+			
+			$model->attributes = $data;  
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//removed to maintain data type
+			// if ($user = SCUSer::findOne(['UserID'=>$model->ClientModifiedBy]))
+			// {
+				// $fname = $user->UserFirstName;
+				// $lname = $user->UserLastName;
+				// $model->ClientModifiedBy = $lname.", ".$fname;
+			// }
+			
+			$model->ClientModifiedDate = date('Y-m-d H:i:s');
+			
+			if($model-> update())
+			{
+				$response->setStatusCode(201);
+				$response->data = $model; 
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
+			throw new \yii\web\HttpException(400);
 		}
-		return $response;
 	}
 	
 	
 	//return a json containing pairs of ClientID and ClientName
 	public function actionGetClientDropdowns()
 	{	
-		//set db target
-		$headers = getallheaders();
-		Client::setClient($headers['X-Client']);
-	
-        $clients = Client::find()
-			->all();
-		$namePairs = [];
-		$clientSize = count($clients);
-		
-		for($i=0; $i < $clientSize; $i++)
+		try
 		{
-			$namePairs[$clients[$i]->ClientID]= $clients[$i]->ClientName;
-		}
+			//set db target
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
+		
+			$clients = Client::find()
+				->all();
+			$namePairs = [];
+			$clientSize = count($clients);
 			
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $namePairs;
-		
-		return $response;
+			for($i=0; $i < $clientSize; $i++)
+			{
+				$namePairs[$clients[$i]->ClientID]= $clients[$i]->ClientName;
+			}
+				
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

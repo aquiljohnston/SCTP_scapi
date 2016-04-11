@@ -97,344 +97,428 @@ class TimeCardController extends BaseActiveController
 	
     public function actionView($id)
     {
-		//set db target
-		$headers = getallheaders();
-		TimeCard::setClient($headers['X-Client']);
-		
-		$timeCard = TimeCard::findOne($id);
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $timeCard;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeCard::setClient($headers['X-Client']);
+			
+			$timeCard = TimeCard::findOne($id);
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $timeCard;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	//get all time card for the current week based on db view
 	public function actionViewAllTimeCardsCurrentWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$timecardArray = AllTimeCardsCurrentWeek::find()->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$timecardArray = AllTimeCardsCurrentWeek::find()->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	//get all time card for the current week that are associated with a projectID based on db view
 	public function actionViewAllTimeCardsCurrentWeekByProject($projectID)
 	{
-		//set db target
-		$headers = getallheaders();
-		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$timecardArray = AllTimeCardsCurrentWeek::find()
-					->where("TimeCardProjectID = $projectID")
-					->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$timecardArray = AllTimeCardsCurrentWeek::find()
+						->where("TimeCardProjectID = $projectID")
+						->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	//get all time card for the prior week that have the status of approved, based on db view
 	public function actionViewAllTimeCardsPriorWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllTimeCardsPriorWeek::setClient($headers['X-Client']);
-		
-		$timecardArray = AllTimeCardsPriorWeek::find()->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllTimeCardsPriorWeek::setClient($headers['X-Client']);
+			
+			$timecardArray = AllTimeCardsPriorWeek::find()->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	//get all time card for the current week based on db view
 	public function actionViewAllApprovedTimeCardsCurrentWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllApprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$timecardArray = AllApprovedTimeCardsCurrentWeek::find()->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllApprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$timecardArray = AllApprovedTimeCardsCurrentWeek::find()->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	//gets all time cards for the current week that have the status of unapproved, based on db view.
 	public function actionViewAllUnapprovedTimeCardsCurrentWeek()
 	{
-		//set db target
-		$headers = getallheaders();
-		AllUnapprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$timecardArray = AllUnapprovedTimeCardsCurrentWeek::find()->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllUnapprovedTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$timecardArray = AllUnapprovedTimeCardsCurrentWeek::find()->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionViewTimeCardHoursWorkedCurrent()
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeCardSumHoursWorkedCurrent::setClient($headers['X-Client']);
-		
-		$timecardArray = TimeCardSumHoursWorkedCurrent::find()->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeCardSumHoursWorkedCurrent::setClient($headers['X-Client']);
+			
+			$timecardArray = TimeCardSumHoursWorkedCurrent::find()->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionViewTimeCardHoursWorkedPrior()
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
-		
-		$timecardArray = TimeCardSumHoursWorkedPrior::find()->all();
-		$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timecardData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
+			
+			$timecardArray = TimeCardSumHoursWorkedPrior::find()->all();
+			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timecardData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionGetTimeCardCurrentWeek($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
-		
-		$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$id]);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		if ($timeCard != null)
+		try
 		{
-			$response->setStatusCode(200);
-			$response->data = $timeCard;
-			return $response;
+			//set db target
+			$headers = getallheaders();
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$id]);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			if ($timeCard != null)
+			{
+				$response->setStatusCode(200);
+				$response->data = $timeCard;
+				return $response;
+			}
+			else
+			{
+				$response->setStatusCode(404);
+				return $response;
+			}
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(404);
-			return $response;
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
 	public function actionViewTimeEntries($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeCard::setClient($headers['X-Client']);
-		TimeEntry::setClient($headers['X-Client']);
-		
-		$response = Yii::$app ->response;
-		$dataArray = [];
-		$timeCard = TimeCard::findOne($id);
-		$date = new DateTime($timeCard-> TimeCardStartDate);
-		
-		//get all time entries for Sunday
-		$sundayDate = $date;
-		$sundayStr = $sundayDate->format('Y-m-d H:i:s');
-		$sundayEntries = TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$sundayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
-		
-		//get all time entries for Monday
-		$mondayDate = $date->modify('+1 day');	
-		$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
-		$mondayEntries =TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$mondayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeCard::setClient($headers['X-Client']);
+			TimeEntry::setClient($headers['X-Client']);
 			
-		//get all time entries for Tuesday	
-		$tuesdayDate = $date->modify('+1 day');
-		$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
-		$tuesdayEntries =TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
+			$response = Yii::$app ->response;
+			$dataArray = [];
+			$timeCard = TimeCard::findOne($id);
+			$date = new DateTime($timeCard-> TimeCardStartDate);
 			
-		//get all time entries for Wednesday	
-		$wednesdayDate = $date->modify('+1 day');
-		$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
-		$wednesdayEntries =TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
+			//get all time entries for Sunday
+			$sundayDate = $date;
+			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
+			$sundayEntries = TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$sundayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
 			
-		//get all time entries for Thursday
-		$thursdayDate = $date->modify('+1 day');
-		$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
- 		$thursdayEntries =TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$thursdayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
+			//get all time entries for Monday
+			$mondayDate = $date->modify('+1 day');	
+			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
+			$mondayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$mondayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
+				
+			//get all time entries for Tuesday	
+			$tuesdayDate = $date->modify('+1 day');
+			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
+			$tuesdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
+				
+			//get all time entries for Wednesday	
+			$wednesdayDate = $date->modify('+1 day');
+			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
+			$wednesdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
+				
+			//get all time entries for Thursday
+			$thursdayDate = $date->modify('+1 day');
+			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
+			$thursdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$thursdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
+				
+			//get all time entries for Friday
+			$fridayDate = $date->modify('+1 day');
+			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
+			$fridayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$fridayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
+				
+			//get all time entries for Saturday
+			$satudayDate = $date->modify('1 day');
+			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
+			$saturdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$satudayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $id")
+				->all();
+				
+			//load data into array
+			$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
+			$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
+			$dayArray =
+			[
+				"Sunday" => $sundayEntries,
+				"Monday" => $mondayEntries,
+				"Tuesday" => $tuesdayEntries,
+				"Wednesday" => $wednesdayEntries,
+				"Thursday" => $thursdayEntries,
+				"Friday" => $fridayEntries,
+				"Saturday" => $saturdayEntries,
+			];
+			$dataArray["TimeEntries"] = [$dayArray];
 			
-		//get all time entries for Friday
-		$fridayDate = $date->modify('+1 day');
-		$fridayStr = $fridayDate->format('Y-m-d H:i:s');
-		$fridayEntries =TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$fridayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
-			
-		//get all time entries for Saturday
-		$satudayDate = $date->modify('1 day');
-		$satudayStr = $satudayDate->format('Y-m-d H:i:s');
-		$saturdayEntries =TimeEntry::find()
-			->where("TimeEntryDate ="."'"."$satudayStr". "'")
-			->andWhere("TimeEntryTimeCardID = $id")
-			->all();
-			
-		//load data into array
-		$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
-		$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
-		$dayArray =
-		[
-			"Sunday" => $sundayEntries,
-			"Monday" => $mondayEntries,
-			"Tuesday" => $tuesdayEntries,
-			"Wednesday" => $wednesdayEntries,
-			"Thursday" => $thursdayEntries,
-			"Friday" => $fridayEntries,
-			"Saturday" => $saturdayEntries,
-		];
-		$dataArray["TimeEntries"] = [$dayArray];
-		
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $dataArray;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $dataArray;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionApproveTimeCards()
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeCard::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		//capture put body
-		$put = file_get_contents("php://input");
-		$data = json_decode($put, true);
-		
-		//create response
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//parse json
-		$approvedBy = $data["approvedByID"];
-		$cardIDs = $data["cardIDArray"];
-		
-		//get timecards
-		foreach($cardIDs as $id)
-		{
-			$approvedCards[]= TimeCard::findOne($id);
-		}
-		
-		//get user's name by ID
-		if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
-		{
-			$fname = $user->UserFirstName;
-			$lname = $user->UserLastName;
-			$approvedBy = $lname.", ".$fname;
-		}
-		
-		//try to approve time cards
 		try
 		{
-			//create transaction
-			$connection = \Yii::$app->db;
-			$transaction = $connection->beginTransaction(); 
-		
-			foreach($approvedCards as $card)
-			{
-				$card-> TimeCardApprovedFlag = "Yes";
-				$card-> TimeCardApprovedBy = $approvedBy;
-				$card-> update();
-			}
-			$transaction->commit();
-			$response->setStatusCode(200);
-			$response->data = $approvedCards; 
-			return $response;
-		}
-		//if transaction fails rollback changes and send error
-		catch(Exception $e)
-		{
-			$transaction->rollBack();
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
-			return $response;
+			//set db target
+			$headers = getallheaders();
+			TimeCard::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//parse json
+			$approvedBy = $data["approvedByID"];
+			$cardIDs = $data["cardIDArray"];
+			
+			//get timecards
+			foreach($cardIDs as $id)
+			{
+				$approvedCards[]= TimeCard::findOne($id);
+			}
+			
+			//get user's name by ID
+			if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
+			{
+				$fname = $user->UserFirstName;
+				$lname = $user->UserLastName;
+				$approvedBy = $lname.", ".$fname;
+			}
+			
+			//try to approve time cards
+			try
+			{
+				//create transaction
+				$connection = \Yii::$app->db;
+				$transaction = $connection->beginTransaction(); 
+			
+				foreach($approvedCards as $card)
+				{
+					$card-> TimeCardApprovedFlag = "Yes";
+					$card-> TimeCardApprovedBy = $approvedBy;
+					$card-> update();
+				}
+				$transaction->commit();
+				$response->setStatusCode(200);
+				$response->data = $approvedCards; 
+				return $response;
+			}
+			//if transaction fails rollback changes and send error
+			catch(Exception $e)
+			{
+				$transaction->rollBack();
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				return $response;
+				
+			}
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
 	// function to get all timecards for the current week associated with a project manager
 	public function actionGetTimeCardsCurrentWeekByManager($userID)
 	{
-		//set db target
-		$headers = getallheaders();
-		AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
-		ProjectUser::setClient($headers['X-Client']);
-		
-		//get all projects for manager
-		$projects = ProjectUser::find()
-			->where("ProjUserUserID = $userID")
-			->all();
-		$projectsSize = count($projects);
-		
-		$timeCards = [];
-		
-		//get all users associated with projects
-		for($i = 0; $i < $projectsSize; $i++)
+		try
 		{
-			$projectID = $projects[$i]->ProjUserProjectID; 
-			$newUsers = ProjectUser::find()
-				->where("ProjUserProjectID = $projectID")
+			//set db target
+			$headers = getallheaders();
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//get all projects for manager
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
 				->all();
-				
-			//get project name for array key
-			$project = Project::find()
-				->where("ProjectID = $projectID")
-				->one();
-			$projectName = $project->ProjectName;
+			$projectsSize = count($projects);
 			
-			//pass users to project key
-			$timeCards[$projectName] = $newUsers;
-			$newUsersSize = count($newUsers);
+			$timeCards = [];
 			
-			$tempCards = [];
-			
-			//get time card information
-			for($j = 0; $j < $newUsersSize; $j++)
+			//get all users associated with projects
+			for($i = 0; $i < $projectsSize; $i++)
 			{
-				$userID = $timeCards[$projectName][$j]->ProjUserUserID;
-				$tempCard = AllTimeCardsCurrentWeek::find()
-					->where("UserID = $userID")
-					->andWhere("TimeCardProjectID = $projectID")
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				$newUsers = ProjectUser::find()
+					->where("ProjUserProjectID = $projectID")
+					->all();
+					
+				//get project name for array key
+				$project = Project::find()
+					->where("ProjectID = $projectID")
 					->one();
-				if ($tempCard != null)
+				$projectName = $project->ProjectName;
+				
+				//pass users to project key
+				$timeCards[$projectName] = $newUsers;
+				$newUsersSize = count($newUsers);
+				
+				$tempCards = [];
+				
+				//get time card information
+				for($j = 0; $j < $newUsersSize; $j++)
 				{
-					$tempCards[] = $tempCard;
+					$userID = $timeCards[$projectName][$j]->ProjUserUserID;
+					$tempCard = AllTimeCardsCurrentWeek::find()
+						->where("UserID = $userID")
+						->andWhere("TimeCardProjectID = $projectID")
+						->one();
+					if ($tempCard != null)
+					{
+						$tempCards[] = $tempCard;
+					}
 				}
+				$timeCards[$projectName] = $tempCards;
 			}
-			$timeCards[$projectName] = $tempCards;
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $timeCards;
+			return $response;
 		}
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->setStatusCode(200);
-		$response->data = $timeCards;
-		return $response;
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 }

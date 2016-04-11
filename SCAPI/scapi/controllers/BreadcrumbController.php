@@ -27,15 +27,22 @@ class BreadcrumbController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		Breadcrumb::setClient($headers['X-Client']);
-		
-		$breadcrumb = Breadcrumb::findOne($id);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $breadcrumb;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			Breadcrumb::setClient($headers['X-Client']);
+			
+			$breadcrumb = Breadcrumb::findOne($id);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $breadcrumb;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

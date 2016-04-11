@@ -36,137 +36,142 @@ class LoginController extends ActiveController
 		
 	public function actionView($Username)
     {
-		$Login = Login::findOne($Username);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $login;
-		
-		return $response;
+		try
+		{
+			$Login = Login::findOne($Username);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $login;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	} 
 	
 	public function actionUserLogin()
 	{
-		//set db target
 		try
 		{
-			$headers = getallheaders();
-			SCUser::setClient($headers['X-Client']);
-			Key::setClient($headers['X-Client']);
-			Auth::setClient($headers['X-Client']);
-		}
-		catch(ErrorException $e)
-		{
-			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
-		}	
-		
-		
-		//ic and secret key of openssl
-		$iv = "abcdefghijklmnop";
-		$secretKey= "sparusholdings12";
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//read the post input (use this technique if you have no post variable name):
-		$post = file_get_contents("php://input");
-
-		//decode json post input as php array:
-		$data = json_decode($post, true);
-
-		//login is a Yii model:
-		$user = new SCUser();
-
-		//load json data into model:
-		$user->attributes = $data;  
-
-		if($userName = SCUser::findOne(['UserName'=>$user->UserName, 'UserActiveFlag'=>1]))
+			//set db target
+			try
 			{
-			$securedPass = $data["Password"];
-			Yii::trace('securedPass: '.$securedPass);
+				$headers = getallheaders();
+				SCUser::setClient($headers['X-Client']);
+				Key::setClient($headers['X-Client']);
+				Auth::setClient($headers['X-Client']);
+			}
+			catch(ErrorException $e)
+			{
+				throw new \yii\web\HttpException(400, 'Client Header Not Found.');
+			}	
 			
-			//Check password for authentication with try catch
-			$decodedPass = base64_decode($securedPass);
-			Yii::trace('decodedPass: '.$decodedPass);
-			$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
-			//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
-			Yii::trace('decryptedPass: '.$decryptedPass);
-			$key = Key::findOne(['KeyID'=>$userName->UserKey]);
-			$hash = $key->Key1;
-			Yii::trace('Hash: '.$hash);
-			//Check the Hash
-			if (password_verify($decryptedPass, $hash)) 
-			{
-				Yii::trace('Password is valid.');
+			
+			//ic and secret key of openssl
+			$iv = "abcdefghijklmnop";
+			$secretKey= "sparusholdings12";
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//read the post input (use this technique if you have no post variable name):
+			$post = file_get_contents("php://input");
+
+			//decode json post input as php array:
+			$data = json_decode($post, true);
+
+			//login is a Yii model:
+			$user = new SCUser();
+
+			//load json data into model:
+			$user->attributes = $data;  
+
+			if($userName = SCUser::findOne(['UserName'=>$user->UserName, 'UserActiveFlag'=>1]))
+				{
+				$securedPass = $data["Password"];
+				Yii::trace('securedPass: '.$securedPass);
 				
-				//Pass
-				Yii::$app->user->login($userName);
-				//Generate Auth Token
-				$auth = new Auth();
-				$userID = $userName->UserID;
-				$auth->AuthUserID = $userID;
-				$auth-> beforeSave(true);
-				//Store Auth Token
-				$auth-> save();
+				//Check password for authentication with try catch
+				$decodedPass = base64_decode($securedPass);
+				Yii::trace('decodedPass: '.$decodedPass);
+				$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
+				//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
+				Yii::trace('decryptedPass: '.$decryptedPass);
+				$key = Key::findOne(['KeyID'=>$userName->UserKey]);
+				$hash = $key->Key1;
+				Yii::trace('Hash: '.$hash);
+				//Check the Hash
+				if (password_verify($decryptedPass, $hash)) 
+				{
+					Yii::trace('Password is valid.');
+					
+					//Pass
+					Yii::$app->user->login($userName);
+					//Generate Auth Token
+					$auth = new Auth();
+					$userID = $userName->UserID;
+					$auth->AuthUserID = $userID;
+					$auth-> beforeSave(true);
+					//Store Auth Token
+					$auth-> save();
+				}
+				else
+				{
+					$response->data = "Password is invalid.";
+					$response->setStatusCode(401);
+					return $response;
+					Yii::trace('Password is invalid.');
+				}
 			}
 			else
 			{
-				$response->data = "Password is invalid.";
+				$response->data = "User not found or inactive.";
 				$response->setStatusCode(401);
 				return $response;
-				Yii::trace('Password is invalid.');
 			}
-		}
-		else
-		{
-			$response->data = "User not found or inactive.";
-			$response->setStatusCode(401);
+			//Fail
+			//Send error
+			
+			//add auth token to response
+			$response->data = $auth;
 			return $response;
 		}
-		//Fail
-		//Send error
-		
-		//add auth token to response
-		$response->data = $auth;
-		return $response;
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
-	
-	// // the current user identity. Null if the user is not authenticated.
-	// $identity = Yii::$app->user->identity;
-
-	// // the ID of the current user. Null if the user not authenticated.
-	// $id = Yii::$app->user->id;
-
-	// // whether the current user is a guest (not authenticated)
-	// $isGuest = Yii::$app->user->isGuest;
-	
-	// // find a user identity with the specified username.
-	// // note that you may want to check the password if needed
-	// $identity = User::findOne(['username' => $username]);
-
-	// // logs in the user 
-	// Yii::$app->user->login($identity);
 	
 	// User logout
 	public function actionUserLogout($userID)
 	{
-		//set db target
 		try
 		{
-			$headers = getallheaders();
-			SCUser::setClient($headers['X-Client']);
+			//set db target
+			try
+			{
+				$headers = getallheaders();
+				SCUser::setClient($headers['X-Client']);
+			}
+			catch(ErrorException $e)
+			{
+				throw new \yii\web\HttpException(400, 'Client Header Not Found.');
+			}	
+			
+			Yii::trace('Logout has been called');
+			$logoutString = 'Logout Successful!';
+			$response = Yii::$app->response;
+			$response->headers->add('Content-Length', strlen($logoutString));
+			Yii::$app->user->logout($destroySession = true, $userID);
+			$response->data = $logoutString;
+			return $response;
 		}
-		catch(ErrorException $e)
+		catch(ErrorException $e) 
 		{
-			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
-		}	
-		
-		Yii::trace('Logout has been called');
-		$logoutString = 'Logout Successful!';
-		$response = Yii::$app->response;
-		$response->headers->add('Content-Length', strlen($logoutString));
-		Yii::$app->user->logout($destroySession = true, $userID);
-		$response->data = $logoutString;
-		return $response;
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 }

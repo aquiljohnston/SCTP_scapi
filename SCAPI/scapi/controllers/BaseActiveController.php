@@ -43,53 +43,67 @@ class BaseActiveController extends ActiveController
 
 	public function actionCreate()
     {
-		//set model class
-		$modelClass = $this->modelClass;
-		
-		//set db target
-		$headers = getallheaders();
-		BaseActiveRecord::setClient($headers['X-Client']);
-		$modelClass::setClient($headers['X-Client']);
-		
-		$post = file_get_contents("php://input");
-		$data = json_decode($post, true);
+		try
+		{
+			//set model class
+			$modelClass = $this->modelClass;
+			
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			$modelClass::setClient($headers['X-Client']);
+			
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
 
-		$model = new $this->modelClass();
-		$model->attributes = $data;
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $model;
-		
-		if($model-> save())
-		{
-			$response->setStatusCode(201);
-			return $response;
+			$model = new $this->modelClass();
+			$model->attributes = $data;
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $model;
+			
+			if($model-> save())
+			{
+				$response->setStatusCode(201);
+				return $response;
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
+			throw new \yii\web\HttpException(400);
 		}
     }
 	
 	public function actionGetAll()
 	{
-		//set model class
-		$modelClass = $this->modelClass;
-		
-		//set db target
-		$headers = getallheaders();
-		BaseActiveRecord::setClient($headers['X-Client']);
-		$modelClass::setClient($headers['X-Client']);
-		
-        $models = $modelClass::find()
-			->all();
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $models;
-		
-		return $response;
+		try
+		{
+			//set model class
+			$modelClass = $this->modelClass;
+			
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			$modelClass::setClient($headers['X-Client']);
+			
+			$models = $modelClass::find()
+				->all();
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $models;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

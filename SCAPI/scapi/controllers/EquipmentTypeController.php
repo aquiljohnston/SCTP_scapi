@@ -22,25 +22,32 @@ class EquipmentTypeController extends BaseActiveController
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetTypeDropdowns()
 	{	
-		//set db target
-		$headers = getallheaders();
-		EquipmentType::setClient($headers['X-Client']);
-	
-        $types = EquipmentType::find()
-			->all();
-		$namePairs = [];
-		$typesSize = count($types);
-		
-		for($i=0; $i < $typesSize; $i++)
+		try
 		{
-			$namePairs[$types[$i]->EquipmentType]= $types[$i]->EquipmentType;
-		}
+			//set db target
+			$headers = getallheaders();
+			EquipmentType::setClient($headers['X-Client']);
+		
+			$types = EquipmentType::find()
+				->all();
+			$namePairs = [];
+			$typesSize = count($types);
 			
-		
-		$response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $namePairs;
-		
-		return $response;
+			for($i=0; $i < $typesSize; $i++)
+			{
+				$namePairs[$types[$i]->EquipmentType]= $types[$i]->EquipmentType;
+			}
+				
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

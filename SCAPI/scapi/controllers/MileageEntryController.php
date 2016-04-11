@@ -47,57 +47,62 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		MileageEntry::setClient($headers['X-Client']);
-		
-		//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-		$mileage = MileageEntry::findOne($id);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $mileage;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			MileageEntry::setClient($headers['X-Client']);
+			
+			//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
+			$mileage = MileageEntry::findOne($id);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileage;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionCreate()
 	{
-		//set db target
-		$headers = getallheaders();
-		MileageEntry::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		$post = file_get_contents("php://input");
-		$data = json_decode($post, true);
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			MileageEntry::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
+			
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
 
-		$model = new MileageEntry(); 
-		$model->attributes = $data;  
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//removed to maintain data type
-		// //created by
-		// if ($user = SCUser::findOne(['UserID'=>$model->MileageEntryCreatedBy]))
-		// {
-			// $fname = $user->UserFirstName;
-			// $lname = $user->UserLastName;
-			// $model->MileageEntryCreatedBy = $lname.", ".$fname;
-		// }
-		
-		//create date
-		$model->MileageEntryCreateDate = date('Y-m-d H:i:s');
-		
-		if($model-> save())
-		{
-			$response->setStatusCode(201);
-			$response->data = $model; 
+			$model = new MileageEntry(); 
+			$model->attributes = $data;  
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//create date
+			$model->MileageEntryCreateDate = date('Y-m-d H:i:s');
+			
+			if($model-> save())
+			{
+				$response->setStatusCode(201);
+				$response->data = $model; 
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
+			throw new \yii\web\HttpException(400);
 		}
-		return $response;
 	}
 }

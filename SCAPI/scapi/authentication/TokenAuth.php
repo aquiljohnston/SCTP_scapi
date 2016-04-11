@@ -19,8 +19,12 @@ class TokenAuth extends AuthMethod
 		
 		//check for client header
 		$headers = getAllHeaders();
-		if($headers['X-Client'] == null)
+		try
 		{
+			$headers['X-Client'];
+		}
+		catch(ErrorException $e)
+		{	
 			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
 		}
 		SCUser::setClient('CometTracker');

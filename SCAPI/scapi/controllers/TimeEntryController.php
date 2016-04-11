@@ -47,69 +47,81 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeEntry::setClient($headers['X-Client']);
-		
-		$timeEntry = TimeEntry::findOne($id);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $timeEntry;
-		
-		return $response;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeEntry::setClient($headers['X-Client']);
+			
+			$timeEntry = TimeEntry::findOne($id);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $timeEntry;
+			
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	public function actionCreate()
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeEntry::setClient($headers['X-Client']);
-		SCUser::setClient($headers['X-Client']);
-		
-		$post = file_get_contents("php://input");
-		$data = json_decode($post, true);
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeEntry::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
+			
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
 
-		$model = new TimeEntry(); 
-		$model->attributes = $data;  
-		
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		
-		//removed to maintain data type
-		// //created by
-		// if ($user = SCUser::findOne(['UserID'=>$model->TimeEntryCreatedBy]))
-		// {
-			// $fname = $user->UserFirstName;
-			// $lname = $user->UserLastName;
-			// $model->TimeEntryCreatedBy = $lname.", ".$fname;
-		// }
-		
-		//create date
-		$model->TimeEntryCreateDate = date('Y-m-d H:i:s');
-		
-		if($model-> save())
-		{
-			$response->setStatusCode(201);
-			$response->data = $model; 
+			$model = new TimeEntry(); 
+			$model->attributes = $data;  
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//create date
+			$model->TimeEntryCreateDate = date('Y-m-d H:i:s');
+			
+			if($model-> save())
+			{
+				$response->setStatusCode(201);
+				$response->data = $model; 
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
 		}
-		else
+		catch(ErrorException $e) 
 		{
-			$response->setStatusCode(400);
-			$response->data = "Http:400 Bad Request";
+			throw new \yii\web\HttpException(400);
 		}
-		return $response;
 	}
 	
 	public function actionGetEntriesByTimeCard($id)
 	{
-		//set db target
-		$headers = getallheaders();
-		TimeEntry::setClient($headers['X-Client']);
-		
-		$entriesArray = TimeEntry::findAll(['TimeEntryTimeCardID'=>$id]);
-		$entryData = array_map(function ($model) {return $model->attributes;},$entriesArray);
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = $entryData;
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			TimeEntry::setClient($headers['X-Client']);
+			
+			$entriesArray = TimeEntry::findAll(['TimeEntryTimeCardID'=>$id]);
+			$entryData = array_map(function ($model) {return $model->attributes;},$entriesArray);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $entryData;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }
