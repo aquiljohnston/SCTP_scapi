@@ -45,6 +45,7 @@ class MileageCardController extends BaseActiveController
 					'update' => ['put'],
 					'approve-mileage-cards'  => ['put'],
 					'view-all-mileage-cards-current-week' => ['get'],
+					'view-all-mileage-cards-current-week-by-project' => ['get'],
 					'view-all-mileage-cards-prior-week' => ['get'],
 					'view-all-approved-mileage-cards-current-week' => ['get'],
 					'view-all-unapproved-mileage-cards-current-week' => ['get'],
@@ -117,6 +118,21 @@ class MileageCardController extends BaseActiveController
 		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
 		
 		$mileagecardArray = AllMileageCardsCurrentWeek::find()->all();
+		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $mileagecardData;
+	}
+	
+	public function actionViewAllMileageCardsCurrentWeekByProject($projectID)
+	{
+		//set db target
+		$headers = getallheaders();
+		AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+		
+		$mileagecardArray = AllMileageCardsCurrentWeek::find()
+					->where("MileageCardProjectID = $projectID")
+					->all();
 		$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
@@ -385,27 +401,6 @@ class MileageCardController extends BaseActiveController
 			}
 			$mileageCards[$projectName] = $tempCards;
 		}
-		
-		// //get all users associated with projects
-		// for($i = 0; $i < $projectsSize; $i++)
-		// {
-			// $projectID = $projects[$i]->ProjUserProjectID; 
-			// $newUsers = ProjectUser::find()
-				// ->where("ProjUserProjectID = $projectID")
-				// ->all();
-			// $users = array_merge($users, $newUsers);
-		// }
-		// $usersSize = count($users);
-		
-		// //get all mileage cards for current week for users
-		// for($i = 0; $i < $usersSize; $i++)
-		// {
-			// $userID = $users[$i]->ProjUserUserID;
-			// $newCards = AllMileageCardsCurrentWeek::find()
-				// ->where("UserID = $userID")
-				// ->all();
-			// $mileageCards = array_unique(array_merge($mileageCards, $newCards), SORT_REGULAR);
-		// }
 		
 		$response = Yii::$app->response;
 		$response ->format = Response::FORMAT_JSON;
