@@ -45,5 +45,9 @@ class EmployeeTypeController extends BaseActiveController
 			
 			return $response;
 		}
+		catch(ErrorException $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }
