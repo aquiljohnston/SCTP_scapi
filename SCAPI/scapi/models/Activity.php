@@ -14,6 +14,8 @@ use Yii;
  * @property string $ActivityBillingCode
  * @property integer $ActivityCode
  * @property integer $ActivityPayCode
+ * @property double $Latitude
+ * @property double $Longitude
  * @property string $ActivityCreateDate
  * @property string $ActivityCreatedBy
  * @property string $ActivityModifiedDate
@@ -40,7 +42,8 @@ class Activity extends BaseActiveRecord
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate'], 'safe'],
             [['ActivityTitle', 'ActivityBillingCode'], 'string'],
-            [['ActivityCode', 'ActivityPayCode' , 'ActivityCreatedBy', 'ActivityModifiedBy'], 'integer']
+            [['ActivityCode', 'ActivityPayCode' , 'ActivityCreatedBy', 'ActivityModifiedBy'], 'integer'],
+			[['Latitude', 'Longitude'], 'number']
         ];
     }
 
@@ -61,6 +64,8 @@ class Activity extends BaseActiveRecord
             'ActivityCreatedBy' => 'Activity Created By',
             'ActivityModifiedDate' => 'Activity Modified Date',
             'ActivityModifiedBy' => 'Activity Modified By',
+			'Latitude' => 'Latitude',
+			'Longitude' => 'Longitude',
         ];
     }
 
