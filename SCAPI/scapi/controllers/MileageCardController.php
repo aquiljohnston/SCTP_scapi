@@ -12,6 +12,7 @@ use app\models\AllMileageCardsCurrentWeek;
 use app\models\AllMileageCardsPriorWeek;
 use app\models\AllApprovedMileageCardsCurrentWeek;
 use app\models\AllUnApprovedMileageCardsCurrentWeek;
+use app\models\AllMileageCardsCurrentWeekSumMiles;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -404,6 +405,30 @@ class MileageCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	//function to get all mileagecards for the current week with their sum miles
+	public function actionGetMileageCardsCurrentWeekSumMiles()
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllMileageCardsCurrentWeekSumMiles::setClient($headers['X-Client']);
+			
+			$mileageCards = AllMileageCardsCurrentWeekSumMiles::find()->all();
+			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			$response->setStatusCode(200);
+			$response->data = $mileageCardArray;
+			return $response;
 		}
 		catch(ErrorException $e) 
 		{
