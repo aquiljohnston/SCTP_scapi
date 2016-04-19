@@ -104,7 +104,7 @@ class UserController extends BaseActiveController
 			$model->attributes = $data;  
 			
 			//created date
-			$model->UserCreatedDate = date('Y-m-d H:i:s');
+			$model->UserCreatedDate = Parent::getDate();
 			
 			if($model-> save())
 			{
@@ -198,7 +198,7 @@ class UserController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			$model->UserModifiedDate = date('Y-m-d H:i:s');
+			$model->UserModifiedDate = Parent::getDate();
 			
 			if($model-> update())
 			{

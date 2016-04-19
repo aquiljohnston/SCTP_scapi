@@ -86,7 +86,7 @@ class MileageEntryController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//create date
-			$model->MileageEntryCreateDate = date('Y-m-d H:i:s');
+			$model->MileageEntryCreateDate = Parent::getDate();
 			
 			if($model-> save())
 			{

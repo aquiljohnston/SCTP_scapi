@@ -97,7 +97,7 @@ class EquipmentController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//create date
-			$model->EquipmentCreateDate = date('Y-m-d H:i:s');
+			$model->EquipmentCreateDate = Parent::getDate();
 			
 			if($model-> save())
 			{
@@ -145,7 +145,7 @@ class EquipmentController extends BaseActiveController
 				// $model->EquipmentModifiedBy = $lname.", ".$fname;
 			// }
 			
-			$model->EquipmentModifiedDate = date('Y-m-d H:i:s');
+			$model->EquipmentModifiedDate = Parent::getDate();
 			
 			//TODO set flag to "Pending" when the project information is changed.
 			if($model->EquipmentProjectID != $currentProject)

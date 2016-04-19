@@ -85,7 +85,7 @@ class TimeEntryController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//create date
-			$model->TimeEntryCreateDate = date('Y-m-d H:i:s');
+			$model->TimeEntryCreateDate = Parent::getDate();
 			
 			if($model-> save())
 			{
