@@ -96,7 +96,7 @@ class ProjectController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//create date
-			$model->ProjectCreateDate = date('Y-m-d H:i:s');
+			$model->ProjectCreateDate = Parent::getDate();
 			
 			if($model-> save())
 			{
@@ -135,7 +135,7 @@ class ProjectController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			$model->ProjectModifiedDate = date('Y-m-d H:i:s');
+			$model->ProjectModifiedDate = Parent::getDate();
 			
 			if($model-> update())
 			{

@@ -107,7 +107,7 @@ class ActivityController extends BaseActiveController
 						// $lname = $user->UserLastName;
 						// $activityArray[$i]["ActivityCreatedBy"] = $lname.", ".$fname;
 					// }
-					$activityArray[$i]["ActivityCreateDate"] = date('Y-m-d H:i:s');
+					$activityArray[$i]["ActivityCreateDate"] = Parent::getDate();
 					//check array data
 					$timeLength = 0;
 					$mileageLength = 0;
@@ -152,7 +152,7 @@ class ActivityController extends BaseActiveController
 								$timeEntry = new TimeEntry();
 								$timeEntry->attributes = $timeArray[$t];
 								$timeEntry-> TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
-								$timeEntry->TimeEntryCreateDate = date('Y-m-d H:i:s');
+								$timeEntry->TimeEntryCreateDate = Parent::getDate();
 								if($timeEntry->save())
 									{
 										$response->setStatusCode(201);
@@ -177,7 +177,7 @@ class ActivityController extends BaseActiveController
 								$mileageEntry = new MileageEntry();
 								$mileageEntry->attributes = $mileageArray[$m];
 								$mileageEntry-> MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
-								$mileageEntry->MileageEntryCreateDate = date('Y-m-d H:i:s');
+								$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 								if($mileageEntry->save())
 									{
 										$response->setStatusCode(201);

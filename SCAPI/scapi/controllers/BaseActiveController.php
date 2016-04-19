@@ -13,6 +13,7 @@ use yii\web\Response;
 
 class BaseActiveController extends ActiveController
 {	
+
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -105,5 +106,10 @@ class BaseActiveController extends ActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function getDate()
+	{
+		return date('Y-m-d H:i:s');
 	}
 }

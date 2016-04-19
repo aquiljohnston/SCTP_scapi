@@ -86,7 +86,7 @@ class ClientController extends BaseActiveController
 			// }
 			
 			//create date
-			$model->ClientCreateDate = date('Y-m-d H:i:s');
+			$model->ClientCreateDate = Parent::getDate();
 			
 			if($model-> save())
 			{
@@ -133,7 +133,7 @@ class ClientController extends BaseActiveController
 				// $model->ClientModifiedBy = $lname.", ".$fname;
 			// }
 			
-			$model->ClientModifiedDate = date('Y-m-d H:i:s');
+			$model->ClientModifiedDate = Parent::getDate();
 			
 			if($model-> update())
 			{
