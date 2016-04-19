@@ -239,7 +239,8 @@ class UserController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-
+	
+	//deprecated
 	public function actionAddUserToProject($userID,$projectID)
 	{
 		try
