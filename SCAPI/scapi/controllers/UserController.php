@@ -11,6 +11,8 @@ use app\models\Key;
 use app\models\ActivityCode;
 use app\models\Equipment;
 use app\models\PayCode;
+use app\models\AllTimeCardsCurrentWeek;
+use app\models\AllMileageCardsCurrentWeek;
 use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -371,6 +373,21 @@ class UserController extends BaseActiveController
 			$projects  = [];
 			for($i=0; $i < $projectUserLength; $i++)
 			{
+				//set current projectID
+				$projectID = $projectUser[$i]->ProjUserProjectID ;
+				
+				//get time card for the current week for this project
+				$timeCardModel = AllTimeCardsCurrentWeek::find()
+					->where("UserID = $userID")
+					->andWhere("TimeCardProjectID = $projectID")
+					->One();
+					
+				//get time card for the current week for this project
+				$mileageCardModel = AllMileageCardsCurrentWeek::find()
+					->where("UserID = $userID")
+					->andWhere("MileageCardProjectID = $projectID")
+					->One();
+				
 				//get job codes for project, for now just getting all job codes
 				$activityCodes = ActivityCode::find()
 				->all();
@@ -384,13 +401,15 @@ class UserController extends BaseActiveController
 					//get payroll code
 					$activityCodesArray[$j]["PayrollCode"] = "TODO";
 				}
-				$projectID = $projectUser[$i]->ProjUserProjectID ;
+				
 				$projectModel = Project::findOne($projectID);
 				$clientModel = Client::findOne($projectModel->ProjectClientID);
 				$projectData["ProjectID"]= $projectModel->ProjectID;  
 				$projectData["ProjectName"]= $projectModel->ProjectName;  
 				$projectData["ProjectClientID"]= $projectModel->ProjectClientID;  
 				$projectData["ProjectClientPath"]= $clientModel->ClientFilesPath;  
+				$projectData["TimeCard"]= $timeCardModel; 
+				$projectData["MileageCard"]= $mileageCardModel;				
 				$projectData["ActivityCodes"]= $activityCodesArray; 
 				$projectData["PayCodes"]= $payCodesArray; 
 				
