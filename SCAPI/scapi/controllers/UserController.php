@@ -39,11 +39,12 @@ class UserController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'deactivate' => ['delete'],
 					'get-user-dropdowns'  => ['get'],
 					'get-me'  => ['get'],
 					'get-all-projects'  => ['get'],
 					'get-users-by-manager' => ['get'],
-					'deactivate' => ['delete'],
+					'get-all-active-users' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -310,7 +311,7 @@ class UserController extends BaseActiveController
 			
 			if($model-> update())
 			{
-				$response->setStatusCode(201);
+				$response->setStatusCode(200);
 				$response->data = $model; 
 			}
 			else
@@ -545,6 +546,29 @@ class UserController extends BaseActiveController
 			$response->setStatusCode(200);
 			$response->data = $users;
 			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionGetAllActiveUsers()
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+		
+			$users = SCUser::find()
+				->where("UserActiveFlag = 1")
+				->all();
+				
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $users;
 		}
 		catch(ErrorException $e) 
 		{
