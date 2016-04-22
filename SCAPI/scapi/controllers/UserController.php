@@ -43,6 +43,7 @@ class UserController extends BaseActiveController
 					'get-me'  => ['get'],
 					'get-all-projects'  => ['get'],
 					'get-users-by-manager' => ['get'],
+					'deactivate' => ['delete'],
                 ],  
             ];
 		return $behaviors;	
@@ -110,25 +111,6 @@ class UserController extends BaseActiveController
 			
 			if($model-> save())
 			{
-				//moved sp calls to when a user is added to a project.
-				// //run sp to create Time and Mileage cards for a new user
-				// try
-				// {
-					// $userID = $model->UserID;
-					// $connection = SCUser::getDb();
-					// $transaction = $connection-> beginTransaction();
-					// $timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForNewUserCatchErrors_proc :PARAMETER1");
-					// $timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-					// $timeCardCommand->execute();
-					// $mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForNewUserCatchErrors_proc :PARAMETER1");
-					// $mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-					// $mileageCardCommand->execute();
-					// $transaction->commit();
-				// }
-				// catch(Exception $e)
-				// {
-					// $transaction->rollBack();
-				// }
 				$response->setStatusCode(201);
 				$response->data = $model;
 			}
@@ -306,6 +288,44 @@ class UserController extends BaseActiveController
 		// //response data
 		// return $response;
 	// }
+	
+	public function actionDeactivate($userID)
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			
+			//get user to be deactivated
+			$model = SCUser::findOne($userID);
+			
+			//pass new data to model
+			$model->UserActiveFlag = 0;  
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			$model->UserModifiedDate = Parent::getDate();
+			
+			if($model-> update())
+			{
+				$response->setStatusCode(201);
+				$response->data = $model; 
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
+		
+	}
 
 	public function actionGetUserDropdowns()
 	{	
