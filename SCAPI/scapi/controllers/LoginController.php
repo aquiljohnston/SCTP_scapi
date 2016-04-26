@@ -8,7 +8,7 @@ use app\models\Auth;
 use app\models\Key;
 use app\authentication\CTUser;
 use yii\data\ActiveDataProvider;
-use yii\rest\ActiveController;
+use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -16,41 +16,9 @@ use yii\web\Response;
 use yii\helpers\Json;
 use yii\base\ErrorException;
 
-class LoginController extends ActiveController
+class LoginController extends Controller
 {
-	public $modelClass = 'app\models\SCUser'; 
-	public $Login;
-	
-     /* public function actionIndex()
-     {
-         return $this->render('index');
-     }
-	 */
-	 
-	public function actions()
-	{
-		$actions = parent::actions();
-		unset($actions['view']);
-		return $actions;
-	}
 		
-	public function actionView($Username)
-    {
-		try
-		{
-			$Login = Login::findOne($Username);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $login;
-			
-			return $response;
-		}
-		catch(ErrorException $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	} 
-	
 	public function actionUserLogin()
 	{
 		try
