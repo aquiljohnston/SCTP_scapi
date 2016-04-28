@@ -18,6 +18,19 @@ class TimeEntryController extends BaseActiveController
 {
     public $modelClass = 'app\models\TimeEntry'; 
 
+	public function behaviors()
+	{
+		$behaviors = parent::behaviors();
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+					'deactivate' => ['delete'],
+                ],  
+            ];
+		return $behaviors;	
+	}
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -123,5 +136,30 @@ class TimeEntryController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function actionDeactivate($id)
+	{
+		//set db target
+			$headers = getallheaders();
+			TimeEntry::setClient($headers['X-Client']);
+			
+			$timeEntry = TimeEntry::findOne($id);
+			$timeEntry->TimeEntryActiveFlag = 'Inactive';
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			if($timeEntry->update())
+			{
+				$response->setStatusCode(200);
+				$response->data = $timeEntry;
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
 	}
 }
