@@ -43,7 +43,7 @@ class TokenAuth extends AuthMethod
 			}
 			catch (ErrorException $e) 
 			{
-				Yii::warning("Token not found.");
+				Yii::warning("Valid token not found.");
 			}
 		}
 
