@@ -5,24 +5,24 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "AllApprovedMileageCardsCurrentWeekSumMiles_vw".
+ * This is the model class for table "AllMileageCardsCurrentWeekSumMiles_vw".
  *
+ * @property integer $MileageCardID
  * @property integer $UserID
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
- * @property integer $MileageCardID
- * @property string $MileageStartDate
- * @property string $MileageEndDate
- * @property integer $SumBusinessMiles
- * @property integer $SumPersonalMiles
- * @property integer $SUMMileageCardAllMileage_calc
+ * @property integer $MileageCardProjectID
+ * @property string $ProjectName
+ * @property string $SumBusinessMiles
+ * @property string $SumPersonalMiles
  * @property string $MileageCardApprovedBy
  * @property string $MileageCardApproved
+ * @property string $MileageStartDate
+ * @property string $MileageEndDate
  * @property string $UserStatus
- * @property integer $MileageCardProjectID
  */
-class AllMileageCardsCurrentWeekSumMiles extends BaseActiveRecord
+class AllMileageCardsCurrentWeekSumMiles extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
@@ -38,9 +38,10 @@ class AllMileageCardsCurrentWeekSumMiles extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['UserID', 'MileageCardID', 'UserStatus'], 'required'],
-            [['UserID', 'MileageCardID', 'SumBusinessMiles', 'SumPersonalMiles', 'SUMMileageCardAllMileage_calc', 'MileageCardProjectID'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'MileageCardApprovedBy', 'MileageCardApproved', 'UserStatus'], 'string'],
+            [['MileageCardID', 'UserID', 'ProjectName', 'UserStatus'], 'required'],
+            [['MileageCardID', 'UserID', 'MileageCardProjectID'], 'integer'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'ProjectName', 'MileageCardApprovedBy', 'MileageCardApproved', 'UserStatus'], 'string'],
+            [['SumBusinessMiles', 'SumPersonalMiles'], 'number'],
             [['MileageStartDate', 'MileageEndDate'], 'safe']
         ];
     }
@@ -51,20 +52,20 @@ class AllMileageCardsCurrentWeekSumMiles extends BaseActiveRecord
     public function attributeLabels()
     {
         return [
+            'MileageCardID' => 'Mileage Card ID',
             'UserID' => 'User ID',
             'UserName' => 'User Name',
             'UserFirstName' => 'User First Name',
             'UserLastName' => 'User Last Name',
-            'MileageCardID' => 'Mileage Card ID',
-            'MileageStartDate' => 'Mileage Start Date',
-            'MileageEndDate' => 'Mileage End Date',
+            'MileageCardProjectID' => 'Mileage Card Project ID',
+            'ProjectName' => 'Project Name',
             'SumBusinessMiles' => 'Sum Business Miles',
             'SumPersonalMiles' => 'Sum Personal Miles',
-            'SUMMileageCardAllMileage_calc' => 'Summileage Card All Mileage Calc',
             'MileageCardApprovedBy' => 'Mileage Card Approved By',
             'MileageCardApproved' => 'Mileage Card Approved',
+            'MileageStartDate' => 'Mileage Start Date',
+            'MileageEndDate' => 'Mileage End Date',
             'UserStatus' => 'User Status',
-            'MileageCardProjectID' => 'Mileage Card Project ID',
         ];
     }
 }
