@@ -18,6 +18,19 @@ class MileageEntryController extends BaseActiveController
 {
     public $modelClass = 'app\models\MileageEntry'; 
 
+	public function behaviors()
+	{
+		$behaviors = parent::behaviors();
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+					'deactivate' => ['delete'],
+                ],  
+            ];
+		return $behaviors;	
+	}
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -54,10 +67,10 @@ class MileageEntryController extends BaseActiveController
 			MileageEntry::setClient($headers['X-Client']);
 			
 			//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-			$mileage = MileageEntry::findOne($id);
+			$mileageEntry = MileageEntry::findOne($id);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileage;
+			$response->data = $mileageEntry;
 			
 			return $response;
 		}
@@ -104,5 +117,30 @@ class MileageEntryController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function actionDeactivate($id)
+	{
+		//set db target
+			$headers = getallheaders();
+			MileageEntry::setClient($headers['X-Client']);
+			
+			$mileageEntry = MileageEntry::findOne($id);
+			$mileageEntry->MileageEntryActiveFlag = 'Inactive';
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			if($mileageEntry->update())
+			{
+				$response->setStatusCode(200);
+				$response->data = $mileageEntry;
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
 	}
 }
