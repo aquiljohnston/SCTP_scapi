@@ -25,7 +25,7 @@ class MileageEntryController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'deactivate' => ['delete'],
+					'deactivate' => ['put'],
                 ],  
             ];
 		return $behaviors;	

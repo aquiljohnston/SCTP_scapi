@@ -39,7 +39,7 @@ class UserController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'deactivate' => ['delete'],
+					'deactivate' => ['put'],
 					'get-user-dropdowns'  => ['get'],
 					'get-me'  => ['get'],
 					'get-all-projects'  => ['get'],
