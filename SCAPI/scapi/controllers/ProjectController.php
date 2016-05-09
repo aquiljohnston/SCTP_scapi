@@ -42,6 +42,7 @@ class ProjectController extends BaseActiveController
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
+		unset($actions['create']);
 		unset($actions['update']);
 		unset($actions['delete']);
 		return $actions;
