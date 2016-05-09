@@ -29,7 +29,7 @@ class AllMileageCardsCurrentWeekSumMiles extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'AllMileageCardsCurrentWeekSumMiles_vw';
+        return 'MileageCardSumMilesCurrentWeekWithProjectName_vw';
     }
 
     /**
@@ -38,10 +38,10 @@ class AllMileageCardsCurrentWeekSumMiles extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['MileageCardID', 'UserID', 'ProjectName', 'UserStatus'], 'required'],
-            [['MileageCardID', 'UserID', 'MileageCardProjectID'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'ProjectName', 'MileageCardApprovedBy', 'MileageCardApproved', 'UserStatus'], 'string'],
-            [['SumBusinessMiles', 'SumPersonalMiles'], 'number'],
+            [['MileageCardID', 'UserID', 'ProjectName'], 'required'],
+            [['ProjectID', 'UserID', 'MileageCardProjectID', 'MileageCardTechID'], 'integer'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'ProjectName', 'MileageCardApprovedBy', 'MileageCardApprovedFlag', 'MileageCardSupervisorName'], 'string'],
+            [['SumMiles'], 'number'],
             [['MileageStartDate', 'MileageEndDate'], 'safe']
         ];
     }
@@ -59,13 +59,11 @@ class AllMileageCardsCurrentWeekSumMiles extends \yii\db\ActiveRecord
             'UserLastName' => 'User Last Name',
             'MileageCardProjectID' => 'Mileage Card Project ID',
             'ProjectName' => 'Project Name',
-            'SumBusinessMiles' => 'Sum Business Miles',
-            'SumPersonalMiles' => 'Sum Personal Miles',
+            'SumMiles' => 'Sum Miles',
             'MileageCardApprovedBy' => 'Mileage Card Approved By',
-            'MileageCardApproved' => 'Mileage Card Approved',
+            'MileageCardApprovedFlag' => 'Mileage Card Approved',
             'MileageStartDate' => 'Mileage Start Date',
             'MileageEndDate' => 'Mileage End Date',
-            'UserStatus' => 'User Status',
         ];
     }
 }
