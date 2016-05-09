@@ -12,7 +12,7 @@ use app\models\AllMileageCardsCurrentWeek;
 use app\models\AllMileageCardsPriorWeek;
 use app\models\AllApprovedMileageCardsCurrentWeek;
 use app\models\AllUnApprovedMileageCardsCurrentWeek;
-use app\models\AllMileageCardsCurrentWeekSumMiles;
+use app\models\MileageCardSumMilesCurrentWeekWithProjectName;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -419,9 +419,9 @@ class MileageCardController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			AllMileageCardsCurrentWeekSumMiles::setClient($headers['X-Client']);
+			MileageCardSumMilesCurrentWeekWithProjectName::setClient($headers['X-Client']);
 			
-			$mileageCards = AllMileageCardsCurrentWeekSumMiles::find()->all();
+			$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->all();
 			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
