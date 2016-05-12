@@ -119,28 +119,64 @@ class MileageEntryController extends BaseActiveController
 		}
 	}
 	
-	public function actionDeactivate($id)
+	public function actionDeactivate()
 	{
-		//set db target
+		try
+		{
+			//set db target
 			$headers = getallheaders();
 			MileageEntry::setClient($headers['X-Client']);
 			
-			$mileageEntry = MileageEntry::findOne($id);
-			$mileageEntry->MileageEntryActiveFlag = 'Inactive';
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
 			
+			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			if($mileageEntry->update())
+			//parse json
+			$deactivatedBy = $data["deactivatedBy"];
+			$entryIDs = $data["entryArray"];
+			
+			//get mileage entries
+			foreach($entryIDs as $id)
 			{
-				$response->setStatusCode(200);
-				$response->data = $mileageEntry;
+				$approvedEntries[]= MileageEntry::findOne($id);
 			}
-			else
+			
+			//try to approve time cards
+			try
 			{
+				//create transaction
+				$connection = \Yii::$app->db;
+				$transaction = $connection->beginTransaction(); 
+			
+				foreach($approvedEntries as $entry)
+				{
+					$entry-> MileageEntryActiveFlag = "Inactive";
+					$entry-> MileageEntryModifiedDate = Parent::getDate();
+					$entry-> MileageEntryModifiedBy = $deactivatedBy;
+					$entry-> update();
+				}
+				$transaction->commit();
+				$response->setStatusCode(200);
+				$response->data = $approvedEntries; 
+				return $response;
+			}
+			//if transaction fails rollback changes and send error
+			catch(Exception $e)
+			{
+				$transaction->rollBack();
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
+				return $response;
 			}
-			return $response;
+			
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

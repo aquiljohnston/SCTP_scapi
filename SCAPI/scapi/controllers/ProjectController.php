@@ -296,7 +296,7 @@ class ProjectController extends BaseActiveController
 			$usersAdded = $data['usersAdded'];
 			$usersRemoved = $data['usersRemoved'];
 			
-			//loop usersAdded and create relationships
+			//loop usersAdded and create relationships and cards
 			foreach($usersAdded as $i)
 			{
 				$user = SCUser::findOne($i);
@@ -323,13 +323,33 @@ class ProjectController extends BaseActiveController
 				}			
 			}
 			
-			//loop usersRemoved and delete relationships
+			//loop usersRemoved and delete relationships and deactivate cards
 			foreach($usersRemoved as $i)
 			{
 				$projUser = ProjectUser::find()
 				->where(['and', "ProjUserUserID = $i","ProjUserProjectID = $projectID"])
 				->one();
 				$projUser->delete();
+				//call sps to deactivate time cards and mileage cards
+				try
+				{
+					$userID = $i;
+					$connection = SCUser::getDb();
+					$transaction = $connection-> beginTransaction();
+					$timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
+					$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+					$timeCardCommand->execute();
+					$mileageCardCommand = $connection->createCommand("EXECUTE DeactivateMileageCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
+					$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+					$mileageCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+					$mileageCardCommand->execute();
+					$transaction->commit();
+				}
+				catch(Exception $e)
+				{
+					$transaction->rollBack();
+				}		
 			}
 			
 			//build response 

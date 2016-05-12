@@ -361,6 +361,8 @@ class MileageCardController extends BaseActiveController
 				{
 					$card-> MileageCardApprovedFlag = "Yes";
 					$card-> MileageCardApprovedBy = $approvedBy;
+					$card-> MileageCardModifiedDate = Parent::getDate();
+					$card-> MileageCardModifiedBy = $approvedBy;
 					$card-> update();
 				}
 				$transaction->commit();
