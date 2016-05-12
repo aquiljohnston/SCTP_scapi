@@ -24,6 +24,7 @@ $config = [
             'identityClass' => 'app\models\SCUser',
             'enableAutoLogin' => false,
 			'authTimeout' => 14400,
+			//'authTimeout' => 15,
 			'loginUrl' => null
         ],
         'errorHandler' => [
