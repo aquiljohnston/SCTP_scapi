@@ -43,7 +43,7 @@ class Activity extends BaseActiveRecord
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate'], 'safe'],
             [['ActivityTitle', 'ActivityBillingCode'], 'string'],
             [['ActivityCode', 'ActivityPayCode' , 'ActivityCreatedBy', 'ActivityModifiedBy'], 'integer'],
-			[['Latitude', 'Longitude'], 'number']
+			[['ActivityLatitude', 'ActivityLongitude'], 'number']
         ];
     }
 
@@ -64,8 +64,8 @@ class Activity extends BaseActiveRecord
             'ActivityCreatedBy' => 'Activity Created By',
             'ActivityModifiedDate' => 'Activity Modified Date',
             'ActivityModifiedBy' => 'Activity Modified By',
-			'Latitude' => 'Latitude',
-			'Longitude' => 'Longitude',
+			'ActivityLatitude' => 'Activity Latitude',
+			'ActivityLongitude' => 'Activity Longitude',
         ];
     }
 
