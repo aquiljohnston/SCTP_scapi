@@ -13,7 +13,9 @@ use Yii;
  * @property string $UserFirstName
  * @property string $UserLastName
  * @property integer $MileageCardProjectID
+ * @property integer $ProjectID
  * @property string $ProjectName
+ * @property integer $MileageCardTechID
  * @property string $SumMiles
  * @property string $MileageCardApprovedBy
  * @property string $MileageCardApprovedFlag
@@ -38,7 +40,7 @@ class MileageCardSumMilesCurrentWeekWithProjectName extends BaseActiveRecord
     {
         return [
             [['MileageCardID', 'UserID', 'ProjectName'], 'required'],
-            [['ProjectID', 'UserID', 'MileageCardProjectID', 'MileageCardTechID'], 'integer'],
+            [['ProjectID', 'UserID', 'MileageCardProjectID', 'MileageCardTechID', 'ProjectID', 'MileageCardTechID',], 'integer'],
             [['UserName', 'UserFirstName', 'UserLastName', 'ProjectName', 'MileageCardApprovedBy', 'MileageCardApprovedFlag', 'MileageCardSupervisorName'], 'string'],
             [['SumMiles'], 'number'],
             [['MileageStartDate', 'MileageEndDate'], 'safe']
@@ -57,7 +59,9 @@ class MileageCardSumMilesCurrentWeekWithProjectName extends BaseActiveRecord
             'UserFirstName' => 'User First Name',
             'UserLastName' => 'User Last Name',
             'MileageCardProjectID' => 'Mileage Card Project ID',
+			'ProjectID' => 'ProjectID',
             'ProjectName' => 'Project Name',
+			'MileageCardTechID' => 'MileageCardTechID',
             'SumMiles' => 'Sum Miles',
             'MileageCardApprovedBy' => 'Mileage Card Approved By',
             'MileageCardApprovedFlag' => 'Mileage Card Approved Flag',

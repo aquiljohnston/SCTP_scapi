@@ -10,6 +10,10 @@ use yii\base\Security;
  *
  * @property integer $AuthUserID
  * @property string $AuthToken
+ * @property string $AuthCreatedDate
+ * @property string $AuthCreatedBy
+ * @property string $AuthModifiedDate
+ * @property string $AuthModifiedBy
  */
 class Auth extends BaseActiveRecord
 {
@@ -28,7 +32,8 @@ class Auth extends BaseActiveRecord
     {
         return [
             [['AuthUserID'], 'integer'],
-            [['AuthToken'], 'string']
+            [['AuthToken', 'AuthCreatedBy', 'AuthModifiedBy'], 'string'],
+			[['AuthCreatedDate', 'AuthModifiedDate'], 'safe']
         ];
     }
 
@@ -40,6 +45,10 @@ class Auth extends BaseActiveRecord
         return [
             'AuthUserId' => 'Auth User ID',
             'AuthToken' => 'Auth Token',
+			'AuthCreatedDate' => 'Auth Created Date',
+			'AuthCreatedBy' => 'Auth Created By',
+			'AuthModifiedDate' => 'Auth Modified Date',
+			'AuthModifiedBy' => 'Auth Modified By',
         ];
     }
 	

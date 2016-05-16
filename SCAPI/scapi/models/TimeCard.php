@@ -7,15 +7,18 @@ use Yii;
 /**
  * This is the model class for table "TimeCardTb".
  *
- * @property string $TimeCardID
+ * @property integer $TimeCardID
  * @property string $TimeCardStartDate
  * @property string $TimeCardEndDate
- * @property string $TimeCardProjectID
+ * @property integer $TimeCardProjectID
+ * @property string $TimeCardProjectGroupID
  * @property string $TimeCardTechID
+ * @property string $TimeCardActiveFlag
  * @property string $TimeCardApprovedFlag
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardSupervisorName
  * @property string $TimeCardComment
+ * @property string $TimeCardArchiveFlag
  * @property string $TimeCardCreateDate
  * @property string $TimeCardCreatedBy
  * @property string $TimeCardModifiedDate
@@ -43,7 +46,8 @@ class TimeCard extends BaseActiveRecord
         return [
             [['TimeCardStartDate', 'TimeCardEndDate', 'TimeCardCreateDate', 'TimeCardModifiedDate'], 'safe'],
             [['TimeCardProjectID', 'TimeCardTechID'], 'integer'],
-            [['TimeCardApprovedBy','TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy', 'TimeCardApprovedFlag'], 'string']
+            [['TimeCardApprovedBy','TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy', 'TimeCardApprovedFlag', 'TimeCardProjectGroupID',
+				'TimeCardActiveFlag', 'TimeCardArchiveFlag' ], 'string']
         ];
     }
 
@@ -57,11 +61,14 @@ class TimeCard extends BaseActiveRecord
             'TimeCardStartDate' => 'Time Card Start Date',
             'TimeCardEndDate' => 'Time Card End Date',
             'TimeCardProjectID' => 'Time Card Project ID',
+			'TimeCardProjectGroupID' => 'Time Card Project Group ID',
             'TimeCardTechID' => 'Time Card Tech ID',
+			'TimeCardActiveFlag' => 'TimeCardActiveFlag',
             'TimeCardApprovedFlag' => 'Time Card Approved Flag',
 			'TimeCardApprovedBy' => 'Time Card Approved By',
             'TimeCardSupervisorName' => 'Time Card Supervisor Name',
             'TimeCardComment' => 'Time Card Comment',
+			'TimeCardArchiveFlag' => 'TimeCardArchiveFlag',
             'TimeCardCreateDate' => 'Time Card Create Date',
             'TimeCardCreatedBy' => 'Time Card Created By',
             'TimeCardModifiedDate' => 'Time Card Modified Date',

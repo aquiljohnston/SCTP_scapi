@@ -13,6 +13,7 @@ use Yii;
  * @property string $Key3
  * @property string $KeyStatus
  * @property string $KeyComment
+ * @property string $KeyArchiveFlag
  * @property string $KeyCreateDate
  * @property string $KeyCreatedBy
  * @property string $KeyModifiedDate
@@ -36,7 +37,7 @@ class Key extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['Key1', 'Key2', 'Key3', 'KeyStatus', 'KeyComment', 'KeyCreatedBy', 'KeyModifiedBy'], 'string'],
+            [['Key1', 'Key2', 'Key3', 'KeyStatus', 'KeyComment', 'KeyCreatedBy', 'KeyModifiedBy', 'KeyArchiveFlag'], 'string'],
             [['KeyCreateDate', 'KeyModifiedDate'], 'safe']
         ];
     }
@@ -53,6 +54,7 @@ class Key extends BaseActiveRecord
             'Key3' => 'Key3',
             'KeyStatus' => 'Key Status',
             'KeyComment' => 'Key Comment',
+			'KeyArchiveFlag' => 'Key Archive Flag',
             'KeyCreateDate' => 'Key Create Date',
             'KeyCreatedBy' => 'Key Created By',
             'KeyModifiedDate' => 'Key Modified Date',

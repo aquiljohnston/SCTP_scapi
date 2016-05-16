@@ -12,6 +12,7 @@ use Yii;
  * @property string $ProjUserProjectID
  * @property string $ProjUserProjectRoles
  * @property string $ProjUserComment
+ * @property string $ProjUserArchiveFlag
  * @property string $ProjUserCreateDate
  * @property string $ProjUserCreatedBy
  * @property string $ProjUserModifiedDate
@@ -37,7 +38,7 @@ class ProjectUser extends BaseActiveRecord
     {
         return [
             [['ProjUserUserID', 'ProjUserProjectID'], 'integer'],
-            [['ProjUserProjectRoles', 'ProjUserComment', 'ProjUserCreatedBy', 'ProjUserModifiedBy'], 'string'],
+            [['ProjUserProjectRoles', 'ProjUserComment', 'ProjUserCreatedBy', 'ProjUserModifiedBy', 'ProjUserArchiveFlag'], 'string'],
             [['ProjUserCreateDate', 'ProjUserModifiedDate'], 'safe']
         ];
     }
@@ -53,6 +54,7 @@ class ProjectUser extends BaseActiveRecord
             'ProjUserProjectID' => 'Proj User Project ID',
             'ProjUserProjectRoles' => 'Proj User Project Roles',
             'ProjUserComment' => 'Proj User Comment',
+			'ProjUserArchiveFlag' => 'Proj User Archive Flag',
             'ProjUserCreateDate' => 'Proj User Create Date',
             'ProjUserCreatedBy' => 'Proj User Created By',
             'ProjUserModifiedDate' => 'Proj User Modified Date',

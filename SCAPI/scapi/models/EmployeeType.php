@@ -10,7 +10,13 @@ use Yii;
  * @property integer $EmployeeTypeID
  * @property string $EmployeeType
  * @property string $EmployeeTypeDescription
+ * @property string $EmployeeTypeArchived
+ * @property string $EmployeeTypeCreateDate
+ * @property string $EmployeeTypeCreatedBy
+ * @property string $EmployeeTypeModifiedDate
+ * @property string $EmployeeTypeModifiedBy
  */
+
 class EmployeeType extends BaseActiveRecord
 {
     /**
@@ -29,7 +35,8 @@ class EmployeeType extends BaseActiveRecord
         return [
             [['EmployeeTypeID'], 'required'],
             [['EmployeeTypeID'], 'integer'],
-            [['EmployeeType', 'EmployeeTypeDescription'], 'string']
+            [['EmployeeType', 'EmployeeTypeDescription', 'EmployeeTypeArchived', 'EmployeeTypeCreateDate', 'EmployeeTypeCreatedBy',
+				'EmployeeTypeModifiedDate', 'EmployeeTypeModifiedBy'], 'string']
         ];
     }
 
@@ -42,6 +49,11 @@ class EmployeeType extends BaseActiveRecord
             'EmployeeTypeID' => 'Employee Type ID',
             'EmployeeType' => 'Employee Type',
             'EmployeeTypeDescription' => 'Employee Type Description',
+			'EmployeeTypeArchived' => 'Employee Type Archived',
+			'EmployeeTypeCreateDate' => 'Employee Type Create Date',
+			'EmployeeTypeCreatedBy' => 'Employee Type Created By',
+			'EmployeeTypeModifiedDate' => 'Employee Type ModifiedDate',
+			'EmployeeTypeModifiedBy' => 'Employee Type ModifiedBy',
         ];
     }
 }

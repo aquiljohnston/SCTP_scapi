@@ -10,6 +10,7 @@ use Yii;
  * @property integer $MileageCardID
  * @property integer $MileageCardTechID
  * @property integer $MileageCardProjectID
+ * @property string $MileageCardProjectGroupID
  * @property string $MileageStartDate
  * @property string $MileageEndDate
  * @property integer $MileageCardBusinessMiles
@@ -17,6 +18,7 @@ use Yii;
  * @property string $MileageCardApprovedFlag
  * @property string $MileageCardApprovedBy
  * @property string $MileageCardSupervisorName
+ * @property string $MileageCardArchiveFlag
  * @property string $MileageCardCreateDate
  * @property string $MileageCardCreatedBy
  * @property string $MileageCardModifiedDate
@@ -43,7 +45,7 @@ class MileageCard extends BaseActiveRecord
     {
         return [
             [['MileageCardTechID', 'MileageCardProjectID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles'], 'integer'],
-            [['MileageCardApprovedBy', 'MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy', 'MileageCardApprovedFlag'], 'string'],
+            [['MileageCardApprovedBy', 'MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy', 'MileageCardApprovedFlag', 'MileageCardProjectGroupID', 'MileageCardArchiveFlag'], 'string'],
             [['MileageStartDate', 'MileageEndDate', 'MileageCardCreateDate', 'MileageCardModifiedDate'], 'safe']
         ];
     }
@@ -57,6 +59,7 @@ class MileageCard extends BaseActiveRecord
             'MileageCardID' => 'Mileage Card ID',
             'MileageCardTechID' => 'Mileage Card Tech ID',
             'MileageCardProjectID' => 'Mileage Card Project ID',
+			'MileageCardProjectGroupID' => 'Mileage Card Project Group ID',
 			'MileageStartDate' => 'Mileage Start Date',
 			'MileageEndDate' => 'Mileage End Date',
 			'MileageCardBusinessMiles' => 'Mileage Card Business Miles',
@@ -64,6 +67,7 @@ class MileageCard extends BaseActiveRecord
             'MileageCardApprovedFlag' => 'Mileage Card Approved Flag',
 			'MileageCardApprovedBy' => 'Mileage Card Approved By',
 			'MileageCardSupervisorName' => 'Mileage Card Supervisor Name',
+			'MileageCardArchiveFlag' => 'Mileage Card Archive Flag',
             'MileageCardCreateDate' => 'Mileage Card Create Date',
             'MileageCardCreatedBy' => 'Mileage Card Created By',
             'MileageCardModifiedDate' => 'Mileage Card Modified Date',

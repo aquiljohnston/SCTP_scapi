@@ -12,6 +12,7 @@ use Yii;
  * @property string $EquipmentCalibrationDate
  * @property integer $EquipmentCalibrationTechnician
  * @property string $EquipmentCalibrationComment
+ * @property string $EquipmentCalibrationArchiveFlag
  * @property string $EquipmentCalibrationCreateDate
  * @property string $EquipmentCalibrationCreatedBy
  * @property string $EquipmentCalibrationMofifiedDate
@@ -33,7 +34,7 @@ class EquipmentCalibration extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentCalibrationID', 'EquipmentCalibrationEquipmentID', 'EquipmentCalibrationTechnician', 'EquipmentCalibrationCreatedBy', 'EquipmentCalibrationModifiedBy'], 'integer'],
+            [['EquipmentCalibrationID', 'EquipmentCalibrationEquipmentID', 'EquipmentCalibrationTechnician', 'EquipmentCalibrationCreatedBy', 'EquipmentCalibrationModifiedBy', 'EquipmentCalibrationArchiveFlag'], 'integer'],
             [['EquipmentCalibrationDate', 'EquipmentCalibrationCreateDate', 'EquipmentCalibrationMofifiedDate'], 'safe'],
             [['EquipmentCalibrationComment'], 'string']
         ];
@@ -50,6 +51,7 @@ class EquipmentCalibration extends BaseActiveRecord
             'EquipmentCalibrationDate' => 'Equipment Calibration Date',
             'EquipmentCalibrationTechnician' => 'Equipment Calibration Technician',
             'EquipmentCalibrationComment' => 'Equipment Calibration Comment',
+			'EquipmentCalibrationArchiveFlag' => 'Equipment Calibration Archive Flag',
             'EquipmentCalibrationCreateDate' => 'Equipment Calibration Create Date',
             'EquipmentCalibrationCreatedBy' => 'Equipment Calibration Created By',
             'EquipmentCalibrationMofifiedDate' => 'Equipment Calibration Mofified Date',

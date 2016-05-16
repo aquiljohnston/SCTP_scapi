@@ -13,14 +13,17 @@ use Yii;
  * @property string $MileageEntryEndingMileage
  * @property string $MileageEntryStartDate
  * @property string $MileageEntryEndDate
+ * @property string $MileageEntryWeekDay
  * @property string $MileageEntryDate
  * @Property String $MileageEntryActiveFlag
  * @property string $MileageEntryType
  * @property integer $MileageEntryMileageCardID
+ * @property integer $MileageEntryMileageSummary
  * @property integer $MileageEntryActivityID
  * @property string $MileageEntryApprovedBy
  * @property integer $MileageEntryStatus
  * @property string $MileageEntryComment
+ * @property string $MileageEntryArchiveFlag
  * @property string $MileageEntryCreateDate
  * @property string $MileageEntryCreatedBy
  * @property string $MileageEntryModifiedDate
@@ -45,9 +48,9 @@ class MileageEntry extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
+            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryMileageSummary'], 'number'],
             [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus', 'MileageEntryUserID', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'integer'],
-            [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryActiveFlag'], 'string'],
+            [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryActiveFlag', 'MileageEntryWeekDay', 'MileageEntryArchiveFlag'], 'string'],
             [['MileageEntryDate', 'MileageEntryStartDate', 'MileageEntryEndDate',  'MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
         ];
     }
@@ -64,14 +67,17 @@ class MileageEntry extends BaseActiveRecord
             'MileageEntryEndingMileage' => 'Mileage Entry Ending Mileage',
 			'MileageEntryStartDate' => 'Mileage Entry Start Date',
 			'MileageEntryEndDate' => 'Mileage Entry End Date',
+			'MileageEntryWeekDay' => 'Mileage Entry Week Day',
 			'MileageEntryDate' => 'Mileage Entry Date',
 			'MileageEntryActiveFlag' => 'Mileage Entry Active Flag',
 			'MileageEntryType' => 'Mileage Entry Type',
             'MileageEntryMileageCardID' => 'Mileage Entry Mileage Card ID',
+			'MileageEntryMileageSummary' => 'Mileage Entry Mileage Summary',
             'MileageEntryActivityID' => 'Mileage Entry Activity ID',
             'MileageEntryApprovedBy' => 'Mileage Entry Approved By',
             'MileageEntryStatus' => 'Mileage Entry Status',
             'MileageEntryComment' => 'Mileage Entry Comment',
+			'MileageEntryArchiveFlag' => 'Mileage Entry Archive Flag',
             'MileageEntryCreateDate' => 'Mileage Entry Create Date',
             'MileageEntryCreatedBy' => 'Mileage Entry Created By',
             'MileageEntryModifiedDate' => 'Mileage Entry Modified Date',

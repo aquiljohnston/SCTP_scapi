@@ -29,6 +29,8 @@ use Yii;
  * @property string $EquipmentAssignedUserID
  * @property string $EquipmentAcceptedFlag
  * @property string $EquipmentAcceptedBy
+ * @property string $EquipmentModificationReason
+ * @property string $EquipmentArchiveFlag
  * @property string $EquipmentCreatedByUser
  * @property string $EquipmentCreateDate
  * @property string $EquipmentModifiedBy
@@ -53,7 +55,9 @@ class Equipment extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag', 'EquipmentAcceptedBy', 'EquipmentModificationReason'], 'string'],
+            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear',
+			'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment',
+			'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag', 'EquipmentAcceptedBy', 'EquipmentModificationReason', 'EquipmentModificationReason', 'EquipmentArchiveFlag'], 'string'],
             [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
@@ -87,6 +91,8 @@ class Equipment extends BaseActiveRecord
             'EquipmentAssignedUserID' => 'Equipment Assigned User ID',
 			'EquipmentAcceptedFlag' => 'Equipment Accepted Flag',
 			'EquipmentAcceptedBy' => 'Equipment Accepted By',
+			'EquipmentModificationReason' => 'Equipment Modification Reason',
+			'EquipmentArchiveFlag' => 'Equipment Archive Flag',
             'EquipmentCreatedByUser' => 'Equipment Created By User',
             'EquipmentCreateDate' => 'Equipment Create Date',
             'EquipmentModifiedBy' => 'Equipment Modified By',

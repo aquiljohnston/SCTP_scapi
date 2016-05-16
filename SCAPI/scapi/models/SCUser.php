@@ -21,6 +21,7 @@ use app\models\Auth;
  * @property string $UserComments
  * @property string $UserKey
  * @property integer $UserActiveFlag
+ * @property string $UserArchiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
  * @property integer $UserCreatedBy
@@ -49,7 +50,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     public function rules()
     {
         return [
-            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments'], 'string'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserArchiveFlag'], 'string'],
             [['UserKey', 'UserActiveFlag', 'UserCreatedBy', 'UserModifiedBy'], 'integer'],
             [['UserCreateDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate'], 'safe']
         ];
@@ -73,6 +74,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserComments' => 'User Comments',
             'UserKey' => 'User Key',
             'UserActiveFlag' => 'User Active Flag',
+			'UserArchiveFlag' => 'User Archive Flag',
             'UserCreatedDate' => 'User Created Date',
             'UserModifiedDate' => 'User Modified Date',
             'UserCreatedBy' => 'User Created By',

@@ -13,6 +13,11 @@ use Yii;
  * @property string $ClientAccountDescriptions
  * @property string $ClientAccountComment
  * @property double $ClientAccountStatus
+ * @property double $ClientAccountsArchiveFlag
+ * @property double $ClientAccountCreatedDate
+ * @property double $ClientAccountCreatedBy
+ * @property double $ClientAccountModifiedDate
+ * @property double $ClientAccountModifiedBy
  */
 class ClientAccounts extends BaseActiveRecord
 {
@@ -31,7 +36,8 @@ class ClientAccounts extends BaseActiveRecord
     {
         return [
             [['ClientAccountID', 'ClientAccountNumber', 'ClientAccountStatus'], 'number'],
-            [['ClientAccountName', 'ClientAccountDescriptions', 'ClientAccountComment'], 'string']
+            [['ClientAccountName', 'ClientAccountDescriptions', 'ClientAccountComment', 'ClientAccountsArchiveFlag',
+				'ClientAccountCreatedDate', 'ClientAccountCreatedBy', 'ClientAccountModifiedDate', 'ClientAccountModifiedBy'], 'string']
         ];
     }
 
@@ -47,6 +53,11 @@ class ClientAccounts extends BaseActiveRecord
             'ClientAccountDescriptions' => 'Client Account Descriptions',
             'ClientAccountComment' => 'Client Account Comment',
             'ClientAccountStatus' => 'Client Account Status',
+			'ClientAccountsArchiveFlag' => 'Client Accounts Archive Flag',
+			'ClientAccountCreatedDate' => 'Client Account Created Date',
+			'ClientAccountCreatedBy' => 'Client Account Created By',
+			'ClientAccountModifiedDate' => 'Client Account Modified Date',
+			'ClientAccountModifiedBy' => 'Client Account Modified By',
         ];
     }
 }

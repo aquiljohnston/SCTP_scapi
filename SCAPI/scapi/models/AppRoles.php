@@ -13,6 +13,7 @@ use Yii;
  * @property string $AppRoleStatus
  * @property string $AppRoleType
  * @property integer $AppRoleUserID
+ * @property string $AppRoleArchiveFlag
  * @property string $AppRoleCreateDate
  * @property string $AppRoleCreatedBy
  * @property string $AppRoleModifiedDate
@@ -34,7 +35,7 @@ class AppRoles extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['AppRoleName', 'AppRoleDescription', 'AppRoleStatus', 'AppRoleType', 'AppRoleCreatedBy', 'AppRoleModifiedBy'], 'string'],
+            [['AppRoleName', 'AppRoleDescription', 'AppRoleStatus', 'AppRoleType', 'AppRoleArchiveFlag', 'AppRoleCreatedBy', 'AppRoleModifiedBy'], 'string'],
             [['AppRoleUserID'], 'integer'],
             [['AppRoleCreateDate', 'AppRoleModifiedDate'], 'safe']
         ];
@@ -52,6 +53,7 @@ class AppRoles extends BaseActiveRecord
             'AppRoleStatus' => 'App Role Status',
             'AppRoleType' => 'App Role Type',
             'AppRoleUserID' => 'App Role User ID',
+			'AppRoleArchiveFlag' => 'App Role Archive Flag',
             'AppRoleCreateDate' => 'App Role Create Date',
             'AppRoleCreatedBy' => 'App Role Created By',
             'AppRoleModifiedDate' => 'App Role Modified Date',

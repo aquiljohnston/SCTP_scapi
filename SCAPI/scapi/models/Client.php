@@ -25,6 +25,8 @@ use Yii;
  * @property integer $ClientActiveFlag
  * @property integer $ClientDivisionsFlag
  * @property string $ClientComment
+ * @property string $ClientFilesPath
+ * @property string $ClientArchiveFlag
  * @property string $ClientCreateDate
  * @property string $ClientCreatorUserID
  * @property string $ClientModifiedDate
@@ -49,7 +51,7 @@ class Client extends BaseActiveRecord
     {
         return [
             [['ClientName'], 'required'],
-            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment'], 'string'],
+            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientComment', 'ClientArchiveFlag'], 'string'],
             [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag',  'ClientCreatorUserID', 'ClientModifiedBy'], 'integer'],
             [['ClientCreateDate', 'ClientModifiedDate'], 'safe']
         ];
@@ -83,6 +85,8 @@ class Client extends BaseActiveRecord
             'ClientCreatorUserID' => 'Client Creator User ID',
             'ClientModifiedDate' => 'Client Modified Date',
             'ClientModifiedBy' => 'Client Modified By',
+			'ClientComment' => 'ClientComment',
+			'ClientFilesPath' => 'ClientFilesPath',
         ];
     }
 
