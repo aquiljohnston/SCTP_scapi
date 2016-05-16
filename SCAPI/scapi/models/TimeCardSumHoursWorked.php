@@ -14,6 +14,7 @@ use Yii;
  * @property string $UserLastName
  * @property string $TimeCardStartDate
  * @property string $TimeCardEndDate
+ * @property integer $ProjectID
  * @property integer $TimeCardProjectID
  * @property integer $TimeCardTechID
  * @property string $SumHours
@@ -39,7 +40,7 @@ class TimeCardSumHoursWorked extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['TimeCardID', 'UserID', 'TimeCardProjectID', 'TimeCardTechID', 'RemainderMinutes', 'Sums'], 'integer'],
+            [['TimeCardID', 'UserID', 'TimeCardProjectID', 'TimeCardTechID', 'RemainderMinutes', 'Sums', 'ProjectID'], 'integer'],
             [['UserID'], 'required'],
             [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedFlag', 'TimeCardApprovedBy', 'TimeCardSupervisorName'], 'string'],
             [['TimeCardStartDate', 'TimeCardEndDate'], 'safe'],
@@ -60,6 +61,7 @@ class TimeCardSumHoursWorked extends BaseActiveRecord
             'UserLastName' => 'User Last Name',
             'TimeCardStartDate' => 'Time Card Start Date',
             'TimeCardEndDate' => 'Time Card End Date',
+			'ProjectID' => 'Project ID',
             'TimeCardProjectID' => 'Time Card Project ID',
             'TimeCardTechID' => 'Time Card Tech ID',
             'SumHours' => 'Sum Hours',

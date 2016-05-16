@@ -12,6 +12,7 @@ use Yii;
  * @property string $JobCodeDescription
  * @property string $JobCodeStatus
  * @property string $JobCodeComments
+ * @property string $JobCodeArchiveFlag
  * @property string $JobCodeCreateDate
  * @property string $JobCodeCreatedBy
  * @property string $JobCodeModifiedDate
@@ -35,7 +36,7 @@ class JobCode extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['JobCodeCode', 'JobCodeDescription', 'JobCodeStatus', 'JobCodeComments', 'JobCodeCreatedBy', 'JobCodeModifiedBy'], 'string'],
+            [['JobCodeCode', 'JobCodeDescription', 'JobCodeStatus', 'JobCodeComments', 'JobCodeCreatedBy', 'JobCodeModifiedBy', 'JobCodeArchiveFlag'], 'string'],
             [['JobCodeCreateDate', 'JobCodeModifiedDate'], 'safe']
         ];
     }
@@ -51,6 +52,7 @@ class JobCode extends BaseActiveRecord
             'JobCodeDescription' => 'Job Code Description',
             'JobCodeStatus' => 'Job Code Status',
             'JobCodeComments' => 'Job Code Comments',
+			'JobCodeArchiveFlag' => 'Job Code Archive Flag',
             'JobCodeCreateDate' => 'Job Code Create Date',
             'JobCodeCreatedBy' => 'Job Code Created By',
             'JobCodeModifiedDate' => 'Job Code Modified Date',

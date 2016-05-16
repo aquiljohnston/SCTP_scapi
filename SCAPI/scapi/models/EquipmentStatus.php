@@ -8,8 +8,9 @@ use Yii;
  * This is the model class for table "EquipmentStatusTb".
  *
  * @property integer $EquipmentStatusID
- * @property string $EquipmentStatus
+ * @property string $EquipmentStatusStatus
  * @property string $EquipmentStatusDescription
+ * @property string $EquipmentStatusArchiveFlag
  * @property string $EquipmentStatusCreatedBy
  * @property string $EquipmentStatusCreatedDate
  * @property string $EquipmentStatusModifiedBy
@@ -31,7 +32,7 @@ class EquipmentStatus extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentStatus', 'EquipmentStatusDescription', 'EquipmentStatusCreatedBy', 'EquipmentStatusModifiedBy'], 'string'],
+            [['EquipmentStatusStatus', 'EquipmentStatusDescription', 'EquipmentStatusCreatedBy', 'EquipmentStatusModifiedBy', 'EquipmentStatusArchiveFlag'], 'string'],
             [['EquipmentStatusCreatedDate', 'EquipmentStatusModifiedDate'], 'safe']
         ];
     }
@@ -43,8 +44,9 @@ class EquipmentStatus extends BaseActiveRecord
     {
         return [
             'EquipmentStatusID' => 'Equipment Status ID',
-            'EquipmentStatus' => 'Equipment Status',
+            'EquipmentStatusStatus' => 'Equipment Status Status',
             'EquipmentStatusDescription' => 'Equipment Status Description',
+			'EquipmentStatusArchiveFlag' => 'Equipment Status Archive Flag',
             'EquipmentStatusCreatedBy' => 'Equipment Status Created By',
             'EquipmentStatusCreatedDate' => 'Equipment Status Created Date',
             'EquipmentStatusModifiedBy' => 'Equipment Status Modified By',

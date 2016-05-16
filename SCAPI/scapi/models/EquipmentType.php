@@ -10,6 +10,11 @@ use Yii;
  * @property integer $EquipmentTypeID
  * @property string $EquipmentType
  * @property string $EquipmentTypeDescription
+ * @property string $EquipmentTypeArchiveFlag
+ * @property string $EquipmentTypeCreatedDate
+ * @property string $EquipmentTypeCreatedBy
+ * @property string $EquipmentTypeModifiedDate
+ * @property string $EquipmetTypeModifiedBy
  */
 class EquipmentType extends BaseActiveRecord
 {
@@ -28,7 +33,7 @@ class EquipmentType extends BaseActiveRecord
     {
         return [
             [['EquipmentTypeID'], 'integer'],
-            [['EquipmentType', 'EquipmentTypeDescription'], 'string']
+            [['EquipmentType', 'EquipmentTypeDescription', 'EquipmentTypeArchiveFlag', 'EquipmentTypeCreatedDate', 'EquipmentTypeCreatedBy', 'EquipmentTypeModifiedDate', 'EquipmetTypeModifiedBy'], 'string']
         ];
     }
 
@@ -41,6 +46,11 @@ class EquipmentType extends BaseActiveRecord
             'EquipmentTypeID' => 'Equipment Type ID',
             'EquipmentType' => 'Equipment Type',
             'EquipmentTypeDescription' => 'Equipment Type Description',
+			'EquipmentTypeArchiveFlag' => 'Equipment Type Archive Flag',
+			'EquipmentTypeCreatedDate' => 'Equipment Type Created Date',
+			'EquipmentTypeCreatedBy' => 'Equipment Type Created By',
+			'EquipmentTypeModifiedDate' => 'Equipment Type Modified Date',
+			'EquipmetTypeModifiedBy' => 'Equipmet Type Modified By',
         ];
     }
 }

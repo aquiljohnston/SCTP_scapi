@@ -10,6 +10,7 @@ use Yii;
  * @property integer $ActivityCodeID
  * @property string $ActivityCodeType
  * @property string $ActivityCodeDescription
+ * @property string $ActivityArchiveFlag
  * @property string $ActivityCodeCreateDate
  * @property string $ActivityCodeCreatedBy
  * @property string $ActivityModifiedDate
@@ -31,7 +32,7 @@ class ActivityCode extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ActivityCodeType', 'ActivityCodeDescription', 'ActivityCodeCreatedBy', 'ActivityModifiedBy'], 'string'],
+            [['ActivityCodeType', 'ActivityCodeDescription', 'ActivityCodeCreatedBy', 'ActivityModifiedBy', 'ActivityArchiveFlag'], 'string'],
             [['ActivityCodeCreateDate', 'ActivityModifiedDate'], 'safe']
         ];
     }
@@ -45,6 +46,7 @@ class ActivityCode extends BaseActiveRecord
             'ActivityCodeID' => 'Activity Code ID',
             'ActivityCodeType' => 'Activity Code Type',
             'ActivityCodeDescription' => 'Activity Code Description',
+			'ActivityArchiveFlag' => 'Activity Archive Flag',
             'ActivityCodeCreateDate' => 'Activity Code Create Date',
             'ActivityCodeCreatedBy' => 'Activity Code Created By',
             'ActivityModifiedDate' => 'Activity Modified Date',

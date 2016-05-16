@@ -10,6 +10,11 @@ use Yii;
  * @property integer $EquipmentConditionID
  * @property string $EquipmentCondition
  * @property string $EquipmentConditionDescription
+ * @property string $EquipmentConditionArchiveFlag
+ * @property string $EquipmentConditionCreateDate
+ * @property string $EquipmentConditionCreatedBy
+ * @property string $EquipmentConditionModifiedDate
+ * @property string $EquipmentConditionModifiedBy
  */
 class EquipmentCondition extends BaseActiveRecord
 {
@@ -29,7 +34,8 @@ class EquipmentCondition extends BaseActiveRecord
         return [
             [['EquipmentConditionID'], 'required'],
             [['EquipmentConditionID'], 'integer'],
-            [['EquipmentCondition', 'EquipmentConditionDescription'], 'string']
+            [['EquipmentCondition', 'EquipmentConditionDescription', 'EquipmentConditionArchiveFlag', 'EquipmentConditionCreateDate', 'EquipmentConditionCreatedBy',
+				'EquipmentConditionModifiedDate', 'EquipmentConditionModifiedBy'], 'string']
         ];
     }
 
@@ -42,6 +48,11 @@ class EquipmentCondition extends BaseActiveRecord
             'EquipmentConditionID' => 'Equipment Condition ID',
             'EquipmentCondition' => 'Equipment Condition',
             'EquipmentConditionDescription' => 'Equipment Condition Description',
+			'EquipmentConditionArchiveFlag' => 'Equipment Condition Archive Flag',
+			'EquipmentConditionCreateDate' => 'Equipment Condition Create Date',
+			'EquipmentConditionCreatedBy' => 'Equipment Condition Created By',
+			'EquipmentConditionModifiedDate' => 'Equipment Condition Modified Date',
+			'EquipmentConditionModifiedBy' => 'Equipment Condition Modified By',
         ];
     }
 }

@@ -14,8 +14,8 @@ use Yii;
  * @property string $ActivityBillingCode
  * @property integer $ActivityCode
  * @property integer $ActivityPayCode
- * @property double $Latitude
- * @property double $Longitude
+ * @property double $ActivityLatitude
+ * @property double $ActivityLongitude
  * @property string $ActivityCreateDate
  * @property string $ActivityCreatedBy
  * @property string $ActivityModifiedDate

@@ -20,6 +20,7 @@ use Yii;
  * @property string $MileageCardApprovedBy
  * @property string $MileageCardApproved
  * @property string $UserStatus
+ * @property integer $MileageCardProjectID
  */
 class AllMileageCardsPriorWeek extends BaseActiveRecord
 {
@@ -38,7 +39,7 @@ class AllMileageCardsPriorWeek extends BaseActiveRecord
     {
         return [
             [['UserID', 'MileageCardID', 'UserStatus'], 'required'],
-            [['UserID', 'MileageCardID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles', 'MileageCardAllMileage_calc'], 'integer'],
+            [['UserID', 'MileageCardID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles', 'MileageCardAllMileage_calc', 'MileageCardProjectID'], 'integer'],
             [['UserName', 'UserFirstName', 'UserLastName', 'MileageCardApprovedBy', 'MileageCardApproved', 'UserStatus'], 'string'],
             [['MileageStartDate', 'MileageEndtDate'], 'safe']
         ];
@@ -63,6 +64,7 @@ class AllMileageCardsPriorWeek extends BaseActiveRecord
             'MileageCardApprovedBy' => 'Mileage Card Approved By',
             'MileageCardApproved' => 'Mileage Card Approve',
             'UserStatus' => 'User Status',
+			'MileageCardProjectID' => 'Mileage Card Project ID',
         ];
     }
 }
