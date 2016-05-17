@@ -46,7 +46,7 @@ class PayCode extends BaseActiveRecord
             'PayCodeID' => 'Pay Code ID',
             'PayCodeType' => 'Pay Code Type',
             'PayCodeDescription' => 'Pay Code Description',
-			'PayCodeArchiveFlag' => 'Pay Code Archive Flag'
+			'PayCodeArchiveFlag' => 'Pay Code Archive Flag',
             'PayCodeCreateDate' => 'Pay Code Create Date',
             'PayCodeCreatedBy' => 'Pay Code Created By',
             'PayCodeModifiedDate' => 'Pay Code Modified Date',
