@@ -76,15 +76,6 @@ class ClientController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			//removed to maintain data type
-			// //created by
-			// if ($user = SCUser::findOne(['UserID'=>$model->ClientCreatorUserID]))
-			// {
-				// $fname = $user->UserFirstName;
-				// $lname = $user->UserLastName;
-				// $model->ClientCreatorUserID = $lname.", ".$fname;
-			// }
-			
 			//create date
 			$model->ClientCreateDate = Parent::getDate();
 			
@@ -124,14 +115,6 @@ class ClientController extends BaseActiveController
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			
-			//removed to maintain data type
-			// if ($user = SCUSer::findOne(['UserID'=>$model->ClientModifiedBy]))
-			// {
-				// $fname = $user->UserFirstName;
-				// $lname = $user->UserLastName;
-				// $model->ClientModifiedBy = $lname.", ".$fname;
-			// }
 			
 			$model->ClientModifiedDate = Parent::getDate();
 			

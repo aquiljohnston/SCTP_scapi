@@ -10,7 +10,7 @@ use yii\base\Security;
  *
  * @property integer $AuthUserID
  * @property string $AuthToken
- * @property string $AuthCreatedDate
+ * @property string $AuthCreateDate
  * @property string $AuthCreatedBy
  * @property string $AuthModifiedDate
  * @property string $AuthModifiedBy
@@ -33,7 +33,7 @@ class Auth extends BaseActiveRecord
         return [
             [['AuthUserID'], 'integer'],
             [['AuthToken', 'AuthCreatedBy', 'AuthModifiedBy'], 'string'],
-			[['AuthCreatedDate', 'AuthModifiedDate'], 'safe']
+			[['AuthCreateDate', 'AuthModifiedDate'], 'safe']
         ];
     }
 
@@ -45,7 +45,7 @@ class Auth extends BaseActiveRecord
         return [
             'AuthUserId' => 'Auth User ID',
             'AuthToken' => 'Auth Token',
-			'AuthCreatedDate' => 'Auth Created Date',
+			'AuthCreateDate' => 'Auth Create Date',
 			'AuthCreatedBy' => 'Auth Created By',
 			'AuthModifiedDate' => 'Auth Modified Date',
 			'AuthModifiedBy' => 'Auth Modified By',

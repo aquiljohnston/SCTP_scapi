@@ -8,7 +8,7 @@ use Yii;
  * This is the model class for table "EmployeeTypeTb".
  *
  * @property integer $EmployeeTypeID
- * @property string $EmployeeType
+ * @property string $EmployeeTypeType
  * @property string $EmployeeTypeDescription
  * @property string $EmployeeTypeArchived
  * @property string $EmployeeTypeCreateDate
@@ -35,7 +35,7 @@ class EmployeeType extends BaseActiveRecord
         return [
             [['EmployeeTypeID'], 'required'],
             [['EmployeeTypeID'], 'integer'],
-            [['EmployeeType', 'EmployeeTypeDescription', 'EmployeeTypeArchived', 'EmployeeTypeCreateDate', 'EmployeeTypeCreatedBy',
+            [['EmployeeTypeType', 'EmployeeTypeDescription', 'EmployeeTypeArchived', 'EmployeeTypeCreateDate', 'EmployeeTypeCreatedBy',
 				'EmployeeTypeModifiedDate', 'EmployeeTypeModifiedBy'], 'string']
         ];
     }
@@ -47,7 +47,7 @@ class EmployeeType extends BaseActiveRecord
     {
         return [
             'EmployeeTypeID' => 'Employee Type ID',
-            'EmployeeType' => 'Employee Type',
+            'EmployeeTypeType' => 'Employee Type Type',
             'EmployeeTypeDescription' => 'Employee Type Description',
 			'EmployeeTypeArchived' => 'Employee Type Archived',
 			'EmployeeTypeCreateDate' => 'Employee Type Create Date',

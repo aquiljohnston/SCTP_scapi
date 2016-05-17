@@ -35,7 +35,7 @@ class EmployeeTypeController extends BaseActiveController
 			
 			for($i=0; $i < $typesSize; $i++)
 			{
-				$namePairs[$types[$i]->EmployeeType]= $types[$i]->EmployeeType;
+				$namePairs[$types[$i]->EmployeeTypeType]= $types[$i]->EmployeeTypeType;
 			}
 				
 			
