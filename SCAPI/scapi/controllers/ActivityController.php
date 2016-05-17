@@ -100,13 +100,6 @@ class ActivityController extends BaseActiveController
 				for($i = 0; $i < $activitySize; $i++)
 				{
 					$activity = new Activity();
-					//removed to maintain data type
-					// if ($user = SCUser::findOne(['UserID'=>$activityArray[$i]["ActivityCreatedBy"]]))
-					// {
-						// $fname = $user->UserFirstName;
-						// $lname = $user->UserLastName;
-						// $activityArray[$i]["ActivityCreatedBy"] = $lname.", ".$fname;
-					// }
 					$activityArray[$i]["ActivityCreateDate"] = Parent::getDate();
 					//check array data
 					$timeLength = 0;
