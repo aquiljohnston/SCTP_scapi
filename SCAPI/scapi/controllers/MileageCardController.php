@@ -13,6 +13,7 @@ use app\models\AllMileageCardsPriorWeek;
 use app\models\AllApprovedMileageCardsCurrentWeek;
 use app\models\AllUnApprovedMileageCardsCurrentWeek;
 use app\models\MileageCardSumMilesCurrentWeekWithProjectName;
+use app\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -51,6 +52,8 @@ class MileageCardController extends BaseActiveController
 					'view-all-approved-mileage-cards-current-week' => ['get'],
 					'view-all-unapproved-mileage-cards-current-week' => ['get'],
 					'get-mileage-cards-current-week-by-manager' => ['get'],
+					'action-get-mileage-cards-current-week-sum-miles' => ['get'],
+					'action-get-mileage-cards-prior-week-sum-miles' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -424,6 +427,30 @@ class MileageCardController extends BaseActiveController
 			MileageCardSumMilesCurrentWeekWithProjectName::setClient($headers['X-Client']);
 			
 			$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->all();
+			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			$response->setStatusCode(200);
+			$response->data = $mileageCardArray;
+			return $response;
+		}
+		catch(ErrorException $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	//function to get all mileagecards for the prior week with their sum miles
+	public function actionGetMileageCardsPriorWeekSumMiles()
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			MileageCardSumMilesPriorWeekWithProjectName::setClient($headers['X-Client']);
+			
+			$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->all();
 			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;

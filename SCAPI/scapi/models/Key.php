@@ -15,9 +15,9 @@ use Yii;
  * @property string $KeyComment
  * @property string $KeyArchiveFlag
  * @property string $KeyCreateDate
- * @property string $KeyCreatedBy
+ * @property integer $KeyCreatedBy
  * @property string $KeyModifiedDate
- * @property string $KeyModifiedBy
+ * @property integer $KeyModifiedBy
  *
  * @property UserTb[] $userTbs
  */
@@ -37,7 +37,8 @@ class Key extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['Key1', 'Key2', 'Key3', 'KeyStatus', 'KeyComment', 'KeyCreatedBy', 'KeyModifiedBy', 'KeyArchiveFlag'], 'string'],
+            [['Key1', 'Key2', 'Key3', 'KeyStatus', 'KeyComment', 'KeyArchiveFlag'], 'string'],
+			[['KeyCreatedBy', 'KeyModifiedBy'], 'integer'],
             [['KeyCreateDate', 'KeyModifiedDate'], 'safe']
         ];
     }
