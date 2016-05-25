@@ -35,7 +35,7 @@ class EquipmentStatusController extends BaseActiveController
 			
 			for($i=0; $i < $statusSize; $i++)
 			{
-				$namePairs[$status[$i]->EquipmentStatus]= $status[$i]->EquipmentStatus;
+				$namePairs[$status[$i]->EquipmentStatusStatus]= $status[$i]->EquipmentStatusStatus;
 			}
 				
 			
