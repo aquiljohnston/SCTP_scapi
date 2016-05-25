@@ -9,7 +9,7 @@ use app\models\Auth;
 /**
  * This is the model class for table "UserTb".
  *
- * @property string $UserID
+ * @property integer $UserID
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName

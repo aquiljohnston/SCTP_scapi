@@ -153,28 +153,47 @@ class UserController extends BaseActiveController
 			];
 			//handle the password
 			//get pass from data
-			$securedPass = $data["UserKey"];
-			//decode the base 64 encoding
-			$decodedPass = base64_decode($securedPass);
-			//decrypt with openssl using the key and iv
-			$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
-			
-			//check if new passowrd
-			if($decryptedPass != $model->UserKey)
+			if(array_key_exists("UserKey", $data))
 			{
-				//hash pass with bcrypt
-				$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
+				$securedPass = $data["UserKey"];
+				//decode the base 64 encoding
+				$decodedPass = base64_decode($securedPass);
+				//decrypt with openssl using the key and iv
+				$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
 				
-				//create row in the db to hold the hashedPass
-				$keyData = Key::findOne($model->UserKey);
-				$keyData->Key1 = $hashedPass;
-				$keyData-> update();
-				//Replace the encoded pass with the ID for the new KeyTb row
-				$data["UserKey"] = $keyData -> KeyID;
-			}
-			else
-			{
-				$data["UserKey"] = $decryptedPass;
+				//check if new passowrd
+				if($decryptedPass != $model->UserKey)
+				{
+					//hash pass with bcrypt
+					$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
+					
+					//create row in the db to hold the hashedPass
+					$keyData = Key::findOne($model->UserKey);
+					$keyData->Key1 = $hashedPass;
+					if(array_key_exists("UserCreatedBy", $data))
+					{
+						$keyData->KeyCreatedBy = $data["UserCreatedBy"];
+					}
+					else
+					{
+						$response->setStatusCode(400);
+						$response->data = "Http:400 Bad Request";
+					}
+					if($keyData-> update())
+					{
+						//Replace the encoded pass with the ID for the new KeyTb row
+						$data["UserKey"] = $keyData -> KeyID;
+					}
+					else
+					{
+						$response->setStatusCode(400);
+						$response->data = "Http:400 Bad Request";
+					}
+				}
+				else
+				{
+					$data["UserKey"] = $decryptedPass;
+				}
 			}
 			
 			//pass new data to model

@@ -8,8 +8,8 @@ use app\models\SCUser;
 use app\models\Project;
 use app\models\ProjectUser;
 use app\models\GetEquipmentByClientProjectVw;
-use app\models\AllTimeCardsPriorWeek;
-use app\models\AllMileageCardsPriorWeek;
+use app\models\TimeCardSumHoursWorkedPrior;
+use app\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -54,8 +54,8 @@ class NotificationController extends Controller
 			ProjectUser::setClient($headers['X-Client']);
 			Project::setClient($headers['X-Client']);
 			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
-			AllTimeCardsPriorWeek::setClient($headers['X-Client']);
-			AllMileageCardsPriorWeek::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
+			MileageCardSumMilesPriorWeekWithProjectName::setClient($headers['X-Client']);
 			
 			//get user
 			$user = SCUser::findOne($userID);
@@ -88,46 +88,55 @@ class NotificationController extends Controller
 					->orWhere(['and', "ProjectID = $projectID","[Accepted Flag] = 'Pending'"])
 					->all();
 				$equipmentCount = count($equipment);
-
+				
 				//get unapproved time cards from last week for project
-				$timeCards = AllTimeCardsPriorWeek::find()
-					->where(['and', "TimeCardProjectID = $projectID","TimeCardApproved = 'No'"])
+				$timeCards = TimeCardSumHoursWorkedPrior::find()
+					->where(['and', "TimeCardProjectID = $projectID","TimeCardApprovedFlag = 'No'"])
 					->all();
 				$timeCardCount = count($timeCards);
 				
 				//get unapproved mileage cards from last week for project
-				$mileageCards = AllMileageCardsPriorWeek::find()
-					->where(['and', "MileageCardProjectID = $projectID","MileageCardApproved = 'No'"])
+				$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()
+					->where(['and', "MileageCardProjectID = $projectID","MileageCardApprovedFlag = 'No'"])
 					->all();	
 				$mileageCardCount = count($mileageCards);
 				
+				//pass equipment data for project
 				$equipmentData["Project"]= $projectName;
 				$equipmentData["Number of Items"]= $equipmentCount;
 				
+				//pass time card data for project
 				$timeCardData["Project"]= $projectName;
 				$timeCardData["Number of Items"]= $timeCardCount;
 				
+				//pass mileage card data for project
 				$mileageCardData["Project"]= $projectName;
 				$mileageCardData["Number of Items"]= $mileageCardCount;
-
+				
+				//appened data to response array
 				$notifications["equipment"][] = $equipmentData;
 				$notifications["timeCards"][] = $timeCardData;
 				$notifications["mileageCards"][] = $mileageCardData;
-				
+
+				//increment total counts
 				$equipmentTotal += $equipmentCount;
 				$timeCardTotal += $timeCardCount;
 				$mileageCardTotal += $mileageCardCount;
 			}
 			
+			//pass equipment data for total
 			$equipmentData["Project"]= "Total";
 			$equipmentData["Number of Items"]= $equipmentTotal;
 			
+			//pass time card data for total
 			$timeCardData["Project"]= "Total";
 			$timeCardData["Number of Items"]= $timeCardTotal;
 			
+			//pass mileage card data for total
 			$mileageCardData["Project"]= "Total";
 			$mileageCardData["Number of Items"]= $mileageCardTotal;
 			
+			//append totals to response array
 			$notifications["equipment"][] = $equipmentData;
 			$notifications["timeCards"][] = $timeCardData;
 			$notifications["mileageCards"][] = $mileageCardData;

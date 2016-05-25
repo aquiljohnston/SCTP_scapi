@@ -11,9 +11,9 @@ use yii\base\Security;
  * @property integer $AuthUserID
  * @property string $AuthToken
  * @property string $AuthCreateDate
- * @property string $AuthCreatedBy
+ * @property integer $AuthCreatedBy
  * @property string $AuthModifiedDate
- * @property string $AuthModifiedBy
+ * @property integer $AuthModifiedBy
  */
 class Auth extends BaseActiveRecord
 {
@@ -31,8 +31,8 @@ class Auth extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['AuthUserID'], 'integer'],
-            [['AuthToken', 'AuthCreatedBy', 'AuthModifiedBy'], 'string'],
+            [['AuthUserID', 'AuthCreatedBy', 'AuthModifiedBy'], 'integer'],
+            [['AuthToken'], 'string'],
 			[['AuthCreateDate', 'AuthModifiedDate'], 'safe']
         ];
     }
