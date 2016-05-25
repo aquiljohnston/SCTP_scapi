@@ -365,6 +365,7 @@ class TimeCardController extends BaseActiveController
 			//load data into array
 			$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
 			$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
+			$dataArray["ApprovedFlag"] = $timeCard-> TimeCardApprovedFlag;
 			$dayArray =
 			[
 				"Sunday" => $sundayEntries,

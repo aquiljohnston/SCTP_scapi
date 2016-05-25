@@ -297,6 +297,7 @@ class MileageCardController extends BaseActiveController
 			//load data into array
 			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
 			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
+			$dataArray["ApprovedFlag"] = $mileageCard-> MileageCardApprovedFlag;
 			$dayArray =
 			[
 				"Sunday" => $sundayEntries,
