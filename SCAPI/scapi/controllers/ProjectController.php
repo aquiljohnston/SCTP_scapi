@@ -316,11 +316,33 @@ class ProjectController extends BaseActiveController
 					$mileageCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
 					$mileageCardCommand->execute();
 					$transaction->commit();
+					
 				}
 				catch(Exception $e)
 				{
 					$transaction->rollBack();
-				}			
+				}
+				//call sps to ensure time/mileage cards are active.
+				try
+				{
+					$userID = $i;
+					$connection = SCUser::getDb();
+					$transaction = $connection-> beginTransaction();
+					$timeCardCommand = $connection->createCommand("EXECUTE ActivateTimeCardByUserByProject_proc :UserParam,:ProjectParam");
+					$timeCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
+					$timeCardCommand->execute();
+					$mileageCardCommand = $connection->createCommand("EXECUTE ActivateMileageCardByUserByProject_proc :UserParam ,:ProjectParam");
+					$mileageCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
+					$mileageCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
+					$mileageCardCommand->execute();
+					$transaction->commit();
+					
+				}
+				catch(Exception $e)
+				{
+					$transaction->rollBack();
+				}
 			}
 			
 			//loop usersRemoved and delete relationships and deactivate cards
