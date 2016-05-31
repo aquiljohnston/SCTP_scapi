@@ -37,6 +37,8 @@ class EquipmentController extends BaseActiveController
                 'actions' => [
 					'accept-equipment'  => ['put'],
 					'get-equipment-by-manager' => ['get'],
+					'view-all-by-user-by-project' => ['get'],
+					'equipment-view' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -232,6 +234,7 @@ class EquipmentController extends BaseActiveController
 	}
 
 	//return json array of all equipment.
+	//used by admins and engineers
 	public function actionViewAll()
 	{
 		try
@@ -261,6 +264,49 @@ class EquipmentController extends BaseActiveController
 		}
 	}
 	
+	//returns a json containing all equipment for projects that a user is associated with
+	//used by proj managers and supervisors
+	public function actionViewAllByUserByProject($userID)
+	{
+		try{
+			//set db target
+			$headers = getallheaders();
+			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//format response
+			$response = Yii::$app->response;
+			$response-> format = Response::FORMAT_JSON;
+			
+			//get user project relations array
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
+				->all();
+			$projectsSize = count($projects);
+			
+			//response array of equipments
+			$equipmentArray = [];
+			
+			//loop user project array get all equipment WHERE equipmentProjectID is equal
+			for($i=0; $i < $projectsSize; $i++)
+			{
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				
+				$equipment = GetEquipmentByClientProjectVw::find()
+				->where(['ProjectID' => $projectID])
+				->all();
+				$equipmentArray = array_merge($equipmentArray, $equipment);
+			}
+			
+			$response->data = $equipmentArray;
+			$response->setStatusCode(200);
+			return $response;
+			
+		} catch (ErrorException $e){
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
 	//return db view for equipment index
 	public function actionEquipmentView()
 	{
@@ -268,7 +314,7 @@ class EquipmentController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
+			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
