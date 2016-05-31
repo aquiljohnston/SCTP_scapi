@@ -53,6 +53,8 @@ class TimeCardController extends BaseActiveController
 					'view-all-unapproved-time-cards-current-week' => ['get'],
 					'view-time-card-hours-worked' => ['get'],
 					'get-time-cards-current-week-by-manager' => ['get'],
+					'view-all-by-user-by-project-current' => ['get'],
+					'view-all-by-user-by-project-prior' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -522,4 +524,89 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
+	//returns a json containing all timecards for projects that a user is associated with for the current week
+	//used by proj managers and supervisors
+	public function actionViewAllByUserByProjectCurrent($userID)
+	{
+		try{
+			//set db target
+			$headers = getallheaders();
+			TimeCardSumHoursWorkedCurrent::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//format response
+			$response = Yii::$app->response;
+			$response-> format = Response::FORMAT_JSON;
+			
+			//get user project relations array
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
+				->all();
+			$projectsSize = count($projects);
+			
+			//response array of time cards
+			$timeCardArray = [];
+			
+			//loop user project array get all time cards WHERE equipmentProjectID is equal
+			for($i=0; $i < $projectsSize; $i++)
+			{
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				
+				$timeCards = TimeCardSumHoursWorkedCurrent::find()
+				->where(['ProjectID' => $projectID])
+				->all();
+				$timeCardArray = array_merge($timeCardArray, $timeCards);
+			}
+			
+			$response->data = $timeCardArray;
+			$response->setStatusCode(200);
+			return $response;
+			
+		} catch (ErrorException $e){
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	//returns a json containing all timecards for projects that a user is associated with for the prior week
+	//used by proj managers and supervisors	
+	public function actionViewAllByUserByProjectPrior($userID)
+	{
+		try{
+			//set db target
+			$headers = getallheaders();
+			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//format response
+			$response = Yii::$app->response;
+			$response-> format = Response::FORMAT_JSON;
+			
+			//get user project relations array
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
+				->all();
+			$projectsSize = count($projects);
+			
+			//response array of time cards
+			$timeCardArray = [];
+			
+			//loop user project array get all time cards WHERE equipmentProjectID is equal
+			for($i=0; $i < $projectsSize; $i++)
+			{
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				
+				$timeCards = TimeCardSumHoursWorkedPrior::find()
+				->where(['ProjectID' => $projectID])
+				->all();
+				$timeCardArray = array_merge($timeCardArray, $timeCards);
+			}
+			
+			$response->data = $timeCardArray;
+			$response->setStatusCode(200);
+			return $response;
+			
+		} catch (ErrorException $e){
+			throw new \yii\web\HttpException(400);
+		}
+	}
 }
