@@ -52,8 +52,10 @@ class MileageCardController extends BaseActiveController
 					'view-all-approved-mileage-cards-current-week' => ['get'],
 					'view-all-unapproved-mileage-cards-current-week' => ['get'],
 					'get-mileage-cards-current-week-by-manager' => ['get'],
-					'action-get-mileage-cards-current-week-sum-miles' => ['get'],
-					'action-get-mileage-cards-prior-week-sum-miles' => ['get'],
+					'get-mileage-cards-current-week-sum-miles' => ['get'],
+					'get-mileage-cards-prior-week-sum-miles' => ['get'],
+					'view-all-by-user-by-project-current' => ['get'],
+					'view-all-by-user-by-project-prior' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -529,6 +531,92 @@ class MileageCardController extends BaseActiveController
 		}
 		catch(ErrorException $e) 
 		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	//returns a json containing all mileage cards for projects that a user is associated with for the current week
+	//used by proj managers and supervisors
+	public function actionViewAllByUserByProjectCurrent($userID)
+	{
+		try{
+			//set db target
+			$headers = getallheaders();
+			MileageCardSumMilesCurrentWeekWithProjectName::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//format response
+			$response = Yii::$app->response;
+			$response-> format = Response::FORMAT_JSON;
+			
+			//get user project relations array
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
+				->all();
+			$projectsSize = count($projects);
+			
+			//response array of mileage cards
+			$mileageCardArray = [];
+			
+			//loop user project array get all mileage cards WHERE equipmentProjectID is equal
+			for($i=0; $i < $projectsSize; $i++)
+			{
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				
+				$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()
+				->where(['ProjectID' => $projectID])
+				->all();
+				$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+			}
+			
+			$response->data = $mileageCardArray;
+			$response->setStatusCode(200);
+			return $response;
+			
+		} catch (ErrorException $e){
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	//returns a json containing all mileage cards for projects that a user is associated with for the prior week
+	//used by proj managers and supervisors	
+	public function actionViewAllByUserByProjectPrior($userID)
+	{
+		try{
+			//set db target
+			$headers = getallheaders();
+			MileageCardSumMilesPriorWeekWithProjectName::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			
+			//format response
+			$response = Yii::$app->response;
+			$response-> format = Response::FORMAT_JSON;
+			
+			//get user project relations array
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
+				->all();
+			$projectsSize = count($projects);
+			
+			//response array of mileage cards
+			$mileageCardArray = [];
+			
+			//loop user project array get all mileage cards WHERE equipmentProjectID is equal
+			for($i=0; $i < $projectsSize; $i++)
+			{
+				$projectID = $projects[$i]->ProjUserProjectID; 
+				
+				$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()
+				->where(['ProjectID' => $projectID])
+				->all();
+				$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+			}
+			
+			$response->data = $mileageCardArray;
+			$response->setStatusCode(200);
+			return $response;
+			
+		} catch (ErrorException $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}
