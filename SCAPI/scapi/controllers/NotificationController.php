@@ -14,15 +14,17 @@ use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
-use yii\web\Controller;
+use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\Link;
 use yii\db\mssql\PDO;
+use yii\base\ErrorException;
+use yii\db\Exception;
 
 
 /**
- * UserController implements the CRUD actions for User model.
+ * NotificationController creates user notifications.
  */
 class NotificationController extends Controller
 {	

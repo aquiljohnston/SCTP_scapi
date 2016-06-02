@@ -10,6 +10,8 @@ use yii\rest\ActiveController;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use yii\base\ErrorException;
+use yii\db\Exception;
 
 class BaseActiveController extends ActiveController
 {	

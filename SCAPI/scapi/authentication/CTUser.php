@@ -66,41 +66,77 @@ class CTUser extends User
 	}
 	
 	//renew auth with token passed from frontend
+	// protected function renewAuthStatusWithToken($token)
+	// {
+		// $session = Yii::$app->getSession();
+        // // $id = $session->getHasSessionId() || $session->getIsActive() ? $session->get($this->idParam) : null;
+		
+		// Yii::Trace("Token Value passed from front end: " . $token);
+		// if ($auth = Auth::find()
+						// ->where(['AuthToken' => $token])
+						// ->one())
+		// {
+			// Yii::Trace("Token Value found on back end: " . $auth->AuthToken);
+			// $userID = $auth->AuthUserID;
+
+			// if ($userID === null) {
+				// $identity = null;
+			// } else {
+				// /* @var $class IdentityInterface */
+				// $class = $this->identityClass;
+				// $identity = $class::findIdentity($userID);
+			// }
+
+			// $this->setIdentity($identity);
+
+			// if ($identity !== null && ($this->authTimeout !== null || $this->absoluteAuthTimeout !== null)) {
+				// $expire = $this->authTimeout !== null ? $session->get($this->authTimeoutParam) : null;
+				// $expireAbsolute = $this->absoluteAuthTimeout !== null ? $session->get($this->absoluteAuthTimeoutParam) : null;
+				// Yii::trace("session id: " . $session->getId());
+				// Yii::trace("expiration duration: " . $this->authTimeout);
+				// Yii::trace("expiration time: " . $session->get($this->authTimeoutParam));
+				// Yii::trace("actual time: " . time());
+				// if ($expire !== null && $expire < time() || $expireAbsolute !== null && $expireAbsolute < time()) {
+					// Yii::trace('AuthTimeout has expired and the user will now be logged out');
+					// $this->logout(true, $userID);
+				// } elseif ($this->authTimeout !== null) {
+					// $session->set($this->authTimeoutParam, time() + $this->authTimeout);
+					// Yii::trace("session id: " . $session->getId());
+					// Yii::trace("expiration duration after success: " . $this->authTimeout);
+					// Yii::trace("expiration time after success: " . $session->get($this->authTimeoutParam));
+				// }
+			// }
+		// }
+		// else
+		// {
+			// //TODO deny access and send response
+		// }
+		//}
+		
 	protected function renewAuthStatusWithToken($token)
 	{
-		$session = Yii::$app->getSession();
-        // $id = $session->getHasSessionId() || $session->getIsActive() ? $session->get($this->idParam) : null;
-		
-		if ($auth = Auth::find()
-						->where(['AuthToken' => $token])
-						->one())
+		if($auth = Auth::find()
+				->where(['AuthToken' => $token])
+				->one())
 		{
 			$userID = $auth->AuthUserID;
-
-			if ($userID === null) {
-				$identity = null;
+			//get currentTime
+			$currentTime = time();//get time
+			$timeout = $auth->AuthTimeout;
+			//check timeout vs current time
+			if($currentTime < $timeout)
+			{
+				//update timeout to current time + time limit
+				$newTimeout = $currentTime + $this->authTimeout;
+				$auth->AuthTimeout = $newTimeout;
+				// set modified by
+				$auth->AuthModifiedBy = $userID;
+				$auth->update();
 			} else {
-				/* @var $class IdentityInterface */
-				$class = $this->identityClass;
-				$identity = $class::findIdentity($userID);
+				$this->logout(true, $userID);
 			}
-
-			$this->setIdentity($identity);
-
-			if ($identity !== null && ($this->authTimeout !== null || $this->absoluteAuthTimeout !== null)) {
-				$expire = $this->authTimeout !== null ? $session->get($this->authTimeoutParam) : null;
-				$expireAbsolute = $this->absoluteAuthTimeout !== null ? $session->get($this->absoluteAuthTimeoutParam) : null;
-				if ($expire !== null && $expire < time() || $expireAbsolute !== null && $expireAbsolute < time()) {
-					Yii::trace('AuthTimeout has expired and the user will now be logged out');
-					$this->logout(true, $userID);
-				} elseif ($this->authTimeout !== null) {
-					$session->set($this->authTimeoutParam, time() + $this->authTimeout);
-				}
-			}
-		}
-		else
-		{
-			//TODO deny access and send response
+		} else {
+			throw new \yii\web\HttpException(401, 'You are requesting with an invalid credential.');
 		}
 	}
 }
