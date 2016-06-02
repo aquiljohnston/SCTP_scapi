@@ -81,6 +81,7 @@ class LoginController extends Controller
 					$auth = new Auth();
 					$userID = $userName->UserID;
 					$auth->AuthUserID = $userID;
+					$auth->AuthCreatedBy = $userID;
 					$auth-> beforeSave(true);
 					//Store Auth Token
 					$auth-> save();

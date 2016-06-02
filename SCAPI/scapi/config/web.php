@@ -23,12 +23,12 @@ $config = [
 			'class' => 'app\authentication\CTUser',
             'identityClass' => 'app\models\SCUser',
             'enableAutoLogin' => false,
-			'authTimeout' => 14400,
-			//'authTimeout' => 15,
+			//'authTimeout' => 28800,
+			'authTimeout' => 15,
 			'loginUrl' => null
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
+            //'errorAction' => 'site/error',
         ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',

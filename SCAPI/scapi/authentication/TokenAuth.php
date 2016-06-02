@@ -37,11 +37,11 @@ class TokenAuth extends AuthMethod
 				$identity = SCUser::findIdentityByAccessToken($token);
 				if ($identity === null) 
 				{
-					throw new UnauthorizedHttpException('You are requesting with an invalid credential.');
+					//throw new \yii\web\HttpException(401, 'You are requesting with an invalid credential.');
 				}
 				return $identity;
 			}
-			catch (ErrorException $e) 
+			catch (\Exception $e) 
 			{
 				Yii::warning("Valid token not found.");
 			}

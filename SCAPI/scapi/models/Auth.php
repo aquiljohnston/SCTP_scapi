@@ -14,6 +14,7 @@ use yii\base\Security;
  * @property integer $AuthCreatedBy
  * @property string $AuthModifiedDate
  * @property integer $AuthModifiedBy
+ * @property integer $AuthTimeout
  */
 class Auth extends BaseActiveRecord
 {
@@ -31,7 +32,7 @@ class Auth extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['AuthUserID', 'AuthCreatedBy', 'AuthModifiedBy'], 'integer'],
+            [['AuthUserID', 'AuthCreatedBy', 'AuthModifiedBy', 'AuthTimeout'], 'integer'],
             [['AuthToken'], 'string'],
 			[['AuthCreateDate', 'AuthModifiedDate'], 'safe']
         ];
@@ -49,6 +50,7 @@ class Auth extends BaseActiveRecord
 			'AuthCreatedBy' => 'Auth Created By',
 			'AuthModifiedDate' => 'Auth Modified Date',
 			'AuthModifiedBy' => 'Auth Modified By',
+			'AuthTimeout' => 'Auth Timeout',
         ];
     }
 	
@@ -65,6 +67,7 @@ class Auth extends BaseActiveRecord
 					$a -> delete();
 				}
                 $this->AuthToken = \Yii::$app->security->generateRandomString();
+				$this->AuthTimeout = time() + Yii::$app->user->authTimeout;
             }
             return true;
         }
