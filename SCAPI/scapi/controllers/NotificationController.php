@@ -150,7 +150,7 @@ class NotificationController extends Controller
 			$response->data = $notifications;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}

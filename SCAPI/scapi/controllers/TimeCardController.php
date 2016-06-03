@@ -112,7 +112,7 @@ class TimeCardController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -133,7 +133,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -156,7 +156,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -177,7 +177,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -198,7 +198,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -219,7 +219,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -239,7 +239,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -259,7 +259,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $timecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -288,7 +288,7 @@ class TimeCardController extends BaseActiveController
 				return $response;
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -383,7 +383,7 @@ class TimeCardController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -452,7 +452,7 @@ class TimeCardController extends BaseActiveController
 				
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -518,7 +518,7 @@ class TimeCardController extends BaseActiveController
 			$response->data = $timeCards;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -562,7 +562,7 @@ class TimeCardController extends BaseActiveController
 			$response->setStatusCode(200);
 			return $response;
 			
-		} catch (ErrorException $e){
+		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -605,7 +605,7 @@ class TimeCardController extends BaseActiveController
 			$response->setStatusCode(200);
 			return $response;
 			
-		} catch (ErrorException $e){
+		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}

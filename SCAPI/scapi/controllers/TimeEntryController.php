@@ -73,7 +73,7 @@ class TimeEntryController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -112,7 +112,7 @@ class TimeEntryController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -132,7 +132,7 @@ class TimeEntryController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $entryData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -190,7 +190,7 @@ class TimeEntryController extends BaseActiveController
 				return $response;
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}

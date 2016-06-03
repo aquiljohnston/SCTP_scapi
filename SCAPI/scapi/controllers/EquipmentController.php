@@ -75,7 +75,7 @@ class EquipmentController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}		
@@ -113,7 +113,7 @@ class EquipmentController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -139,14 +139,6 @@ class EquipmentController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			//removed to maintain data type
-			// if ($user = SCUSer::findOne(['UserID'=>$model->EquipmentModifiedBy]))
-			// {
-				// $fname = $user->UserFirstName;
-				// $lname = $user->UserLastName;
-				// $model->EquipmentModifiedBy = $lname.", ".$fname;
-			// }
-			
 			$model->EquipmentModifiedDate = Parent::getDate();
 			
 			//TODO set flag to "Pending" when the project information is changed.
@@ -168,7 +160,7 @@ class EquipmentController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -198,7 +190,7 @@ class EquipmentController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -227,7 +219,7 @@ class EquipmentController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -258,7 +250,7 @@ class EquipmentController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -302,7 +294,7 @@ class EquipmentController extends BaseActiveController
 			$response->setStatusCode(200);
 			return $response;
 			
-		} catch (ErrorException $e){
+		} catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -331,7 +323,7 @@ class EquipmentController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -399,7 +391,7 @@ class EquipmentController extends BaseActiveController
 				return $response;
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -446,7 +438,7 @@ class EquipmentController extends BaseActiveController
 			$response->data = $equipment;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}

@@ -77,7 +77,7 @@ class BaseActiveController extends ActiveController
 				$response->data = "Http:400 Bad Request";
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -104,7 +104,7 @@ class BaseActiveController extends ActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}

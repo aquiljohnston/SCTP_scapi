@@ -107,7 +107,7 @@ class LoginController extends Controller
 			$response->data = $auth;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -137,7 +137,7 @@ class LoginController extends Controller
 			$response->data = $logoutString;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
