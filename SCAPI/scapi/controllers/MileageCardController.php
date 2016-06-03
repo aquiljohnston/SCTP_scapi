@@ -91,7 +91,7 @@ class MileageCardController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -138,7 +138,7 @@ class MileageCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $mileagecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -160,7 +160,7 @@ class MileageCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $mileagecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -180,7 +180,7 @@ class MileageCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $mileagecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -200,7 +200,7 @@ class MileageCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $mileagecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -220,7 +220,7 @@ class MileageCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $mileagecardData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -315,7 +315,7 @@ class MileageCardController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -385,7 +385,7 @@ class MileageCardController extends BaseActiveController
 				return $response;
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -414,7 +414,7 @@ class MileageCardController extends BaseActiveController
 				return $response;
 			}
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -438,7 +438,7 @@ class MileageCardController extends BaseActiveController
 			$response->data = $mileageCardArray;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -462,7 +462,7 @@ class MileageCardController extends BaseActiveController
 			$response->data = $mileageCardArray;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -529,7 +529,7 @@ class MileageCardController extends BaseActiveController
 			$response->data = $mileageCards;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -573,7 +573,7 @@ class MileageCardController extends BaseActiveController
 			$response->setStatusCode(200);
 			return $response;
 			
-		} catch (ErrorException $e){
+		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -616,7 +616,7 @@ class MileageCardController extends BaseActiveController
 			$response->setStatusCode(200);
 			return $response;
 			
-		} catch (ErrorException $e){
+		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}

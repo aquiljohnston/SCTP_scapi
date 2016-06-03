@@ -72,7 +72,7 @@ class ProjectController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -111,7 +111,7 @@ class ProjectController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -150,7 +150,7 @@ class ProjectController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -174,7 +174,7 @@ class ProjectController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $userData;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -206,7 +206,7 @@ class ProjectController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -269,7 +269,7 @@ class ProjectController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $data;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -380,7 +380,7 @@ class ProjectController extends BaseActiveController
 			$response->setStatusCode(200);
 			$response -> data = $data;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}

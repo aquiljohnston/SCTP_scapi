@@ -23,8 +23,8 @@ $config = [
 			'class' => 'app\authentication\CTUser',
             'identityClass' => 'app\models\SCUser',
             'enableAutoLogin' => false,
-			//'authTimeout' => 28800,
-			'authTimeout' => 15,
+			'authTimeout' => 28800,
+			//'authTimeout' => 15,
 			'loginUrl' => null
         ],
         'errorHandler' => [

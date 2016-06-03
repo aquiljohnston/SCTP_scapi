@@ -22,6 +22,7 @@ class ClientController extends BaseActiveController
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
+		unset($actions['create']);
 		unset($actions['update']);
 		unset($actions['delete']);
 		return $actions;
@@ -51,7 +52,7 @@ class ClientController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -91,7 +92,7 @@ class ClientController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -130,7 +131,7 @@ class ClientController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -163,7 +164,7 @@ class ClientController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}

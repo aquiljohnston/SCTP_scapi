@@ -22,6 +22,9 @@ class BreadcrumbController extends BaseActiveController
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
+		unset($actions['create']);
+		unset($actions['update']);
+		unset($actions['delete']);
 		return $actions;
 	}
 	
@@ -40,9 +43,36 @@ class BreadcrumbController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function actionCreate($id)
+	{
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
+		return $response;
+	}
+	
+	public function actionUpdate($id)
+	{
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
+		return $response;
+	}
+	
+	public function actionDelete($id)
+	{
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = "Method Not Allowed";
+		$response->setStatusCode(405);
+		return $response;
 	}
 }

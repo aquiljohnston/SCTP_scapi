@@ -122,7 +122,7 @@ class UserController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -216,7 +216,7 @@ class UserController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -238,7 +238,7 @@ class UserController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -275,7 +275,7 @@ class UserController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $projUser;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -340,7 +340,7 @@ class UserController extends BaseActiveController
 			}
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -374,7 +374,7 @@ class UserController extends BaseActiveController
 			
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -466,7 +466,7 @@ class UserController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -510,7 +510,7 @@ class UserController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $projects;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -566,7 +566,7 @@ class UserController extends BaseActiveController
 			$response->data = $users;
 			return $response;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -589,7 +589,7 @@ class UserController extends BaseActiveController
 			$response->setStatusCode(200);
 			$response->data = $users;
 		}
-		catch(ErrorException $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
