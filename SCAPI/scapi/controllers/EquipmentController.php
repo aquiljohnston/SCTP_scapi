@@ -9,6 +9,7 @@ use app\models\Client;
 use app\models\SCUser;
 use app\models\ProjectUser;
 use app\models\GetEquipmentByClientProjectVw;
+use app\models\DailyEquipmentCalibrationVw;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\data\ActiveDataProvider;
@@ -173,12 +174,12 @@ class EquipmentController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
+			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			if($equipArray = Equipment::findAll(['EquipmentProjectID'=>$projectID]))
+			if($equipArray = DailyEquipmentCalibrationVw::findAll(['EquipmentProjectID'=>$projectID]))
 			{
 				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 				$response->data = $equipData;
@@ -233,12 +234,12 @@ class EquipmentController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
+			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			if($equipArray = Equipment::find()->all())
+			if($equipArray = DailyEquipmentCalibrationVw::find()->all())
 			{
 				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 				$response->data = $equipData;
@@ -263,7 +264,7 @@ class EquipmentController extends BaseActiveController
 		try{
 			//set db target
 			$headers = getallheaders();
-			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
+			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
@@ -284,8 +285,8 @@ class EquipmentController extends BaseActiveController
 			{
 				$projectID = $projects[$i]->ProjUserProjectID; 
 				
-				$equipment = GetEquipmentByClientProjectVw::find()
-				->where(['ProjectID' => $projectID])
+				$equipment = DailyEquipmentCalibrationVw::find()
+				->where(['EquipmentProjectID' => $projectID])
 				->all();
 				$equipmentArray = array_merge($equipmentArray, $equipment);
 			}
@@ -306,12 +307,12 @@ class EquipmentController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
+			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			if($equipArray = GetEquipmentByClientProjectVw::find()->all())
+			if($equipArray = DailyEquipmentCalibrationVw::find()->all())
 			{
 				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
 				$response->data = $equipData;
