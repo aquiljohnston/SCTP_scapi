@@ -232,8 +232,10 @@ class TimeCardController extends BaseActiveController
 			//set db target
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedCurrent::setClient($headers['X-Client']);
-			
-			$timecardArray = TimeCardSumHoursWorkedCurrent::find()->all();
+
+			$timecardArray = TimeCardSumHoursWorkedCurrent::find()->
+			orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+
 			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -253,7 +255,9 @@ class TimeCardController extends BaseActiveController
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
 			
-			$timecardArray = TimeCardSumHoursWorkedPrior::find()->all();
+			$timecardArray = TimeCardSumHoursWorkedPrior::find()->
+			orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+
 			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -554,6 +558,7 @@ class TimeCardController extends BaseActiveController
 				
 				$timeCards = TimeCardSumHoursWorkedCurrent::find()
 				->where(['ProjectID' => $projectID])
+				->orderBy('UserID,TimeCardStartDate,ProjectID')
 				->all();
 				$timeCardArray = array_merge($timeCardArray, $timeCards);
 			}
@@ -597,6 +602,7 @@ class TimeCardController extends BaseActiveController
 				
 				$timeCards = TimeCardSumHoursWorkedPrior::find()
 				->where(['ProjectID' => $projectID])
+				->orderBy('UserID,TimeCardStartDate,ProjectID')
 				->all();
 				$timeCardArray = array_merge($timeCardArray, $timeCards);
 			}
