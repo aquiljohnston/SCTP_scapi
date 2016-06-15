@@ -45,13 +45,9 @@ class MileageCardController extends BaseActiveController
                 'actions' => [
                     'delete' => ['delete'],
 					'update' => ['put'],
+					'view-mileage-entries' => ['get'],
 					'approve-mileage-cards'  => ['put'],
-					'view-all-mileage-cards-current-week' => ['get'],
-					'view-all-mileage-cards-current-week-by-project' => ['get'],
-					'view-all-mileage-cards-prior-week' => ['get'],
-					'view-all-approved-mileage-cards-current-week' => ['get'],
-					'view-all-unapproved-mileage-cards-current-week' => ['get'],
-					'get-mileage-cards-current-week-by-manager' => ['get'],
+					'get-mileage-card-current-week' => ['get'],
 					'get-mileage-cards-current-week-sum-miles' => ['get'],
 					'get-mileage-cards-prior-week-sum-miles' => ['get'],
 					'view-all-by-user-by-project-current' => ['get'],
@@ -122,108 +118,6 @@ class MileageCardController extends BaseActiveController
 		$response->data = "Method Not Allowed";
 		$response->setStatusCode(405);
 		return $response;
-	}
-	
-	public function actionViewAllMileageCardsCurrentWeek()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-			
-			$mileagecardArray = AllMileageCardsCurrentWeek::find()->all();
-			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileagecardData;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewAllMileageCardsCurrentWeekByProject($projectID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-			
-			$mileagecardArray = AllMileageCardsCurrentWeek::find()
-						->where("MileageCardProjectID = $projectID")
-						->all();
-			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileagecardData;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewAllMileageCardsPriorWeek()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllMileageCardsPriorWeek::setClient($headers['X-Client']);
-			
-			$mileagecardArray = AllMileageCardsPriorWeek::find()->all();
-			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileagecardData;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewAllApprovedMileageCardsCurrentWeek()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
-			
-			$mileagecardArray = AllApprovedMileageCardsCurrentWeek::find()->all();
-			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileagecardData;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewAllUnapprovedMileageCardsCurrentWeek()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllUnApprovedMileageCardsCurrentWeek::setClient($headers['X-Client']);
-			
-			$mileagecardArray = AllUnApprovedMileageCardsCurrentWeek::find()->all();
-			$mileagecardData = array_map(function ($model) {return $model->attributes;},$mileagecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileagecardData;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
 	}
 
 	public function actionViewMileageEntries($id)
@@ -463,73 +357,6 @@ class MileageCardController extends BaseActiveController
 			return $response;
 		}
 		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	
-	//function to get all milage cards for the current week associated with a project manager
-	public function actionGetMileageCardsCurrentWeekByManager($userID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
-			
-			//get all projects for manager
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-
-			$mileageCards = [];
-			
-			//get all users associated with projects
-			for($i = 0; $i < $projectsSize; $i++)
-			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
-				$newUsers = ProjectUser::find()
-					->where("ProjUserProjectID = $projectID")
-					->all();
-					
-				//get project name for array key
-				$project = Project::find()
-					->where("ProjectID = $projectID")
-					->one();
-				$projectName = $project->ProjectName;
-				
-				//pass users to project key
-				$mileageCards[$projectName] = $newUsers;
-				$newUsersSize = count($newUsers);
-				
-				$tempCards = [];
-				
-				//get mileage card information
-				for($j = 0; $j < $newUsersSize; $j++)
-				{
-					$userID = $mileageCards[$projectName][$j]->ProjUserUserID;
-					$tempCard = AllMileageCardsCurrentWeek::find()
-						->where("UserID = $userID")
-						->andWhere("MileageCardProjectID = $projectID")
-						->one();
-					if ($tempCard != null)
-					{
-						$tempCards[] = $tempCard;
-					}
-				}
-				$mileageCards[$projectName] = $tempCards;
-			}
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->setStatusCode(200);
-			$response->data = $mileageCards;
-			return $response;
-		}
-		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
