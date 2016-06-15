@@ -12,8 +12,8 @@ use app\models\AllMileageCardsCurrentWeek;
 use app\models\AllMileageCardsPriorWeek;
 use app\models\AllApprovedMileageCardsCurrentWeek;
 use app\models\AllUnApprovedMileageCardsCurrentWeek;
-use app\models\MileageCardSumMilesCurrentWeekWithProjectName;
-use app\models\MileageCardSumMilesPriorWeekWithProjectName;
+use app\models\MileageCardSumMilesCurrentWeekWithProjectNameNew;
+use app\models\MileageCardSumMilesPriorWeekWithProjectNameNew;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -427,9 +427,9 @@ class MileageCardController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			MileageCardSumMilesCurrentWeekWithProjectName::setClient($headers['X-Client']);
+			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
 			
-			$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->all();
+			$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->all();
 			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -451,9 +451,9 @@ class MileageCardController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			MileageCardSumMilesPriorWeekWithProjectName::setClient($headers['X-Client']);
+			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			
-			$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->all();
+			$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->all();
 			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -542,7 +542,7 @@ class MileageCardController extends BaseActiveController
 		try{
 			//set db target
 			$headers = getallheaders();
-			MileageCardSumMilesCurrentWeekWithProjectName::setClient($headers['X-Client']);
+			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
@@ -563,7 +563,7 @@ class MileageCardController extends BaseActiveController
 			{
 				$projectID = $projects[$i]->ProjUserProjectID; 
 				
-				$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()
+				$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()
 				->where(['ProjectID' => $projectID])
 				->all();
 				$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
@@ -585,7 +585,7 @@ class MileageCardController extends BaseActiveController
 		try{
 			//set db target
 			$headers = getallheaders();
-			MileageCardSumMilesPriorWeekWithProjectName::setClient($headers['X-Client']);
+			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
@@ -606,7 +606,7 @@ class MileageCardController extends BaseActiveController
 			{
 				$projectID = $projects[$i]->ProjUserProjectID; 
 				
-				$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()
+				$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
 				->where(['ProjectID' => $projectID])
 				->all();
 				$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
