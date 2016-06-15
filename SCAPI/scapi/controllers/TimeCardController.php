@@ -12,8 +12,8 @@ use app\models\AllTimeCardsCurrentWeek;
 use app\models\AllTimeCardsPriorWeek;
 use app\models\AllApprovedTimeCardsCurrentWeek;
 use app\models\AllUnapprovedTimeCardsCurrentWeek;
-use app\models\TimeCardSumHoursWorkedCurrent;
-use app\models\TimeCardSumHoursWorkedPrior;
+use app\models\TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew;
+use app\models\TimeCardSumHoursWorkedPriorWeekWithProjectNameNew;
 use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -231,9 +231,9 @@ class TimeCardController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrent::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
 
-			$timecardArray = TimeCardSumHoursWorkedCurrent::find()->
+			$timecardArray = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->
 			orderBy('UserID,TimeCardStartDate,ProjectID')->all();
 
 			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
@@ -253,9 +253,9 @@ class TimeCardController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			
-			$timecardArray = TimeCardSumHoursWorkedPrior::find()->
+			$timecardArray = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->
 			orderBy('UserID,TimeCardStartDate,ProjectID')->all();
 
 			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
@@ -535,7 +535,7 @@ class TimeCardController extends BaseActiveController
 		try{
 			//set db target
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrent::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
@@ -556,7 +556,7 @@ class TimeCardController extends BaseActiveController
 			{
 				$projectID = $projects[$i]->ProjUserProjectID; 
 				
-				$timeCards = TimeCardSumHoursWorkedCurrent::find()
+				$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()
 				->where(['ProjectID' => $projectID])
 				->orderBy('UserID,TimeCardStartDate,ProjectID')
 				->all();
@@ -579,7 +579,7 @@ class TimeCardController extends BaseActiveController
 		try{
 			//set db target
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
@@ -600,7 +600,7 @@ class TimeCardController extends BaseActiveController
 			{
 				$projectID = $projects[$i]->ProjUserProjectID; 
 				
-				$timeCards = TimeCardSumHoursWorkedPrior::find()
+				$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
 				->where(['ProjectID' => $projectID])
 				->orderBy('UserID,TimeCardStartDate,ProjectID')
 				->all();

@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "MileageCardSumMilesPriorWeekWithProjectName_vw".
+ * This is the model class for table "MileageCardSumMilesPriorWeekWithProjectNameNew_vw".
  *
  * @property integer $UserID
  * @property string $UserName
@@ -23,7 +23,7 @@ use Yii;
  * @property string $MileageCardSupervisorName
  * @property integer $COUNTS
  */
-class MileageCardSumMilesPriorWeekWithProjectName extends BaseActiveRecord
+class MileageCardSumMilesPriorWeekWithProjectNameNew extends BaseActiveRecord
 {
     /**
      * @inheritdoc

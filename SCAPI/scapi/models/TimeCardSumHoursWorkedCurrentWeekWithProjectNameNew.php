@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "TimeCardSumHoursWorkedPrior_vw".
+ * This is the model class for table "TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew_vw".
  *
  * @property integer $TimeCardID
  * @property integer $UserID
@@ -24,14 +24,14 @@ use Yii;
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardSupervisorName
  */
-class TimeCardSumHoursWorkedPrior extends BaseActiveRecord
+class TimeCardSumHoursWorkedCurrentWithProjectNameNew extends BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        //return 'TimeCardSumHoursWorkedPrior_vw'; - old view. needs to be removed from the DB
+        //return 'TimeCardSumHoursWorkedCurrent_vw'; - old view. needs to be removed from the DB
         return 'TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew_vw';
     }
 
