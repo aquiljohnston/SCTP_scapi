@@ -8,8 +8,8 @@ use app\models\SCUser;
 use app\models\Project;
 use app\models\ProjectUser;
 use app\models\GetEquipmentByClientProjectVw;
-use app\models\TimeCardSumHoursWorkedPrior;
-use app\models\MileageCardSumMilesPriorWeekWithProjectName;
+use app\models\TimeCardSumHoursWorkedPriorWeekWithProjectNameNew;
+use app\models\MileageCardSumMilesPriorWeekWithProjectNameNew;
 use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -56,8 +56,8 @@ class NotificationController extends Controller
 			ProjectUser::setClient($headers['X-Client']);
 			Project::setClient($headers['X-Client']);
 			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
-			TimeCardSumHoursWorkedPrior::setClient($headers['X-Client']);
-			MileageCardSumMilesPriorWeekWithProjectName::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
+			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			
 			//get user
 			$user = SCUser::findOne($userID);
@@ -92,13 +92,13 @@ class NotificationController extends Controller
 				$equipmentCount = count($equipment);
 				
 				//get unapproved time cards from last week for project
-				$timeCards = TimeCardSumHoursWorkedPrior::find()
+				$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
 					->where(['and', "TimeCardProjectID = $projectID","TimeCardApprovedFlag = 'No'"])
 					->all();
 				$timeCardCount = count($timeCards);
 				
 				//get unapproved mileage cards from last week for project
-				$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()
+				$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
 					->where(['and', "MileageCardProjectID = $projectID","MileageCardApprovedFlag = 'No'"])
 					->all();	
 				$mileageCardCount = count($mileageCards);
