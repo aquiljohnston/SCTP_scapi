@@ -24,7 +24,7 @@ use Yii;
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardSupervisorName
  */
-class TimeCardSumHoursWorkedCurrentWithProjectNameNew extends BaseActiveRecord
+class TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew extends BaseActiveRecord
 {
     /**
      * @inheritdoc
