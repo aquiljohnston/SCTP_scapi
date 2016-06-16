@@ -393,6 +393,8 @@ class UserController extends BaseActiveController
 			ActivityCode::setClient($headers['X-Client']);
 			PayCode::setClient($headers['X-Client']);
 			Client::setClient($headers['X-Client']);
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
 			
 			//get user
 			$user = SCUser::findOne($userID);

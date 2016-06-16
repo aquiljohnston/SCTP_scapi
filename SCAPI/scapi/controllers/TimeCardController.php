@@ -40,15 +40,14 @@ class TimeCardController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'create' => ['create'],
                     'delete' => ['delete'],
 					'update' => ['put'],
-					'approve-time-cards'  => ['put'],
-					'view-time-card-hours-worked-current' => ['get'],
-					'view-time-card-hours-worked-prior' => ['get'],
-					'view-all-by-user-by-project-current' => ['get'],
-					'view-all-by-user-by-project-prior' => ['get'],
-					'view-time-entries' => ['get'],
-					'get-time-card-current-week' => ['get'],
+					'view' => ['get'],
+					'approve-cards'  => ['put'],
+					'get-entries' => ['get'],
+					'get-card' => ['get'],
+					'get-cards' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -91,6 +90,11 @@ class TimeCardController extends BaseActiveController
 		return $response;
 	}
 	
+		 /**
+     * Displays a single TimeCard model.
+     * @param integer $id
+     * @return mixed
+     */
     public function actionView($id)
     {
 		try
@@ -112,175 +116,7 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionViewTimeCardHoursWorkedCurrent()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
-
-			$timecardArray = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->
-			orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-
-			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $timecardData;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewTimeCardHoursWorkedPrior()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
-			
-			$timecardArray = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->
-			orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-
-			$timecardData = array_map(function ($model) {return $model->attributes;},$timecardArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $timecardData;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionGetTimeCardCurrentWeek($id)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
-			
-			$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$id]);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			if ($timeCard != null)
-			{
-				$response->setStatusCode(200);
-				$response->data = $timeCard;
-				return $response;
-			}
-			else
-			{
-				$response->setStatusCode(404);
-				return $response;
-			}
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewTimeEntries($id)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			TimeCard::setClient($headers['X-Client']);
-			TimeEntry::setClient($headers['X-Client']);
-			
-			$response = Yii::$app ->response;
-			$dataArray = [];
-			$timeCard = TimeCard::findOne($id);
-			$date = new DateTime($timeCard-> TimeCardStartDate);
-			
-			//get all time entries for Sunday
-			$sundayDate = $date;
-			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
-			$sundayEntries = TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$sundayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-			
-			//get all time entries for Monday
-			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
-			$mondayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$mondayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-				
-			//get all time entries for Tuesday	
-			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
-			$tuesdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-				
-			//get all time entries for Wednesday	
-			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
-			$wednesdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-				
-			//get all time entries for Thursday
-			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
-			$thursdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$thursdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-				
-			//get all time entries for Friday
-			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
-			$fridayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$fridayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-				
-			//get all time entries for Saturday
-			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
-			$saturdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$satudayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $id")
-				->all();
-				
-			//load data into array
-			$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
-			$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
-			$dataArray["ApprovedFlag"] = $timeCard-> TimeCardApprovedFlag;
-			$dayArray =
-			[
-				"Sunday" => $sundayEntries,
-				"Monday" => $mondayEntries,
-				"Tuesday" => $tuesdayEntries,
-				"Wednesday" => $wednesdayEntries,
-				"Thursday" => $thursdayEntries,
-				"Friday" => $fridayEntries,
-				"Saturday" => $saturdayEntries,
-			];
-			$dataArray["TimeEntries"] = [$dayArray];
-			
-			$response -> format = Response::FORMAT_JSON;
-			$response -> data = $dataArray;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionApproveTimeCards()
+	public function actionApproveCards()
 	{
 		try
 		{
@@ -349,57 +185,137 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
-	//returns a json containing all timecards for projects that a user is associated with for the current week
-	//used by proj managers and supervisors
-	public function actionViewAllByUserByProjectCurrent($userID)
+	public function actionGetEntries($cardID)
 	{
-		try{
+		try
+		{
 			//set db target
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
+			TimeCard::setClient($headers['X-Client']);
+			TimeEntry::setClient($headers['X-Client']);
 			
-			//format response
-			$response = Yii::$app->response;
-			$response-> format = Response::FORMAT_JSON;
+			$response = Yii::$app ->response;
+			$dataArray = [];
+			$timeCard = TimeCard::findOne($cardID);
+			$date = new DateTime($timeCard-> TimeCardStartDate);
 			
-			//get user project relations array
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
+			//get all time entries for Sunday
+			$sundayDate = $date;
+			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
+			$sundayEntries = TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$sundayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
-			$projectsSize = count($projects);
 			
-			//response array of time cards
-			$timeCardArray = [];
-			
-			//loop user project array get all time cards WHERE equipmentProjectID is equal
-			for($i=0; $i < $projectsSize; $i++)
-			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
+			//get all time entries for Monday
+			$mondayDate = $date->modify('+1 day');	
+			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
+			$mondayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$mondayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
+				->all();
 				
-				$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()
-				->where(['ProjectID' => $projectID])
-				->orderBy('UserID,TimeCardStartDate,ProjectID')
+			//get all time entries for Tuesday	
+			$tuesdayDate = $date->modify('+1 day');
+			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
+			$tuesdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
-				$timeCardArray = array_merge($timeCardArray, $timeCards);
+				
+			//get all time entries for Wednesday	
+			$wednesdayDate = $date->modify('+1 day');
+			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
+			$wednesdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
+				->all();
+				
+			//get all time entries for Thursday
+			$thursdayDate = $date->modify('+1 day');
+			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
+			$thursdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$thursdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
+				->all();
+				
+			//get all time entries for Friday
+			$fridayDate = $date->modify('+1 day');
+			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
+			$fridayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$fridayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
+				->all();
+				
+			//get all time entries for Saturday
+			$satudayDate = $date->modify('1 day');
+			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
+			$saturdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$satudayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
+				->all();
+				
+			//load data into array
+			$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
+			$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
+			$dataArray["ApprovedFlag"] = $timeCard-> TimeCardApprovedFlag;
+			$dayArray =
+			[
+				"Sunday" => $sundayEntries,
+				"Monday" => $mondayEntries,
+				"Tuesday" => $tuesdayEntries,
+				"Wednesday" => $wednesdayEntries,
+				"Thursday" => $thursdayEntries,
+				"Friday" => $fridayEntries,
+				"Saturday" => $saturdayEntries,
+			];
+			$dataArray["TimeEntries"] = [$dayArray];
+			
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $dataArray;
+		}
+		catch(\Exception $e)  
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}	
+	
+	public function actionGetCard($userID)
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$userID]);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			if ($timeCard != null)
+			{
+				$response->setStatusCode(200);
+				$response->data = $timeCard;
+				return $response;
 			}
-			
-			$response->data = $timeCardArray;
-			$response->setStatusCode(200);
-			return $response;
-			
-		} catch(\Exception $e) {
+			else
+			{
+				$response->setStatusCode(404);
+				return $response;
+			}
+		}
+		catch(\Exception $e)  
+		{
 			throw new \yii\web\HttpException(400);
 		}
 	}
 	
-	//returns a json containing all timecards for projects that a user is associated with for the prior week
-	//used by proj managers and supervisors	
-	public function actionViewAllByUserByProjectPrior($userID)
+	public function actionGetCards($userID, $isAdmin, $week)
 	{
-		try{
-			//set db target
+		try
+		{
+			//set db target headers
 			$headers = getallheaders();
+			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
 			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
@@ -407,32 +323,80 @@ class TimeCardController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response-> format = Response::FORMAT_JSON;
 			
-			//get user project relations array
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-			
 			//response array of time cards
 			$timeCardArray = [];
 			
-			//loop user project array get all time cards WHERE equipmentProjectID is equal
-			for($i=0; $i < $projectsSize; $i++)
+			//check if user is admin, admins will not limited by project
+			if($isAdmin == "true")
 			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
-				
-				$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
-				->where(['ProjectID' => $projectID])
-				->orderBy('UserID,TimeCardStartDate,ProjectID')
-				->all();
-				$timeCardArray = array_merge($timeCardArray, $timeCards);
+				//check if week is prior or current to determine appropriate view
+				if($week == 'prior')
+				{
+					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
+						->orderBy('UserID,TimeCardStartDate,ProjectID')
+						->all();
+
+					$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
+				} 
+				elseif($week == 'current') 
+				{
+					$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->
+					orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+
+					$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
+				}
+			} 
+			//non-admin users will have their results filtered by associated projects	
+			else		
+			{
+				//get user project relations array
+				$projects = ProjectUser::find()
+					->where("ProjUserUserID = $userID")
+					->all();
+				$projectsSize = count($projects);
+
+				//check if week is prior or current to determine appropriate view
+				if($week == 'prior')
+				{
+					for($i=0; $i < $projectsSize; $i++)
+					{
+						$projectID = $projects[$i]->ProjUserProjectID; 
+						
+						$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
+							->where(['ProjectID' => $projectID])
+							->orderBy('UserID,TimeCardStartDate,ProjectID')
+							->all();
+						$timeCardArray = array_merge($timeCardArray, $timeCards);
+					}
+				} 
+				elseif($week == 'current') 
+				{
+					for($i=0; $i < $projectsSize; $i++)
+					{
+						$projectID = $projects[$i]->ProjUserProjectID; 
+						
+						$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()
+							->where(['ProjectID' => $projectID])
+							->orderBy('UserID,TimeCardStartDate,ProjectID')
+							->all();
+						$timeCardArray = array_merge($timeCardArray, $timeCards);
+					}
+				}
 			}
-			
-			$response->data = $timeCardArray;
-			$response->setStatusCode(200);
-			return $response;
-			
-		} catch(\Exception $e) {
+			if (!empty($timeCardArray))
+			{
+				$response->data = $timeCardArray;
+				$response->setStatusCode(200);
+				return $response;
+			}
+			else
+			{
+				$response->setStatusCode(404);
+				return $response;
+			}
+		}
+		catch(\Exception $e)  
+		{
 			throw new \yii\web\HttpException(400);
 		}
 	}
