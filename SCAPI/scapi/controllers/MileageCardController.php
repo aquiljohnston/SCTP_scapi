@@ -40,15 +40,14 @@ class MileageCardController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+                    'create' => ['create'],
                     'delete' => ['delete'],
 					'update' => ['put'],
-					'view-mileage-entries' => ['get'],
-					'approve-mileage-cards'  => ['put'],
-					'get-mileage-card-current-week' => ['get'],
-					'get-mileage-cards-current-week-sum-miles' => ['get'],
-					'get-mileage-cards-prior-week-sum-miles' => ['get'],
-					'view-all-by-user-by-project-current' => ['get'],
-					'view-all-by-user-by-project-prior' => ['get'],
+					'view' => ['get'],
+					'approve-cards'  => ['put'],
+					'get-entries' => ['get'],
+					'get-card' => ['get'],
+					'get-cards' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -63,32 +62,6 @@ class MileageCardController extends BaseActiveController
 		unset($actions['delete']);
 		return $actions;
 	}
-
-    /**
-     * Displays a single MileageCard model.
-     * @param integer $id
-     * @return mixed
-     */
-    public function actionView($id)
-    {
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			MileageCard::setClient($headers['X-Client']);
-			
-			$mileageCard = MileageCard::findOne($id);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileageCard;
-			
-			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-    }
 	
 	public function actionCreate()
 	{
@@ -116,103 +89,34 @@ class MileageCardController extends BaseActiveController
 		$response->setStatusCode(405);
 		return $response;
 	}
-
-	public function actionViewMileageEntries($id)
-	{
+	
+	 /**
+     * Displays a single MileageCard model.
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionView($id)
+    {
 		try
 		{
 			//set db target
 			$headers = getallheaders();
 			MileageCard::setClient($headers['X-Client']);
-			MileageEntry::setClient($headers['X-Client']);
 			
-			$response = Yii::$app ->response;
-			$dataArray = [];
 			$mileageCard = MileageCard::findOne($id);
-			$date = new DateTime($mileageCard-> MileageStartDate);
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $mileageCard;
 			
-			//get all time entries for Sunday
-			$sundayDate = $date;
-			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
-			$sundayEntries = MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$sundayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-			
-			//get all time entries for Monday
-			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
-			$mondayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$mondayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-				
-			//get all time entries for Tuesday	
-			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
-			$tuesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-				
-			//get all time entries for Wednesday	
-			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
-			$wednesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-				
-			//get all time entries for Thursday
-			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
-			$thursdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-				
-			//get all time entries for Friday
-			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
-			$fridayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$fridayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-				
-			//get all time entries for Saturday
-			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
-			$saturdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$satudayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $id")
-				->all();
-				
-			//load data into array
-			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
-			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
-			$dataArray["ApprovedFlag"] = $mileageCard-> MileageCardApprovedFlag;
-			$dayArray =
-			[
-				"Sunday" => $sundayEntries,
-				"Monday" => $mondayEntries,
-				"Tuesday" => $tuesdayEntries,
-				"Wednesday" => $wednesdayEntries,
-				"Thursday" => $thursdayEntries,
-				"Friday" => $fridayEntries,
-				"Saturday" => $saturdayEntries,
-			];
-			$dataArray["MileageEntries"] = [$dayArray];
-			
-			$response -> format = Response::FORMAT_JSON;
-			$response -> data = $dataArray;
+			return $response;
 		}
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}
-	}
+    }
 	
-	public function actionApproveMileageCards()
+	public function actionApproveCards()
 	{
 		try
 		{
@@ -282,7 +186,102 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetMileageCardCurrentWeek($id)
+	public function actionGetEntries($cardID)
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
+			MileageEntry::setClient($headers['X-Client']);
+			
+			$response = Yii::$app ->response;
+			$dataArray = [];
+			$mileageCard = MileageCard::findOne($cardID);
+			$date = new DateTime($mileageCard-> MileageStartDate);
+			
+			//get all time entries for Sunday
+			$sundayDate = $date;
+			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
+			$sundayEntries = MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$sundayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+			
+			//get all time entries for Monday
+			$mondayDate = $date->modify('+1 day');	
+			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
+			$mondayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$mondayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+				
+			//get all time entries for Tuesday	
+			$tuesdayDate = $date->modify('+1 day');
+			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
+			$tuesdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+				
+			//get all time entries for Wednesday	
+			$wednesdayDate = $date->modify('+1 day');
+			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
+			$wednesdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+				
+			//get all time entries for Thursday
+			$thursdayDate = $date->modify('+1 day');
+			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
+			$thursdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+				
+			//get all time entries for Friday
+			$fridayDate = $date->modify('+1 day');
+			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
+			$fridayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$fridayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+				
+			//get all time entries for Saturday
+			$satudayDate = $date->modify('1 day');
+			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
+			$saturdayEntries =MileageEntry::find()
+				->where("MileageEntryDate ="."'"."$satudayStr". "'")
+				->andWhere("MileageEntryMileageCardID = $cardID")
+				->all();
+				
+			//load data into array
+			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
+			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
+			$dataArray["ApprovedFlag"] = $mileageCard-> MileageCardApprovedFlag;
+			$dayArray =
+			[
+				"Sunday" => $sundayEntries,
+				"Monday" => $mondayEntries,
+				"Tuesday" => $tuesdayEntries,
+				"Wednesday" => $wednesdayEntries,
+				"Thursday" => $thursdayEntries,
+				"Friday" => $fridayEntries,
+				"Saturday" => $saturdayEntries,
+			];
+			$dataArray["MileageEntries"] = [$dayArray];
+			
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $dataArray;
+		}
+		catch(\Exception $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionGetCard($userID)
 	{
 		try
 		{
@@ -290,7 +289,7 @@ class MileageCardController extends BaseActiveController
 			$headers = getallheaders();
 			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
 			
-			$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$id]);
+			$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$userID]);
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			if ($mileageCard != null)
@@ -311,104 +310,13 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	//function to get all mileagecards for the current week with their sum miles
-	public function actionGetMileageCardsCurrentWeekSumMiles()
+	public function actionGetCards($userID, $isAdmin, $week)
 	{
 		try
 		{
-			//set db target
+			//set db target headers
 			$headers = getallheaders();
 			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
-			
-			$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->all();
-			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-
-			$response->setStatusCode(200);
-			$response->data = $mileageCardArray;
-			return $response;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//function to get all mileagecards for the prior week with their sum miles
-	public function actionGetMileageCardsPriorWeekSumMiles()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
-			
-			$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->all();
-			$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-
-			$response->setStatusCode(200);
-			$response->data = $mileageCardArray;
-			return $response;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//returns a json containing all mileage cards for projects that a user is associated with for the current week
-	//used by proj managers and supervisors
-	public function actionViewAllByUserByProjectCurrent($userID)
-	{
-		try{
-			//set db target
-			$headers = getallheaders();
-			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
-			
-			//format response
-			$response = Yii::$app->response;
-			$response-> format = Response::FORMAT_JSON;
-			
-			//get user project relations array
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-			
-			//response array of mileage cards
-			$mileageCardArray = [];
-			
-			//loop user project array get all mileage cards WHERE equipmentProjectID is equal
-			for($i=0; $i < $projectsSize; $i++)
-			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
-				
-				$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()
-				->where(['ProjectID' => $projectID])
-				->all();
-				$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
-			}
-			
-			$response->data = $mileageCardArray;
-			$response->setStatusCode(200);
-			return $response;
-			
-		} catch(\Exception $e) {
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//returns a json containing all mileage cards for projects that a user is associated with for the prior week
-	//used by proj managers and supervisors	
-	public function actionViewAllByUserByProjectPrior($userID)
-	{
-		try{
-			//set db target
-			$headers = getallheaders();
 			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
@@ -416,31 +324,81 @@ class MileageCardController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response-> format = Response::FORMAT_JSON;
 			
-			//get user project relations array
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-			
 			//response array of mileage cards
 			$mileageCardArray = [];
 			
-			//loop user project array get all mileage cards WHERE equipmentProjectID is equal
-			for($i=0; $i < $projectsSize; $i++)
+			//check if user is admin, admins will not limited by project
+			if($isAdmin == "true")
 			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
+				//check if week is prior or current to determine appropriate view
+				if($week == 'prior')
+				{
+					$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
+						->orderBy('UserID,MileageStartDate,ProjectID')
+						->all();
+						
+					$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
+				} 
+				elseif($week == 'current') 
+				{
+					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()
+						->orderBy('UserID,MileageStartDate,ProjectID')
+						->all();
+						
+					$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
+				}
+			} 
+			//non-admin users will have their results filtered by associated projects	
+			else		
+			{
+				//get user project relations array
+				$projects = ProjectUser::find()
+					->where("ProjUserUserID = $userID")
+					->all();
+				$projectsSize = count($projects);
 				
-				$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
-				->where(['ProjectID' => $projectID])
-				->all();
-				$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+				//check if week is prior or current to determine appropriate view
+				if($week == 'prior')
+				{
+					for($i=0; $i < $projectsSize; $i++)
+					{
+						$projectID = $projects[$i]->ProjUserProjectID; 
+							
+						$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
+							->where(['ProjectID' => $projectID])
+							->orderBy('UserID,MileageStartDate,ProjectID')
+							->all();
+						$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+					}
+				} 
+				elseif($week == 'current') 
+				{
+					for($i=0; $i < $projectsSize; $i++)
+					{
+						$projectID = $projects[$i]->ProjUserProjectID; 
+						
+						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()
+							->where(['ProjectID' => $projectID])
+							->orderBy('UserID,MileageStartDate,ProjectID')
+							->all();
+						$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+					}
+				}
 			}
-			
-			$response->data = $mileageCardArray;
-			$response->setStatusCode(200);
-			return $response;
-			
-		} catch(\Exception $e) {
+			if (!empty($mileageCardArray))
+			{
+				$response->data = $mileageCardArray;
+				$response->setStatusCode(200);
+				return $response;
+			}
+			else
+			{
+				$response->setStatusCode(404);
+				return $response;
+			}
+		}
+		catch(\Exception $e)  
+		{
 			throw new \yii\web\HttpException(400);
 		}
 	}
