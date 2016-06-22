@@ -26,12 +26,15 @@ use yii\db\Exception;
 
 
 /**
- * UserController implements the CRUD actions for User model.
+ * UserController implements the routes for the User model.
  */
 class UserController extends BaseActiveController
 {
 	public $modelClass = 'app\models\SCUser'; 
 	
+	/**
+	* sets verb filters for http request
+	*/
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -39,17 +42,24 @@ class UserController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'create' => ['create'],
+                    'delete' => ['delete'],
+					'update' => ['put'],
+					'view' => ['get'],
 					'deactivate' => ['put'],
 					'get-user-dropdowns'  => ['get'],
 					'get-me'  => ['get'],
 					'get-all-projects'  => ['get'],
-					'get-users-by-manager' => ['get'],
 					'get-all-active-users' => ['get'],
+					'add-user-to-project' => ['create'],
                 ],  
             ];
 		return $behaviors;	
 	}
 	
+	/**
+	* unset parent actions
+	*/
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -59,6 +69,11 @@ class UserController extends BaseActiveController
 		return $actions;
 	}
 	
+	/**
+	* Creates a new user record in the database and a corresponding key record
+	* @returns json body of the user data
+	* @throws \yii\web\HttpException
+	*/
 	public function actionCreate()
 	{
 		try
@@ -128,6 +143,11 @@ class UserController extends BaseActiveController
 		}
 	}
 	
+	/**
+	* Updates a user record in the database and a corresponding key record
+	* @returns json body of the user data
+	* @throws \yii\web\HttpException
+	*/	
 	public function actionUpdate($id)
 	{
 		try
@@ -222,6 +242,12 @@ class UserController extends BaseActiveController
 		}
 	}
 	
+	/**
+	* Gets the data for a user based on a user id
+	* @param $id the id of a user record
+	* @returns json body of the user data
+	* @throws \yii\web\HttpException
+	*/	
 	public function actionView($id)
 	{
 		try
@@ -244,43 +270,10 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	//deprecated
-	public function actionAddUserToProject($userID,$projectID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			SCUser::setClient($headers['X-Client']);
-			Project::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
-			
-			$user = SCUser::findOne($userID);
-			
-			$project = Project::findOne($projectID);
-			
-			try
-			{
-				$user->link('projects',$project);
-			}
-			catch(Exception $e)
-			{
-				throw new \yii\web\HttpException(400, 'User cannot be added to this Project, relation may already exist.');
-			}
-
-			$projUser = ProjectUser::find()
-				->where(['and', "ProjUserUserID = $userID","ProjUserProjectID = $projectID"])
-				->one();
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $projUser;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
+	/**
+	* The delete method is not allowed for user so the parent function is overridden to reflect that
+	* @returns json body method not allowed message
+	*/	
 	public function actionDelete()
 	{
 		$response = Yii::$app->response;
@@ -290,25 +283,12 @@ class UserController extends BaseActiveController
 		return $response;
 	}
 	
-	// public function actionDelete($id)
-	// {
-		// //may need to add a try catch here in case of no content
-		// //create response
-		// $response = Yii::$app->response;
-		// $response ->format = Response::FORMAT_JSON;
-		// //find user model
-		// $user = SCUser::findOne($id);
-		// //find associated key model
-		// $key = Key::findOne($user->UserKey);
-		// //delete user and key in that order
-		// if($user->delete() && $key->delete())
-		// {
-			// $response->setStatusCode(204);
-		// }
-		// //response data
-		// return $response;
-	// }
-	
+	/**
+	* Updates the active flag of a user to 0 for inactive
+	* @param $userID id of the user record
+	* @returns json body of user data
+	* @throws \yii\web\HttpException
+	*/
 	public function actionDeactivate($userID)
 	{
 		try
@@ -347,6 +327,11 @@ class UserController extends BaseActiveController
 		
 	}
 
+	/**
+	* Creates an associative array of user id/lastname, firstname pairs
+	* @returns json body id name pairs
+	* @throws \yii\web\HttpException
+	*/
 	public function actionGetUserDropdowns()
 	{	
 		try
@@ -380,6 +365,12 @@ class UserController extends BaseActiveController
 		}
 	}
 	
+	/**
+	* Gets a users data, the equipment assigned to them, and all projects that they are associated with
+	* @param $userID 
+	* @returns json body containing userdata, equipment, and projects 
+	* @throws \yii\web\HttpException
+	*/
 	public function actionGetMe($userID)
 	{
 		try
@@ -474,11 +465,12 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	// Route: getAllProjects
-	// Param: userID
-	// Client: clientID
-	// Returns: JSON of:
-	// Project Name, Project ID, Client ID]
+	/* Route getAllProjects
+	* @Param userID
+	* Client clientID
+	* @Returns JSON of: Project Name, Project ID, Client ID
+	* @throws \yii\web\HttpException
+	*/
 	public function actionGetAllProjects($userID)
 	{
 		try
@@ -518,62 +510,11 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetUsersByManager($userID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			SCUser::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
-			
-			//get all projects for manager
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-			
-			$users = [];
-			
-			//get all users associated with projects
-			for($i = 0; $i < $projectsSize; $i++)
-			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
-				$newUsers = ProjectUser::find()
-					->where("ProjUserProjectID = $projectID")
-					->all();
-					
-				//get project name for array key
-				$project = Project::find()
-					->where("ProjectID = $projectID")
-					->one();
-				$projectName = $project->ProjectName;
-				
-				//pass users to project key
-				$users[$projectName] = $newUsers;
-				$newUsersSize = count($newUsers);
-				
-				//get user information
-				for($j = 0; $j < $newUsersSize; $j++)
-				{
-					$userID = $users[$projectName][$j]->ProjUserUserID;
-					$users[$projectName][$j] = SCUser::find()
-						->where("UserID = $userID")
-						->one();
-				}
-			}		
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->setStatusCode(200);
-			$response->data = $users;
-			return $response;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
+	/**
+	* Gets a users data for all users with an active flag of 1 for active
+	* @returns json body of users 
+	* @throws \yii\web\HttpException
+	*/
 	public function actionGetAllActiveUsers()
 	{
 		try
