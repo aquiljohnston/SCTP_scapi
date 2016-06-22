@@ -42,7 +42,7 @@ class UserController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'create' => ['create'],
+					'create' => ['post'],
                     'delete' => ['delete'],
 					'update' => ['put'],
 					'view' => ['get'],
@@ -51,7 +51,7 @@ class UserController extends BaseActiveController
 					'get-me'  => ['get'],
 					'get-all-projects'  => ['get'],
 					'get-all-active-users' => ['get'],
-					'add-user-to-project' => ['create'],
+					'add-user-to-project' => ['post'],
                 ],  
             ];
 		return $behaviors;	
