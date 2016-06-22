@@ -22,6 +22,10 @@ class ProjectController extends BaseActiveController
 {
 	public $modelClass = 'app\models\Project'; 
 	
+	/**
+	* sets verb filters for http request
+	* @return an array of behaviors
+	*/
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -33,6 +37,7 @@ class ProjectController extends BaseActiveController
 					'get-project-dropdowns'  => ['get'],
 					'get-user-relationships'  => ['get'],
 					'add-remove-users' => ['post'],
+					'get-project-dropdowns' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -48,6 +53,10 @@ class ProjectController extends BaseActiveController
 		return $actions;
 	}
 	
+	/**
+	* The delete method is not allowed for user so the parent function is overridden to reflect that
+	* @returns json body containing a method not allowed message
+	*/	
 	public function actionDelete()
 	{
 		$response = Yii::$app->response;
@@ -57,6 +66,12 @@ class ProjectController extends BaseActiveController
 		return $response;
 	}
 
+	/**
+	* Gets the data for a project based on a project id
+	* @param $id the id of a project record
+	* @returns json body of the project data
+	* @throws \yii\web\HttpException
+	*/	
 	public function actionView($id)
     {
 		try
@@ -78,6 +93,11 @@ class ProjectController extends BaseActiveController
 		}
 	} 
 	
+	/**
+	* Creates a new project record in the database
+	* @returns json body of the project data
+	* @throws \yii\web\HttpException
+	*/	
 	public function actionCreate()
 	{
 		try
@@ -117,6 +137,12 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
+	/**
+	* Updates a project record in the database
+	* @param $id the id of a project record
+	* @returns json body of the project data
+	* @throws \yii\web\HttpException
+	*/	
 	public function actionUpdate($id)
 	{
 		try
@@ -156,31 +182,11 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
-	//return json array of all users attached to a specific project ID
-	public function actionViewAllUsers($projectID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			Project::setClient($headers['X-Client']);
-			SCUser::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
-			
-			$project = Project::findOne($projectID);
-			$userArray = $project->users;
-			$userData = array_map(function ($model) {return $model->attributes;},$userArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $userData;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//return a json containing pairs of ProjectID and ProjectName
+	/**
+	* Creates an associative array of project id/name pairs
+	* @returns json body of id name pairs
+	* @throws \yii\web\HttpException
+	*/
 	public function actionGetProjectDropdowns()
 	{	
 		try
@@ -212,7 +218,13 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
-	//returns json containing two arrays one of all users associated with a project the other of all users not associated with a project 
+	/**
+	* Creates two arrays, one of all users associated with a project 
+	* the other of all users not associated with a project
+	* @param $id the id of a project record
+	* @returns json containing two user arrays
+	* @throws \yii\web\HttpException
+    */	
 	public function actionGetUserRelationships($projectID)
 	{
 		try
@@ -275,6 +287,15 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
+	/**
+	* Accepts two arrays one of users to add to a project and one of users to remove from a project.
+	* Creates ProjectUser records for added users and deletes ProjectUser records for removed users.
+	* Calls SPs to handle creation/activation of time and mileage cards for added users
+	* Calls SPs to handle deactivation of time and mileage cards for users removed
+	* @param $id the id of a project record
+	* @returns json containing two user arrays that were processed
+	* @throws \yii\web\HttpException
+    */	
 	public function actionAddRemoveUsers($projectID)
 	{
 		try
@@ -285,6 +306,10 @@ class ProjectController extends BaseActiveController
 			Project::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
+			//create response
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			
 			//get project from param
 			$project = Project::findOne($projectID);
 			
@@ -292,9 +317,19 @@ class ProjectController extends BaseActiveController
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
 			
-			//parse post data
-			$usersAdded = $data['usersAdded'];
-			$usersRemoved = $data['usersRemoved'];
+			//check if key exist
+			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
+			{
+				//parse post data
+				$usersAdded = $data['usersAdded'];
+				$usersRemoved = $data['usersRemoved'];
+			} else {
+				//set failure response
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				
+				return $response;
+			}
 			
 			//loop usersAdded and create relationships and cards
 			foreach($usersAdded as $i)
@@ -374,11 +409,11 @@ class ProjectController extends BaseActiveController
 				}		
 			}
 			
-			//build response 
-			$response = Yii::$app ->response;
-			$response -> format = Response::FORMAT_JSON;
+			//set success response 
 			$response->setStatusCode(200);
 			$response -> data = $data;
+			
+			return $response;
 		}
 		catch(\Exception $e)  
 		{
