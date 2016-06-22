@@ -118,26 +118,6 @@ class TimeEntryController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetEntriesByTimeCard($id)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			TimeEntry::setClient($headers['X-Client']);
-			
-			$entriesArray = TimeEntry::findAll(['TimeEntryTimeCardID'=>$id]);
-			$entryData = array_map(function ($model) {return $model->attributes;},$entriesArray);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $entryData;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
 	public function actionDeactivate()
 	{
 		try{
