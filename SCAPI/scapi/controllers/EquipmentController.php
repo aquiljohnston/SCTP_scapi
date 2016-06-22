@@ -4,34 +4,26 @@ namespace app\controllers;
 
 use Yii;
 use app\models\Equipment;
-use app\models\Project;
-use app\models\Client;
 use app\models\SCUser;
 use app\models\ProjectUser;
-use app\models\GetEquipmentByClientProjectVw;
 use app\models\DailyEquipmentCalibrationVw;
-use app\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
-use yii\data\ActiveDataProvider;
-use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
 use yii\web\Response;
-use yii\base\ErrorException;
 
 class EquipmentController extends BaseActiveController
 {
 	public $modelClass = 'app\models\Equipment'; 
 	public $equipment;
-	
+
+	/**
+	 * Activates VerbFilter behaviour
+	 * See documentation on behaviours at http://www.yiiframework.com/doc-2.0/guide-concept-behaviors.html
+	 * @return array An array containing behaviours
+	 */
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
 		//Implements Token Authentication to check for Auth Token in Json  Header
-		$behaviors['authenticator'] = 
-		[
-			'class' => TokenAuth::className(),
-		];
 		$behaviors['verbs'] = 
 			[
                 'class' => VerbFilter::className(),
@@ -44,7 +36,11 @@ class EquipmentController extends BaseActiveController
             ];
 		return $behaviors;	
 	}
-	
+
+	/**
+	 * Unsets the view and update actions to prevent security holes.
+	 * @return array An array containing parent's actions with view and update removed
+	 */
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -52,7 +48,15 @@ class EquipmentController extends BaseActiveController
 		unset($actions['update']);
 		return $actions;
 	}
-	
+
+	/**
+	 * Finds a specific Equipment based on ID and returns it to the client. Otherwise
+	 * returns a 404.
+	 *
+	 * @param $id int ID of the Equipment to view
+	 * @return Response
+	 * @throws \yii\web\HttpException 400 when Exception thrown
+	 */
 	public function actionView($id)
     {
 		try
@@ -80,8 +84,14 @@ class EquipmentController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}		
-	} 
-	
+	}
+
+	/**
+	 * Creates an Equipment based on POST input and saves it. If it can not save it returns at 400 status code.
+	 *
+	 * @return Response
+	 * @throws \yii\web\HttpException When saving the model fails
+	 */
 	public function actionCreate()
 	{
 		try
@@ -119,7 +129,14 @@ class EquipmentController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
+
+	/**
+	 * Updates an Equipment model with JSON data from POST.
+	 *
+	 * @param $id int The ID of the model to update
+	 * @return Response JSON object of updated model.
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionUpdate($id)
 	{
 		try
@@ -167,98 +184,19 @@ class EquipmentController extends BaseActiveController
 		}
 	}
 
-	//return json array of all equipment for a project.
-	public function actionViewEquipmentByProject($projectID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			
-			if($equipArray = DailyEquipmentCalibrationVw::findAll(['EquipmentProjectID'=>$projectID]))
-			{
-				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
-				$response->data = $equipData;
-				$response->setStatusCode(200);
-			}
-			else
-			{
-				$response->setStatusCode(404);
-			}
-			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionViewEquipmentByUser($userID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			
-			if($equipArray = Equipment::findAll(['EquipmentAssignedUserID'=>$userID]))
-			{
-				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
-				$response->data = $equipData;
-				$response->setStatusCode(200);
-			}
-			else
-			{
-				$response->setStatusCode(404);
-			}
-			return $response;
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
+	public function actionGetEquipment() {
+		// Will combine actionViewAllByUserByProject and actionEquipmentView
+		// after rbac is complete
 	}
 
-	//return json array of all equipment.
-	//used by admins and engineers
-	public function actionViewAll()
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			
-			if($equipArray = DailyEquipmentCalibrationVw::find()->all())
-			{
-				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
-				$response->data = $equipData;
-				$response->setStatusCode(200);
-			}
-			else
-			{
-				$response->setStatusCode(404);
-			}
-			return $response;
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//returns a json containing all equipment for projects that a user is associated with
-	//used by proj managers and supervisors
+	/**
+	 * Gets all the equipment for the project the user belongs to.
+	 * Used by project managers and supervisors.
+	 *
+	 * @param $userID int ID of the User model to view by
+	 * @return Response a json containing all equipment for projects that a user is associated with
+	 * @throws \yii\web\HttpException When an exception is thrown.
+	 */
 	public function actionViewAllByUserByProject($userID)
 	{
 		try{
@@ -266,41 +204,46 @@ class EquipmentController extends BaseActiveController
 			$headers = getallheaders();
 			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
-			
+
 			//format response
 			$response = Yii::$app->response;
 			$response-> format = Response::FORMAT_JSON;
-			
+
 			//get user project relations array
 			$projects = ProjectUser::find()
 				->where("ProjUserUserID = $userID")
 				->all();
 			$projectsSize = count($projects);
-			
+
 			//response array of equipments
 			$equipmentArray = [];
-			
+
 			//loop user project array get all equipment WHERE equipmentProjectID is equal
 			for($i=0; $i < $projectsSize; $i++)
 			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
-				
+				$projectID = $projects[$i]->ProjUserProjectID;
+
 				$equipment = DailyEquipmentCalibrationVw::find()
-				->where(['EquipmentProjectID' => $projectID])
-				->all();
+					->where(['EquipmentProjectID' => $projectID])
+					->all();
 				$equipmentArray = array_merge($equipmentArray, $equipment);
 			}
-			
+
 			$response->data = $equipmentArray;
 			$response->setStatusCode(200);
 			return $response;
-			
+
 		} catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
-	//return db view for equipment index
+
+	/**
+	 * View all equipment including daily calibration status
+	 *
+	 * @return Response db view for equipment index
+	 * @throws \yii\web\HttpException When an exception is thrown
+	 */
 	public function actionEquipmentView()
 	{
 		try
@@ -329,7 +272,15 @@ class EquipmentController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
+
+	/**
+	 * Accepts one or more Equipments.
+	 *
+	 * Changes the flag on each Equipment that it receives to indicate that they are accepted.
+	 *
+	 * @return Response
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionAcceptEquipment()
 	{
 		try
@@ -391,53 +342,6 @@ class EquipmentController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	public function actionGetEquipmentByManager($userID)
-	{
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
-			
-			//get all projects for manager
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-			
-			$equipment = [];
-			
-			//get all equipment associated with projects
-			for($i = 0; $i < $projectsSize; $i++)
-			{
-				$projectID = $projects[$i]->ProjUserProjectID; 
-				
-				//get project name for array key
-				$project = Project::find()
-					->where("ProjectID = $projectID")
-					->one();
-				$projectName = $project->ProjectName;
-				
-				//get equipment info
-				$newEquipment = Equipment::find()
-					->where("EquipmentProjectID = $projectID")
-					->all();
-				$equipment[$projectName] = $newEquipment;
-			}
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->setStatusCode(200);
-			$response->data = $equipment;
-			return $response;
 		}
 		catch(\Exception $e)
 		{
