@@ -34,6 +34,7 @@ class UserController extends BaseActiveController
 	
 	/**
 	* sets verb filters for http request
+	* @return an array of behaviors
 	*/
 	public function behaviors()
 	{
@@ -272,7 +273,7 @@ class UserController extends BaseActiveController
 	
 	/**
 	* The delete method is not allowed for user so the parent function is overridden to reflect that
-	* @returns json body method not allowed message
+	* @returns json body containing a method not allowed message
 	*/	
 	public function actionDelete()
 	{
