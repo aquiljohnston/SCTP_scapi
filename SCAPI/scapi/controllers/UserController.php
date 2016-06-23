@@ -50,8 +50,8 @@ class UserController extends BaseActiveController
 					'deactivate' => ['put'],
 					'get-user-dropdowns'  => ['get'],
 					'get-me'  => ['get'],
-					'get-all-projects'  => ['get'],
-					'get-all-active-users' => ['get'],
+					'get-projects'  => ['get'],
+					'get-active' => ['get'],
 					'add-user-to-project' => ['post'],
                 ],  
             ];
@@ -146,6 +146,7 @@ class UserController extends BaseActiveController
 	
 	/**
 	* Updates a user record in the database and a corresponding key record
+	* @param $id the id of a user record
 	* @returns json body of the user data
 	* @throws \yii\web\HttpException
 	*/	
@@ -472,7 +473,7 @@ class UserController extends BaseActiveController
 	* @Returns JSON of: Project Name, Project ID, Client ID
 	* @throws \yii\web\HttpException
 	*/
-	public function actionGetAllProjects($userID)
+	public function actionGetProjects($userID)
 	{
 		try
 		{
@@ -516,7 +517,7 @@ class UserController extends BaseActiveController
 	* @returns json body of users 
 	* @throws \yii\web\HttpException
 	*/
-	public function actionGetAllActiveUsers()
+	public function actionGetActive()
 	{
 		try
 		{
