@@ -10,12 +10,12 @@ use Yii;
  * @property integer $EquipmentCalibrationID
  * @property integer $EquipmentCalibrationEquipmentID
  * @property string $EquipmentCalibrationDate
- * @property integer $EquipmentCalibrationTechnician
+ * @property integer $EquipmentCalibrationTechID
  * @property string $EquipmentCalibrationComment
  * @property string $EquipmentCalibrationArchiveFlag
  * @property string $EquipmentCalibrationCreateDate
  * @property string $EquipmentCalibrationCreatedBy
- * @property string $EquipmentCalibrationMofifiedDate
+ * @property string $EquipmentCalibrationModifiedDate
  * @property string $EquipmentCalibrationModifiedBy
  */
 class EquipmentCalibration extends BaseActiveRecord
@@ -34,8 +34,8 @@ class EquipmentCalibration extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['EquipmentCalibrationID', 'EquipmentCalibrationEquipmentID', 'EquipmentCalibrationTechnician', 'EquipmentCalibrationCreatedBy', 'EquipmentCalibrationModifiedBy', 'EquipmentCalibrationArchiveFlag'], 'integer'],
-            [['EquipmentCalibrationDate', 'EquipmentCalibrationCreateDate', 'EquipmentCalibrationMofifiedDate'], 'safe'],
+            [['EquipmentCalibrationID', 'EquipmentCalibrationEquipmentID', 'EquipmentCalibrationTechID', 'EquipmentCalibrationCreatedBy', 'EquipmentCalibrationModifiedBy', 'EquipmentCalibrationArchiveFlag'], 'integer'],
+            [['EquipmentCalibrationDate', 'EquipmentCalibrationCreateDate', 'EquipmentCalibrationModifiedDate'], 'safe'],
             [['EquipmentCalibrationComment'], 'string']
         ];
     }
@@ -49,12 +49,12 @@ class EquipmentCalibration extends BaseActiveRecord
             'EquipmentCalibrationID' => 'Equipment Calibration ID',
             'EquipmentCalibrationEquipmentID' => 'Equipment Calibration Equipment ID',
             'EquipmentCalibrationDate' => 'Equipment Calibration Date',
-            'EquipmentCalibrationTechnician' => 'Equipment Calibration Technician',
+            'EquipmentCalibrationTechID' => 'Equipment Calibration TechID',
             'EquipmentCalibrationComment' => 'Equipment Calibration Comment',
 			'EquipmentCalibrationArchiveFlag' => 'Equipment Calibration Archive Flag',
             'EquipmentCalibrationCreateDate' => 'Equipment Calibration Create Date',
             'EquipmentCalibrationCreatedBy' => 'Equipment Calibration Created By',
-            'EquipmentCalibrationMofifiedDate' => 'Equipment Calibration Mofified Date',
+            'EquipmentCalibrationModifiedDate' => 'Equipment Calibration Modified Date',
             'EquipmentCalibrationModifiedBy' => 'Equipment Calibration Modified By',
         ];
     }
