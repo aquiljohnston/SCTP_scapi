@@ -55,6 +55,8 @@ class ProjectController extends BaseActiveController
 	
 	use DeleteMethodNotAllowed;
 	
+	use GetAll;
+	
 	/**
 	* Gets the data for a project based on a project id
 	* @param $id the id of a project record

@@ -69,6 +69,7 @@ class UserController extends BaseActiveController
 		unset($actions['delete']);
 		return $actions;
 	}
+	use GetAll;
 	
 	/**
 	* Creates a new user record in the database and a corresponding key record

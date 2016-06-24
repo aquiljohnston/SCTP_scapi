@@ -83,38 +83,7 @@ class BaseActiveController extends ActiveController
 		}
     }
 
-	/**
-	 * Gets all of the subclass's model's records
-	 *
-	 * @return Response The records in a JSON format
-	 * @throws \yii\web\HttpException 400 if any exceptions are thrown
-	 */
-	public function actionGetAll()
-	{
-		try
-		{
-			//set model class
-			$modelClass = $this->modelClass;
-			
-			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
-			$modelClass::setClient($headers['X-Client']);
-			
-			$models = $modelClass::find()
-				->all();
-			
-			$response = Yii::$app ->response;
-			$response -> format = Response::FORMAT_JSON;
-			$response -> data = $models;
-			
-			return $response;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
+
 
 	/**
 	 * Returns current date formatted in a standard way
