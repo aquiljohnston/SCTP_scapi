@@ -63,32 +63,9 @@ class MileageCardController extends BaseActiveController
 		return $actions;
 	}
 	
-	public function actionCreate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionUpdate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use CreateMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
 	
 	 /**
      * Displays a single MileageCard model.
@@ -115,6 +92,7 @@ class MileageCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
     }
+	
 	
 	public function actionApproveCards()
 	{

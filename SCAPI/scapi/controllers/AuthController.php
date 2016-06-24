@@ -25,43 +25,24 @@ class AuthController extends BaseActiveController
 		unset($actions['delete']);
 		return $actions;
 	}
-	
-	public function actionView($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionCreate($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionUpdate($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
+
+	// See traits subdirectory
+	use CreateMethodNotAllowed;
+	use ViewMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
+
+
+	/**
+	 * Finds a User using a provided token.
+	 *
+	 * This is done by finding the Auth that matches the token
+	 * then the User that matches the Auth's User ID.
+	 *
+	 * @param $token string The token to find the user with
+	 * @return Response A JSON representation of the User.
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionGetUserByToken($token)
     {
 		try
@@ -84,8 +65,15 @@ class AuthController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
-	} 
-	
+	}
+
+	/**
+	 * Verifies provided AuthToken against Auth
+	 * 
+	 * @param $token
+	 * @return Response Contains true or false depending on the verification.
+	 * @throws \yii\web\HttpException Throws 400 upon any Exception being thrown.
+	 */
 	public function actionValidateAuthKey($token)
 	{
 		try
@@ -95,7 +83,7 @@ class AuthController extends BaseActiveController
 			Auth::setClient($headers['X-Client']);
 			
 			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
+			$response->format = Response::FORMAT_JSON;
 			if($auth = Auth::findOne(['AuthToken'=>$token]))
 			{
 				$response->data = true;

@@ -40,23 +40,8 @@ class MileageEntryController extends BaseActiveController
 		return $actions;
 	}
 	
-	public function actionUpdate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
 	
 	public function actionView($id)
 	{

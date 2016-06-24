@@ -45,14 +45,9 @@ class EquipmentCalibrationController extends BaseActiveController
 		return $actions;
 	}
 	
-	public function actionView()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use ViewMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
 	
 	//Create a new equipment calibration record
 	public function actionCreate()
@@ -96,21 +91,4 @@ class EquipmentCalibrationController extends BaseActiveController
 		}
 	}
 	
-	public function actionUpdate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
 }

@@ -24,41 +24,10 @@ class ClientAccountsController extends BaseActiveController
 		return $actions;
 	}
 	
-	public function actionView($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionCreate($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionUpdate($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use ViewMethodNotAllowed;
+	use CreateMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
 	
 	//return a json containing pairs of ClientAccountIDs and ClientNames
 	public function actionGetClientAccountDropdowns()

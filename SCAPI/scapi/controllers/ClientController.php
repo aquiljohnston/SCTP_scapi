@@ -28,14 +28,7 @@ class ClientController extends BaseActiveController
 		return $actions;
 	}
 	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use DeleteMethodNotAllowed;
 	
 	public function actionView($id)
 	{

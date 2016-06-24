@@ -49,30 +49,7 @@ class BreadcrumbController extends BaseActiveController
 		}
 	}
 	
-	public function actionCreate($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionUpdate($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete($id)
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use CreateMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
 }
