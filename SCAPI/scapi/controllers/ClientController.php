@@ -28,8 +28,10 @@ class ClientController extends BaseActiveController
 		return $actions;
 	}
 	
+	use GetAll;
+
 	use DeleteMethodNotAllowed;
-	
+
 	public function actionView($id)
 	{
 		try
