@@ -16,16 +16,17 @@ use yii\web\Response;
  */
 class ActivityCodeController extends BaseActiveController
 {
-	public $modelClass = 'app\models\ActivityCode'; 
+	public $modelClass = 'app\models\ActivityCode';
 
+	/**
+	 * Activates VerbFilter behaviour
+	 * See documentation on behaviours at http://www.yiiframework.com/doc-2.0/guide-concept-behaviors.html
+	 * @return array An array containing behaviours
+	 */
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
 		//Implements Token Authentication to check for Auth Token in Json  Header
-		$behaviors['authenticator'] = 
-		[
-			'class' => TokenAuth::className(),
-		];
 		$behaviors['verbs'] = 
 			[
                 'class' => VerbFilter::className(),
@@ -35,54 +36,32 @@ class ActivityCodeController extends BaseActiveController
             ];
 		return $behaviors;	
 	}
-	
+
+	/**
+	 * Unsets the default actions to prevent a security hole.
+	 *
+	 * @return array An array containing the parent's actions with some removed
+	 */
 	public function actions()
 	{
 		$actions = parent::actions();
 		unset($actions['view']);
-		unset($actions['create']);
 		unset($actions['update']);
 		unset($actions['delete']);
 		return $actions;
 	}
-	
-	public function actionView()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionCreate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionUpdate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	//return a json containing pairs of EquipmentTypes
+
+	use ViewMethodNotAllowed;
+	use CreateMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
+
+	/**
+	 * Assembles all ActivityCodeTypes in an array with ActivityCodeID keys and returns them in a response
+	 *
+	 * @return Response A JSON array containing pairs of ActivityCodes
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionGetCodeDropdowns()
 	{	
 		try

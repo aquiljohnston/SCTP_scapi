@@ -46,43 +46,21 @@ class AppRolesController extends BaseActiveController
 		return $actions;
 	}
 	
-	public function actionView()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use CreateMethodNotAllowed;
+	use ViewMethodNotAllowed;
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
 	
-	public function actionCreate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionUpdate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	//return a json containing pairs of AppRoleNames
+	//return
+	/**
+	 * Route to get the dropdown
+	 * 
+	 * The pairing of equal Strings for both key and value is done because the front end expects
+	 * an associative array. We use the display name as the key for convenience.
+	 *
+	 * @return Response A JSON associative array containing pairs of AppRoleNames
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionGetRolesDropdowns()
 	{	
 		try
@@ -100,7 +78,7 @@ class AppRolesController extends BaseActiveController
 			{
 				$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
 			}
-				
+			
 			
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;

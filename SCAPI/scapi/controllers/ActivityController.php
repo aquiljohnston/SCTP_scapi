@@ -19,8 +19,13 @@ use yii\web\Response;
  */
 class ActivityController extends BaseActiveController
 {
-    public $modelClass = 'app\models\Activity'; 
+    public $modelClass = 'app\models\Activity';
 
+	/**
+	 * Unsets the default actions so that we can override them
+	 *
+	 * @return array An array containing the parent's actions with some removed
+	 */
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -29,7 +34,14 @@ class ActivityController extends BaseActiveController
 		unset($actions['delete']);
 		return $actions;
 	}
-	
+
+	/**
+	 * Finds an Activity based on ID
+	 * @param $id ID of the Activity to find
+	 *
+	 * @return Response JSON
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionView($id)
 	{
 		try
@@ -50,25 +62,17 @@ class ActivityController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
-	public function actionUpdate()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
 
+	use UpdateMethodNotAllowed;
+	use DeleteMethodNotAllowed;
+
+	/**
+	 * Creates Activities from the contents of POST data.
+	 * Creates MileageEntries and TimeEntries for each activity if provided.
+	 *
+	 * @return \yii\console\Response|Response
+	 * @throws \yii\web\HttpException
+	 */
 	public function actionCreate()
 	{
 		try
@@ -83,8 +87,6 @@ class ActivityController extends BaseActiveController
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
-			
-			//parse the individual arrays of the input json
 			$activityArray = $data["activity"];
 			
 			//create and format response json
@@ -136,7 +138,7 @@ class ActivityController extends BaseActiveController
 						$data["activity"][$i]["timeEntry"] = array();
 						$data["activity"][$i]["mileageEntry"] = array();
 						
-						//add activityID to corrosponding time entries
+						//add activityID to corresponding time entries
 						if($timeLength > 0)
 						{
 							for($t = 0; $t < $timeLength; $t++)
@@ -144,7 +146,7 @@ class ActivityController extends BaseActiveController
 								$timeArray[$t]["TimeEntryActivityID"] = $activityArray[$i]["ActivityID"];
 								$timeEntry = new TimeEntry();
 								$timeEntry->attributes = $timeArray[$t];
-								$timeEntry-> TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
+								$timeEntry->TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
 								$timeEntry->TimeEntryCreateDate = Parent::getDate();
 								if($timeEntry->save())
 									{
@@ -161,7 +163,7 @@ class ActivityController extends BaseActiveController
 									}
 							}
 						}
-						//add activityID to corrosponding mileage entries
+						//add activityID to corresponding mileage entries
 						if($mileageLength > 0)
 						{
 							for($m = 0; $m < $mileageLength; $m++)
@@ -169,7 +171,7 @@ class ActivityController extends BaseActiveController
 								$mileageArray[$m]["MileageEntryActivityID"]= $activityArray[$i]["ActivityID"];
 								$mileageEntry = new MileageEntry();
 								$mileageEntry->attributes = $mileageArray[$m];
-								$mileageEntry-> MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
+								$mileageEntry->MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
 								$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 								if($mileageEntry->save())
 									{

@@ -82,7 +82,13 @@ class BaseActiveController extends ActiveController
 			throw new \yii\web\HttpException(400);
 		}
     }
-	
+
+	/**
+	 * Gets all of the subclass's model's records
+	 *
+	 * @return Response The records in a JSON format
+	 * @throws \yii\web\HttpException 400 if any exceptions are thrown
+	 */
 	public function actionGetAll()
 	{
 		try
@@ -109,7 +115,12 @@ class BaseActiveController extends ActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
+
+	/**
+	 * Returns current date formatted in a standard way
+	 *
+	 * @return bool|string Formatted current date
+	 */
 	public function getDate()
 	{
 		return date('Y-m-d H:i:s');

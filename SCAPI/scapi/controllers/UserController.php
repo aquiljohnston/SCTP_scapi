@@ -272,18 +272,7 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	/**
-	* The delete method is not allowed for user so the parent function is overridden to reflect that
-	* @returns json body containing a method not allowed message
-	*/	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
+	use DeleteMethodNotAllowed;
 	
 	/**
 	* Updates the active flag of a user to 0 for inactive

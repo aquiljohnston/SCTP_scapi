@@ -53,19 +53,8 @@ class ProjectController extends BaseActiveController
 		return $actions;
 	}
 	
-	/**
-	* The delete method is not allowed for user so the parent function is overridden to reflect that
-	* @returns json body containing a method not allowed message
-	*/	
-	public function actionDelete()
-	{
-		$response = Yii::$app->response;
-		$response ->format = Response::FORMAT_JSON;
-		$response->data = "Method Not Allowed";
-		$response->setStatusCode(405);
-		return $response;
-	}
-
+	use DeleteMethodNotAllowed;
+	
 	/**
 	* Gets the data for a project based on a project id
 	* @param $id the id of a project record
