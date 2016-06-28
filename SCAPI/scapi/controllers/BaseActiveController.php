@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use app\models\BaseActiveRecord;
+use app\models\SCUser;
 use app\authentication\TokenAuth;
 use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
@@ -23,6 +24,11 @@ class BaseActiveController extends ActiveController
 		return $actions;
 	}
 	
+	/**
+	* sets authenticator for token authentication
+	* sets verb filters for http request
+	* @return an array of behaviors
+	*/
    public function behaviors()
     {
 		$behaviors = parent::behaviors();
@@ -44,6 +50,11 @@ class BaseActiveController extends ActiveController
 		return $behaviors;
 	}
 
+	/**
+	* Creates a record for the sub class's model
+	* @returns json body of the model data
+	* @throws \yii\web\HttpException
+	*/
 	public function actionCreate()
     {
 		try
@@ -93,5 +104,19 @@ class BaseActiveController extends ActiveController
 	public function getDate()
 	{
 		return date('Y-m-d H:i:s');
+	}
+	
+	public function can($token, $permissionName)
+	{
+		$user = SCUser::findIdentityByAccessToken($token);
+		$userID = $user->UserID;
+		
+		if (($manager = Yii::$app->getAuthManager()) === null) {
+            return false;
+        }
+		
+        $access = $manager->checkAccess($userID, $permissionName);
+		
+		return $access;
 	}
 }

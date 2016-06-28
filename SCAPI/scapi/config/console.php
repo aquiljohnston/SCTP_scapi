@@ -14,6 +14,9 @@ return [
         'gii' => 'yii\gii\Module',
     ],
     'components' => [
+		'authManager' => [
+            'class' => 'app\rbac\ScDbManager',
+        ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],

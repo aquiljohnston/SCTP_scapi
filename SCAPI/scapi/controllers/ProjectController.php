@@ -55,8 +55,6 @@ class ProjectController extends BaseActiveController
 	
 	use DeleteMethodNotAllowed;
 	
-	use GetAll;
-	
 	/**
 	* Gets the data for a project based on a project id
 	* @param $id the id of a project record
@@ -83,6 +81,41 @@ class ProjectController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	} 
+	
+	/**
+	* Gets all of the subclass's model's records
+	*
+	* @return Response The records in a JSON format
+	* @throws \yii\web\HttpException 400 if any exceptions are thrown
+	*/
+    public function actionGetAll()
+    {
+		$token = Yii::$app->request->getAuthUser();
+		if(parent::can($token, 'projectGetAll'))
+		{
+			try
+			{
+				//set db target
+				$headers = getallheaders();
+				Project::setClient($headers['X-Client']);
+
+				$projects = Project::find()
+					->all();
+
+				$response = Yii::$app ->response;
+				$response -> format = Response::FORMAT_JSON;
+				$response -> data = $projects;
+
+				return $response;
+			}
+			catch(\Exception $e)
+			{
+				throw new \yii\web\HttpException(400);
+			}
+		} else{
+			throw new \yii\web\HttpException(403);
+		}
+    }
 	
 	/**
 	* Creates a new project record in the database
