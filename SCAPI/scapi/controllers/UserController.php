@@ -112,28 +112,45 @@ class UserController extends BaseActiveController
 			//hash pass with bcrypt
 			$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 			
-			//create row in the db to hold the hashedPass
-			$keyData = new Key();
-			$keyData->Key1 = $hashedPass;
-			$keyData-> save();
+			//begin a transaction to save all user related data
+			$transaction = Yii::$app->db->beginTransaction();
 			
-			//Replace the encoded pass with the ID for the new KeyTb row
-			$data["UserKey"] = $keyData -> KeyID;
-			
-			//maps the data to a new user model and save
-			$model = new SCUser();
-			$model->attributes = $data;  
-			
-			//created date
-			$model->UserCreatedDate = Parent::getDate();
-			
-			if($model-> save())
-			{
-				$response->setStatusCode(201);
-				$response->data = $model;
+			try{
+				//create row in the db to hold the hashedPass
+				$keyData = new Key();
+				$keyData->Key1 = $hashedPass;
+				$keyData-> save();
+				
+				//Replace the encoded pass with the ID for the new KeyTb row
+				$data["UserKey"] = $keyData -> KeyID;
+				
+				//maps the data to a new user model and save
+				$user = new SCUser();
+				$user->attributes = $data;  
+				
+				//created date
+				$user->UserCreatedDate = Parent::getDate();
+				
+				if($user-> save())
+				{
+					//assign rbac role
+					$auth = Yii::$app->authManager;
+					if($userRole = $auth->getRole($user["UserAppRoleType"]))
+					{
+						$auth->assign($userRole, $user["UserID"]);
+					}
+					$response->setStatusCode(201);
+					$response->data = $user;
+				}
+				else{
+					throw new \yii\web\HttpException(400);
+				}
+				
+				$transaction->commit();
 			}
-			else
+			catch(Exception $e)
 			{
+				$transaction->rollBack();
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 			}
@@ -163,8 +180,8 @@ class UserController extends BaseActiveController
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
 			
-			//get model to be updated
-			$model = SCUser::findOne($id);
+			//get user model to be updated
+			$user = SCUser::findOne($id);
 			
 			//iv and key for openssl
 			$iv = "abcdefghijklmnop";
@@ -174,66 +191,85 @@ class UserController extends BaseActiveController
 			$options = [
 				'cost' => 12,
 			];
-			//handle the password
-			//get pass from data
-			if(array_key_exists("UserKey", $data))
-			{
-				$securedPass = $data["UserKey"];
-				//decode the base 64 encoding
-				$decodedPass = base64_decode($securedPass);
-				//decrypt with openssl using the key and iv
-				$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
-				
-				//check if new passowrd
-				if($decryptedPass != $model->UserKey)
+			
+			//begin a transaction to save all user related data
+			$transaction = Yii::$app->db->beginTransaction();
+			
+			try{
+				//handle the password
+				//get pass from data
+				if(array_key_exists("UserKey", $data))
 				{
-					//hash pass with bcrypt
-					$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
+					$securedPass = $data["UserKey"];
+					//decode the base 64 encoding
+					$decodedPass = base64_decode($securedPass);
+					//decrypt with openssl using the key and iv
+					$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
 					
-					//create row in the db to hold the hashedPass
-					$keyData = Key::findOne($model->UserKey);
-					$keyData->Key1 = $hashedPass;
-					if(array_key_exists("UserCreatedBy", $data))
+					//check if new password
+					if($decryptedPass != $user->UserKey)
 					{
-						$keyData->KeyCreatedBy = $data["UserCreatedBy"];
+						//hash pass with bcrypt
+						$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
+						
+						//create row in the db to hold the hashedPass
+						$keyData = Key::findOne($user->UserKey);
+						$keyData->Key1 = $hashedPass;
+						if(array_key_exists("UserCreatedBy", $data))
+						{
+							$keyData->KeyCreatedBy = $data["UserCreatedBy"];
+						}
+						else
+						{
+							$response->setStatusCode(400);
+							$response->data = "Http:400 Bad Request";
+						}
+						if($keyData-> update())
+						{
+							//Replace the encoded pass with the ID for the new KeyTb row
+							$data["UserKey"] = $keyData -> KeyID;
+						}
+						else
+						{
+							$response->setStatusCode(400);
+							$response->data = "Http:400 Bad Request";
+						}
 					}
 					else
 					{
-						$response->setStatusCode(400);
-						$response->data = "Http:400 Bad Request";
-					}
-					if($keyData-> update())
-					{
-						//Replace the encoded pass with the ID for the new KeyTb row
-						$data["UserKey"] = $keyData -> KeyID;
-					}
-					else
-					{
-						$response->setStatusCode(400);
-						$response->data = "Http:400 Bad Request";
+						$data["UserKey"] = $decryptedPass;
 					}
 				}
-				else
+				
+				//pass new data to user
+				$user->attributes = $data;  
+				
+				$response = Yii::$app->response;
+				$response ->format = Response::FORMAT_JSON;
+				
+				$user->UserModifiedDate = Parent::getDate();
+				
+				if($user-> update())
 				{
-					$data["UserKey"] = $decryptedPass;
+					//handle potential role change
+					$auth = Yii::$app->authManager;
+					if($userRole = $auth->getRole($user["UserAppRoleType"]))
+					{
+						$auth->revokeAll($user["UserID"]);
+						$auth->assign($userRole, $user["UserID"]);
+					}
+					$response->setStatusCode(201);
+					$response->data = $user; 
 				}
+				else{
+					throw new \yii\web\HttpException(400);
+				}
+					
+				$transaction->commit();
 			}
-			
-			//pass new data to model
-			$model->attributes = $data;  
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			
-			$model->UserModifiedDate = Parent::getDate();
-			
-			if($model-> update())
+			catch(Exception $e)
 			{
-				$response->setStatusCode(201);
-				$response->data = $model; 
-			}
-			else
-			{
+				$transaction->rollBack();
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 			}
@@ -290,20 +326,23 @@ class UserController extends BaseActiveController
 			SCUser::setClient($headers['X-Client']);
 			
 			//get user to be deactivated
-			$model = SCUser::findOne($userID);
+			$user = SCUser::findOne($userID);
 			
-			//pass new data to model
-			$model->UserActiveFlag = 0;  
+			//pass new data to user model
+			$user->UserActiveFlag = 0;  
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			$model->UserModifiedDate = Parent::getDate();
+			$user->UserModifiedDate = Parent::getDate();
 			
-			if($model-> update())
+			if($user-> update())
 			{
+				//revoke permissions
+				$auth = Yii::$app->authManager;
+				$auth->revokeAll($user["UserID"]);
 				$response->setStatusCode(200);
-				$response->data = $model; 
+				$response->data = $user; 
 			}
 			else
 			{

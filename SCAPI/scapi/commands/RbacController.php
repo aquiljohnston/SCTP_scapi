@@ -113,6 +113,12 @@ class RbacController extends Controller
 		$equipmentCalibrationCreate->description = 'Creates a new equipment calibration record';
 		$auth->add($equipmentCalibrationCreate);
 		
+		//Equipment Condition permissions/////////////////////////////////////////////////////////////////
+		//add "equipmentConditionGetDropdown" permission
+		$equipmentConditionGetDropdown = $auth->createPermission('equipmentConditionGetDropdown');
+		$equipmentConditionGetDropdown->description = 'Get an associative array of equipment conditions';
+		$auth->add($equipmentConditionGetDropdown);
+		
 		//Equipment permissions/////////////////////////////////////////////////////////////////
         // add "getEquipment" permission
         $getEquipment = $auth->createPermission('getEquipment');
@@ -352,6 +358,7 @@ class RbacController extends Controller
 		$auth->add($engineer);
 		//add permissions
 		$auth->addChild($engineer, $clientGetDropdown);
+		$auth->addChild($engineer, $equipmentConditionGetDropdown);
 		$auth->addChild($engineer, $equipmentView);
 		$auth->addChild($engineer, $equipmentCreate);
 		$auth->addChild($engineer, $equipmentUpdate);
@@ -374,6 +381,7 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $appRoleGetDropdown);
 		$auth->addChild($supervisor, $clientGetDropdown);
 		$auth->addChild($supervisor, $employeeTypeGetDropdown);
+		$auth->addChild($supervisor, $equipmentConditionGetDropdown);
 		$auth->addChild($supervisor, $equipmentView);
 		$auth->addChild($supervisor, $equipmentUpdate);
 		$auth->addChild($supervisor, $equipmentDelete);
