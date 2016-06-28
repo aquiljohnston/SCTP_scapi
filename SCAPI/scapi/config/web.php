@@ -27,6 +27,9 @@ $config = [
 			//'authTimeout' => 15,
 			'loginUrl' => null
         ],
+		'authManager' => [
+            'class' => 'app\rbac\ScDbManager',
+        ],
         'errorHandler' => [
             //'errorAction' => 'site/error',
         ],
