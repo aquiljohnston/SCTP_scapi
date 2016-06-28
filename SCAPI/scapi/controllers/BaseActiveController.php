@@ -106,8 +106,11 @@ class BaseActiveController extends ActiveController
 		return date('Y-m-d H:i:s');
 	}
 	
-	public function can($token, $permissionName)
+	public function can($permissionName, $token = null)
 	{
+		if($token === null) {
+			$token = Yii::$app->request->getAuthUser();
+		}
 		$user = SCUser::findIdentityByAccessToken($token);
 		$userID = $user->UserID;
 		
