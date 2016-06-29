@@ -298,11 +298,9 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($userID, $isAdmin, $week)
+	public function actionGetCards($userID, $week)
 	{
-		// RBAC permission check
-		PermissionsController::requirePermission('timeCardGetCards');
-		
+		// RBAC permission check is embedded in this action	
 		try
 		{
 			//set db target headers
@@ -318,8 +316,8 @@ class TimeCardController extends BaseActiveController
 			//response array of time cards
 			$timeCardArray = [];
 			
-			//check if user is admin, admins will not limited by project
-			if($isAdmin == "true")
+			//rbac permission check
+			if (PermissionsController::can('timeCardGetAllCards'))
 			{
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
@@ -338,8 +336,8 @@ class TimeCardController extends BaseActiveController
 					$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
 				}
 			} 
-			//non-admin users will have their results filtered by associated projects	
-			else		
+			//rbac permission check	
+			elseif (PermissionsController::can('timeCardGetOwnCards'))	
 			{
 				//get user project relations array
 				$projects = ProjectUser::find()
@@ -374,6 +372,9 @@ class TimeCardController extends BaseActiveController
 						$timeCardArray = array_merge($timeCardArray, $timeCards);
 					}
 				}
+			}
+			else{
+				throw new ForbiddenHttpException;
 			}
 			if (!empty($timeCardArray))
 			{
