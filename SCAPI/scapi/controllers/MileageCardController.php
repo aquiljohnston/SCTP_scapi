@@ -300,11 +300,9 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($userID, $isAdmin, $week)
+	public function actionGetCards($userID, $week)
 	{
-		// RBAC permission check
-		PermissionsController::requirePermission('mileageCardGetCards');
-		
+		// RBAC permission check is embedded in this action	
 		try
 		{
 			//set db target headers
@@ -320,8 +318,8 @@ class MileageCardController extends BaseActiveController
 			//response array of mileage cards
 			$mileageCardArray = [];
 			
-			//check if user is admin, admins will not limited by project
-			if($isAdmin == "true")
+			//rbac permission check
+			if (PermissionsController::can('mileageCardGetAllCards'))
 			{
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
@@ -341,8 +339,8 @@ class MileageCardController extends BaseActiveController
 					$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
 				}
 			} 
-			//non-admin users will have their results filtered by associated projects	
-			else		
+			//rbac permission check
+			if (PermissionsController::can('mileageCardGetOwnCards'))		
 			{
 				//get user project relations array
 				$projects = ProjectUser::find()
@@ -377,6 +375,9 @@ class MileageCardController extends BaseActiveController
 						$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
 					}
 				}
+			}
+			else{
+				throw new ForbiddenHttpException;
 			}
 			if (!empty($mileageCardArray))
 			{
