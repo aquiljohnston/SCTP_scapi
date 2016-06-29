@@ -81,10 +81,10 @@ class RbacController extends Controller
         $clientGetAll->description = 'Get an array of all clients';
         $auth->add($clientGetAll);
 		
-		// add "cientView" permission
-        $cientView = $auth->createPermission('cientView');
-        $cientView->description = 'View a client';
-        $auth->add($cientView);
+		// add "clientView" permission
+        $clientView = $auth->createPermission('clientView');
+        $clientView->description = 'View a client';
+        $auth->add($clientView);
 		
 		// add "clientCreate" permission
         $clientCreate = $auth->createPermission('clientCreate');
@@ -120,10 +120,15 @@ class RbacController extends Controller
 		$auth->add($equipmentConditionGetDropdown);
 		
 		//Equipment permissions/////////////////////////////////////////////////////////////////
-        // add "getEquipment" permission
-        $getEquipment = $auth->createPermission('getEquipment');
-        $getEquipment->description = 'Get equipment';
-        $auth->add($getEquipment);
+        // add "getOwnEquipment" permission
+        $getOwnEquipment = $auth->createPermission('getOwnEquipment');
+        $getOwnEquipment->description = 'Get equipment for associated projects';
+        $auth->add($getOwnEquipment);
+		
+		// add "getAllEquipment" permission
+        $getAllEquipment = $auth->createPermission('getAllEquipment');
+        $getAllEquipment->description = 'Get all equipment';
+        $auth->add($getAllEquipment);
 		
 		// add "equipmentView" permission
         $equipmentView = $auth->createPermission('equipmentView');
@@ -163,10 +168,15 @@ class RbacController extends Controller
 		$auth->add($equipmentTypeGetDropdown);
 		
 		//Mileage Card permissions/////////////////////////////////////////////////////////////////
-        // add "mileageCardGetCards" permission
-        $mileageCardGetCards = $auth->createPermission('mileageCardGetCards');
-        $mileageCardGetCards->description = 'Get an array of mileage cards';
-        $auth->add($mileageCardGetCards);
+        // add "mileageCardGetOwnCards" permission
+        $mileageCardGetOwnCards = $auth->createPermission('mileageCardGetOwnCards');
+        $mileageCardGetOwnCards->description = 'Get an array of mileage cards for associated projects';
+        $auth->add($mileageCardGetOwnCards);
+		
+		// add "mileageCardGetAllCards" permission
+        $mileageCardGetAllCards = $auth->createPermission('mileageCardGetAllCards');
+        $mileageCardGetAllCards->description = 'Get an array of all mileage cards';
+        $auth->add($mileageCardGetAllCards);
 		
 		// add "mileageCardView" permission
         $mileageCardView = $auth->createPermission('mileageCardView');
@@ -259,10 +269,15 @@ class RbacController extends Controller
         $auth->add($stateCodeGetDropdown);
 		
 		//Time Card permissions/////////////////////////////////////////////////////////////////
-        // add "timeCardGetCards" permission
-        $timeCardGetCards = $auth->createPermission('timeCardGetCards');
-        $timeCardGetCards->description = 'Get an array of multiple time cards';
-        $auth->add($timeCardGetCards);
+        // add "timeCardGetOwnCards" permission
+        $timeCardGetOwnCards = $auth->createPermission('timeCardGetOwnCards');
+        $timeCardGetOwnCards->description = 'Get an array of multiple time cards for associated projects';
+        $auth->add($timeCardGetOwnCards);
+		
+		// add "timeCardGetAllCards" permission
+        $timeCardGetAllCards = $auth->createPermission('timeCardGetAllCards');
+        $timeCardGetAllCards->description = 'Get an array of all time cards';
+        $auth->add($timeCardGetAllCards);
 		
 		// add "timeCardView" permission
         $timeCardView = $auth->createPermission('timeCardView');
@@ -363,7 +378,7 @@ class RbacController extends Controller
 		$auth->addChild($engineer, $equipmentCreate);
 		$auth->addChild($engineer, $equipmentUpdate);
 		$auth->addChild($engineer, $equipmentDelete);
-		$auth->addChild($engineer, $getEquipment);
+		$auth->addChild($engineer, $getAllEquipment);
 		$auth->addChild($engineer, $acceptEquipment);
 		$auth->addChild($engineer, $equipmentStatusGetDropdown);
 		$auth->addChild($engineer, $equipmentTypeGetDropdown);
@@ -385,26 +400,27 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $equipmentView);
 		$auth->addChild($supervisor, $equipmentUpdate);
 		$auth->addChild($supervisor, $equipmentDelete);
-		$auth->addChild($supervisor, $getEquipment);
+		$auth->addChild($supervisor, $getOwnEquipment);
 		$auth->addChild($supervisor, $acceptEquipment);
 		$auth->addChild($supervisor, $equipmentStatusGetDropdown);
 		$auth->addChild($supervisor, $equipmentTypeGetDropdown);
 		$auth->addChild($supervisor, $mileageCardView);
 		$auth->addChild($supervisor, $mileageCardApprove);
 		$auth->addChild($supervisor, $mileageCardGetEntries);
-		$auth->addChild($supervisor, $mileageCardGetCards);
+		$auth->addChild($supervisor, $mileageCardGetOwnCards);
 		$auth->addChild($supervisor, $mileageEntryView);
 		$auth->addChild($supervisor, $mileageEntryCreate);
 		$auth->addChild($supervisor, $mileageEntryDeactivate);
 		$auth->addChild($supervisor, $notificationsGet);
 		$auth->addChild($supervisor, $payCodeGetDropdown);
+		$auth->addChild($supervisor, $projectView);
 		$auth->addChild($supervisor, $projectGetDropdown);
 		$auth->addChild($supervisor, $projectGetUserRelationships);
 		$auth->addChild($supervisor, $projectAddRemoveUsers);
 		$auth->addChild($supervisor, $timeCardView);
 		$auth->addChild($supervisor, $timeCardApproveCards);
 		$auth->addChild($supervisor, $timeCardGetEntries);
-		$auth->addChild($supervisor, $timeCardGetCards);
+		$auth->addChild($supervisor, $timeCardGetOwnCards);
 		$auth->addChild($supervisor, $timeEntryView);
 		$auth->addChild($supervisor, $timeEntryCreate);
 		$auth->addChild($supervisor, $timeEntryDeactivate);
@@ -431,15 +447,16 @@ class RbacController extends Controller
 		//add permissions
 		$auth->addChild($admin, $activityView);
 		$auth->addChild($admin, $clientAccountsGetDropdown);
-		$auth->addChild($admin, $cientView);
+		$auth->addChild($admin, $clientView);
 		$auth->addChild($admin, $clientCreate);
 		$auth->addChild($admin, $clientUpdate);
 		$auth->addChild($admin, $clientGetAll);
 		$auth->addChild($admin, $projectGetAll);
-		$auth->addChild($admin, $projectView);
 		$auth->addChild($admin, $projectCreate);
 		$auth->addChild($admin, $projectUpdate);
 		$auth->addChild($admin, $stateCodeGetDropdown);
+		$auth->addChild($admin, $mileageCardGetAllCards);
+		$auth->addChild($admin, $timeCardGetAllCards);
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
