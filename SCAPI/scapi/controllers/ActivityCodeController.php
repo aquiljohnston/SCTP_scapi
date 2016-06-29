@@ -63,7 +63,10 @@ class ActivityCodeController extends BaseActiveController
 	 * @throws \yii\web\HttpException
 	 */
 	public function actionGetCodeDropdowns()
-	{	
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('activityCodeGetDropdown');
+
 		try
 		{
 			//set db target

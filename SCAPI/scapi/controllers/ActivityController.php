@@ -44,6 +44,9 @@ class ActivityController extends BaseActiveController
 	 */
 	public function actionView($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('activityView');
+		
 		try
 		{
 			//set db target
@@ -75,6 +78,9 @@ class ActivityController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('activityCreate');
+		
 		try
 		{
 			//set db target

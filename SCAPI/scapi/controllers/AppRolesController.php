@@ -62,7 +62,11 @@ class AppRolesController extends BaseActiveController
 	 * @throws \yii\web\HttpException
 	 */
 	public function actionGetRolesDropdowns()
-	{	
+	{
+		// RBAC permission check
+		
+		
+		PermissionsController::requirePermission('appRoleGetDropdown');
 		try
 		{
 			//set db target

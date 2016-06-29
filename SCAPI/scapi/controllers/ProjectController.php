@@ -63,6 +63,9 @@ class ProjectController extends BaseActiveController
 	*/	
 	public function actionView($id)
     {
+		// RBAC permission check
+		PermissionsController::requirePermission('projectView');
+
 		try
 		{
 			//set db target
@@ -90,30 +93,27 @@ class ProjectController extends BaseActiveController
 	*/
     public function actionGetAll()
     {
-		$token = Yii::$app->request->getAuthUser();
-		if(parent::can($token, 'projectGetAll'))
+		// RBAC permission check
+		PermissionsController::requirePermission('projectGetAll');
+		
+		try
 		{
-			try
-			{
-				//set db target
-				$headers = getallheaders();
-				Project::setClient($headers['X-Client']);
+			//set db target
+			$headers = getallheaders();
+			Project::setClient($headers['X-Client']);
 
-				$projects = Project::find()
-					->all();
+			$projects = Project::find()
+				->all();
 
-				$response = Yii::$app ->response;
-				$response -> format = Response::FORMAT_JSON;
-				$response -> data = $projects;
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $projects;
 
-				return $response;
-			}
-			catch(\Exception $e)
-			{
-				throw new \yii\web\HttpException(400);
-			}
-		} else{
-			throw new \yii\web\HttpException(403);
+			return $response;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
 		}
     }
 	
@@ -124,6 +124,9 @@ class ProjectController extends BaseActiveController
 	*/	
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectCreate');
+
 		try
 		{
 			//set db target
@@ -169,6 +172,9 @@ class ProjectController extends BaseActiveController
 	*/	
 	public function actionUpdate($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectUpdate');
+
 		try
 		{
 			//set db target
@@ -212,7 +218,10 @@ class ProjectController extends BaseActiveController
 	* @throws \yii\web\HttpException
 	*/
 	public function actionGetProjectDropdowns()
-	{	
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectGetDropdown');
+
 		try
 		{
 			//set db target
@@ -251,6 +260,9 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionGetUserRelationships($projectID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectGetUserRelationships');
+
 		try
 		{
 			//set db target
@@ -322,6 +334,9 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionAddRemoveUsers($projectID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectAddRemoveUsers');
+
 		try
 		{
 			//set db target

@@ -66,14 +66,18 @@ class TimeCardController extends BaseActiveController
 	use CreateMethodNotAllowed;
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
-	
-		 /**
-     * Displays a single TimeCard model.
-     * @param integer $id
-     * @return mixed
-     */
+
+	/**
+	 * Displays a single TimeCard model.
+	 * @param integer $id
+	 * @return mixed
+	 * @throws \yii\web\HttpException
+	 */
     public function actionView($id)
     {
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardView');
+
 		try
 		{
 			//set db target
@@ -95,6 +99,8 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionApproveCards()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardApproveCards');
 		try
 		{
 			//set db target
@@ -164,6 +170,9 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionGetEntries($cardID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardGetEntries');
+		
 		try
 		{
 			//set db target
@@ -259,6 +268,9 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionGetCard($userID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardGetCard');
+		
 		try
 		{
 			//set db target
@@ -288,6 +300,9 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionGetCards($userID, $isAdmin, $week)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardGetCards');
+		
 		try
 		{
 			//set db target headers

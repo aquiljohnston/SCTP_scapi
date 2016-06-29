@@ -59,6 +59,9 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionView($id)
     {
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentView');
+
 		try
 		{
 			$response = Yii::$app->response;
@@ -94,6 +97,9 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentCreate');
+
 		try
 		{
 			//set db target
@@ -139,6 +145,9 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionUpdate($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentUpdate');
+
 		try
 		{
 			//set db target
@@ -199,6 +208,9 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionViewAllByUserByProject($userID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('');
+
 		try{
 			//set db target
 			$headers = getallheaders();
@@ -246,6 +258,9 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionEquipmentView()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentView');
+
 		try
 		{
 			//set db target
@@ -283,6 +298,9 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionAcceptEquipment()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('acceptEquipment');
+
 		try
 		{
 			//set db target
