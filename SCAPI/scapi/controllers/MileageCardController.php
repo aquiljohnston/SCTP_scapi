@@ -76,6 +76,9 @@ class MileageCardController extends BaseActiveController
     {
 		try
 		{
+			// RBAC permission check
+			PermissionsController::requirePermission('mileageCardView');
+			
 			//set db target
 			$headers = getallheaders();
 			MileageCard::setClient($headers['X-Client']);
@@ -96,6 +99,9 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionApproveCards()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardApprove');
+		
 		try
 		{
 			//set db target
@@ -166,6 +172,9 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionGetEntries($cardID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardGetEntries');
+		
 		try
 		{
 			//set db target
@@ -261,6 +270,9 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionGetCard($userID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardGetCard');
+		
 		try
 		{
 			//set db target
@@ -290,6 +302,9 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionGetCards($userID, $isAdmin, $week)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardGetCards');
+		
 		try
 		{
 			//set db target headers

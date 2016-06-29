@@ -5,11 +5,8 @@ namespace app\controllers;
 use Yii;
 use app\models\Client;
 use app\models\SCUser;
-use app\controllers\BaseActiveController;
-use yii\data\ActiveDataProvider;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
+use app\models\BaseActiveRecord;
 
 /**
  * ClientController implements the CRUD actions for Client model.
@@ -27,13 +24,47 @@ class ClientController extends BaseActiveController
 		unset($actions['delete']);
 		return $actions;
 	}
-	
-	use GetAll;
+
+	/**
+	 * Gets all of the class's model's records
+	 *
+	 * @return Response The records in a JSON format
+	 * @throws \yii\web\HttpException 400 if any exceptions are thrown
+	 */
+	public function actionGetAll()
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientGetAll');
+		
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			Client::setClient($headers['X-Client']);
+
+			$models = Client::find()
+				->all();
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $models;
+
+			return $response;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
 
 	use DeleteMethodNotAllowed;
 
 	public function actionView($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientView');
+		
 		try
 		{
 			//set db target
@@ -56,6 +87,9 @@ class ClientController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientCreate');
+		
 		try
 		{
 			//set db target
@@ -95,6 +129,9 @@ class ClientController extends BaseActiveController
 	
 	public function actionUpdate($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientUpdate');
+		
 		try
 		{
 			//set db target
@@ -135,7 +172,10 @@ class ClientController extends BaseActiveController
 	
 	//return a json containing pairs of ClientID and ClientName
 	public function actionGetClientDropdowns()
-	{	
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientGetDropdown');
+		
 		try
 		{
 			//set db target

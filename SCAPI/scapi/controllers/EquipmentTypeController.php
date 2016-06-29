@@ -34,7 +34,10 @@ class EquipmentTypeController extends BaseActiveController
 	
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetTypeDropdowns()
-	{	
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentTypeGetDropdown');
+		
 		try
 		{
 			//set db target

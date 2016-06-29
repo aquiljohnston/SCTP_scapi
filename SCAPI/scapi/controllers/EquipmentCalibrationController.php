@@ -52,6 +52,9 @@ class EquipmentCalibrationController extends BaseActiveController
 	//Create a new equipment calibration record
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentCalibrationCreate');
+		
 		try
 		{
 			//set db target

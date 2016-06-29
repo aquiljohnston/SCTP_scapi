@@ -45,6 +45,9 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageEntryView');
+
 		try
 		{
 			//set db target
@@ -67,6 +70,9 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageEntryCreate');
+
 		try
 		{
 			//set db target
@@ -106,6 +112,9 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionDeactivate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('');
+
 		try
 		{
 			//set db target

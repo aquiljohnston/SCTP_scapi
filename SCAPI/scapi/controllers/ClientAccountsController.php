@@ -31,7 +31,10 @@ class ClientAccountsController extends BaseActiveController
 	
 	//return a json containing pairs of ClientAccountIDs and ClientNames
 	public function actionGetClientAccountDropdowns()
-	{	
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientAccountsGetDropdown');
+		
 		try
 		{
 			//set db target

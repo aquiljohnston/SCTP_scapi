@@ -8,6 +8,7 @@ use app\models\SCUser;
 use app\authentication\TokenAuth;
 use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -106,20 +107,13 @@ class BaseActiveController extends ActiveController
 		return date('Y-m-d H:i:s');
 	}
 	
-	public function can($permissionName, $token = null)
+	
+	public function getUserFromToken($token = null)
 	{
-		if($token === null) {
+		if ($token === null) {
 			$token = Yii::$app->request->getAuthUser();
 		}
-		$user = SCUser::findIdentityByAccessToken($token);
-		$userID = $user->UserID;
-		
-		if (($manager = Yii::$app->getAuthManager()) === null) {
-            return false;
-        }
-		
-        $access = $manager->checkAccess($userID, $permissionName);
-		
-		return $access;
+		return SCUser::findIdentityByAccessToken($token);
 	}
+
 }

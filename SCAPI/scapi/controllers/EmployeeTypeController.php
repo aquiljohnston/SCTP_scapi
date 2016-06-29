@@ -34,7 +34,10 @@ class EmployeeTypeController extends BaseActiveController
 	
 	//return a json containing pairs of EmployeeTypes
 	public function actionGetTypeDropdowns()
-	{	
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('employeeTypeGetDropdown');
+
 		try
 		{
 			//set db target

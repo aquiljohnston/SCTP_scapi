@@ -45,6 +45,9 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeEntryView');
+		
 		try
 		{
 			//set db target
@@ -66,6 +69,9 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeEntryCreate');
+		
 		try
 		{
 			//set db target
@@ -105,6 +111,9 @@ class TimeEntryController extends BaseActiveController
 	
 	public function actionDeactivate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeEntryDeactivate');
+		
 		try{
 			//set db target
 			$headers = getallheaders();
