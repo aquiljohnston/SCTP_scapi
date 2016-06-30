@@ -330,11 +330,41 @@ class RbacController extends Controller
         $userCreate = $auth->createPermission('userCreate');
         $userCreate->description = 'Create a user';
         $auth->add($userCreate);
+		
+		// add "userCreateAdmin" permission
+        $userCreateAdmin = $auth->createPermission('userCreateAdmin');
+        $userCreateAdmin->description = 'Create a user of role type admin';
+        $auth->add($userCreateAdmin);
 
         // add "userUpdate" permission
         $userUpdate = $auth->createPermission('userUpdate');
         $userUpdate->description = 'Update user';
         $auth->add($userUpdate);
+		
+		// add "userUpdateTechnician" permission
+        $userUpdateTechnician = $auth->createPermission('userUpdateTechnician');
+        $userUpdateTechnician->description = 'Update user of role type technician';
+        $auth->add($userUpdateTechnician);
+		
+		// add "userUpdateEngineer" permission
+        $userUpdateEngineer = $auth->createPermission('userUpdateEngineer');
+        $userUpdateEngineer->description = 'Update user of role type engineer';
+        $auth->add($userUpdateEngineer);
+		
+		// add "userUpdateSupervisor" permission
+        $userUpdateSupervisor = $auth->createPermission('userUpdateSupervisor');
+        $userUpdateSupervisor->description = 'Update user of role type supervisor';
+        $auth->add($userUpdateSupervisor);
+		
+		// add "userUpdateProjectManager" permission
+        $userUpdateProjectManager = $auth->createPermission('userUpdateProjectManager');
+        $userUpdateProjectManager->description = 'Update user of role type project manager';
+        $auth->add($userUpdateProjectManager);
+		
+		// add "userUpdateAdmin" permission
+        $userUpdateAdmin = $auth->createPermission('userUpdateAdmin');
+        $userUpdateAdmin->description = 'Update user of role type admin';
+        $auth->add($userUpdateAdmin);
 		
 		// add "userDeactivate" permission
         $userDeactivate = $auth->createPermission('userDeactivate');
@@ -426,6 +456,9 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $timeEntryDeactivate);
 		$auth->addChild($supervisor, $userCreate);
 		$auth->addChild($supervisor, $userUpdate);
+		$auth->addChild($supervisor, $userUpdateTechnician);
+		$auth->addChild($supervisor, $userUpdateSupervisor);
+		$auth->addChild($supervisor, $userUpdateEngineer);
 		$auth->addChild($supervisor, $userView);
 		$auth->addChild($supervisor, $userDeactivate);
 		$auth->addChild($supervisor, $userGetDropdown);
@@ -437,6 +470,7 @@ class RbacController extends Controller
         $auth->add($projectManager);
 		//add child roles
         $auth->addChild($projectManager, $supervisor);
+		$auth->addChild($projectManager, $userUpdateProjectManager);
 		
 		// add "admin" role and give this role the permissions of the "projectManager"
 		$admin = $auth->createRole('Admin');
@@ -457,6 +491,8 @@ class RbacController extends Controller
 		$auth->addChild($admin, $stateCodeGetDropdown);
 		$auth->addChild($admin, $mileageCardGetAllCards);
 		$auth->addChild($admin, $timeCardGetAllCards);
+		$auth->addChild($admin, $userCreateAdmin);
+		$auth->addChild($admin, $userUpdateAdmin);
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
