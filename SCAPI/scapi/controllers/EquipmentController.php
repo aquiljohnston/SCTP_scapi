@@ -314,10 +314,12 @@ class EquipmentController extends BaseActiveController
 			
 			//create response
 			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			
+			$response->format = Response::FORMAT_JSON;
+
+			//get userID
+			$acceptedBy = self::getUserFromToken()->UserID;
+
 			//parse json
-			$acceptedBy = $data["acceptedByID"];
 			$equipmentIDs = $data["equipmentIDArray"];
 			
 			//get equipment
