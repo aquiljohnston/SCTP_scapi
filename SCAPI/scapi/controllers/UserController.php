@@ -17,6 +17,7 @@ use app\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\Link;
@@ -78,6 +79,8 @@ class UserController extends BaseActiveController
 	*/
 	public function actionCreate()
 	{
+		PermissionsController::requirePermission('userCreate');
+		
 		try
 		{
 			//set db target
@@ -128,6 +131,12 @@ class UserController extends BaseActiveController
 				$user = new SCUser();
 				$user->attributes = $data;  
 				
+				//rbac check if attempting to create an admin
+				if($$user["UserAppRoleType"] == 'Admin')
+				{
+					PermissionsController::requirePermission('userCreateAdmin');
+				}
+				
 				//created date
 				$user->UserCreatedDate = Parent::getDate();
 				
@@ -147,6 +156,10 @@ class UserController extends BaseActiveController
 				}
 				
 				$transaction->commit();
+			}
+			catch(ForbiddenHttpException $e)
+			{
+				throw new ForbiddenHttpException;
 			}
 			catch(Exception $e)
 			{
@@ -170,6 +183,8 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionUpdate($id)
 	{
+		PermissionsController::requirePermission('userUpdate');
+		
 		try
 		{
 			//set db target
@@ -180,8 +195,15 @@ class UserController extends BaseActiveController
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
 			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
 			//get user model to be updated
 			$user = SCUser::findOne($id);
+			
+			$currentRole = $user["UserAppRoleType"];
+			
+			PermissionsController::requirePermission('userUpdateAdmin');
 			
 			//iv and key for openssl
 			$iv = "abcdefghijklmnop";
@@ -221,8 +243,7 @@ class UserController extends BaseActiveController
 						}
 						else
 						{
-							$response->setStatusCode(400);
-							$response->data = "Http:400 Bad Request";
+							throw new \yii\web\HttpException(400);
 						}
 						if($keyData-> update())
 						{
@@ -231,8 +252,7 @@ class UserController extends BaseActiveController
 						}
 						else
 						{
-							$response->setStatusCode(400);
-							$response->data = "Http:400 Bad Request";
+							throw new \yii\web\HttpException(400);
 						}
 					}
 					else
@@ -244,8 +264,11 @@ class UserController extends BaseActiveController
 				//pass new data to user
 				$user->attributes = $data;  
 				
-				$response = Yii::$app->response;
-				$response ->format = Response::FORMAT_JSON;
+				//rbac check if attempting to create an admin
+				if($user["UserAppRoleType"] == 'Admin')
+				{
+					PermissionsController::requirePermission('userCreateAdmin');
+				}
 				
 				$user->UserModifiedDate = Parent::getDate();
 				
@@ -267,6 +290,10 @@ class UserController extends BaseActiveController
 					
 				$transaction->commit();
 			}
+			catch(ForbiddenHttpException $e)
+			{
+				throw new ForbiddenHttpException;
+			}
 			catch(Exception $e)
 			{
 				$transaction->rollBack();
@@ -274,6 +301,10 @@ class UserController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 			}
 			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
 		}
 		catch(\Exception $e) 
 		{
@@ -289,6 +320,8 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionView($id)
 	{
+		PermissionsController::requirePermission('userView');
+		
 		try
 		{
 			//set db target
@@ -319,6 +352,8 @@ class UserController extends BaseActiveController
 	*/
 	public function actionDeactivate($userID)
 	{
+		PermissionsController::requirePermission('userDeactivate');
+		
 		try
 		{
 			//set db target
@@ -327,6 +362,10 @@ class UserController extends BaseActiveController
 			
 			//get user to be deactivated
 			$user = SCUser::findOne($userID);
+			
+			$currentRole = $user["UserAppRoleType"];
+			
+			PermissionsController::requirePermission('userUpdate'.$currentRole);
 			
 			//pass new data to user model
 			$user->UserActiveFlag = 0;  
@@ -351,6 +390,10 @@ class UserController extends BaseActiveController
 			}
 			return $response;
 		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
@@ -365,6 +408,8 @@ class UserController extends BaseActiveController
 	*/
 	public function actionGetUserDropdowns()
 	{	
+		PermissionsController::requirePermission('userGetDropdown');
+	
 		try
 		{
 			//set db target
@@ -404,6 +449,8 @@ class UserController extends BaseActiveController
 	*/
 	public function actionGetMe($userID)
 	{
+		PermissionsController::requirePermission('userGetMe');
+		
 		try
 		{
 			//set db target
@@ -504,6 +551,8 @@ class UserController extends BaseActiveController
 	*/
 	public function actionGetProjects($userID)
 	{
+		PermissionsController::requirePermission('userGetProjects');
+		
 		try
 		{
 			//set db target
@@ -548,6 +597,8 @@ class UserController extends BaseActiveController
 	*/
 	public function actionGetActive()
 	{
+		PermissionsController::requirePermission('userGetActive');
+		
 		try
 		{
 			//set db target

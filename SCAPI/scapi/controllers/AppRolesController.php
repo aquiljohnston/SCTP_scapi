@@ -83,6 +83,10 @@ class AppRolesController extends BaseActiveController
 				$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
 			}
 			
+			if (!PermissionsController::can('userCreateAdmin'))
+			{
+				unset($namePairs['Admin']);
+			}
 			
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
