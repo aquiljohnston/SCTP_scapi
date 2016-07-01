@@ -109,6 +109,7 @@ class ActivityController extends BaseActiveController
 				{
 					$activity = new Activity();
 					$activityArray[$i]["ActivityCreateDate"] = Parent::getDate();
+					$activityArray[$i]["ActivityCreatedUserUID"] = Parent::getUserFromToken()->UserID;
 					//check array data
 					$timeLength = 0;
 					$mileageLength = 0;
@@ -152,7 +153,7 @@ class ActivityController extends BaseActiveController
 								$timeArray[$t]["TimeEntryActivityID"] = $activityArray[$i]["ActivityID"];
 								$timeEntry = new TimeEntry();
 								$timeEntry->attributes = $timeArray[$t];
-								$timeEntry->TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
+								$timeEntry->TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedUserUID"];
 								$timeEntry->TimeEntryCreateDate = Parent::getDate();
 								if($timeEntry->save())
 									{
@@ -177,7 +178,7 @@ class ActivityController extends BaseActiveController
 								$mileageArray[$m]["MileageEntryActivityID"]= $activityArray[$i]["ActivityID"];
 								$mileageEntry = new MileageEntry();
 								$mileageEntry->attributes = $mileageArray[$m];
-								$mileageEntry->MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedBy"];
+								$mileageEntry->MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedUserUID"];
 								$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 								if($mileageEntry->save())
 									{
