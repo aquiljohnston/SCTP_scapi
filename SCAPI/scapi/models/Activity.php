@@ -40,7 +40,7 @@ use Yii;
  * @property MileageEntryTb[] $mileageEntryTbs
  * @property TimeEntryTb[] $timeEntryTbs
  */
-class Activity extends \yii\db\ActiveRecord
+class Activity extends BaseActiveRecord
 {
     /**
      * @inheritdoc
