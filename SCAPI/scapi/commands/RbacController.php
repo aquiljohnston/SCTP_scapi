@@ -247,6 +247,11 @@ class RbacController extends Controller
         $projectUpdate->description = 'Update project';
         $auth->add($projectUpdate);
 		
+		// add "projectGetOwnProjects" permission
+        $projectGetOwnProjects = $auth->createPermission('projectGetOwnProjects');
+        $projectGetOwnProjects->description = 'Get all projects that a user is associated with';
+        $auth->add($projectGetOwnProjects);
+		
 		// add "projectGetDropdown" permission
         $projectGetDropdown = $auth->createPermission('projectGetDropdown');
         $projectGetDropdown->description = 'Get an associative array of project name/id pairs';
@@ -381,11 +386,6 @@ class RbacController extends Controller
         $userGetMe->description = 'Get equipment and project data for a user';
         $auth->add($userGetMe);
 		
-		// add "userGetProjects" permission
-        $userGetProjects = $auth->createPermission('userGetProjects');
-        $userGetProjects->description = 'Get all projects that a user is associated with';
-        $auth->add($userGetProjects);
-		
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
 		// add "Technician" role and give this role CRUD permissions
@@ -444,6 +444,7 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $notificationsGet);
 		$auth->addChild($supervisor, $payCodeGetDropdown);
 		$auth->addChild($supervisor, $projectView);
+		$auth->addChild($supervisor, $projectGetOwnProjects);
 		$auth->addChild($supervisor, $projectGetDropdown);
 		$auth->addChild($supervisor, $projectGetUserRelationships);
 		$auth->addChild($supervisor, $projectAddRemoveUsers);
@@ -462,7 +463,6 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $userView);
 		$auth->addChild($supervisor, $userDeactivate);
 		$auth->addChild($supervisor, $userGetDropdown);
-		$auth->addChild($supervisor, $userGetProjects);
 		$auth->addChild($supervisor, $userGetActive);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
