@@ -132,7 +132,7 @@ class UserController extends BaseActiveController
 				$user->attributes = $data;  
 				
 				//rbac check if attempting to create an admin
-				if($$user["UserAppRoleType"] == 'Admin')
+				if($user["UserAppRoleType"] == 'Admin')
 				{
 					PermissionsController::requirePermission('userCreateAdmin');
 				}
