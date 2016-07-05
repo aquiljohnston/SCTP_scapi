@@ -116,9 +116,11 @@ class MileageCardController extends BaseActiveController
 			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			
+
+			//get user id
+			$approvedBy = self::getUserFromToken()->UserID;
+
 			//parse json
-			$approvedBy = $data["approvedByID"];
 			$cardIDs = $data["cardIDArray"];
 			
 			//get timecards

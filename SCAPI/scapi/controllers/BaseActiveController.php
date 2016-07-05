@@ -108,7 +108,7 @@ class BaseActiveController extends ActiveController
 	}
 	
 	
-	public function getUserFromToken($token = null)
+	public static function getUserFromToken($token = null)
 	{
 		if ($token === null) {
 			$token = Yii::$app->request->getAuthUser();

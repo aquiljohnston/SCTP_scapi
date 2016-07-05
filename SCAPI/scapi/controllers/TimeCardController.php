@@ -15,6 +15,7 @@ use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -116,8 +117,10 @@ class TimeCardController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
+			//get userid
+			$approvedBy = self::getUserFromToken()->UserID;
+			
 			//parse json
-			$approvedBy = $data["approvedByID"];
 			$cardIDs = $data["cardIDArray"];
 			
 			//get timecards
@@ -125,7 +128,8 @@ class TimeCardController extends BaseActiveController
 			{
 				$approvedCards[]= TimeCard::findOne($id);
 			}
-			
+
+			// TODO: Comment this block out when Sandra finishes database changes
 			//get user's name by ID
 			if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
 			{
@@ -135,25 +139,24 @@ class TimeCardController extends BaseActiveController
 			}
 			
 			//try to approve time cards
-			try
-			{
+			try {
 				//create transaction
 				$connection = \Yii::$app->db;
-				$transaction = $connection->beginTransaction(); 
-			
-				foreach($approvedCards as $card)
-				{
-					$card-> TimeCardApprovedFlag = "Yes";
-					$card-> TimeCardApprovedBy = $approvedBy;
-					$card-> update();
+				$transaction = $connection->beginTransaction();
+
+				foreach ($approvedCards as $card) {
+					$card->TimeCardApprovedFlag = "Yes";
+					$card->TimeCardApprovedBy = $approvedBy;
+					$card->update();
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
-				$response->data = $approvedCards; 
+				$response->data = $approvedCards;
 				return $response;
+			} catch (ForbiddenHttpException $e) {
+				throw new ForbiddenHttpException;
 			}
-			//if transaction fails rollback changes and send error
-			catch(Exception $e)
+			catch(\Exception $e) //if transaction fails rollback changes and send error
 			{
 				$transaction->rollBack();
 				$response->setStatusCode(400);
@@ -298,7 +301,7 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($userID, $week)
+	public function actionGetCards($week)
 	{
 		// RBAC permission check is embedded in this action	
 		try
@@ -339,6 +342,7 @@ class TimeCardController extends BaseActiveController
 			//rbac permission check	
 			elseif (PermissionsController::can('timeCardGetOwnCards'))	
 			{
+				$userID = self::getUserFromToken()->UserID;
 				//get user project relations array
 				$projects = ProjectUser::find()
 					->where("ProjUserUserID = $userID")
@@ -387,6 +391,9 @@ class TimeCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
 		}
 		catch(\Exception $e)  
 		{
