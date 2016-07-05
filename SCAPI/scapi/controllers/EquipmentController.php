@@ -8,6 +8,7 @@ use app\models\SCUser;
 use app\models\ProjectUser;
 use app\models\DailyEquipmentCalibrationVw;
 use yii\filters\VerbFilter;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
 class EquipmentController extends BaseActiveController
@@ -111,7 +112,7 @@ class EquipmentController extends BaseActiveController
 
 			$model = new Equipment(); 
 			$model->attributes = $data;  
-			
+			$model->EquipmentCreatedByUser = self::getUserFromToken()->UserID;
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
@@ -196,94 +197,58 @@ class EquipmentController extends BaseActiveController
 	public function actionGetEquipment() {
 		// Will combine actionViewAllByUserByProject and actionEquipmentView
 		// after rbac is complete
-	}
-
-	/**
-	 * Gets all the equipment for the project the user belongs to.
-	 * Used by project managers and supervisors.
-	 *
-	 * @param $userID int ID of the User model to view by
-	 * @return Response a json containing all equipment for projects that a user is associated with
-	 * @throws \yii\web\HttpException When an exception is thrown.
-	 */
-	public function actionViewAllByUserByProject($userID)
-	{
-		// RBAC permission check
-		PermissionsController::requirePermission('');
-
+		$headers = getallheaders();
+		DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
+		ProjectUser::setClient($headers['X-Client']);
+		$response = Yii::$app->response;
+		$response-> format = Response::FORMAT_JSON;
 		try{
 			//set db target
-			$headers = getallheaders();
-			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
-			ProjectUser::setClient($headers['X-Client']);
+			if(PermissionsController::can('getAllEquipment')) {
+				if ($equipArray = DailyEquipmentCalibrationVw::find()->all()) {
+					$equipData = array_map(function ($model) {
+						return $model->attributes;
+					}, $equipArray);
+					$response->data = $equipData;
+					$response->setStatusCode(200);
+				} else {
+					$response->setStatusCode(404);
+				}
+				//format response
+			} else if (PermissionsController::can('getOwnEquipment')) {
+				//get user project relations array
+				$userId = parent::getUserFromToken()->UserID;
 
-			//format response
-			$response = Yii::$app->response;
-			$response-> format = Response::FORMAT_JSON;
+				Yii::trace("user id: $userId");
 
-			//get user project relations array
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-
-			//response array of equipments
-			$equipmentArray = [];
-
-			//loop user project array get all equipment WHERE equipmentProjectID is equal
-			for($i=0; $i < $projectsSize; $i++)
-			{
-				$projectID = $projects[$i]->ProjUserProjectID;
-
-				$equipment = DailyEquipmentCalibrationVw::find()
-					->where(['EquipmentProjectID' => $projectID])
+				$projects = ProjectUser::find()
+					->where("ProjUserUserID = $userId")
 					->all();
-				$equipmentArray = array_merge($equipmentArray, $equipment);
-			}
-
-			$response->data = $equipmentArray;
-			$response->setStatusCode(200);
-			return $response;
-
-		} catch(\Exception $e){
-			throw new \yii\web\HttpException(400);
-		}
-	}
-
-	/**
-	 * View all equipment including daily calibration status
-	 *
-	 * @return Response db view for equipment index
-	 * @throws \yii\web\HttpException When an exception is thrown
-	 */
-	public function actionEquipmentView()
-	{
-		// RBAC permission check
-		PermissionsController::requirePermission('equipmentView');
-
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
-			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			
-			if($equipArray = DailyEquipmentCalibrationVw::find()->all())
-			{
-				$equipData = array_map(function ($model) {return $model->attributes;},$equipArray);
-				$response->data = $equipData;
+				$projectsSize = count($projects);
+	
+				//response array of equipments
+				$equipmentArray = [];
+	
+				//loop user project array get all equipment WHERE equipmentProjectID is equal
+				for($i=0; $i < $projectsSize; $i++)
+				{
+					$projectID = $projects[$i]->ProjUserProjectID;
+	
+					$equipment = DailyEquipmentCalibrationVw::find()
+						->where(['EquipmentProjectID' => $projectID])
+						->all();
+					$equipmentArray = array_merge($equipmentArray, $equipment);
+				}
+	
+				$response->data = $equipmentArray;
 				$response->setStatusCode(200);
+				
+			} else {
+				throw new ForbiddenHttpException;
 			}
-			else
-			{
-				$response->setStatusCode(404);
-			}
+
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
+		} catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}

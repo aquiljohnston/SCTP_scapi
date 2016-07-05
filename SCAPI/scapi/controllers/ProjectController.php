@@ -8,6 +8,7 @@ use app\models\SCUser;
 use app\models\ProjectUser;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -90,32 +91,59 @@ class ProjectController extends BaseActiveController
 	*
 	* @return Response The records in a JSON format
 	* @throws \yii\web\HttpException 400 if any exceptions are thrown
+	* @throws ForbiddenHttpException If permissions are not granted for request
 	*/
-    public function actionGetAll()
-    {
-		// RBAC permission check
-		PermissionsController::requirePermission('projectGetAll');
-		
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			Project::setClient($headers['X-Client']);
+    public function actionGetAll($limitToUser = null)
+	{
+		if(($limitToUser != "true" && $limitToUser != "1") && PermissionsController::can("projectGetAll")) {
+			try
+			{
+				//set db target
+				$headers = getallheaders();
+				Project::setClient($headers['X-Client']);
 
-			$projects = Project::find()
+				$projects = Project::find()
+					->all();
+
+				$response = Yii::$app ->response;
+				$response -> format = Response::FORMAT_JSON;
+				$response -> data = $projects;
+
+				return $response;
+			}
+			catch(\Exception $e)
+			{
+				throw new \yii\web\HttpException(400);
+			}
+		} else if (PermissionsController::can("projectGetOwnProjects")) {
+			$userID = self::getUserFromToken()->UserID;
+
+			//get users relationship to projects
+			$projectUser = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
 				->all();
+
+			//get projects based on relationship
+			$projectUserLength = count($projectUser);
+			$projects = [];
+			for($i=0; $i < $projectUserLength; $i++)
+			{
+				$projectID = $projectUser[$i]->ProjUserProjectID ;
+				$projectModel = Project::findOne($projectID);
+				$projectData["ProjectID"]= $projectModel->ProjectID;
+				$projectData["ProjectName"]= $projectModel->ProjectName;
+				$projectData["ProjectClientID"]= $projectModel->ProjectClientID;
+
+				$projects[] = $projectData;
+			}
 
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $projects;
-
-			return $response;
+		} else {
+			throw new ForbiddenHttpException;
 		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
-    }
+	}
 	
 	/**
 	* Creates a new project record in the database

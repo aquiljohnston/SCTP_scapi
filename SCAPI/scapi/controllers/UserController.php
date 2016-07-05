@@ -159,7 +159,8 @@ class UserController extends BaseActiveController
 			}
 			catch(ForbiddenHttpException $e)
 			{
-				throw new ForbiddenHttpException;
+				$transaction->rollBack();
+				throw $e;
 			}
 			catch(Exception $e)
 			{
@@ -552,7 +553,7 @@ class UserController extends BaseActiveController
 	public function actionGetProjects($userID)
 	{
 		PermissionsController::requirePermission('userGetProjects');
-		
+		// TODO: remove. Replaced by ProjectController::actionGetAll()
 		try
 		{
 			//set db target
@@ -561,7 +562,7 @@ class UserController extends BaseActiveController
 			Project::setClient($headers['X-Client']);
 			ProjectUser::setClient($headers['X-Client']);
 			
-			//get users realtionship to projects
+			//get users relationship to projects
 			$projectUser = ProjectUser::find()
 				->where("ProjUserUserID = $userID")
 				->all();
