@@ -105,4 +105,21 @@ class Project extends BaseActiveRecord
     {
         return $this->hasOne(ClientTb::className(), ['ClientID' => 'ProjectClientID']);
     }
+	
+	/**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getMenuProjectModuleTbs()
+    {
+        return $this->hasMany(MenusProjectModule::className(), ['ProjectModulesProjectID' => 'ProjectID']);
+    }
+	
+	/**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getModuleMenus()
+    {
+        return $this->hasMany(MenusModuleMenu::className(), ['ModuleMenuName' => 'ProjectModulesName'])
+			->via('menuProjectModuleTbs');
+    }
 }
