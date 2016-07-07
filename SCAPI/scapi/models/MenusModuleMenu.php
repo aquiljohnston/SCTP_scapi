@@ -12,9 +12,9 @@ use Yii;
  * @property string $ModuleMenuNavMenuName
  * @property integer $ModuleMenuNavMenuID
  * @property string $ModuleMenuCreateDate
- * @property string $ModuleMenuCreatedBy
+ * @property int $ModuleMenuCreatedBy
  * @property string $ModuleMenuModifiedDate
- * @property string $ModuleMenuModifiedBy
+ * @property int $ModuleMenuModifiedBy
  */
 class MenusModuleMenu extends BaseActiveRecord
 {
@@ -32,8 +32,8 @@ class MenusModuleMenu extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ModuleMenuName', 'ModuleMenuNavMenuName', 'ModuleMenuCreatedBy', 'ModuleMenuModifiedBy'], 'string'],
-            [['ModuleMenuNavMenuID'], 'integer'],
+            [['ModuleMenuName', 'ModuleMenuNavMenuName'], 'string'],
+            [['ModuleMenuNavMenuID', 'ModuleMenuCreatedBy', 'ModuleMenuModifiedBy'], 'integer'],
             [['ModuleMenuCreateDate', 'ModuleMenuModifiedDate'], 'safe']
         ];
     }
