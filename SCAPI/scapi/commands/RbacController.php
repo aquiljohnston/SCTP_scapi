@@ -385,7 +385,69 @@ class RbacController extends Controller
         $userGetMe = $auth->createPermission('userGetMe');
         $userGetMe->description = 'Get equipment and project data for a user';
         $auth->add($userGetMe);
-		
+
+
+
+        ////// Module Sub Menu Permissions //////
+
+
+        $viewClientMgmt = $auth->createPermission('viewClientMgmt');
+        $viewClientMgmt->description = 'View client management';
+        $auth->add($viewClientMgmt);
+
+        $viewProjectMgmt = $auth->createPermission('viewProjectMgmt');
+        $viewProjectMgmt->description = 'View project name';
+        $auth->add($viewProjectMgmt);
+
+        $viewUserMgmt = $auth->createPermission('viewUserMgmt');
+        $viewUserMgmt->description = 'View user management';
+        $auth->add($viewUserMgmt);
+
+        $viewEquipmentMgmt = $auth->createPermission('viewEquipmentMgmt');
+        $viewEquipmentMgmt->description = 'View equipment management';
+        $auth->add($viewEquipmentMgmt);
+
+        $viewTimeCardMgmt = $auth->createPermission('viewTimeCardMgmt');
+        $viewTimeCardMgmt->description = 'View time card management';
+        $auth->add($viewTimeCardMgmt);
+
+        $viewMileageCardMgmt = $auth->createPermission('viewMileageCardMgmt');
+        $viewMileageCardMgmt->description = 'View mileage card management';
+        $auth->add($viewMileageCardMgmt);
+
+        $viewTracker = $auth->createPermission('viewTracker');
+        $viewTracker->description = 'View tracker';
+        $auth->add($viewTracker);
+        
+        $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
+        $viewLeakLogMgmt->description = 'View leak log management';
+        $auth->add($viewLeakLogMgmt);
+
+        $viewLeakLogDetail = $auth->createPermission('viewLeakLogDetail');
+        $viewLeakLogDetail->description = 'View leak log detail';
+        $auth->add($viewLeakLogDetail);
+
+        $viewMapStampMgmt = $auth->createPermission('viewMapStampMgmt');
+        $viewMapStampMgmt->description = 'View map stamp management';
+        $auth->add($viewMapStampMgmt);
+
+        $viewMapStampDetail = $auth->createPermission('viewMapStampDetail');
+        $viewMapStampDetail->description = 'View map stamp detail';
+        $auth->add($viewMapStampDetail);
+
+        $viewAOC = $auth->createPermission('viewAOC');
+        $viewAOC->description = 'View AOC';
+        $auth->add($viewAOC);
+
+        $viewDispatch = $auth->createPermission('viewDispatch');
+        $viewDispatch->description = 'View dispatch';
+        $auth->add($viewDispatch);
+
+        $viewAssigned = $auth->createPermission('viewAssigned');
+        $viewAssigned->description = 'View assigned';
+        $auth->add($viewAssigned);
+        
+
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
 		// add "Technician" role and give this role CRUD permissions
@@ -472,7 +534,7 @@ class RbacController extends Controller
         $auth->addChild($projectManager, $supervisor);
 		$auth->addChild($projectManager, $userUpdateProjectManager);
 		
-		// add "admin" role and give this role the permissions of the "projectManager"
+		// add "admin" role and give this role the permissions of the "projectManager" and "engineer"
 		$admin = $auth->createRole('Admin');
         $auth->add($admin);
 		// add child roles
