@@ -11,9 +11,9 @@ use Yii;
  * @property integer $ProjectModulesProjectID
  * @property string $ProjectModulesName
  * @property string $ProjectModulesCreateDate
- * @property string $ProjectModulesCreatedBy
+ * @property int $ProjectModulesCreatedBy
  * @property string $ProjectModulesModifiedDate
- * @property string $ProjectModulesModifiedBy
+ * @property int $ProjectModulesModifiedBy
  */
 class MenusProjectModule extends BaseActiveRecord
 {
@@ -31,8 +31,8 @@ class MenusProjectModule extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectModulesProjectID'], 'integer'],
-            [['ProjectModulesName', /*'ProjectModulesCreatedBy',*/ 'ProjectModulesModifiedBy'], 'string'],
+            [['ProjectModulesProjectID', 'ProjectModulesCreatedBy', 'ProjectModulesModifiedBy'], 'integer'],
+            [['ProjectModulesName'], 'string'],
             [['ProjectModulesCreateDate', 'ProjectModulesModifiedDate'], 'safe']
         ];
     }
