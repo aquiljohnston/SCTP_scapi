@@ -28,7 +28,7 @@ use yii\db\Exception;
  */
 class NotificationController extends Controller
 {	
-	 public function behaviors()
+	public function behaviors()
     {
 		$behaviors = parent::behaviors();
 		//Implements Token Authentication to check for Auth Token in Json Header

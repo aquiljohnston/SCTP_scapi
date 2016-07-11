@@ -477,6 +477,8 @@ class RbacController extends Controller
 		$auth->addChild($engineer, $notificationsGet);
 		$auth->addChild($engineer, $projectGetDropdown);
 		$auth->addChild($engineer, $userGetDropdown);
+		// sub menu permissions
+		$auth->addChild($engineer, $viewEquipmentMgmt);
 
         // add "supervisor" role and give this role CRUD permissions
         $supervisor = $auth->createRole('Supervisor');
@@ -526,6 +528,19 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $userDeactivate);
 		$auth->addChild($supervisor, $userGetDropdown);
 		$auth->addChild($supervisor, $userGetActive);
+		// sub menu permissions
+		$auth->addChild($supervisor, $viewUserMgmt);
+		$auth->addChild($supervisor, $viewEquipmentMgmt);
+		$auth->addChild($supervisor, $viewTimeCardMgmt);
+		$auth->addChild($supervisor, $viewMileageCardMgmt);
+		$auth->addChild($supervisor, $viewTracker);
+		$auth->addChild($supervisor, $viewLeakLogMgmt);
+		$auth->addChild($supervisor, $viewLeakLogDetail);
+		$auth->addChild($supervisor, $viewMapStampMgmt);
+		$auth->addChild($supervisor, $viewMapStampDetail);
+		$auth->addChild($supervisor, $viewAOC);
+		$auth->addChild($supervisor, $viewDispatch);
+		$auth->addChild($supervisor, $viewAssigned);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
@@ -555,6 +570,9 @@ class RbacController extends Controller
 		$auth->addChild($admin, $timeCardGetAllCards);
 		$auth->addChild($admin, $userCreateAdmin);
 		$auth->addChild($admin, $userUpdateAdmin);
+		// sub menu permissions
+		$auth->addChild($admin, $viewClientMgmt);
+		$auth->addChild($admin, $viewProjectMgmt);
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
