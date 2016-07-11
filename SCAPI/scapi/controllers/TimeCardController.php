@@ -190,7 +190,7 @@ class TimeCardController extends BaseActiveController
 			
 			//get all time entries for Sunday
 			$sundayDate = $date;
-			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
+			$sundayStr = $sundayDate->format(DATE_ATOM);
 			$sundayEntries = TimeEntry::find()
 				->where("TimeEntryDate ="."'"."$sundayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
@@ -198,7 +198,7 @@ class TimeCardController extends BaseActiveController
 			
 			//get all time entries for Monday
 			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format('Y-m-d H:i:s');		
+			$mondayStr = $mondayDate->format(DATE_ATOM);
 			$mondayEntries =TimeEntry::find()
 				->where("TimeEntryDate ="."'"."$mondayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
@@ -206,7 +206,7 @@ class TimeCardController extends BaseActiveController
 				
 			//get all time entries for Tuesday	
 			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format('Y-m-d H:i:s');
+			$tuesdayStr = $tuesdayDate->format(DATE_ATOM);
 			$tuesdayEntries =TimeEntry::find()
 				->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
@@ -214,7 +214,7 @@ class TimeCardController extends BaseActiveController
 				
 			//get all time entries for Wednesday	
 			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format('Y-m-d H:i:s');
+			$wednesdayStr = $wednesdayDate->format(DATE_ATOM);
 			$wednesdayEntries =TimeEntry::find()
 				->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
@@ -222,7 +222,7 @@ class TimeCardController extends BaseActiveController
 				
 			//get all time entries for Thursday
 			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format('Y-m-d H:i:s');
+			$thursdayStr = $thursdayDate->format(DATE_ATOM);
 			$thursdayEntries =TimeEntry::find()
 				->where("TimeEntryDate ="."'"."$thursdayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
@@ -230,17 +230,17 @@ class TimeCardController extends BaseActiveController
 				
 			//get all time entries for Friday
 			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format('Y-m-d H:i:s');
+			$fridayStr = $fridayDate->format(DATE_ATOM);
 			$fridayEntries =TimeEntry::find()
 				->where("TimeEntryDate ="."'"."$fridayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//get all time entries for Saturday
-			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format('Y-m-d H:i:s');
+			$saturdayDate = $date->modify('1 day');
+			$saturdayStr = $saturdayDate->format(DATE_ATOM);
 			$saturdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$satudayStr". "'")
+				->where("TimeEntryDate ="."'"."$saturdayStr". "'")
 				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
