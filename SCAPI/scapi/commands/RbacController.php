@@ -267,6 +267,11 @@ class RbacController extends Controller
         $projectAddRemoveUsers->description = 'Add or remove users from a project';
         $auth->add($projectAddRemoveUsers);
 		
+		// add "projectAddRemoveModules" permission
+		$projectAddRemoveModules = $auth->createPermission('projectAddRemoveModules');
+        $projectAddRemoveModules->description = 'Add or remove modules from a project';
+        $auth->add($projectAddRemoveModules);
+		
 		//State Code permissions/////////////////////////////////////////////////////////////////
         // add "stateCodeGetDropdown" permission
         $stateCodeGetDropdown = $auth->createPermission('stateCodeGetDropdown');
@@ -565,6 +570,7 @@ class RbacController extends Controller
 		$auth->addChild($admin, $projectGetAll);
 		$auth->addChild($admin, $projectCreate);
 		$auth->addChild($admin, $projectUpdate);
+		$auth->addChild($admin, $projectAddRemoveModules);
 		$auth->addChild($admin, $stateCodeGetDropdown);
 		$auth->addChild($admin, $mileageCardGetAllCards);
 		$auth->addChild($admin, $timeCardGetAllCards);
