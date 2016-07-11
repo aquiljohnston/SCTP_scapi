@@ -2,17 +2,16 @@
 
 namespace app\controllers;
 
+use app\models\MenusProjectModule;
 use Yii;
 use app\models\Project;
 use app\models\SCUser;
 use app\models\ProjectUser;
-use app\controllers\BaseActiveController;
-use yii\data\ActiveDataProvider;
+use app\models\MenusModuleMenu;
+use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
-use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
-use yii\web\Link;
 use yii\filters\auth\TokenAuth;
 
 
@@ -308,7 +307,7 @@ class ProjectController extends BaseActiveController
 			//create array of included user id/name pairs
 			for($i=0; $i < $assignedSize; $i++)
 			{
-				$assignedPairs[$assignedUsers[$i]->UserID]=['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName];
+				$assignedPairs[$assignedUsers[$i]->UserID] = ['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName];
 			}
 			
 			//get all users
@@ -486,5 +485,112 @@ class ProjectController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
+	}
+
+	public function actionGetProjectModules($projectID) {
+		//PermissionsController::requirePermission('projectGetProjectModules');
+		try {
+			//set db target
+			$headers = getallheaders();
+			MenusProjectModule::setClient($headers['X-Client']);
+
+			//TODO: Sanitize $projectID
+
+			// get all modules for project
+			$projectModules = MenusProjectModule::find()
+				->where("ProjectModulesProjectID = $projectID")
+				->all();
+
+			$assignedModules = [];
+			foreach ($projectModules as $module) {
+				$assignedModules[] = $module->ProjectModulesName;
+			}
+
+			// get all modules
+
+			$allModules = MenusProjectModule::find()
+				//moduleActiveFlag == 1
+				->all();
+
+			$unassignedModules = [];
+
+			foreach($allModules as $module) {
+				$unassignedModules[] = $module->ProjectModulesName;
+			}
+
+			foreach($unassignedModules as $unassignedKey => $unassignedValue) {
+				foreach($assignedModules as $assignedKey => $assignedValue) {
+					if($unassignedValue == $assignedValue) {
+						unset($unassignedModules[$unassignedKey]);
+					}
+				}
+			}
+
+
+			$data["assignedModules"] = $assignedModules;
+			$data["unassignedModules"] = $unassignedModules;
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+
+			return $response;
+		} catch (Exception $e) {
+			throw new BadRequestHttpException;
+		}
+	}
+
+	public function actionAddRemoveModule($projectID) {
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
+
+
+		//create response
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
+
+		//get project from param
+		$project = Project::findOne($projectID);
+
+
+		//decode post data
+		$post = file_get_contents("php://input");
+		$data = json_decode($post, true);
+
+		//check if key exist
+		if(array_key_exists("modulesAdded", $data) && array_key_exists("modulesRemoved", $data))
+		{
+			//parse post data
+			$modulesAdded = $data['modulesAdded'];
+			$modulesRemoved = $data['modulesRemoved'];
+		} else {
+			//set failure response
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
+
+			return $response;
+		}
+
+		//loop modulesAdded and create relationships
+		foreach($modulesAdded as $i)
+		{
+			$module = ProjectModuleTb::findOne($i);
+			$module->
+
+		}
+
+		//loop usersRemoved and delete relationships
+		foreach($modulesRemoved as $i)
+		{
+			$module = MenusModuleMenu::findOne($i);
+			$module->unlink('projects', $project);
+		}
+
+		//set success response
+		$response->setStatusCode(200);
+		$response -> data = $data;
+
+		return $response;
+
 	}
 }
