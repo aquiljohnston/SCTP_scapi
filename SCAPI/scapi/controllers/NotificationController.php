@@ -62,93 +62,97 @@ class NotificationController extends Controller
 			//get user
 			$user = SCUser::findOne($userID);
 			
-			//get projects the user belongs to
-			$projectData = $user->projects;
-			$projectArray = array_map(function ($model) {return $model->attributes;},$projectData);
-			$projectSize = count($projectArray);
-			
-			//load data into array
-			$notifications = [];
-			$notifications["firstName"] = $user-> UserFirstName;
-			$notifications["lastName"] = $user-> UserLastName;
-			$notifications["equipment"] = []; 
-			$notifications["timeCards"] = []; 
-			$notifications["mileageCards"] = []; 
-			$equipmentTotal = 0;
-			$timeCardTotal = 0;
-			$mileageCardTotal = 0;
+			// check if login user is Engineer
+			if($user->UserAppRoleType != "Engineer"){
 				
-			//loop projects to get data
-			for($i=0; $i < $projectSize; $i++)
-			{		
-				$projectID = $projectArray[$i]["ProjectID"];
-				$projectName =  $projectArray[$i]["ProjectName"];
+				//get projects the user belongs to
+				$projectData = $user->projects;
+				$projectArray = array_map(function ($model) {return $model->attributes;},$projectData);
+				$projectSize = count($projectArray);
 				
-				//get unaccepted equipment for project
-				$equipment = GetEquipmentByClientProjectVw::find()
-					->where(['and', "ProjectID = $projectID","[Accepted Flag] = 'No'"])
-					->orWhere(['and', "ProjectID = $projectID","[Accepted Flag] = 'Pending'"])
-					->all();
-				$equipmentCount = count($equipment);
+				//load data into array
+				$notifications = [];
+				$notifications["firstName"] = $user-> UserFirstName;
+				$notifications["lastName"] = $user-> UserLastName;
+				$notifications["equipment"] = []; 
+				$notifications["timeCards"] = []; 
+				$notifications["mileageCards"] = []; 
+				$equipmentTotal = 0;
+				$timeCardTotal = 0;
+				$mileageCardTotal = 0;
+					
+				//loop projects to get data
+				for($i=0; $i < $projectSize; $i++)
+				{		
+					$projectID = $projectArray[$i]["ProjectID"];
+					$projectName =  $projectArray[$i]["ProjectName"];
+					
+					//get unaccepted equipment for project
+					$equipment = GetEquipmentByClientProjectVw::find()
+						->where(['and', "ProjectID = $projectID","[Accepted Flag] = 'No'"])
+						->orWhere(['and', "ProjectID = $projectID","[Accepted Flag] = 'Pending'"])
+						->all();
+					$equipmentCount = count($equipment);
+					
+					//get unapproved time cards from last week for project
+					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
+						->where(['and', "TimeCardProjectID = $projectID","TimeCardApprovedFlag = 'No'"])
+						->all();
+					$timeCardCount = count($timeCards);
+					
+					//get unapproved mileage cards from last week for project
+					$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
+						->where(['and', "MileageCardProjectID = $projectID","MileageCardApprovedFlag = 'No'"])
+						->all();	
+					$mileageCardCount = count($mileageCards);
+					
+					//pass equipment data for project
+					$equipmentData["Project"]= $projectName;
+					$equipmentData["Number of Items"]= $equipmentCount;
+					
+					//pass time card data for project
+					$timeCardData["Project"]= $projectName;
+					$timeCardData["Number of Items"]= $timeCardCount;
+					
+					//pass mileage card data for project
+					$mileageCardData["Project"]= $projectName;
+					$mileageCardData["Number of Items"]= $mileageCardCount;
+					
+					//appened data to response array
+					$notifications["equipment"][] = $equipmentData;
+					$notifications["timeCards"][] = $timeCardData;
+					$notifications["mileageCards"][] = $mileageCardData;
+
+					//increment total counts
+					$equipmentTotal += $equipmentCount;
+					$timeCardTotal += $timeCardCount;
+					$mileageCardTotal += $mileageCardCount;
+				}
 				
-				//get unapproved time cards from last week for project
-				$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
-					->where(['and', "TimeCardProjectID = $projectID","TimeCardApprovedFlag = 'No'"])
-					->all();
-				$timeCardCount = count($timeCards);
+				//pass equipment data for total
+				$equipmentData["Project"]= "Total";
+				$equipmentData["Number of Items"]= $equipmentTotal;
 				
-				//get unapproved mileage cards from last week for project
-				$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
-					->where(['and', "MileageCardProjectID = $projectID","MileageCardApprovedFlag = 'No'"])
-					->all();	
-				$mileageCardCount = count($mileageCards);
+				//pass time card data for total
+				$timeCardData["Project"]= "Total";
+				$timeCardData["Number of Items"]= $timeCardTotal;
 				
-				//pass equipment data for project
-				$equipmentData["Project"]= $projectName;
-				$equipmentData["Number of Items"]= $equipmentCount;
+				//pass mileage card data for total
+				$mileageCardData["Project"]= "Total";
+				$mileageCardData["Number of Items"]= $mileageCardTotal;
 				
-				//pass time card data for project
-				$timeCardData["Project"]= $projectName;
-				$timeCardData["Number of Items"]= $timeCardCount;
-				
-				//pass mileage card data for project
-				$mileageCardData["Project"]= $projectName;
-				$mileageCardData["Number of Items"]= $mileageCardCount;
-				
-				//appened data to response array
+				//append totals to response array
 				$notifications["equipment"][] = $equipmentData;
 				$notifications["timeCards"][] = $timeCardData;
 				$notifications["mileageCards"][] = $mileageCardData;
-
-				//increment total counts
-				$equipmentTotal += $equipmentCount;
-				$timeCardTotal += $timeCardCount;
-				$mileageCardTotal += $mileageCardCount;
+				
+				
+				//send response
+				$response = Yii::$app->response;
+				$response ->format = Response::FORMAT_JSON;
+				$response->data = $notifications;
+				return $response;
 			}
-			
-			//pass equipment data for total
-			$equipmentData["Project"]= "Total";
-			$equipmentData["Number of Items"]= $equipmentTotal;
-			
-			//pass time card data for total
-			$timeCardData["Project"]= "Total";
-			$timeCardData["Number of Items"]= $timeCardTotal;
-			
-			//pass mileage card data for total
-			$mileageCardData["Project"]= "Total";
-			$mileageCardData["Number of Items"]= $mileageCardTotal;
-			
-			//append totals to response array
-			$notifications["equipment"][] = $equipmentData;
-			$notifications["timeCards"][] = $timeCardData;
-			$notifications["mileageCards"][] = $mileageCardData;
-			
-			
-			//send response
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $notifications;
-			return $response;
 		}
 		catch(\Exception $e) 
 		{
