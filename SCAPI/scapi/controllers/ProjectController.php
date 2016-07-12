@@ -503,24 +503,25 @@ class ProjectController extends BaseActiveController
 
 			$assignedModules = [];
 			foreach ($projectModules as $module) {
-				$assignedModules[] = $module->ProjectModulesName;
+				$assignedModules[$module->ProjectModulesName] = ['content' => $module->ProjectModulesName];
 			}
 
 			// get all modules
 
-			$allModules = MenusProjectModule::find()
+			$allModules = MenusModuleMenu::find()
+				->distinct()
 				//moduleActiveFlag == 1
 				->all();
 
 			$unassignedModules = [];
 
 			foreach($allModules as $module) {
-				$unassignedModules[] = $module->ProjectModulesName;
+				$unassignedModules[$module->ModuleMenuName] = ['content' => $module->ModuleMenuName];
 			}
 
 			foreach($unassignedModules as $unassignedKey => $unassignedValue) {
 				foreach($assignedModules as $assignedKey => $assignedValue) {
-					if($unassignedValue == $assignedValue) {
+					if($unassignedKey == $assignedKey) {
 						unset($unassignedModules[$unassignedKey]);
 					}
 				}
@@ -544,6 +545,7 @@ class ProjectController extends BaseActiveController
 		$headers = getallheaders();
 		Project::setClient($headers['X-Client']);
 
+		$userID = self::getUserFromToken()->UserID;
 
 		//create response
 		$response = Yii::$app ->response;
@@ -574,16 +576,26 @@ class ProjectController extends BaseActiveController
 		//loop modulesAdded and create relationships
 		foreach($modulesAdded as $i)
 		{
-			$module = ProjectModuleTb::findOne($i);
-			$module->
+			$model = new MenusProjectModule();
+			$model->ProjectModulesName = $i;
+			$model->ProjectModulesProjectID = $projectID;
+			$model->ProjectModulesCreatedBy = $userID;
+			if(!$model->save()) {
+				throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
+			}
 
 		}
 
 		//loop usersRemoved and delete relationships
 		foreach($modulesRemoved as $i)
 		{
-			$module = MenusModuleMenu::findOne($i);
-			$module->unlink('projects', $project);
+			$modules = MenusProjectModule::find()
+				->where("ProjectModulesProjectID = $projectID")
+				->where("ProjectModulesName = '$i'")
+				->all();
+			foreach($modules as $module) {
+				$module->delete();
+			}
 		}
 
 		//set success response
