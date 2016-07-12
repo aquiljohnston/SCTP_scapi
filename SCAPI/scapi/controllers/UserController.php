@@ -418,6 +418,7 @@ class UserController extends BaseActiveController
 			SCUser::setClient($headers['X-Client']);
 		
 			$users = SCUser::find()
+				->where("UserActiveFlag = 1")
 				->all();
 			$namePairs = [null => "Unassigned"];
 			$tempPairs = [];
