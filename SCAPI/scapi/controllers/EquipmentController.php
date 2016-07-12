@@ -112,7 +112,7 @@ class EquipmentController extends BaseActiveController
 
 			$model = new Equipment(); 
 			$model->attributes = $data;  
-			$model->EquipmentCreatedByUser = self::getUserFromToken()->UserID;
+			$model->EquipmentCreatedBy = self::getUserFromToken()->UserID;
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
@@ -168,12 +168,13 @@ class EquipmentController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			$model->EquipmentModifiedDate = Parent::getDate();
+			$model->EquipmentModifiedBy = self::getUserFromToken()->UserID;
 			
 			//TODO set flag to "Pending" when the project information is changed.
 			if($model->EquipmentProjectID != $currentProject)
 			{
 				$model-> EquipmentAcceptedFlag = "Pending";
-				$model-> EquipmentAcceptedBy = "Pending";
+				$model-> EquipmentAcceptedBy = null;
 			}
 			
 			if($model-> update())
