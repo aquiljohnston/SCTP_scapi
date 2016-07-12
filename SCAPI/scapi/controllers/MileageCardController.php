@@ -15,6 +15,7 @@ use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
+use yii\debug\components\search\matchers\Base;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -191,7 +192,7 @@ class MileageCardController extends BaseActiveController
 			
 			//get all time entries for Sunday
 			$sundayDate = $date;
-			$sundayStr = $sundayDate->format(DATE_ATOM);
+			$sundayStr = $sundayDate->format(BaseActiveController::DATE_FORMAT);
 			$sundayEntries = MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$sundayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
@@ -199,7 +200,7 @@ class MileageCardController extends BaseActiveController
 			
 			//get all time entries for Monday
 			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format(DATE_ATOM);		
+			$mondayStr = $mondayDate->format(BaseActiveController::DATE_FORMAT);
 			$mondayEntries =MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$mondayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
@@ -207,7 +208,7 @@ class MileageCardController extends BaseActiveController
 				
 			//get all time entries for Tuesday	
 			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format(DATE_ATOM);
+			$tuesdayStr = $tuesdayDate->format(BaseActiveController::DATE_FORMAT);
 			$tuesdayEntries =MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
@@ -215,7 +216,7 @@ class MileageCardController extends BaseActiveController
 				
 			//get all time entries for Wednesday	
 			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format(DATE_ATOM);
+			$wednesdayStr = $wednesdayDate->format(BaseActiveController::DATE_FORMAT);
 			$wednesdayEntries =MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
@@ -223,7 +224,7 @@ class MileageCardController extends BaseActiveController
 				
 			//get all time entries for Thursday
 			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format(DATE_ATOM);
+			$thursdayStr = $thursdayDate->format(BaseActiveController::DATE_FORMAT);
 			$thursdayEntries =MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
@@ -231,7 +232,7 @@ class MileageCardController extends BaseActiveController
 				
 			//get all time entries for Friday
 			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format(DATE_ATOM);
+			$fridayStr = $fridayDate->format(BaseActiveController::DATE_FORMAT);
 			$fridayEntries =MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$fridayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
@@ -239,7 +240,7 @@ class MileageCardController extends BaseActiveController
 				
 			//get all time entries for Saturday
 			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format(DATE_ATOM);
+			$satudayStr = $satudayDate->format(BaseActiveController::DATE_FORMAT);
 			$saturdayEntries =MileageEntry::find()
 				->where("MileageEntryDate ="."'"."$satudayStr". "'")
 				->andWhere("MileageEntryMileageCardID = $cardID")
