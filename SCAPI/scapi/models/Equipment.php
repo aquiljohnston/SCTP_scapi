@@ -31,7 +31,7 @@ use Yii;
  * @property string $EquipmentAcceptedBy
  * @property string $EquipmentModificationReason
  * @property string $EquipmentArchiveFlag
- * @property string $EquipmentCreatedByUser
+ * @property string $EquipmentCreatedBy
  * @property string $EquipmentCreateDate
  * @property string $EquipmentModifiedBy
  * @property string $EquipmentModifiedDate
@@ -58,7 +58,7 @@ class Equipment extends BaseActiveRecord
             [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear',
 			'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment',
 			'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag', 'EquipmentAcceptedBy', 'EquipmentModificationReason', 'EquipmentModificationReason', 'EquipmentArchiveFlag'], 'string'],
-            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedByUser', 'EquipmentModifiedBy'], 'integer'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedBy', 'EquipmentModifiedBy'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
     }
@@ -93,7 +93,7 @@ class Equipment extends BaseActiveRecord
 			'EquipmentAcceptedBy' => 'Equipment Accepted By',
 			'EquipmentModificationReason' => 'Equipment Modification Reason',
 			'EquipmentArchiveFlag' => 'Equipment Archive Flag',
-            'EquipmentCreatedByUser' => 'Equipment Created By User',
+            'EquipmentCreatedBy' => 'Equipment Created By',
             'EquipmentCreateDate' => 'Equipment Create Date',
             'EquipmentModifiedBy' => 'Equipment Modified By',
             'EquipmentModifiedDate' => 'Equipment Modified Date',
