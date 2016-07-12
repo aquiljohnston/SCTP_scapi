@@ -106,11 +106,15 @@ class BaseActiveController extends ActiveController
 	 * Use DateTime::ATOM or DATE_ATOM for compatibility with ISO-8601 instead." - PHP Docs
 	 * @return bool|string Formatted current date
 	 */
-	public function getDate()
+	public function getISODate()
 	{
 		return date(DATE_ATOM); // ISO8601
 	}
-	
+		
+	public function getDate()
+	{
+		return date('Y-m-d H:i:s'); 
+	}	
 	
 	public static function getUserFromToken($token = null)
 	{
