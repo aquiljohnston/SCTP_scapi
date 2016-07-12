@@ -17,7 +17,8 @@ use yii\db\Exception;
 
 class BaseActiveController extends ActiveController
 {	
-
+	const DATE_FORMAT = 'Y-m-d H:i:s';
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -94,26 +95,10 @@ class BaseActiveController extends ActiveController
 			throw new \yii\web\HttpException(400);
 		}
     }
-
-
-
-	/**
-	 * Returns current date formatted in a standard way
-	 *
-	 * A note on why we use DateTime:ATOM:
-	 *
-	 * "[DateTime::ISO8601] is not compatible with ISO-8601, but is left this way for backward compatibility reasons.
-	 * Use DateTime::ATOM or DATE_ATOM for compatibility with ISO-8601 instead." - PHP Docs
-	 * @return bool|string Formatted current date
-	 */
-	public function getISODate()
-	{
-		return date(DATE_ATOM); // ISO8601
-	}
-		
+	
 	public function getDate()
 	{
-		return date('Y-m-d H:i:s'); 
+		return date(BaseActiveController::DATE_FORMAT);
 	}	
 	
 	public static function getUserFromToken($token = null)
