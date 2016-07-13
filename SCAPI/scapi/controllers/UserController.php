@@ -369,22 +369,21 @@ class UserController extends BaseActiveController
 			PermissionsController::requirePermission('userUpdate'.$currentRole);
 			
 			//pass new data to user model
-			$user->UserActiveFlag = 0;  
+			//$user->UserActiveFlag = 0;  
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			$user->UserModifiedDate = Parent::getDate();
-			
-			if($user-> update())
+			//call stored procedure to for cascading deactivation of a user
+			try
 			{
-				//revoke permissions
-				$auth = Yii::$app->authManager;
-				$auth->revokeAll($user["UserID"]);
-				$response->setStatusCode(200);
+				$connection = SCUser::getDb();
+				$userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
+				$userDeactivateCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
+				$userDeactivateCommand->execute();
 				$response->data = $user; 
 			}
-			else
+			catch(Exception $e)
 			{
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";

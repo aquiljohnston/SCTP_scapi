@@ -19,6 +19,7 @@ use Yii;
  * @property integer $MileageCardApprovedBy
  * @property string $MileageCardSupervisorName
  * @property string $MileageCardArchiveFlag
+ * @property string $MileageCardActiveFlag
  * @property string $MileageCardCreateDate
  * @property string $MileageCardCreatedBy
  * @property string $MileageCardModifiedDate
@@ -45,7 +46,7 @@ class MileageCard extends BaseActiveRecord
     {
         return [
             [['MileageCardTechID', 'MileageCardProjectID', 'MileageCardBusinessMiles', 'MileageCardApprovedBy', 'MileageCardPersonalMiles'], 'integer'],
-            [['MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy', 'MileageCardApprovedFlag', 'MileageCardProjectGroupID', 'MileageCardArchiveFlag'], 'string'],
+            [['MileageCardSupervisorName', 'MileageCardCreatedBy', 'MileageCardModifiedBy', 'MileageCardApprovedFlag', 'MileageCardProjectGroupID', 'MileageCardArchiveFlag', 'MileageCardActiveFlag'], 'string'],
             [['MileageStartDate', 'MileageEndDate', 'MileageCardCreateDate', 'MileageCardModifiedDate'], 'safe']
         ];
     }
@@ -67,6 +68,7 @@ class MileageCard extends BaseActiveRecord
             'MileageCardApprovedFlag' => 'Mileage Card Approved Flag',
 			'MileageCardApprovedBy' => 'Mileage Card Approved By',
 			'MileageCardSupervisorName' => 'Mileage Card Supervisor Name',
+			'MileageCardActiveFlag' => 'Mileage Card Active Flag',
 			'MileageCardArchiveFlag' => 'Mileage Card Archive Flag',
             'MileageCardCreateDate' => 'Mileage Card Create Date',
             'MileageCardCreatedBy' => 'Mileage Card Created By',
