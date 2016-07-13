@@ -130,14 +130,6 @@ class MileageCardController extends BaseActiveController
 				$approvedCards[]= MileageCard::findOne($id);
 			}
 			
-			//get user's name by ID
-			if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
-			{
-				$fname = $user->UserFirstName;
-				$lname = $user->UserLastName;
-				$approvedBy = $lname.", ".$fname;
-			}
-			
 			//try to approve time cards
 			try
 			{
@@ -150,7 +142,7 @@ class MileageCardController extends BaseActiveController
 					$card-> MileageCardApprovedFlag = "Yes";
 					$card-> MileageCardApprovedBy = $approvedBy;
 					$card-> MileageCardModifiedDate = Parent::getDate();
-					$card-> MileageCardModifiedBy = $approvedBy;
+					//$card-> MileageCardModifiedBy = $approvedBy;
 					$card-> update();
 				}
 				$transaction->commit();

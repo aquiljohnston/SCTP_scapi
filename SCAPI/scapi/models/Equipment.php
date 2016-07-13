@@ -31,9 +31,9 @@ use Yii;
  * @property string $EquipmentAcceptedBy
  * @property string $EquipmentModificationReason
  * @property string $EquipmentArchiveFlag
- * @property string $EquipmentCreatedBy
+ * @property integer $EquipmentCreatedBy
  * @property string $EquipmentCreateDate
- * @property string $EquipmentModifiedBy
+ * @property integer $EquipmentModifiedBy
  * @property string $EquipmentModifiedDate
  *
  * @property ClientTb $equipmentClient
@@ -57,8 +57,8 @@ class Equipment extends BaseActiveRecord
         return [
             [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear',
 			'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment',
-			'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag', 'EquipmentAcceptedBy', 'EquipmentModificationReason', 'EquipmentModificationReason', 'EquipmentArchiveFlag'], 'string'],
-            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedBy', 'EquipmentModifiedBy'], 'integer'],
+			'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag',  'EquipmentModificationReason', 'EquipmentModificationReason', 'EquipmentArchiveFlag'], 'string'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedBy', 'EquipmentModifiedBy', 'EquipmentAcceptedBy'], 'integer'],
             [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
         ];
     }
