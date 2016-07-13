@@ -128,15 +128,6 @@ class TimeCardController extends BaseActiveController
 			{
 				$approvedCards[]= TimeCard::findOne($id);
 			}
-
-			// TODO: Comment this block out when Sandra finishes database changes
-			//get user's name by ID
-			if ($user = SCUser::findOne(['UserID'=>$approvedBy]))
-			{
-				$fname = $user->UserFirstName;
-				$lname = $user->UserLastName;
-				$approvedBy = $lname.", ".$fname;
-			}
 			
 			//try to approve time cards
 			try {
