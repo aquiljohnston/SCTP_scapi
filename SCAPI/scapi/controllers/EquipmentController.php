@@ -294,14 +294,6 @@ class EquipmentController extends BaseActiveController
 				$approvedEquipment[]= Equipment::findOne($id);
 			}
 			
-			//get user's name by ID
-			if ($user = SCUser::findOne(['UserID'=>$acceptedBy]))
-			{
-				$fname = $user->UserFirstName;
-				$lname = $user->UserLastName;
-				$acceptedBy = $lname.", ".$fname;
-			}
-			
 			//try to accept equipment
 			try
 			{
@@ -323,6 +315,7 @@ class EquipmentController extends BaseActiveController
 			//if transaction fails rollback changes and send error
 			catch(Exception $e)
 			{
+				throw $e;
 				$transaction->rollBack();
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
