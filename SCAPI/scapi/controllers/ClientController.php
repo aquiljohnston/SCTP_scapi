@@ -183,6 +183,7 @@ class ClientController extends BaseActiveController
 			Client::setClient($headers['X-Client']);
 		
 			$clients = Client::find()
+				->orderBy('ClientName')
 				->all();
 			$namePairs = [];
 			$clientSize = count($clients);
