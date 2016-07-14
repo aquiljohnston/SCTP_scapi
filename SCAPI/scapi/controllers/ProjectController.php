@@ -37,7 +37,6 @@ class ProjectController extends BaseActiveController
 					'get-project-dropdowns'  => ['get'],
 					'get-user-relationships'  => ['get'],
 					'add-remove-users' => ['post'],
-					'get-project-dropdowns' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -256,6 +255,7 @@ class ProjectController extends BaseActiveController
 			Project::setClient($headers['X-Client']);
 		
 			$projects = Project::find()
+				->orderBy('ProjectName')
 				->all();
 			$namePairs = [null => "Unassigned"];
 			$projectSize = count($projects);
