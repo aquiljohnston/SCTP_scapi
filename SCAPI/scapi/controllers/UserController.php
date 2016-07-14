@@ -418,6 +418,7 @@ class UserController extends BaseActiveController
 		
 			$users = SCUser::find()
 				->where("UserActiveFlag = 1")
+				->orderBy("UserLastName")
 				->all();
 			$namePairs = [null => "Unassigned"];
 			$tempPairs = [];
@@ -427,7 +428,6 @@ class UserController extends BaseActiveController
 			{
 				$tempPairs[$users[$i]->UserID]= $users[$i]->UserLastName. ", ". $users[$i]->UserFirstName;
 			}
-			natcasesort($tempPairs);
 			$namePairs = $namePairs + $tempPairs;
 
 			$response = Yii::$app ->response;
