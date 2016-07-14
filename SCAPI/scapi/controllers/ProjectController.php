@@ -300,7 +300,9 @@ class ProjectController extends BaseActiveController
 			
 			//get all users for the project
 			$project = Project::findOne($projectID);
-			$assignedUsers = $project->users;
+			$assignedUsers = $project->getUsers()
+								->orderBy('UserLastName')
+								->all();
 			$assignedPairs = [];
 			$assignedSize = count($assignedUsers);
 			
@@ -313,6 +315,7 @@ class ProjectController extends BaseActiveController
 			//get all users
 			$allUsers = SCUser::find()
 				->where(['UserActiveFlag' => 1])
+				->orderBy('UserLastName')
 				->all();
 			
 			$unassignedPairs = [];
