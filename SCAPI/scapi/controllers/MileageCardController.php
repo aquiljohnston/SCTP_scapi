@@ -295,7 +295,7 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($userID, $week)
+	public function actionGetCards($week)
 	{
 		// RBAC permission check is embedded in this action	
 		try
@@ -335,8 +335,9 @@ class MileageCardController extends BaseActiveController
 				}
 			} 
 			//rbac permission check
-			if (PermissionsController::can('mileageCardGetOwnCards'))		
+			elseif(PermissionsController::can('mileageCardGetOwnCards'))		
 			{
+				$userID = self::getUserFromToken()->UserID;
 				//get user project relations array
 				$projects = ProjectUser::find()
 					->where("ProjUserUserID = $userID")
