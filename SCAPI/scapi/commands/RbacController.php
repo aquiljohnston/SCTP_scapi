@@ -482,6 +482,7 @@ class RbacController extends Controller
 		$auth->addChild($engineer, $notificationsGet);
 		$auth->addChild($engineer, $projectGetDropdown);
 		$auth->addChild($engineer, $userGetDropdown);
+		$auth->addChild($engineer, $userView);
 		// sub menu permissions
 		$auth->addChild($engineer, $viewEquipmentMgmt);
 

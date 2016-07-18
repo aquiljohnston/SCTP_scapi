@@ -143,7 +143,7 @@ class MenuController extends Controller {
 							$subNavData["enabled"] = 1;
 							$userMgmtFlag = true;
 						}
-						else if((Yii::$app->user->can($permissionName) && $relationFlag) || PermissionsController::can("Admin"))
+						else if((PermissionsController::can($permissionName) && $relationFlag) || PermissionsController::can("Admin"))
 						{
 							$subNavData["enabled"] = 1;
 						}
@@ -176,6 +176,10 @@ class MenuController extends Controller {
 			
 			//push the data into the response array
 			$menuArray["Modules"][] = $modules;	
+			
+			$responseJson = json_encode($menuArray);
+			
+			Yii::Trace($responseJson);
 			
 			//send response
 			$response = Yii::$app->response;
