@@ -60,10 +60,22 @@ class MenuController extends Controller {
 			//get project data
 			$project = Project::findOne($projectID);
 			//get client data
-			$client = Client::findOne($project->ProjectClientID);
+			if($project != null)
+			{
+				$client = Client::findOne($project->ProjectClientID);
+			}
+			else{
+				$client = null;
+			}
 			
 			//populate menu array
-			$menuArray["ClientName"] = $client->ClientName;
+			if ($client != null)
+			{
+				$menuArray["ClientName"] = $client->ClientName;
+			}
+			else{
+				$menuArray["ClientName"] = null;
+			}
 			$menuArray["ProjectID"] = $projectID;
 			
 			//get active modules for enaabled flags
