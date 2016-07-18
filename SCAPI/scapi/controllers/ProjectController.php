@@ -163,9 +163,11 @@ class ProjectController extends BaseActiveController
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
 
-			$model = new Project(); 
+			$model = new Project();
+
 			$model->attributes = $data;  
-			
+			$model->ProjectCreatedBy = self::getUserFromToken()->UserID;
+
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
