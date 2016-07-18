@@ -129,10 +129,8 @@ class LoginController extends Controller
 				throw new \yii\web\HttpException(400, 'Client Header Not Found.');
 			}	
 			
-			Yii::trace('Logout has been called');
-			$logoutString = 'Logout Successful!';
+			$logoutString = "Logout Successful!";
 			$response = Yii::$app->response;
-			$response->headers->add('Content-Length', strlen($logoutString));
 			Yii::$app->user->logout($destroySession = true, $userID);
 			$response->data = $logoutString;
 			return $response;
