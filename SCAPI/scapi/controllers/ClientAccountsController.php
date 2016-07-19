@@ -43,7 +43,7 @@ class ClientAccountsController extends BaseActiveController
 		
 			$clientAccounts = ClientAccounts::find()
 				->all();
-			$namePairs = [];
+			$namePairs = [null => "Unassigned"];
 			$clientSize = count($clientAccounts);
 			
 			for($i=0; $i < $clientSize; $i++)
