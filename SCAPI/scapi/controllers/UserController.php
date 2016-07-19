@@ -448,7 +448,7 @@ class UserController extends BaseActiveController
 	* @returns json body containing userdata, equipment, and projects 
 	* @throws \yii\web\HttpException
 	*/
-	public function actionGetMe($userID)
+	public function actionGetMe()
 	{
 		PermissionsController::requirePermission('userGetMe');
 		
@@ -465,6 +465,9 @@ class UserController extends BaseActiveController
 			Client::setClient($headers['X-Client']);
 			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
 			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			//get user id from auth token
+			$userID = self::getUserFromToken()->UserID;
 			
 			//get user
 			$user = SCUser::findOne($userID);
