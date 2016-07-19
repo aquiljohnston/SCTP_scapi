@@ -46,7 +46,7 @@ class NotificationController extends Controller
 		return $behaviors;		
 	}
 	
-	public function actionGetNotifications($userID)
+	public function actionGetNotifications()
 	{
 		try
 		{
@@ -60,10 +60,13 @@ class NotificationController extends Controller
 			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			
 			//get user
+			$userID = BaseActiveController::getUserFromToken()->UserID;
 			$user = SCUser::findOne($userID);
 			
 			// check if login user is Engineer
 			if($user->UserAppRoleType != "Engineer"){
+				
+				PermissionsController::requirePermission('notificationsGet');
 				
 				//get projects the user belongs to
 				$projectData = $user->projects;
