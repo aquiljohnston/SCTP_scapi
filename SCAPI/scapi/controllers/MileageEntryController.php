@@ -113,7 +113,7 @@ class MileageEntryController extends BaseActiveController
 	public function actionDeactivate()
 	{
 		// RBAC permission check
-		PermissionsController::requirePermission('');
+		PermissionsController::requirePermission('mileageEntryDeactivate');
 
 		try
 		{
