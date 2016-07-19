@@ -15,6 +15,7 @@ use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\Link;
@@ -156,6 +157,10 @@ class NotificationController extends Controller
 				$response->data = $notifications;
 				return $response;
 			}
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
 		}
 		catch(\Exception $e) 
 		{

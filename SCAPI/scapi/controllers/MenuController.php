@@ -37,7 +37,7 @@ class MenuController extends Controller {
 	}
 	
 	//public function actionGet()
-	public function actionGet($projectID)
+	public function actionGet($project)
 	{
 		// try{
 			//set db target
@@ -58,7 +58,10 @@ class MenuController extends Controller {
 			$subNavigation = [];
 			
 			//get project data
-			$project = Project::findOne($projectID);
+			$project = Project::find()
+				->where("ProjectUrlPrefix = '$project'")
+				->one();
+			$projectID = $project->ProjectID;
 			//get client data
 			if($project != null)
 			{
