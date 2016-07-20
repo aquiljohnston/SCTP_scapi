@@ -84,8 +84,13 @@ class MileageEntryController extends BaseActiveController
 			$data = json_decode($post, true);
 
 			$model = new MileageEntry(); 
-			$model->attributes = $data;  
+			$model->attributes = $data;
+
 			
+			$userID = self::getUserFromToken()->UserID;
+			$model->MileageEntryCreatedBy = $userID;
+
+
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			

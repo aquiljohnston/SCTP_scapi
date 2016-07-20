@@ -129,8 +129,12 @@ class UserController extends BaseActiveController
 				
 				//maps the data to a new user model and save
 				$user = new SCUser();
-				$user->attributes = $data;  
-				
+				$user->attributes = $data;
+
+				$userID = self::getUserFromToken()->UserID;
+				$user->UserCreatedBy = $userID;
+
+
 				//rbac check if attempting to create an admin
 				if($user["UserAppRoleType"] == 'Admin')
 				{
@@ -139,7 +143,7 @@ class UserController extends BaseActiveController
 				
 				//created date
 				$user->UserCreatedDate = Parent::getDate();
-				
+
 				if($user-> save())
 				{
 					//assign rbac role
@@ -185,7 +189,7 @@ class UserController extends BaseActiveController
 	public function actionUpdate($id)
 	{
 		PermissionsController::requirePermission('userUpdate');
-		
+
 		try
 		{
 			//set db target
@@ -201,11 +205,11 @@ class UserController extends BaseActiveController
 			
 			//get user model to be updated
 			$user = SCUser::findOne($id);
-			
+
 			$currentRole = $user["UserAppRoleType"];
-			
-			PermissionsController::requirePermission('userUpdateAdmin');
-			
+
+			PermissionsController::requirePermission('userUpdate' . $currentRole);
+
 			//iv and key for openssl
 			$iv = "abcdefghijklmnop";
 			$sKey ="sparusholdings12";
@@ -238,14 +242,8 @@ class UserController extends BaseActiveController
 						//create row in the db to hold the hashedPass
 						$keyData = Key::findOne($user->UserKey);
 						$keyData->Key1 = $hashedPass;
-						if(array_key_exists("UserCreatedBy", $data))
-						{
-							$keyData->KeyCreatedBy = $data["UserCreatedBy"];
-						}
-						else
-						{
-							throw new \yii\web\HttpException(400);
-						}
+						$keyData->KeyCreatedBy = self::getUserFromToken()->UserID;
+
 						if($keyData-> update())
 						{
 							//Replace the encoded pass with the ID for the new KeyTb row
@@ -261,9 +259,15 @@ class UserController extends BaseActiveController
 						$data["UserKey"] = $decryptedPass;
 					}
 				}
-				
+
+				//Don't let client change this attribute
+				if(isset($data["UserCreatedBy"])) {
+					unset($data["UserCreatedBy"]);
+				}
 				//pass new data to user
-				$user->attributes = $data;  
+				$user->attributes = $data;
+				// Get modified by from token
+				$user->UserModifiedBy = self::getUserFromToken()->UserID;
 				
 				//rbac check if attempting to create an admin
 				if($user["UserAppRoleType"] == 'Admin')
@@ -307,7 +311,7 @@ class UserController extends BaseActiveController
 		{
 			throw new ForbiddenHttpException;
 		}
-		catch(\Exception $e) 
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}

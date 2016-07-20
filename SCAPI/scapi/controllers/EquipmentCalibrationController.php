@@ -72,6 +72,7 @@ class EquipmentCalibrationController extends BaseActiveController
 			//pass data to model
 			$model = new EquipmentCalibration(); 
 			$model->attributes = $data;  
+			$model->EquipmentCalibrationCreatedBy = self::getUserFromToken()->UserID;
 			
 			//create date
 			$model->EquipmentCalibrationCreateDate = Parent::getDate();
