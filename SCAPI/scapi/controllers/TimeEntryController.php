@@ -90,6 +90,10 @@ class TimeEntryController extends BaseActiveController
 			
 			//create date
 			$model->TimeEntryCreateDate = Parent::getDate();
+
+			//created by
+			$userID = self::getUserFromToken()->UserID;
+			$model->TimeEntryCreatedBy = $userID;
 			
 			if($model-> save())
 			{
