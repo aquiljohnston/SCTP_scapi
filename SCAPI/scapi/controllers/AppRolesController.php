@@ -4,10 +4,8 @@ namespace app\controllers;
 
 use Yii;
 use app\models\AppRoles;
-use app\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
-use yii\data\ActiveDataProvider;
-use yii\web\NotFoundHttpException;
+use yii\web\BadRequestHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 
@@ -97,6 +95,30 @@ class AppRolesController extends BaseActiveController
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
+		}
+	}
+
+	public function actionGetPgeDropdowns() {
+
+		// TODO: Permissions check
+		try {
+			//TODO: headers and X-Client
+
+			//TODO: Find App Roles
+			$data = [
+				"Administrator",
+				"Project Manager",
+				"Supervisor",
+				"Engineer",
+				"Technician"
+			];
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+			return $response;
+		} catch (\Exception $e) {
+			throw new BadRequestHttpException;
 		}
 	}
 }

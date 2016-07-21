@@ -6,6 +6,7 @@ use Yii;
 use app\models\EmployeeType;
 use app\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
+use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -64,6 +65,28 @@ class EmployeeTypeController extends BaseActiveController
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
+		}
+	}
+
+	public function actionGetPgeDropdowns() {
+		
+		// TODO: Permissions check
+		try {
+			//TODO: headers and X-Client
+			
+			//TODO: Find EmployeeTypes
+			$data = [
+				"Employee",
+				"Contractor",
+				"Intern"
+			];
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+			return $response;
+		} catch (\Exception $e) {
+			throw new BadRequestHttpException;
 		}
 	}
 }
