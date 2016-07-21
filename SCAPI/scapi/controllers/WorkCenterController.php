@@ -4,7 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use app\authentication\TokenAuth;
-//use app\models\Division;
+//use app\models\WorkCenter;
 use app\controllers\BaseActiveController;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
@@ -16,15 +16,15 @@ use yii\db\Exception;
 
 
 /**
- * DivisionController creates user notifications.
+ * WorkCenterController creates user notifications.
  */
-class DivisionController extends Controller
+class WorkCenterController extends Controller
 //swap when model is implemented
-//class DivisionController extends BaseActiveController
+//class WorkCenterController extends BaseActiveController
 {	
 	
 	//use when model is implemented
-	//public $modelClass = 'app\models\Division'; 
+	//public $modelClass = 'app\models\WorkCenter'; 
 	
 	public function behaviors()
     {
@@ -44,7 +44,7 @@ class DivisionController extends Controller
 		return $behaviors;		
 	}
 	
-	public function actionGetDropdown()
+	public function actionGetDropdown($division = null)
 	{
 		//TODO RBAC permission check
 		try{
@@ -52,10 +52,29 @@ class DivisionController extends Controller
 			
 			//stub data
 			$dropdown = [];
-			$dropdown["Belial"] = "Belial";
-			$dropdown["Azmodan"] = "Azmodan";
-			$dropdown["Diablo"] = "Diablo";
-			$dropdown["Malthael"] = "Malthael";
+			if($division == null)
+			{
+				$dropdown[] = "Zoltun Kulle";
+				$dropdown[] = "Cydaea";
+				$dropdown[] = "Izual";
+				$dropdown[] = "Urzael";
+			}
+			elseif ($division == "Belial")
+			{
+				$dropdown[] = "Zoltun Kulle";
+			}
+			elseif ($division == "Azmodan")
+			{
+				$dropdown[] = "Cydaea";
+			}
+			elseif ($division == "Diablo")
+			{
+				$dropdown[] = "Izual";
+			}
+			elseif ($division == "Malthael")
+			{
+				$dropdown[] = "Urzael";
+			}
 			
 			//send response
 			$response = Yii::$app->response;
