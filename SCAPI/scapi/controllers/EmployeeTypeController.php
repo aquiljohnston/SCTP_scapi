@@ -76,9 +76,9 @@ class EmployeeTypeController extends BaseActiveController
 			
 			//TODO: Find EmployeeTypes
 			$data = [
-				"Employee",
-				"Contractor",
-				"Intern"
+				"Employee" => "Employee",
+				"Contractor" => "Contractor",
+				"Intern" => "Intern"
 			];
 			
 			$response = Yii::$app->response;
