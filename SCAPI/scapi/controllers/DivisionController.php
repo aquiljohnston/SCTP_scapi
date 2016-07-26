@@ -51,7 +51,7 @@ class DivisionController extends Controller
 			//TODO check headers
 			
 			//stub data
-			$dropdown = [];
+			$dropdown = [null => "Select..."];
 			$dropdown["Belial"] = "Belial";
 			$dropdown["Azmodan"] = "Azmodan";
 			$dropdown["Diablo"] = "Diablo";
