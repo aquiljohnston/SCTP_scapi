@@ -44,6 +44,8 @@ class WorkCenterController extends Controller
 		return $behaviors;		
 	}
 	
+	//required format for the dynaic dropdowns 
+	//['id'=>'<sub-cat_id_2>', 'name'=>'<sub-cat-name2>']	
 	public function actionGetDropdown($division = null)
 	{
 		//TODO RBAC permission check
@@ -52,28 +54,53 @@ class WorkCenterController extends Controller
 			
 			//stub data
 			$dropdown = [];
+			$data = [];
 			if($division == null)
 			{
-				$dropdown[] = "Zoltun Kulle";
-				$dropdown[] = "Cydaea";
-				$dropdown[] = "Izual";
-				$dropdown[] = "Urzael";
+				$data["id"] = "Zoltun Kulle";
+				$data["name"] = "Zoltun Kulle";
+				$dropdown[] = $data;
+				$data = [];
+				$data["id"] = "Cydaea";
+				$data["name"] = "Cydaea";
+				$dropdown[] = $data;
+				$data = [];
+				$data["id"] = "Izual";
+				$data["name"] = "Izual";
+				$dropdown[] = $data;
+				$data = [];
+				$data["id"] = "Urzael";
+				$data["name"] = "Urzael";
+				$dropdown[] = $data;
+				$data = [];
 			}
 			elseif ($division == "Belial")
 			{
-				$dropdown[] = "Zoltun Kulle";
+				$data["id"] = "Zoltun Kulle";
+				$data["name"] = "Zoltun Kulle";
+				$dropdown[] = $data;
+				$data = [];
 			}
 			elseif ($division == "Azmodan")
 			{
-				$dropdown[] = "Cydaea";
+				$data["id"] = "Cydaea";
+				$data["name"] = "Cydaea";
+				$dropdown[] = $data;
+				$data = [];
 			}
 			elseif ($division == "Diablo")
 			{
-				$dropdown[] = "Izual";
+				$data["id"] = "Izual";
+				$data["name"] = "Izual";
+				$dropdown[] = $data;
+				$data = [];
 			}
 			elseif ($division == "Malthael")
 			{
-				$dropdown[] = "Urzael";
+				$data["id"] = "Urzael";
+				$data["name"] = "Urzael";
+				$dropdown[] = $data;
+				$data = [];
 			}
 			
 			//send response
