@@ -744,4 +744,118 @@ class UserController extends BaseActiveController
 		// }
 	}
 
+	public function actionGet($division = null, $workCenter = null, $type = null, $filter = null)
+	{
+		//TODO RBAC permissions check
+		//try{
+		//TODO check headers
+
+		//stub data
+		$users = [];
+		//build stub users
+		$andre = [];
+		$andre["Division"] = "Diablo";
+		$andre["WorkCenter"] = "Izual";
+		$andre["Status"] = "Active";
+		$andre["LastName"] = "Vicente";
+		$andre["FirstName"] = "Andre";
+		$andre["LANID"] = "A6V9";
+		$andre["Type"] = "Contractor";
+		$andre["OQ"] = "Lapsed";
+		$josh = [];
+		$josh["Division"] = "Belial";
+		$josh["WorkCenter"] = "Zoltun Kulle";
+		$josh["Status"] = "Active";
+		$josh["LastName"] = "Josh";
+		$josh["FirstName"] = "Patton";
+		$josh["LANID"] = "J0P0";
+		$josh["Type"] = "Intern";
+		$josh["OQ"] = "Lapsed";
+		$michael = [];
+		$michael["Division"] = "Malthael";
+		$michael["WorkCenter"] = array(
+			"Adria",
+			"Urzael",
+		);
+		$michael["Status"] = "Active";
+		$michael["LastName"] = "Davis";
+		$michael["FirstName"] = "Michael";
+		$michael["LANID"] = "M3D4";
+		$michael["Type"] = "Employee";
+		$michael["OQ"] = "Current";
+		$tao = [];
+		$tao["Division"] = "Azmodan";
+		$tao["WorkCenter"] = "Cydaea";
+		$tao["Status"] = "Active";
+		$tao["LastName"] = "Tao";
+		$tao["FirstName"] = "Zhang";
+		$tao["LANID"] = "T1Z3";
+		$tao["Type"] = "Employee";
+		$tao["OQ"] = "Lapsed";
+
+		$users[] = $andre;
+		$users[] = $josh;
+		$users[] = $michael;
+		$users[] = $tao;
+		$userCount = count($users);
+		$userData = [];
+		function workCenterSearch($filter, $workCenter) {
+			if (is_array($workCenter)) {
+				$workCenterCount = count($workCenter);
+				for ($j = 0; $j < $workCenterCount; $j++) {
+					if (stripos($workCenter[$j], $filter) !== false) {
+						return true;
+					}
+				}
+			} elseif (stripos($workCenter, $filter) !== false) {
+				return true;
+			}
+			return false;
+		}
+		//loop to filter users
+		for ($i = 0; $i < $userCount; $i++) {
+			if ($filter == null || stripos($users[$i]["Division"], $filter) !== false
+				|| stripos($users[$i]["Status"], $filter) !== false || stripos($users[$i]["LastName"], $filter) !== false
+				|| stripos($users[$i]["FirstName"], $filter) !== false || stripos($users[$i]["LANID"], $filter) !== false
+				|| stripos($users[$i]["Type"], $filter) !== false || stripos($users[$i]["OQ"], $filter) !== false
+				|| workCenterSearch($filter, $users[$i]["WorkCenter"])
+			) {
+				if ($division == null || $division == $users[$i]["Division"]) {
+					if ($type == null || $type == $users[$i]["Type"]) {
+						if (is_array($users[$i]["WorkCenter"])) {
+							$workCenterCount = count($users[$i]["WorkCenter"]);
+							for ($j = 0; $j < $workCenterCount; $j++) {
+								if ($workCenter == null || $workCenter == $users[$i]["WorkCenter"][$j]) {
+									$users[$i]["WorkCenter"] = "Many";
+									$userData[] = $users[$i];
+									break;
+								}
+							}
+						} elseif ($workCenter == null || $workCenter == $users[$i]["WorkCenter"]) {
+							$userData[] = $users[$i];
+						}
+					}
+				}
+			}
+		}
+
+		//loop to handle many work centers
+
+		//send response
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $userData;
+		return $response;
+		// }
+		// catch(ForbiddenHttpException $e)
+		// {
+		// throw new ForbiddenHttpException;
+		// }
+		// catch(\Exception $e)
+		// {
+		// throw new \yii\web\HttpException(400);
+		// }
+	}
+
+
 }
