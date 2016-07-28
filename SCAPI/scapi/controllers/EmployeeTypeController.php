@@ -76,6 +76,7 @@ class EmployeeTypeController extends BaseActiveController
 			
 			//TODO: Find EmployeeTypes
 			$data = [
+				null => "Select...",
 				"Employee" => "Employee",
 				"Contractor" => "Contractor",
 				"Intern" => "Intern"
