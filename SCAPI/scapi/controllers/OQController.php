@@ -18,7 +18,7 @@ use yii\db\Exception;
 /**
  * OQController creates user notifications.
  */
-class OqController extends Controller
+class OQController extends Controller
 //swap when model is implemented
 //class OqController extends BaseActiveController
 {	
