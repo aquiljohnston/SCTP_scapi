@@ -8,6 +8,12 @@ $config = [
     'id' => 'scapi',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+	//module configs for versioning
+	'modules' => [
+		'v1' => [
+			'class' => 'app\modules\v1\Module',
+		],
+	],	
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
@@ -78,7 +84,6 @@ $config = [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
-	
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,
