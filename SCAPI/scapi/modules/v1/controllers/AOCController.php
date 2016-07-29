@@ -22,7 +22,7 @@ class AOCController extends Controller
         $gavin["Badge #"] = 56183;
         $gavin["Status"] = "In Progress";
         $gavin["Employee"] = "Free, Gavin";
-        $gavin["Date/Time"] = "7/28/16 17:03";
+        $gavin["Date/Time"] = "7/25/16 17:03";
         $gavin["AOC Code"] = "AC";
         $gavin["Meter"] = "235294";
         $gavin["House #"] = "123";
@@ -39,7 +39,7 @@ class AOCController extends Controller
         $chris["Badge"] = "56183";
         $chris["Status"] = "In Progress";
         $chris["Employee"] = "Smith, Chris";
-        $chris["Date/Time"] = "5/9/16 8:25";
+        $chris["Date/Time"] = "7/18/16 8:25";
         $chris["AOC Code"] = "AC";
         $chris["Meter"] = "1235464";
         $chris["House #"] = "100";
@@ -56,7 +56,7 @@ class AOCController extends Controller
         $burnie["Badge"] = "402953";
         $burnie["Status"] = "In Progress";
         $burnie["Employee"] = "Berns, Burnie";
-        $burnie["Date/Time"] = "6/25/16 8:25";
+        $burnie["Date/Time"] = "7/15/16 8:25";
         $burnie["AOC Code"] = "AC";
         $burnie["Meter"] = "5235464";
         $burnie["House #"] = "400";
