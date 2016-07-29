@@ -6,16 +6,18 @@
  * Time: 12:54 PM
  */
 namespace app\modules\v1\controllers;
+
 use \yii\web\Controller;
 use \Yii;
 use yii\web\Response;
 
-class AOCController extends Controller {
+class AOCController extends Controller
+{
 
-    public function actionGet() {
+    public function actionGet($workCenter = null, $week = null)
+    {
         $data = [];
-        
-        
+
         $gavin = [];
         $gavin["Badge #"] = 56183;
         $gavin["Status"] = "In Progress";
@@ -30,8 +32,9 @@ class AOCController extends Controller {
         $gavin["Zip"] = "30346";
         $gavin["Images"] = "";
         $gavin["Comment"] = "This is a comment";
+        $gavin["WorkCenter"] = "Cydaea";
         $data[] = $gavin;
-        
+
         $chris = [];
         $chris["Badge"] = "56183";
         $chris["Status"] = "In Progress";
@@ -46,8 +49,8 @@ class AOCController extends Controller {
         $chris["Zip"] = "94520-4508";
         $chris["Images"] = "";
         $chris["Comment"] = "This is probably a comment";
+        $chris["WorkCenter"] = "Izual";
         $data[] = $chris;
-
 
         $burnie = [];
         $burnie["Badge"] = "402953";
@@ -63,13 +66,38 @@ class AOCController extends Controller {
         $burnie["Zip"] = "30319";
         $burnie["Images"] = "AF4REJN3OI4SI422.jpg";
         $burnie["Comment"] = "Roosters don't have teeth";
+        $burnie["WorkCenter"] = "Urzael";
         $data[] = $burnie;
-        
+
+
+        $filteredData = [];
+        if($week != null) {
+            $explodedWeek = explode(" - ", $week);
+            $firstDayTS = strtotime($explodedWeek[0]);
+            $lastDayTS = strtotime($explodedWeek[1]);
+        } else {
+            $firstDayTS = null;
+            $lastDayTS = null;
+        }
+        //TODO: Possibly add a day to last day in order to get 12am on the correct day)
+        for ($i = 0; $i < count($data); $i++) {
+            if ($workCenter == null || $data[$i]["WorkCenter"] == $workCenter) {
+                if ($week != null) {
+                    $timestamp = strtotime($data[$i]["Date/Time"]);
+                } else {
+                    $timestamp = null;
+                }
+                if ($week == null || ( $firstDayTS <= $timestamp && $timestamp < $lastDayTS) ) {
+                    $filteredData[] = $data[$i];
+                }
+            }
+        }
+
 
         //send response
         $response = Yii::$app->response;
-        $response ->format = Response::FORMAT_JSON;
-        $response->data = $data;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $filteredData;
         return $response;
     }
 }
