@@ -40,11 +40,11 @@ class DropdownController extends Controller
             ];
         return $behaviors;
     }
-    public function actionMapPlatDropdown() {
-        $data["0000/Z00/Special/GD"] = "0000/Z00/Special/GD";
-        $data["0001/A01/1 Year/GD (22)"] = "0001/A01/1 Year/GD (22)";
-        $data["0001/A01/3 Year/GD (1)"] = "0001/A01/3 Year/GD (1)";
-        $data["0001/A01/5 Year/GD (2)"] = "0001/A01/5 Year/GD (2)";
+    public function actionGetMapPlatDropdown() {
+        $data["161-30-5-C"] = "161-30-5-C";
+        $data["141-31-3-C"] = "141-31-3-C";
+        $data["171-40-1-B"] = "171-40-1-B";
+        $data["130-15-5-F"] = "130-15-5-F";
 
         //send response
         $response = Yii::$app->response;
@@ -53,7 +53,7 @@ class DropdownController extends Controller
         return $response;
     }
 
-    public function actionSurveyorDropdown() {
+    public function actionGetSurveyorDropdown() {
         $data["Demo, Demo"] = "Demo, Demo";
         $data["Zhang, Tao"] = "Zhang, Tao";
         $data["Vicente, Andre"] = "Vicente, Andre";
@@ -290,5 +290,158 @@ class DropdownController extends Controller
         } catch (\Exception $e) {
             throw new BadRequestHttpException;
         }
+    }
+
+    public function actionGetMapPlatDependentDropdown($division = null, $surveyor = null, $date = null) {
+
+        $data = [];
+
+        $data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
+        $data["161-30-5-C"]["Division"] = "Diablo";
+        $data["161-30-5-C"]["Surveyor"] = "johndoe";
+        $data["161-30-5-C"]["Date"] = "5/10/16";
+
+        $data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
+        $data["161-30-3-C"]["Division"] = "Diablo";
+        $data["161-30-3-C"]["Surveyor"] = "janedoe";
+        $data["161-30-3-C"]["Date"] = "5/11/16";
+
+        $data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
+        $data["141-31-3-C"]["Division"] = "Azmodan";
+        $data["141-31-3-C"]["Surveyor"] = "bob1";
+        $data["141-31-3-C"]["Date"] = "5/12/16";
+
+        $data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
+        $data["120-31-6-F"]["Division"] = "Malthael";
+        $data["120-31-6-F"]["Surveyor"] = "bill2";
+        $data["120-31-6-F"]["Date"] = "5/13/16";
+
+        $data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
+        $data["110-11-3-A"]["Division"] = "Malthael";
+        $data["110-11-3-A"]["Surveyor"] = "fred3";
+        $data["110-11-3-A"]["Date"] = "5/14/16";
+
+        $filteredData = [];
+        foreach($data as $datum) {
+            if($division == null || $division == $datum["Division"]) {
+                if($surveyor == null || $surveyor == $datum["Surveyor"]) {
+                    if($date == null || $date == $datum["Date"]) {
+                        $entry = [];
+                        $entry["id"] = $datum["MapPlat"];
+                        $entry["name"] = $datum["MapPlat"];
+                        $filteredData[] = $entry;
+                    }
+                }
+            }
+        }
+
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $filteredData;
+        return $response;
+
+    }
+
+    public function actionGetSurveyorDependentDropdown($division = null, $mapPlat = null, $date = null) {
+
+        $data = [];
+
+        $data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
+        $data["161-30-5-C"]["Division"] = "Diablo";
+        $data["161-30-5-C"]["Surveyor"] = "Doe, John (johndoe)";
+        $data["161-30-5-C"]["Date"] = "5/10/16";
+
+        $data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
+        $data["161-30-3-C"]["Division"] = "Diablo";
+        $data["161-30-3-C"]["Surveyor"] = "Doe, Jane (janedoe)";
+        $data["161-30-3-C"]["Date"] = "5/11/16";
+
+        $data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
+        $data["141-31-3-C"]["Division"] = "Azmodan";
+        $data["141-31-3-C"]["Surveyor"] = "Smith, Bob (bob1)";
+        $data["141-31-3-C"]["Date"] = "5/12/16";
+
+        $data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
+        $data["120-31-6-F"]["Division"] = "Malthael";
+        $data["120-31-6-F"]["Surveyor"] = "Randalt, Bill (bill2)";
+        $data["120-31-6-F"]["Date"] = "5/13/16";
+
+        $data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
+        $data["110-11-3-A"]["Division"] = "Malthael";
+        $data["110-11-3-A"]["Surveyor"] = "Flintstone, Fred (fred3)";
+        $data["110-11-3-A"]["Date"] = "5/14/16";
+
+        $filteredData = [];
+        foreach($data as $datum) {
+            if($division == null || $division == $datum["Division"]) {
+                if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
+                    if($date == null || $date == $datum["Date"]) {
+                        $entry = [];
+                        $entry["id"] = $datum["Surveyor"];
+                        $entry["name"] = $datum["Surveyor"];
+                        $filteredData[] = $entry;
+                    }
+                }
+            }
+        }
+
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $filteredData;
+        return $response;
+
+    }
+
+    public function actionGetDateDependentDropdown($division = null, $surveyor = null, $mapPlat = null) {
+
+        $data = [];
+
+        $data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
+        $data["161-30-5-C"]["Division"] = "Diablo";
+        $data["161-30-5-C"]["Surveyor"] = "johndoe";
+        $data["161-30-5-C"]["Date"] = "5/10/16";
+
+        $data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
+        $data["161-30-3-C"]["Division"] = "Diablo";
+        $data["161-30-3-C"]["Surveyor"] = "janedoe";
+        $data["161-30-3-C"]["Date"] = "5/11/16";
+
+        $data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
+        $data["141-31-3-C"]["Division"] = "Azmodan";
+        $data["141-31-3-C"]["Surveyor"] = "bob1";
+        $data["141-31-3-C"]["Date"] = "5/12/16";
+
+        $data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
+        $data["120-31-6-F"]["Division"] = "Malthael";
+        $data["120-31-6-F"]["Surveyor"] = "bill2";
+        $data["120-31-6-F"]["Date"] = "5/13/16";
+
+        $data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
+        $data["110-11-3-A"]["Division"] = "Malthael";
+        $data["110-11-3-A"]["Surveyor"] = "fred3";
+        $data["110-11-3-A"]["Date"] = "5/14/16";
+
+        $filteredData = [];
+        foreach($data as $datum) {
+            if($division == null || $division == $datum["Division"]) {
+                if($surveyor == null || $surveyor == $datum["Surveyor"]) {
+                    if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
+                        $entry = [];
+                        $entry["id"] = $datum["Date"];
+                        $entry["name"] = $datum["Date"];
+                        $filteredData[] = $entry;
+                    }
+                }
+            }
+        }
+
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $filteredData;
+        return $response;
+
     }
 }
