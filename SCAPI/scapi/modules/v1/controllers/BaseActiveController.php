@@ -110,4 +110,9 @@ class BaseActiveController extends ActiveController
 		return SCUser::findIdentityByAccessToken($token);
 	}
 
+	//TODO: Possibly add a day to last day in order to make it 12am on the next day.
+    public static function inDateRange($timestamp, $startDateTS, $endDateTS) {
+        $endDateTS += 60*60*24;
+        return $startDateTS <= $timestamp && $timestamp < $endDateTS;
+    }
 }

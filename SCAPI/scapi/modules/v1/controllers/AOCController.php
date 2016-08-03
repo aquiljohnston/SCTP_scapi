@@ -87,7 +87,7 @@ class AOCController extends Controller
                 } else {
                     $timestamp = null;
                 }
-                if ($week == null || ( $firstDayTS <= $timestamp && $timestamp < $lastDayTS) ) {
+                if($week == null || BaseActiveController::inDateRange($timestamp, $firstDayTS, $lastDayTS)) {
                     $filteredData[] = $data[$i];
                 }
             }
