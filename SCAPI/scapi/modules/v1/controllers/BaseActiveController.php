@@ -112,7 +112,7 @@ class BaseActiveController extends ActiveController
 
 	//TODO: Possibly add a day to last day in order to make it 12am on the next day.
     public static function inDateRange($timestamp, $startDateTS, $endDateTS) {
-        $endDateTS += 60*60*24;
+		$endDateTS = $endDateTS . " 23:59:59";
         return $startDateTS <= $timestamp && $timestamp < $endDateTS;
     }
 }
