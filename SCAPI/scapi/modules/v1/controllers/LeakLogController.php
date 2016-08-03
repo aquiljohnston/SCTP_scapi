@@ -47,7 +47,7 @@ class LeakLogController extends Controller {
         $leak1["SAP Leak #"] = "n/a";
         $leak1["Above/Below Ground"] = "A";
         $leak1["Reported By"] = "Foot Survey";
-        $leak1["Date Found"] = "5/10/16";
+        $leak1["Date Found"] = "05/10/2016";
         $leak1["Time Found"] = "11:20";
         $leak1["Address City"] = "Concord";
         $leak1["Sorl"] = "A";
@@ -70,7 +70,7 @@ class LeakLogController extends Controller {
         $leak2["SAP Leak #"] = "n/a";
         $leak2["Above/Below Ground"] = "A";
         $leak2["Reported By"] = "Call In";
-        $leak2["Date Found"] = "5/12/16";
+        $leak2["Date Found"] = "05/12/2016";
         $leak2["Time Found"] = "1:20";
         $leak2["Address City"] = "Concord";
         $leak2["Sorl"] = "A";
@@ -93,7 +93,7 @@ class LeakLogController extends Controller {
         $leak3["SAP Leak #"] = "n/a";
         $leak3["Above/Below Ground"] = "B";
         $leak3["Reported By"] = "Foot Survey";
-        $leak3["Date Found"] = "5/13/16";
+        $leak3["Date Found"] = "05/13/2016";
         $leak3["Time Found"] = "1:20";
         $leak3["Address City"] = "Concord";
         $leak3["Sorl"] = "A";
@@ -116,7 +116,7 @@ class LeakLogController extends Controller {
         $leak4["SAP Leak #"] = "n/a";
         $leak4["Above/Below Ground"] = "B";
         $leak4["Reported By"] = "Foot Survey";
-        $leak4["Date Found"] = "5/14/16";
+        $leak4["Date Found"] = "05/14/2016";
         $leak4["Time Found"] = "1:20";
         $leak4["Address City"] = "Concord";
         $leak4["Sorl"] = "A";
@@ -132,7 +132,7 @@ class LeakLogController extends Controller {
         $leak4["Surveyor"] = "fred3";
 		
 		$service1 = [];
-        $service1["Date"] = "5/11/2016";
+        $service1["Date"] = "05/11/2016";
         $service1["Operator ID"] = "janedoe";
         $service1["Inst Type"] = "I-Heath DPIR";
         $service1["Inst Serial #"] = "6717771107";
@@ -144,7 +144,7 @@ class LeakLogController extends Controller {
         $service1["Map/Plat"] = "161-30-3-C";
         
         $service2 = [];
-        $service2["Date"] = "5/10/2016";
+        $service2["Date"] = "05/10/2016";
         $service2["Operator ID"] = "johndoe";
         $service2["Inst Type"] = "I-Heath DPIR";
         $service2["Inst Serial #"] = "7786829100";
@@ -156,7 +156,7 @@ class LeakLogController extends Controller {
         $service2["Map/Plat"] = "161-30-5-C";
 		
 		$service3 = [];
-        $service3["Date"] = "5/12/2016";
+        $service3["Date"] = "05/12/2016";
         $service3["Operator ID"] = "bob1";
         $service3["Inst Type"] = "I-Heath DPIR";
         $service3["Inst Serial #"] = "6717771107";
@@ -168,7 +168,7 @@ class LeakLogController extends Controller {
         $service3["Map/Plat"] = "141-31-3-C";
 		
 		$service4 = [];
-        $service4["Date"] = "5/13/2016";
+        $service4["Date"] = "05/13/2016";
         $service4["Operator ID"] = "bill2";
         $service4["Inst Type"] = "I-Heath DPIR";
         $service4["Inst Serial #"] = "6717771107";
@@ -230,16 +230,6 @@ class LeakLogController extends Controller {
 				}
 			}
 		}
-		
-        // $data["Leaks"][] = $leak1;
-        // $data["Leaks"][] = $leak2;
-        // $data["Leaks"][] = $leak3;
-        // $data["Leaks"][] = $leak4;
-		
-		// $data["Services"][] = $service1;
-        // $data["Services"][] = $service2;
-        // $data["Services"][] = $service3;
-        // $data["Services"][] = $service4;
 
         //send response
         $response = Yii::$app->response;
@@ -261,7 +251,7 @@ class LeakLogController extends Controller {
 		$leak1["Leak"] = "1";
 		$leak1["Approved"] = "0";
 		$leak1["HCA"] = "0";
-		$leak1["Date"] = "5/10/2016";
+		$leak1["Date"] = "05/10/2016";
 		$leak1["Employee"] = "Doe, John (johndoe)";
 		$leak1["Work Center"] = "Izual";
 		$leak1["Map"] = "161-30-5-C";
@@ -278,7 +268,7 @@ class LeakLogController extends Controller {
 		$leak2["Leak"] = "1";
 		$leak2["Approved"] = "1";
 		$leak2["HCA"] = "0";
-		$leak2["Date"] = "5/11/2016";
+		$leak2["Date"] = "05/11/2016";
 		$leak2["Employee"] = "Doe, Jane (janedoe)";
 		$leak2["Work Center"] = "Izual";
 		$leak2["Map"] = "161-30-5-C";
@@ -295,8 +285,8 @@ class LeakLogController extends Controller {
 		$leak3["Leak"] = "1";
 		$leak3["Approved"] = "1";
 		$leak3["HCA"] = "0";
-		$leak3["Date"] = "5/12/2016";
-		$leak3["Employee"] = "Robertson, Robert (bob1)";
+		$leak3["Date"] = "05/12/2016";
+		$leak3["Employee"] = "Smith, Bob (bob1)";
 		$leak3["Work Center"] = "Cydaea";
 		$leak3["Map"] = "141-31-3-C";
 		$leak3["Plat"] = "141-31-3-C";
@@ -312,8 +302,8 @@ class LeakLogController extends Controller {
 		$leak4["Leak"] = "1";
 		$leak4["Approved"] = "1";
 		$leak4["HCA"] = "0";
-		$leak4["Date"] = "5/12/2016";
-		$leak4["Employee"] = "Billson, Billy (bill2)";
+		$leak4["Date"] = "05/12/2016";
+		$leak4["Employee"] = "Randalt, Bill (bill2)";
 		$leak4["Work Center"] = "Urzael";
 		$leak4["Map"] = "141-31-3-C";
 		$leak4["Plat"] = "141-31-3-C";
@@ -329,8 +319,8 @@ class LeakLogController extends Controller {
 		$leak5["Leak"] = "1";
 		$leak5["Approved"] = "1";
 		$leak5["HCA"] = "0";
-		$leak5["Date"] = "5/12/2016";
-		$leak5["Employee"] = "Frederickson, Frederick (fred3)";
+		$leak5["Date"] = "05/12/2016";
+		$leak5["Employee"] = "Milstone, Fred (fred3)";
 		$leak5["Work Center"] = "Urzael";
 		$leak5["Map"] = "141-31-3-C";
 		$leak5["Plat"] = "141-31-3-C";
@@ -358,7 +348,7 @@ class LeakLogController extends Controller {
 			{
 				if($leaks[$i]["Employee"] == $surveyor)
 				{
-					if($leaks[$i]["Date"] == $startDate)
+					if(BaseActiveController::inDateRange($leaks[$i]["Date"], $startDate, $endDate))
 					{
 						if($leaks[$i]["Status"] == $status)
 						{
@@ -368,13 +358,7 @@ class LeakLogController extends Controller {
 				}
 			}
 		}
-		
-		// $data[] = $leak1;
-		// $data[] = $leak2;
-		// $data[] = $leak3;
-		// $data[] = $leak4;
-		// $data[] = $leak5;
-		
+
 		//send response
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
