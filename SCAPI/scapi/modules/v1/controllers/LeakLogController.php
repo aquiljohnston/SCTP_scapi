@@ -240,13 +240,6 @@ class LeakLogController extends Controller {
 	
 	public function actionGetMgmt($workCenter, $surveyor, $startDate, $endDate, $status)
 	{
-		Yii::trace("Work Center: " . $workCenter);
-		Yii::trace("Surveyor: " . $surveyor);
-		Yii::trace("Start Date: " . $startDate);
-		Yii::trace("End Date: " . $endDate);
-		Yii::trace("Status: " . $status);
-		
-		
 		$leak1 = [];
 		$leak1["Leak"] = "1";
 		$leak1["Approved"] = "0";
