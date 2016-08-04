@@ -493,18 +493,44 @@ class DropdownController extends Controller
 
     public function actionGetComplianceMonthDropdown() {
         $data = [];
-        $data["01 January"] = "January";
-        $data["02 February"] = "February";
-        $data["03 March"] = "March";
-        $data["04 April"] = "April";
-        $data["05 May"] = "May";
-        $data["06 June"] = "June";
-        $data["07 July"] = "July";
-        $data["08 August"] = "August";
-        $data["09 September"] = "September";
-        $data["10 October"] = "October";
-        $data["11 November"] = "November";
-        $data["12 December"] = "December";
+        $data["01"] = "January";
+        $data["02"] = "February";
+        $data["03"] = "March";
+        $data["04"] = "April";
+        $data["05"] = "May";
+        $data["06"] = "June";
+        $data["07"] = "July";
+        $data["08"] = "August";
+        $data["09"] = "September";
+        $data["10"] = "October";
+        $data["11"] = "November";
+        $data["12"] = "December";
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
+
+    public function actionGetStatusDropdown() {
+        $data = [];
+
+        $data["Accepted"] = "Accepted";
+        $data["Dispatched"] = "Dispatched";
+        $data["In Progress"] = "In Progress";
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
+
+    public function actionGetDispatchMethodDropdown() {
+        $data = [];
+
+        $data["Dispatched"] = "Dispatched";
+        $data["Self Dispatched"] = "Self Dispatched";
+        $data["Ad Hoc"] = "Ad Hoc";
 
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
