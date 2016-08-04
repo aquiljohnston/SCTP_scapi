@@ -105,17 +105,17 @@ class DropdownController extends Controller
         //TODO check headers
 
         $dropdown = [];
-        $w1sun = new DateTime("07/24/16");
+        $w1sun = new DateTime("07/24/2016");
         $w1sun = $w1sun->format('m/d/Y');
-        $w1sat = new DateTime("07/30/16");
+        $w1sat = new DateTime("07/30/2016");
         $w1sat = $w1sat->format('m/d/Y');
-        $w2sun = new DateTime("07/17/16");
+        $w2sun = new DateTime("07/17/2016");
         $w2sun = $w2sun->format('m/d/Y');
-        $w2sat = new DateTime("07/23/16");
+        $w2sat = new DateTime("07/23/2016");
         $w2sat = $w2sat->format('m/d/Y');
-        $w3sun = new DateTime("07/10/16");
+        $w3sun = new DateTime("07/10/2016");
         $w3sun = $w3sun->format('m/d/Y');
-        $w3sat = new DateTime("07/16/16");
+        $w3sat = new DateTime("07/16/2016");
         $w3sat = $w3sat->format('m/d/Y');
         //stub data
         $dropdown[$w1sun . " - " . $w1sat] = $w1sun . " - " . $w1sat;
@@ -304,27 +304,27 @@ class DropdownController extends Controller
         $data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
         $data["161-30-5-C"]["Division"] = "Diablo";
         $data["161-30-5-C"]["Surveyor"] = "johndoe";
-        $data["161-30-5-C"]["Date"] = "05/10/16";
+        $data["161-30-5-C"]["Date"] = "05/10/2016";
 
         $data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
         $data["161-30-3-C"]["Division"] = "Diablo";
         $data["161-30-3-C"]["Surveyor"] = "janedoe";
-        $data["161-30-3-C"]["Date"] = "05/11/16";
+        $data["161-30-3-C"]["Date"] = "05/11/2016";
 
         $data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
         $data["141-31-3-C"]["Division"] = "Azmodan";
         $data["141-31-3-C"]["Surveyor"] = "bob1";
-        $data["141-31-3-C"]["Date"] = "05/12/16";
+        $data["141-31-3-C"]["Date"] = "05/12/2016";
 
         $data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
         $data["120-31-6-F"]["Division"] = "Malthael";
         $data["120-31-6-F"]["Surveyor"] = "bill2";
-        $data["120-31-6-F"]["Date"] = "05/13/16";
+        $data["120-31-6-F"]["Date"] = "05/13/2016";
 
         $data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
         $data["110-11-3-A"]["Division"] = "Malthael";
         $data["110-11-3-A"]["Surveyor"] = "fred3";
-        $data["110-11-3-A"]["Date"] = "05/14/16";
+        $data["110-11-3-A"]["Date"] = "05/14/2016";
 
         $filteredData = [];
         foreach($data as $datum) {
@@ -359,35 +359,35 @@ class DropdownController extends Controller
         $data["161-30-5-C"]["Division"] = "Diablo";
         $data["161-30-5-C"]["SurveyorDisplay"] = "Doe, John (johndoe)";
         $data["161-30-5-C"]["Surveyor"] = "johndoe";
-        $data["161-30-5-C"]["Date"] = "05/10/16";
+        $data["161-30-5-C"]["Date"] = "05/10/2016";
         $data["161-30-5-C"]["WorkCenter"] = "Concord";
 
         $data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
         $data["161-30-3-C"]["Division"] = "Diablo";
         $data["161-30-3-C"]["SurveyorDisplay"] = "Doe, Jane (janedoe)";
         $data["161-30-3-C"]["Surveyor"] = "janedoe";
-        $data["161-30-3-C"]["Date"] = "05/11/16";
+        $data["161-30-3-C"]["Date"] = "05/11/2016";
         $data["161-30-3-C"]["WorkCenter"] = "Concord";
 
         $data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
         $data["141-31-3-C"]["Division"] = "Azmodan";
         $data["141-31-3-C"]["SurveyorDisplay"] = "Smith, Bob (bob1)";
         $data["141-31-3-C"]["Surveyor"] = "bob1";
-        $data["141-31-3-C"]["Date"] = "05/12/16";
+        $data["141-31-3-C"]["Date"] = "05/12/2016";
         $data["141-31-3-C"]["WorkCenter"] = "Concord";
 
         $data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
         $data["120-31-6-F"]["Division"] = "Malthael";
         $data["120-31-6-F"]["SurveyorDisplay"] = "Randalt, Bill (bill2)";
         $data["120-31-6-F"]["Surveyor"] = "bill2";
-        $data["120-31-6-F"]["Date"] = "05/13/16";
+        $data["120-31-6-F"]["Date"] = "05/13/2016";
         $data["120-31-6-F"]["WorkCenter"] = "Concord";
 
         $data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
         $data["110-11-3-A"]["Division"] = "Malthael";
         $data["110-11-3-A"]["SurveyorDisplay"] = "Milstone, Fred (fred3)";
         $data["110-11-3-A"]["Surveyor"] = "fred3";
-        $data["110-11-3-A"]["Date"] = "05/14/16";
+        $data["110-11-3-A"]["Date"] = "05/14/2016";
         $data["161-30-5-C"]["WorkCenter"] = "Concord";
 
         $filteredData = [];
@@ -421,27 +421,27 @@ class DropdownController extends Controller
         $data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
         $data["161-30-5-C"]["Division"] = "Diablo";
         $data["161-30-5-C"]["Surveyor"] = "johndoe";
-        $data["161-30-5-C"]["Date"] = "05/10/16";
+        $data["161-30-5-C"]["Date"] = "05/10/2016";
 
         $data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
         $data["161-30-3-C"]["Division"] = "Diablo";
         $data["161-30-3-C"]["Surveyor"] = "janedoe";
-        $data["161-30-3-C"]["Date"] = "05/11/16";
+        $data["161-30-3-C"]["Date"] = "05/11/2016";
 
         $data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
         $data["141-31-3-C"]["Division"] = "Azmodan";
         $data["141-31-3-C"]["Surveyor"] = "bob1";
-        $data["141-31-3-C"]["Date"] = "05/12/16";
+        $data["141-31-3-C"]["Date"] = "05/12/2016";
 
         $data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
         $data["120-31-6-F"]["Division"] = "Malthael";
         $data["120-31-6-F"]["Surveyor"] = "bill2";
-        $data["120-31-6-F"]["Date"] = "05/13/16";
+        $data["120-31-6-F"]["Date"] = "05/13/2016";
 
         $data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
         $data["110-11-3-A"]["Division"] = "Malthael";
         $data["110-11-3-A"]["Surveyor"] = "fred3";
-        $data["110-11-3-A"]["Date"] = "05/14/16";
+        $data["110-11-3-A"]["Date"] = "05/14/2016";
 
         $filteredData = [];
         foreach($data as $datum) {
@@ -472,6 +472,39 @@ class DropdownController extends Controller
         $data["Report 3"] = "Report 3";
         $data["Report 4"] = "Report 4";
         $data["Report 5"] = "Report 5";
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
+
+    public function actionGetSurveyTypeDropdown() {
+        $data = [];
+        $data["1 YR"] = "1 YR";
+        $data["3 YR"] = "3 YR";
+        $data["5 YR"] = "5 YR";
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
+
+    public function actionGetComplianceMonthDropdown() {
+        $data = [];
+        $data["01 January"] = "January";
+        $data["02 February"] = "February";
+        $data["03 March"] = "March";
+        $data["04 April"] = "April";
+        $data["05 May"] = "May";
+        $data["06 June"] = "June";
+        $data["07 July"] = "July";
+        $data["08 August"] = "August";
+        $data["09 September"] = "September";
+        $data["10 October"] = "October";
+        $data["11 November"] = "November";
+        $data["12 December"] = "December";
 
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
