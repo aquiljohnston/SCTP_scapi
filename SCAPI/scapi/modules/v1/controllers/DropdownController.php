@@ -35,7 +35,8 @@ class DropdownController extends Controller
                     'get-pge-employee-type-dropdown' => ['get'],
                     'get-map-plat-dropdown' => ['get'],
                     'get-surveyor-dropdown' => ['get'],
-                    'get-division-dropdown' => ['get']
+                    'get-division-dropdown' => ['get'],
+                    'get-device-id-dropdown' => ['get']
                 ],
             ];
         return $behaviors;
@@ -531,6 +532,20 @@ class DropdownController extends Controller
         $data["Dispatched"] = "Dispatched";
         $data["Self Dispatched"] = "Self Dispatched";
         $data["Ad Hoc"] = "Ad Hoc";
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
+	
+	public function actionGetDeviceIdDropdown() {
+        $data = [];
+
+        $data["12345678"] = "12345678";
+        $data["87654321"] = "87654321";
+        $data["13572468"] = "13572468";
+        $data["24681357"] = "24681357";
 
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
