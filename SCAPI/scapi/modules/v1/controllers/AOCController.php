@@ -22,7 +22,7 @@ class AOCController extends Controller
         $gavin["Badge #"] = 56183;
         $gavin["Status"] = "In Progress";
         $gavin["Employee"] = "Free, Gavin";
-        $gavin["Date/Time"] = "7/25/16 17:03";
+        $gavin["Date/Time"] = "07/25/2016 17:03";
         $gavin["AOC Code"] = "AC";
         $gavin["Meter"] = "235294";
         $gavin["House #"] = "123";
@@ -39,7 +39,7 @@ class AOCController extends Controller
         $chris["Badge"] = "56183";
         $chris["Status"] = "In Progress";
         $chris["Employee"] = "Smith, Chris";
-        $chris["Date/Time"] = "7/18/16 8:25";
+        $chris["Date/Time"] = "07/18/2016 08:25";
         $chris["AOC Code"] = "AC";
         $chris["Meter"] = "1235464";
         $chris["House #"] = "100";
@@ -56,7 +56,7 @@ class AOCController extends Controller
         $burnie["Badge"] = "402953";
         $burnie["Status"] = "In Progress";
         $burnie["Employee"] = "Berns, Burnie";
-        $burnie["Date/Time"] = "7/15/16 8:25";
+        $burnie["Date/Time"] = "07/15/2016 08:25";
         $burnie["AOC Code"] = "AC";
         $burnie["Meter"] = "5235464";
         $burnie["House #"] = "400";
@@ -73,21 +73,18 @@ class AOCController extends Controller
         $filteredData = [];
         if($week != null) {
             $explodedWeek = explode(" - ", $week);
-            $firstDayTS = strtotime($explodedWeek[0]);
-            $lastDayTS = strtotime($explodedWeek[1]);
+            $firstDay = $explodedWeek[0];
+            $lastDay = $explodedWeek[1];
         } else {
-            $firstDayTS = null;
-            $lastDayTS = null;
+            // These variables will not be used if this branch is reached
+            // We set them to avoid IDE warnings.
+            $firstDay = null;
+            $lastDay = null;
         }
-        //TODO: Possibly add a day to last day in order to get 12am on the correct day)
         for ($i = 0; $i < count($data); $i++) {
             if ($workCenter == null || $data[$i]["WorkCenter"] == $workCenter) {
-                if ($week != null) {
-                    $timestamp = strtotime($data[$i]["Date/Time"]);
-                } else {
-                    $timestamp = null;
-                }
-                if($week == null || BaseActiveController::inDateRange($timestamp, $firstDayTS, $lastDayTS)) {
+                $theDay = $data[$i]["Date/Time"];
+                if($week == null || BaseActiveController::inDateRange($theDay, $firstDay, $lastDay)) {
                     $filteredData[] = $data[$i];
                 }
             }
