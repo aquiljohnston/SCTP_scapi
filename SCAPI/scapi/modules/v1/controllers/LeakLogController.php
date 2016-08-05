@@ -238,7 +238,7 @@ class LeakLogController extends Controller {
         return $response;
     }
 	
-	public function actionGetMgmt($workCenter, $surveyor, $startDate, $endDate, $status)
+	public function actionGetMgmt($workCenter, $surveyor = null, $startDate, $endDate, $status)
 	{
 		$leak1 = [];
 		$leak1["Leak"] = "1";
@@ -339,7 +339,7 @@ class LeakLogController extends Controller {
 		{
 			if($leaks[$i]["Work Center"] == $workCenter)
 			{
-				if($leaks[$i]["Employee"] == $surveyor)
+				if($surveyor == null || $leaks[$i]["Employee"] == $surveyor)
 				{
 					if(BaseActiveController::inDateRange($leaks[$i]["Date"], $startDate, $endDate))
 					{
