@@ -237,8 +237,9 @@ class LeakLogController extends Controller {
         $response->data = $data;
         return $response;
     }
-	
-	public function actionGetMgmt($workCenter, $surveyor = null, $startDate, $endDate, $status)
+
+
+    public function actionGetMgmt($workCenter, $surveyor = null, $startDate, $endDate)
 	{
 		$leak1 = [];
 		$leak1["Leak"] = "1";
@@ -256,6 +257,7 @@ class LeakLogController extends Controller {
 		$leak1["Hours"] = "1";
 		$leak1["Exception"] = "";
 		$leak1["Status"] = "Not Approved";
+        $leak1["Tab"] = "Not Approved";
 		
 		$leak2 = [];
 		$leak2["Leak"] = "1";
@@ -273,7 +275,8 @@ class LeakLogController extends Controller {
 		$leak2["Hours"] = "1";
 		$leak2["Exception"] = "";
 		$leak2["Status"] = "Not Submitted";
-		
+		$leak2["Tab"] = "Approved / Not Submitted";
+
 		$leak3 = [];
 		$leak3["Leak"] = "1";
 		$leak3["Approved"] = "1";
@@ -290,7 +293,9 @@ class LeakLogController extends Controller {
 		$leak3["Hours"] = "3";
 		$leak3["Exception"] = "";
 		$leak3["Status"] = "Pending";
-		
+		$leak3['Tab'] = 'Submitted / Pending';
+
+
 		$leak4 = [];
 		$leak4["Leak"] = "1";
 		$leak4["Approved"] = "1";
@@ -307,7 +312,8 @@ class LeakLogController extends Controller {
 		$leak4["Hours"] = "8";
 		$leak4["Exception"] = "1";
 		$leak4["Status"] = "Rejected";
-		
+		$leak4["Tab"] = "Exceptions";
+
 		$leak5 = [];
 		$leak5["Leak"] = "1";
 		$leak5["Approved"] = "1";
@@ -324,7 +330,8 @@ class LeakLogController extends Controller {
 		$leak5["Hours"] = "0";
 		$leak5["Exception"] = "";
 		$leak5["Status"] = "Completed";
-		
+		$leak5["Tab"] = "Completed";
+
 		$leaks[] = $leak1;
 		$leaks[] = $leak2;
 		$leaks[] = $leak3;
@@ -333,21 +340,23 @@ class LeakLogController extends Controller {
 		$leakCount = count($leaks);
 		
 		$data = [];
+        $data['Not Approved'] = [];
+        $data['Approved / Not Submitted'] = [];
+        $data['Submitted / Pending'] = [];
+        $data['Exceptions'] = [];
+        $data['Completed'] = [];
 		
 		//filter leaks
 		for($i = 0 ; $i < $leakCount ; $i++)
 		{
-			if($leaks[$i]["Work Center"] == $workCenter)
+            if($leaks[$i]["Work Center"] == $workCenter)
 			{
 				if($surveyor == null || $leaks[$i]["Employee"] == $surveyor)
 				{
 					if(BaseActiveController::inDateRange($leaks[$i]["Date"], $startDate, $endDate))
 					{
-						if($leaks[$i]["Status"] == $status)
-						{
-							$data[] = $leaks[$i];
-						}
-					}
+						$data[$leaks[$i]['Tab']][] = $leaks[$i];
+                    }
 				}
 			}
 		}
