@@ -57,12 +57,11 @@ class DropdownController extends Controller
     }
 
     public function actionGetSurveyorDropdown() {
-        $data["Demo, Demo"] = "Demo, Demo";
-        $data["Zhang, Tao"] = "Zhang, Tao";
-        $data["Vicente, Andre"] = "Vicente, Andre";
-        $data["Vicente, Bob"] ="Vicente, Bob";
-        $data["Zhang, Rufus"] = "Zhang, Rufus";
-        $data["Doe, John"] = "Doe, John";
+        $data["Doe, Jane (janedoe)"] = "Doe, Jane";
+        $data["Doe, John (johndoe)"] = "Doe, John";
+        $data["Milstone, Fred (fred3)"] = "Milstone, Fred";
+        $data["Randalt, Bill (bill2)"] ="Randalt, Bill";
+        $data["Smith, Bob (bob1)"] = "Smith, Bob";
 
 
         //send response
