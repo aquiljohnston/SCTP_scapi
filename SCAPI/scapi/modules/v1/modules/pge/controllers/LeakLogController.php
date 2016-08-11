@@ -6,7 +6,7 @@
  * Time: 12:45 PM
  */
 
-namespace app\modules\v1\controllers;
+namespace app\modules\v1\modules\pge\controllers;
 
 use Yii;
 use yii\web\Controller;
