@@ -15,7 +15,7 @@ use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
-class MapStampMgmtController extends \yii\web\Controller{
+class MapStampController extends \yii\web\Controller{
     public function behaviors()
     {
         $behaviors = parent::behaviors();
@@ -29,6 +29,7 @@ class MapStampMgmtController extends \yii\web\Controller{
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-table' => ['get'],
+                    'get-detail' => ['get']
                 ],
             ];
         return $behaviors;
@@ -49,7 +50,7 @@ class MapStampMgmtController extends \yii\web\Controller{
 			$row1["# of Days"] = "1";
 			$row1["# of Leaks"] = "12";
 			$row1["Notification ID"] = "667171777461";
-			$row1["Date"] = "05/05/2015";
+			$row1["Date"] = "08/05/2016";
 			$row1["Surveyor"] = "johndoe";
 			$row1["Tab"] = "Not Approved";
 			$data[] = $row1;
@@ -63,7 +64,7 @@ class MapStampMgmtController extends \yii\web\Controller{
 			$row2["# of Days"] = "1";
 			$row2["# of Leaks"] = "12";
 			$row2["Notification ID"] = "667171777461";
-			$row2["Date"] = "06/05/2015";
+			$row2["Date"] = "08/05/2016";
 			$row2["Surveyor"] = "janedoe";
 			$row2["Tab"] = "Approved / Not Submitted";
 			$data[] = $row2;
@@ -146,5 +147,59 @@ class MapStampMgmtController extends \yii\web\Controller{
             // throw new \yii\web\HttpException(400);
         // }
     }
+    public function actionGetDetail($id) {
+        if($id === "") {
+            throw new BadRequestHttpException("Empty ID argument");
+        }
+        $data = [];
+        $info = [];
+        $info['Map Number'] = '0001-A01';
+        $info['Schedule Month/Year'] = '02/2016';
+        $info['Previous Start Date'] = '05/11/2011';
+        $info['Current Start Date'] = '02/13/2016';
+        $info['Prior Feet of Main'] = '270,000';
+        $info['Prior Services'] = 1000;
+        $info['Survey Frequency Type'] = '5 Year';
+        $info['Notification ID'] = 66717172894967;
+        $info['Status'] = 'Completed';
 
+        $data['info'] = $info;
+
+        $tableData = [];
+        $row1['Survey Area'] = 1;
+        $row1['Type +'] = 'PIC';
+        $row1['Date Surveyed'] = '03/13/2016';
+        $row1['Surveyor LANID'] = 'JSFT';
+        $row1['Instrument'] = 'PIC 46781046';
+        $row1['Start Wind Speed'] = 2;
+        $row1['Mid-Day Wind Speed'] = 4;
+        $row1['Foot'] = true;
+        $row1['Mobile'] = true;
+        $row1['Feet of Main'] = 18845;
+        $row1['Services'] = 100;
+        $tableData[] = $row1;
+
+        $row2['Survey Area'] = 2;
+        $row2['Type +'] = 'LISA';
+        $row2['Date Surveyed'] = '03/13/2016';
+        $row2['Surveyor LANID'] = 'JSFT';
+        $row2['Instrument'] = 'PIC 758910461';
+        $row2['Start Wind Speed'] = 2;
+        $row2['Mid-Day Wind Speed'] = 4;
+        $row2['Foot'] = true;
+        $row2['Mobile'] = false;
+        $row2['Feet of Main'] = 18845;
+        $row2['Services'] = 100;
+        $tableData[] = $row2;
+
+        $data['Table Data'] = $tableData;
+        $data['Total Feet of Main'] = 207295;
+        $data['Total Services'] = 1100;
+
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
 }
