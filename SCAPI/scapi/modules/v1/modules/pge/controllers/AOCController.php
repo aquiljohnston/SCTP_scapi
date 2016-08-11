@@ -5,7 +5,7 @@
  * Date: 7/28/2016
  * Time: 12:54 PM
  */
-namespace app\modules\v1\controllers;
+namespace app\modules\v1\modules\pge\controllers;
 
 use \yii\web\Controller;
 use \Yii;
