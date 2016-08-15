@@ -118,4 +118,18 @@ class BaseActiveController extends ActiveController
         $dayTS = strtotime($day);
         return strtotime($startDate) <= $dayTS && $dayTS < strtotime($endDate);
     }
+	
+	//type: type of data the UID will be associated with such as User, breadcrumb, activty, etc.
+	//source: platform that created the data UID is associated with such as web, mobile, etc.
+	public static function generateUID($type, $source)
+	{
+		//generate random number
+		$random = rand(10000000, 99999999);
+		
+		//get current date time in format YmdHis
+		$date = date("YmdHis");
+		
+		//concat values into string and return the resulting UID
+		return "{$type}_{$random}_{$date}_{$source}";
+	}
 }
