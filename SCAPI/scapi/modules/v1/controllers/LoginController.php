@@ -6,6 +6,7 @@ use Yii;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Auth;
 use app\modules\v1\models\Key;
+use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\CTUser;
 // use app\modules\v1\authentication\CTUser;
 use yii\data\ActiveDataProvider;
@@ -37,11 +38,6 @@ class LoginController extends Controller
 				throw new \yii\web\HttpException(400, 'Client Header Not Found.');
 			}	
 			
-			
-			//ic and secret key of openssl
-			$iv = "abcdefghijklmnop";
-			$secretKey= "sparusholdings12";
-			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
@@ -60,14 +56,10 @@ class LoginController extends Controller
 			if($userName = SCUser::findOne(['UserName'=>$user->UserName, 'UserActiveFlag'=>1]))
 				{
 				$securedPass = $data["Password"];
-				Yii::trace('securedPass: '.$securedPass);
 				
-				//Check password for authentication with try catch
-				$decodedPass = base64_decode($securedPass);
-				Yii::trace('decodedPass: '.$decodedPass);
-				$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
-				//$decryptedPass= Yii::$app->getSecurity()->decryptByPassword($decodedPass, $secretKey);
-				Yii::trace('decryptedPass: '.$decryptedPass);
+				//decrypt password
+				$decryptedPass = BaseActiveController::decrypt($securedPass);
+
 				$key = Key::findOne(['KeyID'=>$userName->UserKey]);
 				$hash = $key->Key1;
 				Yii::trace('Hash: '.$hash);
