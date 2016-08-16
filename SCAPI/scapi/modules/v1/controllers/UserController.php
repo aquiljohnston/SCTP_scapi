@@ -90,10 +90,6 @@ class UserController extends BaseActiveController
 			
 			//create response
 			$response = Yii::$app->response;
-			
-			//iv and key for openssl
-			$iv = "abcdefghijklmnop";
-			$sKey ="sparusholdings12";
 		
 			//options for bcrypt
 			$options = [
@@ -107,11 +103,10 @@ class UserController extends BaseActiveController
 			//handle the password
 			//get pass from data
 			$securedPass = $data["UserKey"];
-			//decode the base 64 encoding
-			$decodedPass = base64_decode($securedPass);
-			//decrypt with openssl using the key and iv
-			$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
-			Yii::trace('decryptedPass: '.$decryptedPass);
+			
+			//decrypt password
+			$decryptedPass = BaseActiveController::decrypt($securedPass);
+			
 			//hash pass with bcrypt
 			$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 			
@@ -209,10 +204,6 @@ class UserController extends BaseActiveController
 			$currentRole = $user["UserAppRoleType"];
 
 			PermissionsController::requirePermission('userUpdate' . $currentRole);
-
-			//iv and key for openssl
-			$iv = "abcdefghijklmnop";
-			$sKey ="sparusholdings12";
 			
 			//options for bcrypt
 			$options = [
@@ -228,10 +219,9 @@ class UserController extends BaseActiveController
 				if(array_key_exists("UserKey", $data))
 				{
 					$securedPass = $data["UserKey"];
-					//decode the base 64 encoding
-					$decodedPass = base64_decode($securedPass);
-					//decrypt with openssl using the key and iv
-					$decryptedPass = openssl_decrypt($decodedPass,  'AES-128-CBC', $sKey, OPENSSL_RAW_DATA, $iv);
+					
+					//decrypt password
+					$decryptedPass = BaseActiveController::decrypt($securedPass);
 					
 					//check if new password
 					if($decryptedPass != $user->UserKey)

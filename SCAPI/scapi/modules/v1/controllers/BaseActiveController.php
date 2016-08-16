@@ -19,6 +19,8 @@ use yii\db\Exception;
 class BaseActiveController extends ActiveController
 {	
 	const DATE_FORMAT = 'Y-m-d H:i:s';
+	private static $IV = 'abcdefghijklmnop';
+	private static $S_KEY = 'sparusholdings12';
 	
 	public function actions()
 	{
@@ -131,5 +133,19 @@ class BaseActiveController extends ActiveController
 		
 		//concat values into string and return the resulting UID
 		return "{$type}_{$random}_{$date}_{$source}";
+	}
+	
+	public static function decrypt($encryptedString)
+	{
+		$decodedString = base64_decode($encryptedString);
+		$decryptedString = openssl_decrypt($decodedString,  'AES-128-CBC', self::$S_KEY, OPENSSL_RAW_DATA, self::$IV);
+		return $decryptedString;
+	}
+	
+	public static function encrypt($string)
+	{
+		$encryptedString = openssl_encrypt($string,  'AES-128-CBC', self::$S_KEY, OPENSSL_RAW_DATA, self::$IV);
+		$encodedString = base64_encode($encryptedString);
+		return $encodedString;
 	}
 }
