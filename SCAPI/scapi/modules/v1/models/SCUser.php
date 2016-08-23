@@ -21,21 +21,23 @@ use app\modules\v1\models\Auth;
  * @property string $UserComments
  * @property string $UserKey
  * @property integer $UserActiveFlag
- * @property string $UserArchiveFlag
+ * @property integer $UserArchiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
- * @property integer $UserCreatedBy
- * @property integer $UserModifiedBy
+ * @property string $UserCreatedUID
+ * @property string $UserModifiedUID
  * @property string $UserCreateDTLTOffset
- * @property integer $UserModifiedDTLTOffset
- * @property integer $UserInactiveDTLTOffset
+ * @property string $UserModifiedDTLTOffset
+ * @property string $UserInactiveDTLTOffset
+ * @property string $UserUID
+ * @property string $UserPassword
  *
  * @property EquipmentTb[] $equipmentTbs
  * @property ProjectUserTb[] $projectUserTbs
  * @property KeyTb $userKey
  */
 class SCUser extends BaseActiveRecord  implements IdentityInterface
-{
+{	
     /**
      * @inheritdoc
      */
@@ -50,9 +52,10 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     public function rules()
     {
         return [
-            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserArchiveFlag'], 'string'],
-            [['UserKey', 'UserActiveFlag', 'UserCreatedBy', 'UserModifiedBy'], 'integer'],
-            [['UserCreateDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate'], 'safe']
+            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
+			'UserCreatedUID', 'UserModifiedUID', 'UserPassword', 'UserUID'], 'string'],
+            [['UserActiveFlag', 'UserArchiveFlag'], 'integer'],
+            [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate'], 'safe']
         ];
     }
 
@@ -72,16 +75,18 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserCompanyPhone' => 'User Company Phone',
             'UserAppRoleType' => 'User App Role Type',
             'UserComments' => 'User Comments',
-            'UserKey' => 'User Key',
+            //'UserKey' => 'User Key',
             'UserActiveFlag' => 'User Active Flag',
 			'UserArchiveFlag' => 'User Archive Flag',
             'UserCreatedDate' => 'User Created Date',
             'UserModifiedDate' => 'User Modified Date',
-            'UserCreatedBy' => 'User Created By',
-            'UserModifiedBy' => 'User Modified By',
-            'UserCreateDTLTOffset' => 'User Create Dtltoffset',
+            'UserCreatedUID' => 'User Created UID',
+            'UserModifiedUID' => 'User Modified UID',
+            'UserCreatedDTLTOffset' => 'User Created Dtltoffset',
             'UserModifiedDTLTOffset' => 'User Modified Dtltoffset',
             'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
+			'UserUID' => 'User UID',
+			'UserPassword' => 'User Password',
         ];
     }
 
@@ -122,10 +127,10 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getUserKey()
-    {
-        return $this->hasOne(KeyTb::className(), ['KeyID' => 'UserKey']);
-    }
+    // public function getUserKey()
+    // {
+        // return $this->hasOne(KeyTb::className(), ['KeyID' => 'UserKey']);
+    // }
 	
 	/**
      * Finds an identity by the given ID.
