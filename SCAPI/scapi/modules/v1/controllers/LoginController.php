@@ -5,7 +5,6 @@ namespace app\modules\v1\controllers;
 use Yii;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Auth;
-use app\modules\v1\models\Key;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\CTUser;
 // use app\modules\v1\authentication\CTUser;
@@ -26,17 +25,7 @@ class LoginController extends Controller
 		try
 		{
 			//set db target
-			try
-			{
-				$headers = getallheaders();
-				SCUser::setClient($headers['X-Client']);
-				Key::setClient($headers['X-Client']);
-				Auth::setClient($headers['X-Client']);
-			}
-			catch(ErrorException $e)
-			{
-				throw new \yii\web\HttpException(400, 'Client Header Not Found.');
-			}	
+			SCUser::setClient('CometTracker');
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -48,20 +37,19 @@ class LoginController extends Controller
 			$data = json_decode($post, true);
 
 			//login is a Yii model:
-			$user = new SCUser();
+			$userName = new SCUser();
 
 			//load json data into model:
-			$user->attributes = $data;  
+			$userName->UserName = $data['UserName'];  
 
-			if($userName = SCUser::findOne(['UserName'=>$user->UserName, 'UserActiveFlag'=>1]))
+			if($user = SCUser::findOne(['UserName'=>$userName->UserName, 'UserActiveFlag'=>1]))
 				{
 				$securedPass = $data["Password"];
 				
 				//decrypt password
 				$decryptedPass = BaseActiveController::decrypt($securedPass);
 
-				$key = Key::findOne(['KeyID'=>$userName->UserKey]);
-				$hash = $key->Key1;
+				$hash = $user->UserPassword;
 				Yii::trace('Hash: '.$hash);
 				//Check the Hash
 				if (password_verify($decryptedPass, $hash)) 
@@ -69,10 +57,10 @@ class LoginController extends Controller
 					Yii::trace('Password is valid.');
 					
 					//Pass
-					Yii::$app->user->login($userName);
+					Yii::$app->user->login($user);
 					//Generate Auth Token
 					$auth = new Auth();
-					$userID = $userName->UserID;
+					$userID = $user->UserID;
 					$auth->AuthUserID = $userID;
 					$auth->AuthCreatedBy = $userID;
 					$auth-> beforeSave(true);
