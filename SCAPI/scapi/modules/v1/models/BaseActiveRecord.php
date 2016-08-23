@@ -7,11 +7,12 @@ use Yii;
 class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	
-	private static $CLIENT_ID = 0;
+	private static $CLIENT_ID = '';
 	private static $DEFAULT_DB = 'CometTracker';	
 	private static $SCANA_DB = 'CT_SCANA';
 	private static $DEFAULT_QA_DB = 'CometTrackerQA';
 	private static $SCANA_QA_DB = 'CT_SCANAQA';
+	private static $PGE_DEV_DB = 'pgedev';
 	
 	public static function getClient()
 	{
@@ -41,6 +42,9 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->scanaQADb;
 		}
-		
+		if (self::$CLIENT_ID == self::$PGE_DEV_DB)
+		{
+			return Yii::$app->pgeDevDb;
+		}
 	}
 }
