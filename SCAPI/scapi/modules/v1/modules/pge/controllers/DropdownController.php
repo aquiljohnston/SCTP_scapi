@@ -11,6 +11,8 @@ use yii\web\Response;
 use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
+use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 
 
 class DropdownController extends Controller
@@ -248,23 +250,20 @@ class DropdownController extends Controller
     //return a json containing pairs of EmployeeTypes
     public function actionGetEmployeeTypeDropdown()
     {
-        // RBAC permission check
-        PermissionsController::requirePermission('employeeTypeGetDropdown');
-
         try
         {
-            //set db target
-            $headers = getallheaders();
-            EmployeeType::setClient($headers['X-Client']);
+			// RBAC permission check
 
-            $types = EmployeeType::find()
+            //set db target
+
+            $types = WebManagementDropDownEmployeeType::find()
                 ->all();
             $namePairs = [];
             $typesSize = count($types);
 
             for($i=0; $i < $typesSize; $i++)
             {
-                $namePairs[$types[$i]->EmployeeTypeType]= $types[$i]->EmployeeTypeType;
+                $namePairs[$types[$i]->FieldDescription]= $types[$i]->FieldDescription;
             }
 
 
@@ -279,31 +278,6 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-
-    public function actionGetPgeEmployeeTypeDropdown() {
-
-        // TODO: Permissions check
-        try {
-            //TODO: headers and X-Client
-
-            //TODO: Find EmployeeTypes
-            $data = [
-                null => "Select...",
-                "Employee" => "Employee",
-                "Contractor" => "Contractor",
-                "Intern" => "Intern"
-            ];
-
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
-        } catch (\Exception $e) {
-            throw new BadRequestHttpException;
-        }
-    }
-
-
 
     /*
      * Belongs to LeakLogDetail
@@ -652,6 +626,59 @@ class DropdownController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $data;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetSupervisorDropdown() {
+		try{
+			$data = [];
+			
+			$data = [null => "Select..."];
+			$data["S1V1"] = "Visor, Super";
+			$data["D0B0"] = "Boss, Da";
+			$data["OS"] = "13572468";
+			$data["24681357"] = "24681357";
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetReportingGroupDropdown() {
+		try{
+			//todo permission check and db target
+			$data = WebManagementDropDownReportingGroups::find()
+                ->all();
+            $namePairs = [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->GroupName]= $data[$i]->GroupName;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
