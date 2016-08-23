@@ -58,7 +58,7 @@ $config = [
         //'db' => require(__DIR__ . '/db.php'),
 		'db' => [
 			'class' => 'yii\db\Connection',
-			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CometTracker',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',
@@ -80,6 +80,13 @@ $config = [
 		'scanaQADb' => [
 			'class' => 'yii\db\Connection',
 			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CT_SCANAQA',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'pgeDevDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_PGE_GIS_DEV',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',
