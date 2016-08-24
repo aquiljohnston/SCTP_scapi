@@ -7,6 +7,7 @@ use Yii;
 /**
  * This is the model class for table "vWebManagementDropDownReportingGroups".
  *
+ * @property string $ReportingGroupUID
  * @property string $GroupName
  */
 class WebManagementDropDownReportingGroups extends \app\modules\v1\models\BaseActiveRecord
@@ -33,7 +34,7 @@ class WebManagementDropDownReportingGroups extends \app\modules\v1\models\BaseAc
     public function rules()
     {
         return [
-            [['GroupName'], 'string']
+            [['GroupName', 'ReportingGroupUID'], 'string']
         ];
     }
 
@@ -44,6 +45,7 @@ class WebManagementDropDownReportingGroups extends \app\modules\v1\models\BaseAc
     {
         return [
             'GroupName' => 'Group Name',
+			'ReportingGroupUID' => 'Reporting Group UID',
         ];
     }
 }
