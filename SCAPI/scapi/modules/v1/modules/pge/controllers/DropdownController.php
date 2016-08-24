@@ -693,6 +693,34 @@ class DropdownController extends Controller
         }
     }
 	
+	public function actionGetReportingGroupUIDDropdown() {
+		try{
+			//todo permission check and db target
+			$data = WebManagementDropDownReportingGroups::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->ReportingGroupUID]= $data[$i]->GroupName;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
 	public function actionGetRoleDropdown() {
 		try{
 			//todo permission check and db target
