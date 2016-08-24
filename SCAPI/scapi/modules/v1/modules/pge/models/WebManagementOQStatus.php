@@ -12,14 +12,14 @@ use Yii;
  * @property string $Status
  * @property string $Expires
  */
-class WebManagaementOQStatus extends \app\modules\v1\models\BaseActiveRecord
+class WebManagementOQStatus extends \app\modules\v1\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vWebMangementOQStatus';
+        return 'vWebManagementOQStatus';
     }
 
     /**
