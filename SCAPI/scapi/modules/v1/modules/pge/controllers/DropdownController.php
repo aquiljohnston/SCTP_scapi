@@ -13,6 +13,7 @@ use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
+use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
 
 
 class DropdownController extends Controller
@@ -34,11 +35,12 @@ class DropdownController extends Controller
                     'get-work-center-dropdown' => ['get'],
                     'get-work-center-dependent-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
-                    'get-pge-employee-type-dropdown' => ['get'],
                     'get-map-plat-dropdown' => ['get'],
                     'get-surveyor-dropdown' => ['get'],
                     'get-division-dropdown' => ['get'],
-                    'get-device-id-dropdown' => ['get']
+                    'get-device-id-dropdown' => ['get'],
+                    'get-reporting-group-dropdown' => ['get'],
+                    'get-role-dropdown' => ['get']
                 ],
             ];
         return $behaviors;
@@ -258,7 +260,7 @@ class DropdownController extends Controller
 
             $types = WebManagementDropDownEmployeeType::find()
                 ->all();
-            $namePairs = [];
+            $namePairs = [null => "Select..."];
             $typesSize = count($types);
 
             for($i=0; $i < $typesSize; $i++)
@@ -668,12 +670,40 @@ class DropdownController extends Controller
 			//todo permission check and db target
 			$data = WebManagementDropDownReportingGroups::find()
                 ->all();
-            $namePairs = [];
+            $namePairs = [null => "Select..."];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->GroupName]= $data[$i]->GroupName;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetRoleDropdown() {
+		try{
+			//todo permission check and db target
+			$data = WebManagementDropDownRoles::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->RoleName]= $data[$i]->RoleName;
             }
 			
 			$response = Yii::$app->response;
