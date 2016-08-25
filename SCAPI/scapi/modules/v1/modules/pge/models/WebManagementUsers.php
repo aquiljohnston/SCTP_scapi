@@ -10,11 +10,13 @@ use Yii;
  * @property string $GroupName
  * @property string $Status
  * @property string $LastName
+ * @property string $FullName
  * @property string $UserFirstName
  * @property string $UserLANID
  * @property string $UserEmployeeType
  * @property string $OQ
  * @property string $Role
+ * @property string $UserUID
  */
 class WebManagementUsers extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -40,7 +42,7 @@ class WebManagementUsers extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['GroupName', 'Status', 'LastName', 'UserFirstName', 'UserLANID', 'UserEmployeeType', 'OQ', 'Rolef'], 'string'],
+            [['GroupName', 'Status', 'LastName', 'UserFirstName', 'UserLANID', 'UserEmployeeType', 'OQ', 'Role', 'UserUID', 'FullName'], 'string'],
             [['Status', 'OQ'], 'required']
         ];
     }
@@ -55,10 +57,12 @@ class WebManagementUsers extends \app\modules\v1\models\BaseActiveRecord
             'Status' => 'Status',
             'LastName' => 'Last Name',
             'UserFirstName' => 'User First Name',
+			'FullName' => 'Full Name',
             'UserLANID' => 'User Lanid',
             'UserEmployeeType' => 'User Employee Type',
             'OQ' => 'Oq',
 			'Role' => 'Role',
+			'UserUID' => 'User UID',
         ];
     }
 }
