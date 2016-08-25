@@ -14,6 +14,12 @@ use yii\web\BadRequestHttpException;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchComplianceDate;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchWorkCenter;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchDivision;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchSurveyType;
 
 
 class DropdownController extends Controller
@@ -77,21 +83,21 @@ class DropdownController extends Controller
 
     public function actionGetDivisionDropdown()
     {
-        //TODO RBAC permission check
         try{
-            //TODO check headers
+            //todo permission check and db target
+			$data = WebManagementDropDownDispatchDivision::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
 
-            //stub data
-            $dropdown = [null => "Select..."];
-            $dropdown["Belial"] = "Belial";
-            $dropdown["Azmodan"] = "Azmodan";
-            $dropdown["Diablo"] = "Diablo";
-            $dropdown["Malthael"] = "Malthael";
-
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->Division]= $data[$i]->Division;
+            }
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
-            $response->data = $dropdown;
+            $response->data = $namePairs;
             return $response;
         }
         catch(ForbiddenHttpException $e)
@@ -178,65 +184,24 @@ class DropdownController extends Controller
     //['id'=>'<sub-cat_id_2>', 'name'=>'<sub-cat-name2>']
     public function actionGetWorkCenterDependentDropdown($division = null)
     {
-        //TODO RBAC permission check
         try{
-            //TODO check headers
+            //todo permission check and db target
+			$data = WebManagementDropDownDispatchWorkCenter::find()
+				->where(['Division'=>$division])
+                ->all();
+            $namePairs= [];
+            $dataSize = count($data);
 
-            //stub data
-            $dropdown = [];
-            $data = [];
-            if($division == null)
+            for($i=0; $i < $dataSize; $i++)
             {
-                $data["id"] = "Zoltun Kulle";
-                $data["name"] = "Zoltun Kulle";
-                $dropdown[] = $data;
-                $data = [];
-                $data["id"] = "Cydaea";
-                $data["name"] = "Cydaea";
-                $dropdown[] = $data;
-                $data = [];
-                $data["id"] = "Izual";
-                $data["name"] = "Izual";
-                $dropdown[] = $data;
-                $data = [];
-                $data["id"] = "Urzael";
-                $data["name"] = "Urzael";
-                $dropdown[] = $data;
-                $data = [];
+                $namePairs[]=[
+				'id'=>$data[$i]->WorkCenter, 
+				'name'=>$data[$i]->WorkCenter];
             }
-            elseif ($division == "Belial")
-            {
-                $data["id"] = "Zoltun Kulle";
-                $data["name"] = "Zoltun Kulle";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Azmodan")
-            {
-                $data["id"] = "Cydaea";
-                $data["name"] = "Cydaea";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Diablo")
-            {
-                $data["id"] = "Izual";
-                $data["name"] = "Izual";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Malthael")
-            {
-                $data["id"] = "Urzael";
-                $data["name"] = "Urzael";
-                $dropdown[] = $data;
-                $data = [];
-            }
-
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
-            $response->data = $dropdown;
+            $response->data = $namePairs;
             return $response;
         }
         catch(ForbiddenHttpException $e)
@@ -284,64 +249,36 @@ class DropdownController extends Controller
     /*
      * Belongs to LeakLogDetail
      */
-    public function actionGetMapPlatDependentDropdown($division = null, $surveyor = null, $date = null) {
+    public function actionGetMapPlatDependentDropdown($workCenter = null, $division = null, $surveyor = null, $date = null) {
 		
-		try{
-			$data = [];
+		//try{
+			//todo permission check and db target
+			$data = WebManagementDropDownDispatchMapPlat::find()
+				->where(['WorkCenter'=>$workCenter])
+                ->all();
+            $namePairs = [];
+            $dataSize = count($data);
 
-			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
-			$data["161-30-5-C"]["Division"] = "Diablo";
-			$data["161-30-5-C"]["Surveyor"] = "johndoe";
-			$data["161-30-5-C"]["Date"] = "05/10/2016";
-
-			$data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
-			$data["161-30-3-C"]["Division"] = "Diablo";
-			$data["161-30-3-C"]["Surveyor"] = "janedoe";
-			$data["161-30-3-C"]["Date"] = "05/11/2016";
-
-			$data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
-			$data["141-31-3-C"]["Division"] = "Azmodan";
-			$data["141-31-3-C"]["Surveyor"] = "bob1";
-			$data["141-31-3-C"]["Date"] = "05/12/2016";
-
-			$data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
-			$data["120-31-6-F"]["Division"] = "Malthael";
-			$data["120-31-6-F"]["Surveyor"] = "bill2";
-			$data["120-31-6-F"]["Date"] = "05/13/2016";
-
-			$data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
-			$data["110-11-3-A"]["Division"] = "Malthael";
-			$data["110-11-3-A"]["Surveyor"] = "fred3";
-			$data["110-11-3-A"]["Date"] = "05/14/2016";
-
-			$filteredData = [];
-			foreach($data as $datum) {
-				if($division == null || $division == $datum["Division"]) {
-					if($surveyor == null || $surveyor == $datum["Surveyor"]) {
-						if($date == null || $date == $datum["Date"]) {
-							$entry = [];
-							$entry["id"] = $datum["MapPlat"];
-							$entry["name"] = $datum["MapPlat"];
-							$filteredData[] = $entry;
-						}
-					}
-				}
-			}
-
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[]=[
+				'id'=>$data[$i]->MapPlat, 
+				'name'=>$data[$i]->MapPlat];
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
     }
 
     /*
@@ -512,16 +449,20 @@ class DropdownController extends Controller
 
     public function actionGetSurveyTypeDropdown() {
         try{
-			$data = [];
-			
-			$data = [null => "Select..."];
-			$data["1 YR"] = "1 YR";
-			$data["3 YR"] = "3 YR";
-			$data["5 YR"] = "5 YR";
+			//todo permission check and db target
+			$data = WebManagementDropDownDispatchSurveyType::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
 
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
+            }
+			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
+			$response->data = $namePairs;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -536,25 +477,21 @@ class DropdownController extends Controller
 
     public function actionGetComplianceMonthDropdown() {
 		try{
-			$data = [];
-			
-			$data = [null => "Select..."];
-			$data["01"] = "January";
-			$data["02"] = "February";
-			$data["03"] = "March";
-			$data["04"] = "April";
-			$data["05"] = "May";
-			$data["06"] = "June";
-			$data["07"] = "July";
-			$data["08"] = "August";
-			$data["09"] = "September";
-			$data["10"] = "October";
-			$data["11"] = "November";
-			$data["12"] = "December";
+			//todo permission check and db target
+			$data = WebManagementDropDownDispatchComplianceDate::find()
+				->orderBy('ComplianceSort')
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
 
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
+            }
+			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
+			$response->data = $namePairs;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -569,16 +506,20 @@ class DropdownController extends Controller
 
     public function actionGetStatusDropdown() {
         try{
-			$data = [];
+			//todo permission check and db target
+			$data = WebManagementDropDownDispatchStatus::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
 
-			$data = [null => "Select..."];
-			$data["Accepted"] = "Accepted";
-			$data["Dispatched"] = "Dispatched";
-			$data["In Progress"] = "In Progress";
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->Status]= $data[$i]->Status;
+            }
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
+			$response->data = $namePairs;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
