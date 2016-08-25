@@ -77,10 +77,7 @@ class ActivityController extends BaseActiveController
 	 * @throws \yii\web\HttpException
 	 */
 	public function actionCreate()
-	{
-		// RBAC permission check
-		PermissionsController::requirePermission('activityCreate');
-		
+	{		
 		try
 		{
 			//set db target
@@ -89,6 +86,9 @@ class ActivityController extends BaseActiveController
 			SCUser::setClient($headers['X-Client']);
 			TimeEntry::setClient($headers['X-Client']);
 			MileageEntry::setClient($headers['X-Client']);
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('activityCreate');
 			
 			//capture and decode the input json
 			$post = file_get_contents("php://input");

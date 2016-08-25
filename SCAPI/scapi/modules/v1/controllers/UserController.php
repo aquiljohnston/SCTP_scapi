@@ -444,7 +444,6 @@ class UserController extends BaseActiveController
 	*/
 	public function actionGetMe()
 	{
-		PermissionsController::requirePermission('userGetMe');
 		
 		try
 		{
@@ -459,6 +458,8 @@ class UserController extends BaseActiveController
 			Client::setClient($headers['X-Client']);
 			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
 			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
+			
+			PermissionsController::requirePermission('userGetMe');
 			
 			//get user id from auth token
 			$userID = self::getUserFromToken()->UserID;
@@ -772,6 +773,5 @@ class UserController extends BaseActiveController
 		throw new \yii\web\HttpException(400);
 		}
 	}
-
 
 }
