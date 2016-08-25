@@ -4,7 +4,9 @@ namespace app\modules\v1\modules\pge\controllers;
 
 use Yii;
 use app\modules\v1\modules\pge\models\PGEUser;
+use app\modules\v1\modules\pge\models\Role;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
+use app\modules\v1\modules\pge\models\ReportingGroupEmployeeRef;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\models\Project;
@@ -90,8 +92,8 @@ class UserController extends BaseActiveController
 		SCUser::setClient('CometTracker');
 		PermissionsController::requirePermission('userCreate');
 		
-		// try
-		// {
+		try
+		{
 			//create response
 			$response = Yii::$app->response;
 			
@@ -124,6 +126,25 @@ class UserController extends BaseActiveController
 			$pgeUser->attributes = $data;
 			$pgeUser->UserPassword = $hashedPass;
 			
+			//handle app role type for sc
+			$roleName = $pgeUser->UserAppRoleType;
+			if ($roleName == 'Administrator')
+			{
+				$scUser->UserAppRoleType = 'Admin';
+			}
+			elseif($roleName == 'Supervisor' || $roleName == 'QM' || $roleName == 'BSS/Analyst')
+			{
+				$scUser->UserAppRoleType = 'Supervisor';
+			}
+			elseif($roleName == 'Surveyor/Inspector')
+			{
+				$scUser->UserAppRoleType = 'Technician';
+			}
+			
+			$role = Role::find()
+				->where(['RoleName'=>$roleName])
+				->one();
+			
 			//rbac check if attempting to create an admin
 			if($scUser["UserAppRoleType"] == 'Admin')
 			{
@@ -153,12 +174,32 @@ class UserController extends BaseActiveController
 			$pgeUser->UserCreatedDate = Parent::getDate();
 			$pgeUser->UserUID = $userUID;
 			
+			$pgeUser->UserName = $pgeUser->UserLANID;
+			$scUser->UserName = $pgeUser->UserLANID;
+			
 			PGEUser::setClient('pgedev');
 			if($pgeUser-> save())
 			{
 				SCUser::setClient('CometTracker');
 				if($scUser-> save())
 				{
+								
+					//TODO add users to reporting groups/////////////////////////////////////
+					$groups = $data['ReportingGroup'];
+					
+					foreach($groups as $g)
+					{
+						$newGroup = new ReportingGroupEmployeeRef;
+						$newGroup->UserUID = $pgeUser->UserUID;
+						$newGroup->ReportingGroupUID = $g;
+						$newGroup->RoleUID = $role->RoleUID;
+						$newGroup->CreatedUserUID = $userCreatedUID;
+						$newGroup->CreateDatetime = Parent::getDate();
+						$newGroup->Revision = 0;
+						$newGroup->ActiveFlag = 1;
+						$newGroup -> save();
+					}
+					
 					//the project id of the pgedev project will need to change later
 					$projectName = 'PG&E Dev';
 					$project = Project::find()
@@ -194,6 +235,7 @@ class UserController extends BaseActiveController
 						$auth->assign($userRole, $scUser["UserID"]);
 					}
 					$response->setStatusCode(201);
+					$pgeUser->UserPassword = '';
 					$response->data = $pgeUser;
 				}
 				else
@@ -206,15 +248,15 @@ class UserController extends BaseActiveController
 				throw new \yii\web\HttpException(400);
 			}
 			return $response;
-        // }
-		// catch(ForbiddenHttpException $e)
-		// {
-			// throw new ForbiddenHttpException;
-		// }
-		// catch(Exception $e) 
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+        }
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(Exception $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	/**
@@ -228,8 +270,8 @@ class UserController extends BaseActiveController
 		SCUser::setClient('CometTracker');
 		PermissionsController::requirePermission('userUpdate');
 
-		try
-		{			
+		// try
+		// {			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
 			
@@ -238,11 +280,15 @@ class UserController extends BaseActiveController
 			
 			//get user model to be updated
 			SCUser::setClient('CometTracker');
-			$scUser = SCUser::findOne($UID);
+			$scUser = SCUser::find()
+				->where(['UserUID'=>$UID])
+				->one();
 			
 			//get user model to be updated
 			PGEUser::setClient('pgedev');
-			$PGEUser = PGEUser::findOne($UID);
+			$pgeUser = PGEUser::find()
+				->where(['UserUID'=>$UID])
+				->one();
 
 			$currentRole = $scUser["UserAppRoleType"];
 
@@ -259,7 +305,7 @@ class UserController extends BaseActiveController
 			if(array_key_exists("UserPassword", $data))
 			{
 				//decrypt password
-				$securedPass = $data["Password"];
+				$securedPass = $data["UserPassword"];
 				$decryptedPass = BaseActiveController::decrypt($securedPass);
 				
 				//check if new password
@@ -268,70 +314,82 @@ class UserController extends BaseActiveController
 					//hash pass with bcrypt
 					$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 					
-					//create row in the db to hold the hashedPass
-					$keyData = Key::findOne($user->UserKey);
-					$keyData->Key1 = $hashedPass;
-					$keyData->KeyCreatedBy = self::getUserFromToken()->UserID;
-
-					if($keyData-> update())
-					{
-						//Replace the encoded pass with the ID for the new KeyTb row
-						$data["UserKey"] = $keyData -> KeyID;
-					}
-					else
-					{
-						throw new \yii\web\HttpException(400);
-					}
+					$data["UserPassword"] = $hashedPass;
 				}
 				else
 				{
-					$data["UserKey"] = $decryptedPass;
+					unset($data['UserPassword']);
 				}
 			}
 
-			//Don't let client change this attribute
-			if(isset($data["UserCreatedBy"])) {
-				unset($data["UserCreatedBy"]);
-			}
 			//pass new data to user
-			$user->attributes = $data;
+			$pgeUser->attributes = $data;
+			$scUser->attributes = $data;
 			// Get modified by from token
-			$user->UserModifiedBy = self::getUserFromToken()->UserID;
+			$modifiedUID = self::getUserFromToken()->UserUID;
+			$pgeUser->UserModifiedUID = $modifiedUID;
+			$scUser->UserModifiedUID = $modifiedUID;
+			//set modified dates
+			$pgeUser->UserModifiedDate = Parent::getDate();
+			$scUser->UserModifiedDate = Parent::getDate();
+			//set user names
+			$pgeUser->UserName = $pgeUser->UserLANID;
+			$scUser->UserName = $pgeUser->UserLANID;
+			
+			//handle app role type for sc
+			$roleName = $pgeUser->UserAppRoleType;
+			if ($roleName == 'Administrator')
+			{
+				$scUser->UserAppRoleType = 'Admin';
+			}
+			elseif($roleName == 'Supervisor' || $roleName == 'QM' || $roleName == 'BSS/Analyst')
+			{
+				$scUser->UserAppRoleType = 'Supervisor';
+			}
+			elseif($roleName == 'Surveyor/Inspector')
+			{
+				$scUser->UserAppRoleType = 'Technician';
+			}
 			
 			//rbac check if attempting to create an admin
-			if($user["UserAppRoleType"] == 'Admin')
+			if($scUser["UserAppRoleType"] == 'Admin')
 			{
 				PermissionsController::requirePermission('userCreateAdmin');
 			}
 			
-			$user->UserModifiedDate = Parent::getDate();
-			
-			if($user-> update())
+			Yii::Trace('PGE User ID' . $pgeUser->UserID);
+			PGEUser::setClient('pgedev');
+			if($pgeUser-> update())
 			{
-				//handle potential role change
-				$auth = Yii::$app->authManager;
-				if($userRole = $auth->getRole($user["UserAppRoleType"]))
+				SCUser::setClient('CometTracker');
+				if($scUser-> update())
 				{
-					$auth->revokeAll($user["UserID"]);
-					$auth->assign($userRole, $user["UserID"]);
+					//handle potential role change
+					$auth = Yii::$app->authManager;
+					if($userRole = $auth->getRole($scUser["UserAppRoleType"]))
+					{
+						$auth->revokeAll($scUser["UserID"]);
+						$auth->assign($userRole, $scUser["UserID"]);
+					}
+					$response->setStatusCode(201);
+					$pgeUser->UserPassword = '';
+					$response->data = $pgeUser; 
 				}
-				$response->setStatusCode(201);
-				$response->data = $user; 
 			}
 			else
 			{
 				throw new \yii\web\HttpException(400);
 			}
 			return $response;
-		}
-		catch(ForbiddenHttpException $e)
-		{
-			throw new ForbiddenHttpException;
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(ForbiddenHttpException $e)
+		// {
+			// throw new ForbiddenHttpException;
+		// }
+		// catch(\Exception $e)
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 	
 	/**
@@ -450,31 +508,39 @@ class UserController extends BaseActiveController
 			$headers = getallheaders();
 			WebManagementUsers::setClient($headers['X-Client']);
 			
-			$users = WebManagementUsers::find()
-				->all();
+			$userQuery = WebManagementUsers::find();
 			
-			$userCount = count($users);
-			$userData = [];
-
-			//loop to filter users
-			for ($i = 0; $i < $userCount; $i++) {
-				if ($filter == null || stripos($users[$i]["GroupName"], $filter) !== false
-					|| stripos($users[$i]["Status"], $filter) !== false || stripos($users[$i]["LastName"], $filter) !== false
-					|| stripos($users[$i]["UserFirstName"], $filter) !== false || stripos($users[$i]["UserLANID"], $filter) !== false
-					|| stripos($users[$i]["UserEmployeeType"], $filter) !== false || stripos($users[$i]["OQ"], $filter) !== false
-				) {
-					if ($group == null || $group == $users[$i]["GroupName"]) {
-						if ($type == null || $type == $users[$i]["UserEmployeeType"]) {
-							$userData[] = $users[$i];
-						}
-					}
-				}
+			if($group != null)
+			{
+				$userQuery->andWhere(['GroupName'=>$group]);
 			}
-
+			
+			if($type != null)
+			{
+				$userQuery->andWhere(['UserEmployeeType'=>$type]);
+			}
+			
+			if($filter != null)
+			{
+				$userQuery->andFilterWhere([
+				'or',
+				['like', 'GroupName', $filter],
+				['like', 'Status', $filter],
+				['like', 'LastName', $filter],
+				['like', 'UserFirstName', $filter],
+				['like', 'UserLANID', $filter],
+				['like', 'UserEmployeeType', $filter],
+				['like', 'OQ', $filter],
+				['like', 'Role', $filter],
+				]);
+			}
+			
+			$users = $userQuery->all();
+			
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			$response->data = $userData;
+			$response->data = $users;
 			return $response;
 		// }
 		// catch(ForbiddenHttpException $e)
