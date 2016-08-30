@@ -92,8 +92,8 @@ class UserController extends BaseActiveController
 		SCUser::setClient('CometTracker');
 		PermissionsController::requirePermission('userCreate');
 		
-		try
-		{
+		// try
+		// {
 			//create response
 			$response = Yii::$app->response;
 			
@@ -202,6 +202,7 @@ class UserController extends BaseActiveController
 					
 					//the project id of the pgedev project will need to change later
 					$projectName = 'PG&E Dev';
+					Project::setClient('CometTracker');
 					$project = Project::find()
 						->where(['ProjectName' => $projectName])
 						->one();
@@ -248,15 +249,15 @@ class UserController extends BaseActiveController
 				throw new \yii\web\HttpException(400);
 			}
 			return $response;
-        }
-		catch(ForbiddenHttpException $e)
-		{
-			throw new ForbiddenHttpException;
-		}
-		catch(Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
+        // }
+		// catch(ForbiddenHttpException $e)
+		// {
+			// throw new ForbiddenHttpException;
+		// }
+		// catch(Exception $e) 
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 	
 	/**
@@ -267,13 +268,14 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionUpdate($UID)
 	{
-		SCUser::setClient('CometTracker');
-		PermissionsController::requirePermission('userUpdate');
-
 		// try
-		// {			
+		// {
+			SCUser::setClient('CometTracker');
+			PermissionsController::requirePermission('userUpdate');	
+			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
+			$reportingGroups = $data['ReportingGroups'];
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -357,10 +359,32 @@ class UserController extends BaseActiveController
 				PermissionsController::requirePermission('userCreateAdmin');
 			}
 			
+			$role = Role::find()
+				->where(['RoleName'=>$roleName])
+				->one();
+			
 			Yii::Trace('PGE User ID' . $pgeUser->UserID);
 			PGEUser::setClient('pgedev');
 			if($pgeUser-> update())
 			{
+				//Handle changes to reporting groups
+				//remove existing groups
+				ReportingGroupEmployeeRef::deleteAll(['UserUID' => $UID]);
+				
+				//loop reporting group array and create new row for each
+				foreach($reportingGroups as $group)
+				{
+					$newGroup = new ReportingGroupEmployeeRef;
+					$newGroup->UserUID = $UID;
+					$newGroup->ReportingGroupUID = $group;
+					$newGroup->RoleUID = $role->RoleUID;
+					$newGroup->CreatedUserUID = $modifiedUID;
+					$newGroup->CreateDatetime = Parent::getDate();
+					$newGroup->Revision = 0;
+					$newGroup->ActiveFlag = 1;
+					$newGroup->save();
+				}
+				
 				SCUser::setClient('CometTracker');
 				if($scUser-> update())
 				{
@@ -400,8 +424,8 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionView($LANID)
 	{
-		try
-		{
+		// try
+		// {
 			//TODO permissions check
 			//BaseActiveRecord::setClient('CometTracker');
 			//PermissionsController::requirePermission('userView');	
@@ -410,18 +434,31 @@ class UserController extends BaseActiveController
 			WebManagementUsers::setClient($headers['X-Client']);
 		
 			$user = WebManagementUsers::find()
-				->Where(['UserLANID' => $LANID])
-				->One();
+				->where(['UserLANID' => $LANID])
+				->asArray()
+				->all();
+				
+			$count = count($user);
+			
+			if($count > 1)
+			{
+				$user[0]['GroupName'] = [$user[0]['GroupName']];
+				for($i = 1; $i < $count; $i++)
+				{
+					$user[0]['GroupName'][] = $user[$i]['GroupName'];
+				}
+			}
+			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			$response->data = $user;
+			$response->data = $user[0];
 			
 			return $response;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(\Exception $e)  
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 	
 	/**
