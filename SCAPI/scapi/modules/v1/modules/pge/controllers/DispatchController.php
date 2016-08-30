@@ -13,6 +13,7 @@ use app\modules\v1\modules\pge\models\WebManagementDispatch;
 use app\modules\v1\modules\pge\models\WebManagementAssignedWorkQueue;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
 use app\modules\v1\modules\pge\models\AssignedWorkQueue;
+use app\modules\v1\modules\pge\models\UserLogin;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -36,7 +37,8 @@ class DispatchController extends Controller
 					'get-assigned' => ['get'],
 					'get-surveyors' => ['get'],
 					'dispatch' => ['post'],
-                ],  
+					'unassign' => ['delete'],
+                ],
             ];
 		return $behaviors;	
 	}
@@ -202,36 +204,39 @@ class DispatchController extends Controller
 	
 	public function actionGetSurveyors($filter = null)
 	{
-		try
-		{
+		// try
+		// {
 			//TODO need to add a new column to the view with lastname, firstname
-			$userQuery = WebManagementUsers::find();
+			$userQuery = UserLogin::find()
+				->select(['UserUID', new \yii\db\Expression("CONCAT(UserLastName, ', ', UserFirstName)as UserFullName"), 'UserLANID'])
+				->orderBy('UserLastName');
 			
 			if($filter != null)
 			{
 				$userQuery->andFilterWhere([
 				'or',
-				['like', 'LastName', $filter],
+				['like', 'UserLastName', $filter],
+				['like', 'UserFirstName', $filter],
 				['like', 'UserLANID', $filter],
 				]);
 			}
 			
-			$users = $userQuery->all();
+			$users = $userQuery->asArray()->all();
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $users;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
 	}
 	
 	public function actionDispatch()
@@ -280,5 +285,34 @@ class DispatchController extends Controller
         // {
             // throw new \yii\web\HttpException(400);
         // }
+	}
+	
+	public function actionUnassign()
+	{
+		try{
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
+			
+			$count = count($data['Unassign']);
+			
+			for($i = 0; $i < $count; $i++)
+			{
+				AssignedWorkQueue::deleteAll(['AssignedWorkQueueUID' => $data['Unassign'][$i]]);
+			}
+			
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->statusCode = 204;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }
