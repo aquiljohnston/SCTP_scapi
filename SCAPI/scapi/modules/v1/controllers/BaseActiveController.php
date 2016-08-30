@@ -6,7 +6,6 @@ use Yii;
 use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\models\SCUser;
 use app\authentication\TokenAuth;
-// use app\modules\v1\authentication\TokenAuth;
 use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
 use yii\web\ForbiddenHttpException;
