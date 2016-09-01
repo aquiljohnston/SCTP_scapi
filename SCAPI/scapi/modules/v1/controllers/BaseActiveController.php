@@ -68,7 +68,8 @@ class BaseActiveController extends ActiveController
 			
 			//set db target
 			$headers = getallheaders();
-			BaseActiveRecord::setClient(self::urlPrefix());
+			BaseActiveRecord::setClient($headers['X-Client']);
+			$modelClass::setClient($headers['X-Client']);
 			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -145,12 +146,5 @@ class BaseActiveController extends ActiveController
 		$encryptedString = openssl_encrypt($string,  'AES-128-CBC', self::$S_KEY, OPENSSL_RAW_DATA, self::$IV);
 		$encodedString = base64_encode($encryptedString);
 		return $encodedString;
-	}
-	
-	public static function urlPrefix()
-	{
-		$url = explode(".", $_SERVER['SERVER_NAME']);
-		$prefix = $url[0];
-		return $prefix;
 	}
 }

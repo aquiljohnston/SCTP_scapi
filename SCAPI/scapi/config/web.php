@@ -27,7 +27,7 @@ $config = [
         ],
         'user' => [
 			'class' => 'app\authentication\CTUser',
-            'identityClass' => 'app\modules\v1\models\SCUser',
+            'identityClass' => 'app\models\SCUser',
             'enableAutoLogin' => false,
 			'authTimeout' => 28800,
 			//'authTimeout' => 15,
@@ -55,6 +55,7 @@ $config = [
                 ],
             ],
         ],
+        //'db' => require(__DIR__ . '/db.php'),
 		'db' => [
 			'class' => 'yii\db\Connection',
 			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker',
@@ -62,9 +63,23 @@ $config = [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
-		'ctDevDb' => [
+		'dbQA' => [
 			'class' => 'yii\db\Connection',
-			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker',
+			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CometTrackerQA',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'scanaDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CT_SCANA',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'scanaQADb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=192.168.20.46;Database=CT_SCANAQA',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',
@@ -76,7 +91,6 @@ $config = [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
-		//TODO Add Stage and Prod Versions of CT and PGE DBs
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,

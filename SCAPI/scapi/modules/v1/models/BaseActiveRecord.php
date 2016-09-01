@@ -8,12 +8,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	
 	private static $CLIENT_ID = '';
-	private static $CT_DEV_DB = 'apidev';	
-	private static $CT_STAGE_DB = 'apistage';
-	private static $CT_PROD_DB = 'api';
+	private static $DEFAULT_DB = 'CometTracker';	
+	private static $SCANA_DB = 'CT_SCANA';
+	private static $DEFAULT_QA_DB = 'CometTrackerQA';
+	private static $SCANA_QA_DB = 'CT_SCANAQA';
 	private static $PGE_DEV_DB = 'pgedev';
-	private static $PGE_STAGE_DB = 'pgestage';
-	private static $PGE_PROD_DB = 'pge';
 	
 	public static function getClient()
 	{
@@ -27,9 +26,21 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	
 	public static function getDb()
 	{
-		if (self::$CLIENT_ID == self::$CT_DEV_DB)
+		if (self::$CLIENT_ID == self::$DEFAULT_DB)
 		{
-			return Yii::$app->ctDevDb;
+			return Yii::$app->db;
+		}
+		if (self::$CLIENT_ID == self::$DEFAULT_QA_DB)
+		{
+			return Yii::$app->dbQA;
+		}
+		if (self::$CLIENT_ID == self::$SCANA_DB)
+		{
+			return Yii::$app->scanaDb;
+		}
+		if (self::$CLIENT_ID == self::$SCANA_QA_DB)
+		{
+			return Yii::$app->scanaQADb;
 		}
 		if (self::$CLIENT_ID == self::$PGE_DEV_DB)
 		{

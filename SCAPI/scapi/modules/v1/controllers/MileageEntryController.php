@@ -45,13 +45,14 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionView($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageEntryView');
+
 		try
 		{
 			//set db target
-			MileageEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageEntryView');
+			$headers = getallheaders();
+			MileageEntry::setClient($headers['X-Client']);
 			
 			//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
 			$mileageEntry = MileageEntry::findOne($id);
@@ -69,13 +70,15 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageEntryCreate');
+
 		try
 		{
 			//set db target
-			MileageEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageEntryCreate');
+			$headers = getallheaders();
+			MileageEntry::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -114,13 +117,14 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionDeactivate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageEntryDeactivate');
+
 		try
 		{
 			//set db target
-			MileageEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageEntryDeactivate');
+			$headers = getallheaders();
+			MileageEntry::setClient($headers['X-Client']);
 			
 			//capture put body
 			$put = file_get_contents("php://input");

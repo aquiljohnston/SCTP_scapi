@@ -38,7 +38,8 @@ class EquipmentConditionController extends BaseActiveController
 		try
 		{
 			//set db target
-			EquipmentCondition::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			EquipmentCondition::setClient($headers['X-Client']);
 			
 			$condition = EquipmentCondition::find()
 				->all();

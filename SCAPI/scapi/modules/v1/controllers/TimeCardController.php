@@ -13,6 +13,7 @@ use app\modules\v1\models\TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew;
 use app\modules\v1\models\TimeCardSumHoursWorkedPriorWeekWithProjectNameNew;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
+// use app\modules\v1\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\ForbiddenHttpException;
@@ -76,13 +77,14 @@ class TimeCardController extends BaseActiveController
 	 */
     public function actionView($id)
     {
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardView');
+
 		try
 		{
 			//set db target
-			TimeCard::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeCardView');
+			$headers = getallheaders();
+			TimeCard::setClient($headers['X-Client']);
 			
 			$timeCard = TimeCard::findOne($id);
 			$response = Yii::$app ->response;
@@ -99,13 +101,14 @@ class TimeCardController extends BaseActiveController
 	
 	public function actionApproveCards()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardApproveCards');
 		try
 		{
 			//set db target
-			TimeCard::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeCardApproveCards');
+			$headers = getallheaders();
+			TimeCard::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			//capture put body
 			$put = file_get_contents("php://input");
@@ -161,14 +164,16 @@ class TimeCardController extends BaseActiveController
 	}
 	
 	public function actionGetEntries($cardID)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardGetEntries');
+		
 		try
 		{
 			//set db target
-			TimeCard::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeCardGetEntries');
+			$headers = getallheaders();
+			TimeCard::setClient($headers['X-Client']);
+			TimeEntry::setClient($headers['X-Client']);
 			
 			$response = Yii::$app ->response;
 			$dataArray = [];
@@ -257,14 +262,15 @@ class TimeCardController extends BaseActiveController
 	}	
 	
 	public function actionGetCard($userID)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeCardGetCard');
+		
 		try
 		{
 			//set db target
-			AllTimeCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeCardGetCard');
+			$headers = getallheaders();
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
 			
 			$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$userID]);
 			$response = Yii::$app->response;
@@ -294,7 +300,9 @@ class TimeCardController extends BaseActiveController
 		{
 			//set db target headers
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
 			$response = Yii::$app->response;

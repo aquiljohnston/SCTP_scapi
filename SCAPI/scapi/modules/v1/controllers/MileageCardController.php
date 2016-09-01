@@ -13,6 +13,7 @@ use app\modules\v1\models\MileageCardSumMilesCurrentWeekWithProjectNameNew;
 use app\modules\v1\models\MileageCardSumMilesPriorWeekWithProjectNameNew;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
+// use app\modules\v1\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
@@ -76,13 +77,13 @@ class MileageCardController extends BaseActiveController
     public function actionView($id)
     {
 		try
-		{			
-			//set db target
-			$headers = getallheaders();
-			MileageCard::setClient(BaseActiveController::urlPrefix());
-			
+		{
 			// RBAC permission check
 			PermissionsController::requirePermission('mileageCardView');
+			
+			//set db target
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
 			
 			$mileageCard = MileageCard::findOne($id);
 			$response = Yii::$app->response;
@@ -99,14 +100,16 @@ class MileageCardController extends BaseActiveController
 	
 	
 	public function actionApproveCards()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardApprove');
+		
 		try
 		{
 			//set db target
-			MileageCard::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardApprove');
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			//capture put body
 			$put = file_get_contents("php://input");
@@ -164,14 +167,16 @@ class MileageCardController extends BaseActiveController
 	}
 	
 	public function actionGetEntries($cardID)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardGetEntries');
+		
 		try
 		{
 			//set db target
-			MileageCard::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardGetEntries');
+			$headers = getallheaders();
+			MileageCard::setClient($headers['X-Client']);
+			MileageEntry::setClient($headers['X-Client']);
 			
 			$response = Yii::$app ->response;
 			$dataArray = [];
@@ -260,14 +265,15 @@ class MileageCardController extends BaseActiveController
 	}
 	
 	public function actionGetCard($userID)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('mileageCardGetCard');
+		
 		try
 		{
 			//set db target
-			AllMileageCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardGetCard');
+			$headers = getallheaders();
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
 			
 			$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$userID]);
 			$response = Yii::$app->response;
@@ -296,7 +302,10 @@ class MileageCardController extends BaseActiveController
 		try
 		{
 			//set db target headers
-			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient($headers['X-Client']);
+			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
 			
 			//format response
 			$response = Yii::$app->response;
