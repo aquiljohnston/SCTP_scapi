@@ -4,7 +4,6 @@ namespace app\modules\v1\controllers;
 
 use yii;
 use app\authentication\TokenAuth;
-// use app\modules\v1\authentication\TokenAuth;
 use yii\web\Controller;
 use yii\web\Response;
 use app\modules\v1\controllers\BaseActiveController;
@@ -40,14 +39,9 @@ class MenuController extends Controller {
 	//public function actionGet()
 	public function actionGet($project)
 	{
-		// try{
+		try{
 			//set db target
-			$headers = getallheaders();
-			Project::setClient($headers['X-Client']);
-			Client::setClient($headers['X-Client']);
-			MenusProjectModule::setClient($headers['X-Client']);
-			MenusModuleMenu::setClient($headers['X-Client']);
-			MenusModuleSubMenu::setClient($headers['X-Client']);
+			Project::setClient(BaseActiveController::urlPrefix());
 			
 			//build menu array for project Id
 			//create data arrays
@@ -190,11 +184,11 @@ class MenuController extends Controller {
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $menuArray;
 			return $response;
-		// }
-		// catch(\Exception $e) 
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(\Exception $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 }

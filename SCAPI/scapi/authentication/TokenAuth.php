@@ -4,10 +4,11 @@ namespace  app\authentication;
 
 use Yii;
 use yii\filters\auth\AuthMethod;
-use app\models\SCUser;
-use app\models\Auth;
+use app\modules\v1\models\SCUser;
+use app\modules\v1\models\Auth;
 use yii\base\ErrorException;
 use yii\web\Response;
+use app\modules\v1\controllers\BaseActiveController;
 
 class TokenAuth extends AuthMethod
 {
@@ -15,6 +16,8 @@ class TokenAuth extends AuthMethod
 	 
     public function authenticate($user, $request, $response)
     {
+		SCUser::setClient(BaseActiveController::urlPrefix());
+		
         $token = $request->getAuthUser();
 		
 		//check for client header
@@ -27,8 +30,6 @@ class TokenAuth extends AuthMethod
 		{	
 			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
 		}
-		SCUser::setClient('CometTracker');
-		Auth::setClient('CometTracker');
 		
 		if ($token !== null) {
 			Yii::$app->user->checkTimeout($token);

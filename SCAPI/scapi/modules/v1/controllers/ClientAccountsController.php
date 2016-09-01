@@ -31,15 +31,14 @@ class ClientAccountsController extends BaseActiveController
 	
 	//return a json containing pairs of ClientAccountIDs and ClientNames
 	public function actionGetClientAccountDropdowns()
-	{
-		// RBAC permission check
-		PermissionsController::requirePermission('clientAccountsGetDropdown');
-		
+	{		
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			ClientAccounts::setClient($headers['X-Client']);
+			ClientAccounts::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('clientAccountsGetDropdown');
 		
 			$clientAccounts = ClientAccounts::find()
 				->all();
