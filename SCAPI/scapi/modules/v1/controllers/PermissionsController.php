@@ -31,6 +31,7 @@ class PermissionsController extends Controller {
 
     public static function can($permissionName, $token = null)
     {
+		SCUser::setClient(BaseActiveController::urlPrefix());
         if($token === null) {
             $token = Yii::$app->request->getAuthUser();
         }
