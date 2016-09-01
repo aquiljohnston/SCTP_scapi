@@ -5,23 +5,27 @@ namespace app\authentication;
 use Yii;
 use yii\web\User;
 use yii\base\ErrorException;
-use app\models\Auth;
-use app\models\SCUser;
+use app\modules\v1\models\Auth;
+use app\modules\v1\models\SCUser;
+use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v1\models\BaseActiveRecord;
 
 class CTUser extends User
 {
 	public function clearToken($userID)
 	{
-		Yii::trace('Clearing Token From DB');
+		Auth::setClient(BaseActiveController::urlPrefix());
 		$session = Yii::$app->getSession();
 		Yii::trace('Id of token is '.$userID);
-					$auth = Auth::find()
-						->where(['AuthUserID' => $userID])
-						->one();
-					if ($auth !== null)
-					{
-						$auth->delete();
-					}
+		$auth = Auth::find()
+			->where(['AuthUserID' => $userID])
+			->one();
+		Yii::trace('Token Found');
+		if ($auth !== null)
+		{
+			$auth->delete();
+			Yii::trace('Token Removed');
+		}
 		Yii::trace('Token has been cleared');
 	}
 	 
@@ -64,57 +68,10 @@ class CTUser extends User
             }
         }
 	}
-	
-	//renew auth with token passed from frontend
-	// protected function renewAuthStatusWithToken($token)
-	// {
-		// $session = Yii::$app->getSession();
-        // // $id = $session->getHasSessionId() || $session->getIsActive() ? $session->get($this->idParam) : null;
-		
-		// Yii::Trace("Token Value passed from front end: " . $token);
-		// if ($auth = Auth::find()
-						// ->where(['AuthToken' => $token])
-						// ->one())
-		// {
-			// Yii::Trace("Token Value found on back end: " . $auth->AuthToken);
-			// $userID = $auth->AuthUserID;
-
-			// if ($userID === null) {
-				// $identity = null;
-			// } else {
-				// /* @var $class IdentityInterface */
-				// $class = $this->identityClass;
-				// $identity = $class::findIdentity($userID);
-			// }
-
-			// $this->setIdentity($identity);
-
-			// if ($identity !== null && ($this->authTimeout !== null || $this->absoluteAuthTimeout !== null)) {
-				// $expire = $this->authTimeout !== null ? $session->get($this->authTimeoutParam) : null;
-				// $expireAbsolute = $this->absoluteAuthTimeout !== null ? $session->get($this->absoluteAuthTimeoutParam) : null;
-				// Yii::trace("session id: " . $session->getId());
-				// Yii::trace("expiration duration: " . $this->authTimeout);
-				// Yii::trace("expiration time: " . $session->get($this->authTimeoutParam));
-				// Yii::trace("actual time: " . time());
-				// if ($expire !== null && $expire < time() || $expireAbsolute !== null && $expireAbsolute < time()) {
-					// Yii::trace('AuthTimeout has expired and the user will now be logged out');
-					// $this->logout(true, $userID);
-				// } elseif ($this->authTimeout !== null) {
-					// $session->set($this->authTimeoutParam, time() + $this->authTimeout);
-					// Yii::trace("session id: " . $session->getId());
-					// Yii::trace("expiration duration after success: " . $this->authTimeout);
-					// Yii::trace("expiration time after success: " . $session->get($this->authTimeoutParam));
-				// }
-			// }
-		// }
-		// else
-		// {
-			// //TODO deny access and send response
-		// }
-		//}
 		
 	protected function renewAuthStatusWithToken($token)
 	{
+		Auth::setClient(BaseActiveController::urlPrefix());
 		if($auth = Auth::find()
 				->where(['AuthToken' => $token])
 				->one())

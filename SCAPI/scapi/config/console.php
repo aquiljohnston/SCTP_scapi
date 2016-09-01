@@ -28,7 +28,7 @@ return [
                 ],
             ],
         ],
-        'db' => [
+        'ctDevDb' => [
 			'class' => 'yii\db\Connection',
 			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker',
 			'username' => 'ApplicationCometTracker',

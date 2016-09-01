@@ -7,8 +7,10 @@
  */
 
 namespace app\modules\v1\controllers;
+
 use Yii;
 use app\modules\v1\models\BaseActiveRecord;
+use app\modules\v1\controllers\BaseActiveController;
 use yii\web\Response;
 
 trait GetAll
@@ -27,9 +29,7 @@ trait GetAll
             $modelClass = $this->modelClass;
 
             //set db target
-            $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
-            $modelClass::setClient($headers['X-Client']);
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             $models = $modelClass::find()
                 ->all();

@@ -88,12 +88,15 @@ class UserController extends BaseActiveController
 	* @throws \yii\web\HttpException
 	*/
 	public function actionCreate()
-	{
-		SCUser::setClient('CometTracker');
-		PermissionsController::requirePermission('userCreate');
+	{		
+		try
+		{
+			$headers = getallheaders();
+			
+			SCUser::setClient(BaseActiveController::urlPrefix());
+			PermissionsController::requirePermission('userCreate');
 		
-		// try
-		// {
+			
 			//create response
 			$response = Yii::$app->response;
 			
@@ -116,12 +119,12 @@ class UserController extends BaseActiveController
 			//hash pass with bcrypt
 			$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 
-			SCUser::setClient('CometTracker');
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			$scUser = new SCUser;
 			$scUser->attributes = $data;
 			$scUser->UserPassword = $hashedPass;
 			
-			PGEUser::setClient('pgedev');
+			PGEUser::setClient($headers['X-Client']);
 			$pgeUser = new PGEUser;
 			$pgeUser->attributes = $data;
 			$pgeUser->UserPassword = $hashedPass;
@@ -148,12 +151,12 @@ class UserController extends BaseActiveController
 			//rbac check if attempting to create an admin
 			if($scUser["UserAppRoleType"] == 'Admin')
 			{
-				SCUser::setClient('CometTracker');
+				SCUser::setClient(BaseActiveController::urlPrefix());
 				PermissionsController::requirePermission('userCreateAdmin');
 			}
 			
 			// UID of current user that is creating new user
-			SCUser::setClient('CometTracker');
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			$userCreatedUID = self::getUserFromToken()->UserUID;
 			if(array_key_exists('Source', $data))
 			{
@@ -177,32 +180,29 @@ class UserController extends BaseActiveController
 			$pgeUser->UserName = $pgeUser->UserLANID;
 			$scUser->UserName = $pgeUser->UserLANID;
 			
-			PGEUser::setClient('pgedev');
+			PGEUser::setClient($headers['X-Client']);
 			if($pgeUser-> save())
 			{
-				SCUser::setClient('CometTracker');
-				if($scUser-> save())
+				$groups = $data['ReportingGroup'];
+					
+				foreach($groups as $g)
 				{
-								
-					//TODO add users to reporting groups/////////////////////////////////////
-					$groups = $data['ReportingGroup'];
-					
-					foreach($groups as $g)
-					{
-						$newGroup = new ReportingGroupEmployeeRef;
-						$newGroup->UserUID = $pgeUser->UserUID;
-						$newGroup->ReportingGroupUID = $g;
-						$newGroup->RoleUID = $role->RoleUID;
-						$newGroup->CreatedUserUID = $userCreatedUID;
-						$newGroup->CreateDatetime = Parent::getDate();
-						$newGroup->Revision = 0;
-						$newGroup->ActiveFlag = 1;
-						$newGroup -> save();
-					}
-					
+					$newGroup = new ReportingGroupEmployeeRef;
+					$newGroup->UserUID = $pgeUser->UserUID;
+					$newGroup->ReportingGroupUID = $g;
+					$newGroup->RoleUID = $role->RoleUID;
+					$newGroup->CreatedUserUID = $userCreatedUID;
+					$newGroup->CreateDatetime = Parent::getDate();
+					$newGroup->Revision = 0;
+					$newGroup->ActiveFlag = 1;
+					$newGroup -> save();
+				}
+				
+				SCUser::setClient(BaseActiveController::urlPrefix());
+				if($scUser-> save())
+				{					
 					//the project id of the pgedev project will need to change later
 					$projectName = 'PG&E Dev';
-					Project::setClient('CometTracker');
 					$project = Project::find()
 						->where(['ProjectName' => $projectName])
 						->one();
@@ -249,15 +249,15 @@ class UserController extends BaseActiveController
 				throw new \yii\web\HttpException(400);
 			}
 			return $response;
-        // }
-		// catch(ForbiddenHttpException $e)
-		// {
-			// throw new ForbiddenHttpException;
-		// }
-		// catch(Exception $e) 
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+        }
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(Exception $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	/**
@@ -268,9 +268,11 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionUpdate($UID)
 	{
-		// try
-		// {
-			SCUser::setClient('CometTracker');
+		try
+		{
+			$headers = getallheaders();
+			
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			PermissionsController::requirePermission('userUpdate');	
 			
 			$put = file_get_contents("php://input");
@@ -281,21 +283,22 @@ class UserController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//get user model to be updated
-			SCUser::setClient('CometTracker');
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			$scUser = SCUser::find()
 				->where(['UserUID'=>$UID])
 				->one();
 			
 			//get user model to be updated
-			PGEUser::setClient('pgedev');
+			PGEUser::setClient($headers['X-Client']);
 			$pgeUser = PGEUser::find()
 				->where(['UserUID'=>$UID])
 				->one();
 
 			$currentRole = $scUser["UserAppRoleType"];
 
-			SCUser::setClient('CometTracker');
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			PermissionsController::requirePermission('userUpdate' . $currentRole);
+			$modifiedUID = self::getUserFromToken()->UserUID;
 			
 			//options for bcrypt
 			$options = [
@@ -328,7 +331,6 @@ class UserController extends BaseActiveController
 			$pgeUser->attributes = $data;
 			$scUser->attributes = $data;
 			// Get modified by from token
-			$modifiedUID = self::getUserFromToken()->UserUID;
 			$pgeUser->UserModifiedUID = $modifiedUID;
 			$scUser->UserModifiedUID = $modifiedUID;
 			//set modified dates
@@ -359,12 +361,11 @@ class UserController extends BaseActiveController
 				PermissionsController::requirePermission('userCreateAdmin');
 			}
 			
+			PGEUser::setClient($headers['X-Client']);
 			$role = Role::find()
 				->where(['RoleName'=>$roleName])
 				->one();
 			
-			Yii::Trace('PGE User ID' . $pgeUser->UserID);
-			PGEUser::setClient('pgedev');
 			if($pgeUser-> update())
 			{
 				//Handle changes to reporting groups
@@ -385,7 +386,7 @@ class UserController extends BaseActiveController
 					$newGroup->save();
 				}
 				
-				SCUser::setClient('CometTracker');
+				SCUser::setClient(BaseActiveController::urlPrefix());
 				if($scUser-> update())
 				{
 					//handle potential role change
@@ -405,15 +406,15 @@ class UserController extends BaseActiveController
 				throw new \yii\web\HttpException(400);
 			}
 			return $response;
-		// }
-		// catch(ForbiddenHttpException $e)
-		// {
-			// throw new ForbiddenHttpException;
-		// }
-		// catch(\Exception $e)
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	/**
@@ -424,8 +425,8 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionView($LANID)
 	{
-		// try
-		// {
+		try
+		{
 			//TODO permissions check
 			//BaseActiveRecord::setClient('CometTracker');
 			//PermissionsController::requirePermission('userView');	
@@ -454,11 +455,11 @@ class UserController extends BaseActiveController
 			$response->data = $user[0];
 			
 			return $response;
-		// }
-		// catch(\Exception $e)  
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(\Exception $e)  
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 	/**
@@ -467,51 +468,51 @@ class UserController extends BaseActiveController
 	* @returns json body of user data
 	* @throws \yii\web\HttpException
 	*/
-	public function actionDeactivate($userID)
-	{
-		PermissionsController::requirePermission('userDeactivate');
+	// public function actionDeactivate($userID)
+	// {
+		// PermissionsController::requirePermission('userDeactivate');
 		
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			PGEUser::setClient($headers['X-Client']);
+		// try
+		// {
+			// //set db target
+			// $headers = getallheaders();
+			// PGEUser::setClient($headers['X-Client']);
 			
-			//get user to be deactivated
-			$user = PGEUser::findOne($userID);
+			// //get user to be deactivated
+			// $user = PGEUser::findOne($userID);
 			
-			$currentRole = $user["UserAppRoleType"];
+			// $currentRole = $user["UserAppRoleType"];
 			
-			PermissionsController::requirePermission('userUpdate'.$currentRole);
+			// PermissionsController::requirePermission('userUpdate'.$currentRole);
 			
-			//pass new data to user model
-			//$user->UserActiveFlag = 0;  
+			// //pass new data to user model
+			// //$user->UserActiveFlag = 0;  
 			
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
+			// $response = Yii::$app->response;
+			// $response ->format = Response::FORMAT_JSON;
 			
-			//call stored procedure to for cascading deactivation of a user
-			try
-			{
-				//deactivate PGEUser
-			}
-			catch(Exception $e)
-			{
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
-			}
-			return $response;
-		}
-		catch(ForbiddenHttpException $e)
-		{
-			throw new ForbiddenHttpException;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
+			// //call stored procedure to for cascading deactivation of a user
+			// try
+			// {
+				// //deactivate PGEUser
+			// }
+			// catch(Exception $e)
+			// {
+				// $response->setStatusCode(400);
+				// $response->data = "Http:400 Bad Request";
+			// }
+			// return $response;
+		// }
+		// catch(ForbiddenHttpException $e)
+		// {
+			// throw new ForbiddenHttpException;
+		// }
+		// catch(\Exception $e)  
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 		
-	}
+	// }
 	
 	/**
 	* Gets a users data, the equipment assigned to them, and all projects that they are associated with
@@ -535,8 +536,8 @@ class UserController extends BaseActiveController
 	
 	public function actionGet($group = null, $type = null, $filter = null)
 	{
-		// try
-		// {
+		try
+		{
 			//TODO RBAC permissions check
 			//BaseActiveRecord::setClient('CometTracker');
 			//PermissionsController::requirePermission('userView');	
@@ -579,15 +580,15 @@ class UserController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $users;
 			return $response;
-		// }
-		// catch(ForbiddenHttpException $e)
-		// {
-		// throw new ForbiddenHttpException;
-		// }
-		// catch(\Exception $e)
-		// {
-		// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(ForbiddenHttpException $e)
+		{
+		throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)
+		{
+		throw new \yii\web\HttpException(400);
+		}
 	}
 
 

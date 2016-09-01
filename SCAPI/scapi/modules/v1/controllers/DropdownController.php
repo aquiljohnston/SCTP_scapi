@@ -7,6 +7,7 @@ use app\authentication\TokenAuth;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
 use app\modules\v1\models\EmployeeType;
+use app\modules\v1\Controllers\BaseActiveController;
 use yii\web\Response;
 use \DateTime;
 use yii\web\ForbiddenHttpException;
@@ -248,14 +249,14 @@ class DropdownController extends Controller
     //return a json containing pairs of EmployeeTypes
     public function actionGetEmployeeTypeDropdown()
     {
-        // RBAC permission check
-        PermissionsController::requirePermission('employeeTypeGetDropdown');
-
         try
         {
             //set db target
             $headers = getallheaders();
-            EmployeeType::setClient($headers['X-Client']);
+            EmployeeType::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('employeeTypeGetDropdown');
 
             $types = EmployeeType::find()
                 ->all();

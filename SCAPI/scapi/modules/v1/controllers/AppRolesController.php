@@ -62,15 +62,13 @@ class AppRolesController extends BaseActiveController
 	 */
 	public function actionGetRolesDropdowns()
 	{
-		// RBAC permission check
-		
-		
-		PermissionsController::requirePermission('appRoleGetDropdown');
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			AppRoles::setClient($headers['X-Client']);
+			AppRoles::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('appRoleGetDropdown');
 		
 			$roles = AppRoles::find()
 				->all();
@@ -96,30 +94,6 @@ class AppRolesController extends BaseActiveController
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
-		}
-	}
-
-	public function actionGetPgeDropdowns() {
-
-		// TODO: Permissions check
-		try {
-			//TODO: headers and X-Client
-
-			//TODO: Find App Roles
-			$data = [
-				"Administrator",
-				"Project Manager",
-				"Supervisor",
-				"Engineer",
-				"Technician"
-			];
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
-			return $response;
-		} catch (\Exception $e) {
-			throw new BadRequestHttpException;
 		}
 	}
 }
