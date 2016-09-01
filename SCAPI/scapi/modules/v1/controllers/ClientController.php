@@ -32,14 +32,16 @@ class ClientController extends BaseActiveController
 	 * @throws \yii\web\HttpException 400 if any exceptions are thrown
 	 */
 	public function actionGetAll()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientGetAll');
+		
 		try
 		{
 			//set db target
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('clientGetAll');
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			Client::setClient($headers['X-Client']);
 
 			$models = Client::find()
 				->all();
@@ -59,14 +61,15 @@ class ClientController extends BaseActiveController
 	use DeleteMethodNotAllowed;
 
 	public function actionView($id)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientView');
+		
 		try
 		{
 			//set db target
-			Client::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('clientView');
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
 			
 			$client = Client::findOne($id);
 			$response = Yii::$app->response;
@@ -83,14 +86,16 @@ class ClientController extends BaseActiveController
 	
 	
 	public function actionCreate()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientCreate');
+		
 		try
 		{
 			//set db target
-			Client::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('clientCreate');
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -124,14 +129,16 @@ class ClientController extends BaseActiveController
 	}
 	
 	public function actionUpdate($id)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientUpdate');
+		
 		try
 		{
 			//set db target
-			Client::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('clientUpdate');
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
@@ -167,14 +174,15 @@ class ClientController extends BaseActiveController
 	
 	//return a json containing pairs of ClientID and ClientName
 	public function actionGetClientDropdowns()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('clientGetDropdown');
+		
 		try
 		{
 			//set db target
-			Client::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('clientGetDropdown');
+			$headers = getallheaders();
+			Client::setClient($headers['X-Client']);
 		
 			$clients = Client::find()
 				->orderBy('ClientName')

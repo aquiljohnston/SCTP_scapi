@@ -34,15 +34,15 @@ class EquipmentTypeController extends BaseActiveController
 	
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetTypeDropdowns()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentTypeGetDropdown');
+		
 		try
 		{
 			//set db target
 			$headers = getallheaders();
-			EquipmentType::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('equipmentTypeGetDropdown');
+			EquipmentType::setClient($headers['X-Client']);
 		
 			$types = EquipmentType::find()
 				->all();

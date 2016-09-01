@@ -33,7 +33,8 @@ class BreadcrumbController extends BaseActiveController
 		try
 		{
 			//set db target
-			Breadcrumb::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			Breadcrumb::setClient($headers['X-Client']);
 			
 			$breadcrumb = Breadcrumb::findOne($id);
 			$response = Yii::$app->response;

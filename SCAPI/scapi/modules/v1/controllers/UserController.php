@@ -78,13 +78,15 @@ class UserController extends BaseActiveController
 	* @throws \yii\web\HttpException
 	*/
 	public function actionCreate()
-	{		
+	{
+		PermissionsController::requirePermission('userCreate');
+		
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			PermissionsController::requirePermission('userCreate');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			Key::setClient($headers['X-Client']);
 			
 			//create response
 			$response = Yii::$app->response;
@@ -181,12 +183,14 @@ class UserController extends BaseActiveController
 	*/	
 	public function actionUpdate($id)
 	{
+		PermissionsController::requirePermission('userUpdate');
+
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			PermissionsController::requirePermission('userUpdate');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			Key::setClient($headers['X-Client']);
 			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
@@ -310,13 +314,14 @@ class UserController extends BaseActiveController
 	* @throws \yii\web\HttpException
 	*/	
 	public function actionView($id)
-	{		
+	{
+		PermissionsController::requirePermission('userView');
+		
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			PermissionsController::requirePermission('userView');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
 			
 			//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
 			$user = SCUser::findOne($id);
@@ -342,12 +347,13 @@ class UserController extends BaseActiveController
 	*/
 	public function actionDeactivate($userID)
 	{
+		PermissionsController::requirePermission('userDeactivate');
+		
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			PermissionsController::requirePermission('userDeactivate');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
 			
 			//get user to be deactivated
 			$user = SCUser::findOne($userID);
@@ -395,13 +401,14 @@ class UserController extends BaseActiveController
 	* @throws \yii\web\HttpException
 	*/
 	public function actionGetUserDropdowns()
-	{		
+	{	
+		PermissionsController::requirePermission('userGetDropdown');
+	
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			PermissionsController::requirePermission('userGetDropdown');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
 		
 			$users = SCUser::find()
 				->where("UserActiveFlag = 1")
@@ -441,7 +448,16 @@ class UserController extends BaseActiveController
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			Project::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			Equipment::setClient($headers['X-Client']);
+			ActivityCode::setClient($headers['X-Client']);
+			PayCode::setClient($headers['X-Client']);
+			Client::setClient($headers['X-Client']);
+			AllTimeCardsCurrentWeek::setClient($headers['X-Client']);
+			AllMileageCardsCurrentWeek::setClient($headers['X-Client']);
 			
 			PermissionsController::requirePermission('userGetMe');
 			
@@ -534,13 +550,15 @@ class UserController extends BaseActiveController
 	*/
 	public function actionGetProjects($userID)
 	{
+		PermissionsController::requirePermission('userGetProjects');
 		// TODO: remove. Replaced by ProjectController::actionGetAll()
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			PermissionsController::requirePermission('userGetProjects');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			Project::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
 			
 			//get users relationship to projects
 			$projectUser = ProjectUser::find()
@@ -577,14 +595,15 @@ class UserController extends BaseActiveController
 	* @throws \yii\web\HttpException
 	*/
 	public function actionGetActive()
-	{		
+	{
+		PermissionsController::requirePermission('userGetActive');
+		
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
 		
-			PermissionsController::requirePermission('userGetActive');
-			
 			$users = SCUser::find()
 				->where("UserActiveFlag = 1")
 				->all();
@@ -599,4 +618,160 @@ class UserController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+
+
+	public function actionGet($division = null, $workCenter = null, $type = null, $filter = null)
+	{
+		//TODO RBAC permissions check
+		try
+		{
+			//TODO check headers
+
+			//stub data
+			$users = [];
+			//build stub users
+			$andre = [];
+			$andre["ID"] = 1;
+			$andre["Division"] = "Diablo";
+			$andre["WorkCenter"] = "Izual";
+			$andre["Status"] = "Active";
+			$andre["LastName"] = "Vicente";
+			$andre["FirstName"] = "Andre";
+			$andre["LANID"] = "A6V9";
+			$andre["Type"] = "Contractor";
+			$andre["OQ"] = "Lapsed";
+			$josh = [];
+			$josh["ID"] = 2;
+			$josh["Division"] = "Belial";
+			$josh["WorkCenter"] = "Zoltun Kulle";
+			$josh["Status"] = "Active";
+			$josh["LastName"] = "Josh";
+			$josh["FirstName"] = "Patton";
+			$josh["LANID"] = "J0P0";
+			$josh["Type"] = "Intern";
+			$josh["OQ"] = "Lapsed";
+			$michael = [];
+			$michael["ID"] = 3;
+			$michael["Division"] = "Malthael";
+			$michael["WorkCenter"] = array(
+				"Adria",
+				"Urzael",
+			);
+			$michael["Status"] = "Active";
+			$michael["LastName"] = "Davis";
+			$michael["FirstName"] = "Michael";
+			$michael["LANID"] = "M3D4";
+			$michael["Type"] = "Employee";
+			$michael["OQ"] = "Current";
+			$tao = [];
+			$tao["ID"] = 4;
+			$tao["Division"] = "Azmodan";
+			$tao["WorkCenter"] = "Cydaea";
+			$tao["Status"] = "Active";
+			$tao["LastName"] = "Tao";
+			$tao["FirstName"] = "Zhang";
+			$tao["LANID"] = "T1Z3";
+			$tao["Type"] = "Employee";
+			$tao["OQ"] = "Lapsed";
+
+			$sarah = [];
+			$sarah["ID"] = 5;
+			$sarah["Division"] = "Azmodan";
+			$sarah["WorkCenter"] = "Cydaea";
+			$sarah["Status"] = "Active";
+			$sarah["LastName"] = "Smith";
+			$sarah["FirstName"] = "Sarah";
+			$sarah["LANID"] = "S1S2";
+			$sarah["Type"] = "Employee";
+			$sarah["OQ"] = "Lapsed";
+
+			$bob = [];
+			$bob["ID"] = 6;
+			$bob["Division"] = "Azmodan";
+			$bob["WorkCenter"] = "Cydaea";
+			$bob["Status"] = "Active";
+			$bob["LastName"] = "Westerly";
+			$bob["FirstName"] = "Bob";
+			$bob["LANID"] = "B1W2";
+			$bob["Type"] = "Contractor";
+			$bob["OQ"] = "Lapsed";
+
+			$jennifer = [];
+			$jennifer["ID"] = 7;
+			$jennifer["Division"] = "Azmodan";
+			$jennifer["WorkCenter"] = "Cydaea";
+			$jennifer["Status"] = "Active";
+			$jennifer["LastName"] = "Garrett";
+			$jennifer["FirstName"] = "Jennifer";
+			$jennifer["LANID"] = "B1W2";
+			$jennifer["Type"] = "Contractor";
+			$jennifer["OQ"] = "Lapsed";
+			
+			$users[] = $andre;
+			$users[] = $josh;
+			$users[] = $michael;
+			$users[] = $tao;
+			$users[] = $sarah;
+			$users[] = $jennifer;
+			
+			$userCount = count($users);
+			$userData = [];
+			function workCenterSearch($filter, $workCenter) {
+				if (is_array($workCenter)) {
+					$workCenterCount = count($workCenter);
+					for ($j = 0; $j < $workCenterCount; $j++) {
+						if (stripos($workCenter[$j], $filter) !== false) {
+							return true;
+						}
+					}
+				} elseif (stripos($workCenter, $filter) !== false) {
+					return true;
+				}
+				return false;
+			}
+			//loop to filter users
+			for ($i = 0; $i < $userCount; $i++) {
+				if ($filter == null || stripos($users[$i]["Division"], $filter) !== false
+					|| stripos($users[$i]["Status"], $filter) !== false || stripos($users[$i]["LastName"], $filter) !== false
+					|| stripos($users[$i]["FirstName"], $filter) !== false || stripos($users[$i]["LANID"], $filter) !== false
+					|| stripos($users[$i]["Type"], $filter) !== false || stripos($users[$i]["OQ"], $filter) !== false
+					|| workCenterSearch($filter, $users[$i]["WorkCenter"])
+				) {
+					if ($division == null || $division == $users[$i]["Division"]) {
+						if ($type == null || $type == $users[$i]["Type"]) {
+							if (is_array($users[$i]["WorkCenter"])) {
+								$workCenterCount = count($users[$i]["WorkCenter"]);
+								for ($j = 0; $j < $workCenterCount; $j++) {
+									if ($workCenter == null || $workCenter == $users[$i]["WorkCenter"][$j]) {
+										$users[$i]["WorkCenter"] = "Many";
+										$userData[] = $users[$i];
+										break;
+									}
+								}
+							} elseif ($workCenter == null || $workCenter == $users[$i]["WorkCenter"]) {
+								$userData[] = $users[$i];
+							}
+						}
+					}
+				}
+			}
+
+			//loop to handle many work centers
+
+			//send response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $userData;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+		throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)
+		{
+		throw new \yii\web\HttpException(400);
+		}
+	}
+
 }

@@ -47,9 +47,6 @@ class DispatchController extends Controller
 	{
 		try
 		{
-			//set db
-			$headers = getallheaders();
-			WebManagementDispatch::setClient($headers['X-Client']);
 			
 			$assetQuery = WebManagementDispatch::find()->where(['Assigned' => 0]);
 			
@@ -115,9 +112,6 @@ class DispatchController extends Controller
 	{
 		try
 		{
-			$headers = getallheaders();
-			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
-			
 			$assetQuery = WebManagementAssignedWorkQueue::find();
 			
 			if($division != null)
@@ -185,11 +179,8 @@ class DispatchController extends Controller
 	{
 		try
 		{
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			WebManagementAssignedWorkQueue::setClient('CometTracker');
 			$UID = BaseActiveController::getUserFromToken()->UserUID;
-			
-			$headers = getallheaders();
-			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
 			
 			$assignedWork = WebManagementAssignedWorkQueue::find()
 				->where(['UserUID'=>$UID])
@@ -213,11 +204,8 @@ class DispatchController extends Controller
 	
 	public function actionGetSurveyors($filter = null)
 	{
-		try
-		{
-			$headers = getallheaders();
-			UserLogin::setClient($headers['X-Client']);
-			
+		// try
+		// {
 			//TODO need to add a new column to the view with lastname, firstname
 			$userQuery = UserLogin::find()
 				->select(['UserUID', new \yii\db\Expression("CONCAT(UserLastName, ', ', UserFirstName)as UserFullName"), 'UserLANID'])
@@ -240,23 +228,21 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $users;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
 	}
 	
 	public function actionDispatch()
 	{
-		try
-		{
-			$headers = getallheaders();
-			
+		// try
+		// {
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
 			$responseData = [];
@@ -265,22 +251,20 @@ class DispatchController extends Controller
 			
 			for($i = 0; $i < $assetCount; $i++)
 			{
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				$userUID = BaseActiveController::getUserFromToken()->UserUID;
-				
-				AssignedWorkQueue::setClient($headers['X-Client']);
+				BaseActiveRecord::setClient('CometTracker');
 				$assignment = new AssignedWorkQueue;
 				$assignment->SourceID = $data['SourceID'];
 				$assignment->DispatchMethod = 'Dispatched';
 				$assignment->AssignedDate = BaseActiveController::getDate();
-				$assignment->CreatedUserUID = $userUID;
+				$assignment->CreatedUserUID = BaseActiveController::getUserFromToken()->UserUID;
 				$assignment->ProjectID = 1;
 				$assignment->ActiveFlag = 1;
 				$assignment->Revision = 0;
-				$assignment->ModifiedUserUID = $userUID;
+				$assignment->ModifiedUserUID = BaseActiveController::getUserFromToken()->UserUID;
 				$assignment->AssignedWorkQueueUID = BaseActiveController::generateUID('AssignedWorkQueue', $data['SourceID']);
 				$assignment->AssignedInspectionRequestUID = $data['Assignments'][$i]['IR'];
 				$assignment->AssignedUserUID = $data['Assignments'][$i]['User'];
+				AssignedWorkQueue::setClient('pgedev');
 				if($assignment->save())
 				{
 					$responseData[] = $assignment;
@@ -292,23 +276,20 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseData;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
 	}
 	
 	public function actionUnassign()
 	{
 		try{
-			$headers = getallheaders();
-			AssignedWorkQueue::setClient($headers['X-Client']);
-			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
 			

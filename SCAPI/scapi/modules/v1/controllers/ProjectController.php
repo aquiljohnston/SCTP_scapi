@@ -62,13 +62,14 @@ class ProjectController extends BaseActiveController
 	*/	
 	public function actionView($id)
     {
+		// RBAC permission check
+		PermissionsController::requirePermission('projectView');
+
 		try
 		{
 			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('projectView');
+			$headers = getallheaders();
+			Project::setClient($headers['X-Client']);
 			
 			$project = Project::findOne($id);
 			$response = Yii::$app->response;
@@ -96,7 +97,8 @@ class ProjectController extends BaseActiveController
 			try
 			{
 				//set db target
-				Project::setClient(BaseActiveController::urlPrefix());
+				$headers = getallheaders();
+				Project::setClient($headers['X-Client']);
 
 				$projects = Project::find()
 					->all();
@@ -148,13 +150,15 @@ class ProjectController extends BaseActiveController
 	*/	
 	public function actionCreate()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectCreate');
+
 		try
 		{
 			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('projectCreate');
+			$headers = getallheaders();
+			Project::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -196,13 +200,15 @@ class ProjectController extends BaseActiveController
 	*/	
 	public function actionUpdate($id)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectUpdate');
+
 		try
 		{
 			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('projectUpdate');
+			$headers = getallheaders();
+			Project::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
@@ -241,13 +247,14 @@ class ProjectController extends BaseActiveController
 	*/
 	public function actionGetProjectDropdowns()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectGetDropdown');
+
 		try
 		{
 			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('projectGetDropdown');
+			$headers = getallheaders();
+			Project::setClient($headers['X-Client']);
 		
 			$projects = Project::find()
 				->orderBy('ProjectName')
@@ -282,13 +289,16 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionGetUserRelationships($projectID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectGetUserRelationships');
+
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('projectGetUserRelationships');
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			Project::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
 			
 			//get all users for the project
 			$project = Project::findOne($projectID);
@@ -356,14 +366,16 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionAddRemoveUsers($projectID)
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('projectAddRemoveUsers');
+
 		try
 		{
 			//set db target
 			$headers = getallheaders();
-			Project::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('projectAddRemoveUsers');
+			SCUser::setClient($headers['X-Client']);
+			Project::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
 			
 			//create response
 			$response = Yii::$app ->response;
@@ -484,7 +496,8 @@ class ProjectController extends BaseActiveController
 		//PermissionsController::requirePermission('projectGetProjectModules');
 		try {
 			//set db target
-			MenusProjectModule::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			MenusProjectModule::setClient($headers['X-Client']);
 
 			//TODO: Sanitize $projectID
 
@@ -533,72 +546,68 @@ class ProjectController extends BaseActiveController
 	}
 
 	public function actionAddRemoveModule($projectID) {
-		try{
-			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
+		//set db target
+		$headers = getallheaders();
+		Project::setClient($headers['X-Client']);
 
-			$userID = self::getUserFromToken()->UserID;
+		$userID = self::getUserFromToken()->UserID;
 
-			//create response
-			$response = Yii::$app ->response;
-			$response -> format = Response::FORMAT_JSON;
+		//create response
+		$response = Yii::$app ->response;
+		$response -> format = Response::FORMAT_JSON;
 
-			//get project from param
-			$project = Project::findOne($projectID);
+		//get project from param
+		$project = Project::findOne($projectID);
 
 
-			//decode post data
-			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
+		//decode post data
+		$post = file_get_contents("php://input");
+		$data = json_decode($post, true);
 
-			//check if key exist
-			if(array_key_exists("modulesAdded", $data) && array_key_exists("modulesRemoved", $data))
-			{
-				//parse post data
-				$modulesAdded = $data['modulesAdded'];
-				$modulesRemoved = $data['modulesRemoved'];
-			} else {
-				//set failure response
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
-
-				return $response;
-			}
-
-			//loop modulesAdded and create relationships
-			foreach($modulesAdded as $i)
-			{
-				$model = new MenusProjectModule();
-				$model->ProjectModulesName = $i;
-				$model->ProjectModulesProjectID = $projectID;
-				$model->ProjectModulesCreatedBy = $userID;
-				if(!$model->save()) {
-					throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
-				}
-
-			}
-
-			//loop usersRemoved and delete relationships
-			foreach($modulesRemoved as $i)
-			{
-				$modules = MenusProjectModule::find()
-					->where("ProjectModulesProjectID = $projectID")
-					->where("ProjectModulesName = '$i'")
-					->all();
-				foreach($modules as $module) {
-					$module->delete();
-				}
-			}
-
-			//set success response
-			$response->setStatusCode(200);
-			$response -> data = $data;
+		//check if key exist
+		if(array_key_exists("modulesAdded", $data) && array_key_exists("modulesRemoved", $data))
+		{
+			//parse post data
+			$modulesAdded = $data['modulesAdded'];
+			$modulesRemoved = $data['modulesRemoved'];
+		} else {
+			//set failure response
+			$response->setStatusCode(400);
+			$response->data = "Http:400 Bad Request";
 
 			return $response;
 		}
-		catch(\Exception $e)  
+
+		//loop modulesAdded and create relationships
+		foreach($modulesAdded as $i)
 		{
-			throw new \yii\web\HttpException(400);
+			$model = new MenusProjectModule();
+			$model->ProjectModulesName = $i;
+			$model->ProjectModulesProjectID = $projectID;
+			$model->ProjectModulesCreatedBy = $userID;
+			if(!$model->save()) {
+				throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
+			}
+
 		}
+
+		//loop usersRemoved and delete relationships
+		foreach($modulesRemoved as $i)
+		{
+			$modules = MenusProjectModule::find()
+				->where("ProjectModulesProjectID = $projectID")
+				->where("ProjectModulesName = '$i'")
+				->all();
+			foreach($modules as $module) {
+				$module->delete();
+			}
+		}
+
+		//set success response
+		$response->setStatusCode(200);
+		$response -> data = $data;
+
+		return $response;
+
 	}
 }

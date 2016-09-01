@@ -4,6 +4,7 @@ namespace app\modules\v1\controllers;
 
 use Yii;
 use app\authentication\TokenAuth;
+// use app\modules\v1\authentication\TokenAuth;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Project;
 use app\modules\v1\models\ProjectUser;
@@ -52,7 +53,13 @@ class NotificationController extends Controller
 		try
 		{
 			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			SCUser::setClient($headers['X-Client']);
+			ProjectUser::setClient($headers['X-Client']);
+			Project::setClient($headers['X-Client']);
+			GetEquipmentByClientProjectVw::setClient($headers['X-Client']);
+			TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
+			MileageCardSumMilesPriorWeekWithProjectNameNew::setClient($headers['X-Client']);
 			
 			//get user
 			$userID = BaseActiveController::getUserFromToken()->UserID;

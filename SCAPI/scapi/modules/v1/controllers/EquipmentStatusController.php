@@ -35,14 +35,15 @@ class EquipmentStatusController extends BaseActiveController
 	//return a json containing pairs of EquipmentConditions
 	public function actionGetStatusDropdowns()
 	{
+		// RBAC permission check
+		PermissionsController::requirePermission('equipmentStatusGetDropdown');
+		
 		try
 		{
 			//set db target
-			EquipmentStatus::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			EquipmentStatus::setClient($headers['X-Client']);
 			
-			// RBAC permission check
-			PermissionsController::requirePermission('equipmentStatusGetDropdown');
-		
 			$status = EquipmentStatus::find()
 				->all();
 			$namePairs = [];

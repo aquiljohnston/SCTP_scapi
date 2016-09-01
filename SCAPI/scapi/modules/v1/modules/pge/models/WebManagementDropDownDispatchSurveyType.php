@@ -20,6 +20,14 @@ class WebManagementDropDownDispatchSurveyType extends \app\modules\v1\models\Bas
     }
 
     /**
+     * @return \yii\db\Connection the database connection used by this AR class.
+     */
+    public static function getDb()
+    {
+        return Yii::$app->get('pgeDevDb');
+    }
+
+    /**
      * @inheritdoc
      */
     public function rules()

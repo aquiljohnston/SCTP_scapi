@@ -48,7 +48,9 @@ class AuthController extends BaseActiveController
 		try
 		{
 			//set db target
-			Auth::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			Auth::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$auth = Auth::findOne(['AuthToken'=>$token]);
 			$userID = $auth->AuthUserID;
@@ -77,7 +79,8 @@ class AuthController extends BaseActiveController
 		try
 		{
 			//set db target
-			Auth::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			Auth::setClient($headers['X-Client']);
 			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;

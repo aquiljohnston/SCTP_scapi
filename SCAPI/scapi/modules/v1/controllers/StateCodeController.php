@@ -63,14 +63,15 @@ class StateCodeController extends BaseActiveController
 	
 	//return a json containing pairs of EquipmentTypes
 	public function actionGetCodeDropdowns()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('stateCodeGetDropdown');
+		
 		try
 		{
 			//set db target
-			StateCode::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('stateCodeGetDropdown');
+			$headers = getallheaders();
+			StateCode::setClient($headers['X-Client']);
 		
 			$codes = StateCode::find()
 				->all();

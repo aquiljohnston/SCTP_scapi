@@ -44,15 +44,15 @@ class TimeEntryController extends BaseActiveController
 	use DeleteMethodNotAllowed;
 	
 	public function actionView($id)
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeEntryView');
+		
 		try
 		{
 			//set db target
 			$headers = getallheaders();
-			TimeEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeEntryView');
+			TimeEntry::setClient($headers['X-Client']);
 			
 			$timeEntry = TimeEntry::findOne($id);
 			$response = Yii::$app->response;
@@ -68,15 +68,16 @@ class TimeEntryController extends BaseActiveController
 	}
 	
 	public function actionCreate()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeEntryCreate');
+		
 		try
 		{
 			//set db target
 			$headers = getallheaders();
-			TimeEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeEntryCreate');
+			TimeEntry::setClient($headers['X-Client']);
+			SCUser::setClient($headers['X-Client']);
 			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -113,14 +114,14 @@ class TimeEntryController extends BaseActiveController
 	}
 	
 	public function actionDeactivate()
-	{		
+	{
+		// RBAC permission check
+		PermissionsController::requirePermission('timeEntryDeactivate');
+		
 		try{
 			//set db target
 			$headers = getallheaders();
-			TimeEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeEntryDeactivate');
+			TimeEntry::setClient($headers['X-Client']);
 			
 			//capture put body
 			$put = file_get_contents("php://input");
