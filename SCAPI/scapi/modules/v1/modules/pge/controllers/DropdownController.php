@@ -84,7 +84,12 @@ class DropdownController extends Controller
     public function actionGetDivisionDropdown()
     {
         try{
-            //todo permission check and db target
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchDivision::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
 			$data = WebManagementDropDownDispatchDivision::find()
                 ->all();
             $namePairs = [null => "Select..."];
@@ -185,7 +190,12 @@ class DropdownController extends Controller
     public function actionGetWorkCenterDependentDropdown($division = null)
     {
         try{
-            //todo permission check and db target
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchWorkCenter::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
 			$data = WebManagementDropDownDispatchWorkCenter::find()
 				->where(['Division'=>$division])
                 ->all();
@@ -219,9 +229,11 @@ class DropdownController extends Controller
     {
         try
         {
-			// RBAC permission check
-
             //set db target
+			$headers = getallheaders();
+			WebManagementDropDownEmployeeType::setClient($headers['X-Client']);
+			
+			// RBAC permission check
 
             $types = WebManagementDropDownEmployeeType::find()
                 ->all();
@@ -251,8 +263,13 @@ class DropdownController extends Controller
      */
     public function actionGetMapPlatDependentDropdown($workCenter = null, $division = null, $surveyor = null, $date = null) {
 		
-		//try{
-			//todo permission check and db target
+		try{
+			//db target
+			$headers = getallheaders;
+			WebManagementDropDownDispatchMapPlat::setClient($headers['X-Client']);
+			
+			//todo permission check
+			
 			$data = WebManagementDropDownDispatchMapPlat::find()
 				->where(['WorkCenter'=>$workCenter])
                 ->all();
@@ -270,15 +287,15 @@ class DropdownController extends Controller
             $response ->format = Response::FORMAT_JSON;
             $response->data = $namePairs;
             return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 
     /*
@@ -449,7 +466,12 @@ class DropdownController extends Controller
 
     public function actionGetSurveyTypeDropdown() {
         try{
-			//todo permission check and db target
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchSurveyType::setClient($headers['X-Client']);
+			
+			//todo permission check
+			
 			$data = WebManagementDropDownDispatchSurveyType::find()
                 ->all();
             $namePairs = [null => "Select..."];
@@ -477,7 +499,11 @@ class DropdownController extends Controller
 
     public function actionGetComplianceMonthDropdown() {
 		try{
-			//todo permission check and db target
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchComplianceDate::setClient($headers['X-Client']);
+			
+			//todo permission check
 			$data = WebManagementDropDownDispatchComplianceDate::find()
 				->orderBy('ComplianceSort')
                 ->all();
@@ -506,7 +532,11 @@ class DropdownController extends Controller
 
     public function actionGetStatusDropdown() {
         try{
-			//todo permission check and db target
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchStatus::setClient($headers['X-Client']);
+			
+			//todo permission check
 			$data = WebManagementDropDownDispatchStatus::find()
                 ->all();
             $namePairs = [null => "Select..."];
@@ -608,7 +638,11 @@ class DropdownController extends Controller
 	
 	public function actionGetReportingGroupDropdown() {
 		try{
-			//todo permission check and db target
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownReportingGroups::setClient($headers['X-Client']);
+			
+			//todo permission check
 			$data = WebManagementDropDownReportingGroups::find()
                 ->all();
             $namePairs = [null => "Select..."];
@@ -636,7 +670,11 @@ class DropdownController extends Controller
 	
 	public function actionGetReportingGroupUIDDropdown() {
 		try{
-			//todo permission check and db target
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownReportingGroups::setClient($headers['X-Client']);
+			
+			//todo permission check
 			$data = WebManagementDropDownReportingGroups::find()
                 ->all();
             $namePairs = [null => "Select..."];
@@ -664,7 +702,11 @@ class DropdownController extends Controller
 	
 	public function actionGetRoleDropdown() {
 		try{
-			//todo permission check and db target
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownRoles::setClient($headers['X-Client']);
+			
+			//todo permission check
 			$data = WebManagementDropDownRoles::find()
                 ->all();
             $namePairs = [null => "Select..."];

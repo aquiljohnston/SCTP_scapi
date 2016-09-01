@@ -38,8 +38,7 @@ class PayCodeController extends BaseActiveController
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			PayCode::setClient($headers['X-Client']);
+			PayCode::setClient(BaseActiveController::urlPrefix());
 		
 			$codes = PayCode::find()
 				->all();

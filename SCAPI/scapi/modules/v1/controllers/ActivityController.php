@@ -50,8 +50,7 @@ class ActivityController extends BaseActiveController
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			Activity::setClient($headers['X-Client']);
+			Activity::setClient(BaseActiveController::urlPrefix());
 			
 			$activity = Activity::findOne($id);
 			$response = Yii::$app->response;
@@ -82,10 +81,7 @@ class ActivityController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-			Activity::setClient($headers['X-Client']);
-			SCUser::setClient($headers['X-Client']);
-			TimeEntry::setClient($headers['X-Client']);
-			MileageEntry::setClient($headers['X-Client']);
+			Activity::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');

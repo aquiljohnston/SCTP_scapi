@@ -7,7 +7,6 @@ use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Auth;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\CTUser;
-// use app\modules\v1\authentication\CTUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
@@ -25,7 +24,7 @@ class LoginController extends Controller
 		try
 		{
 			//set db target
-			SCUser::setClient('CometTracker');
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -100,15 +99,7 @@ class LoginController extends Controller
 		try
 		{
 			//set db target
-			try
-			{
-				$headers = getallheaders();
-				SCUser::setClient($headers['X-Client']);
-			}
-			catch(ErrorException $e)
-			{
-				throw new \yii\web\HttpException(400, 'Client Header Not Found.');
-			}	
+			SCUser::setClient(BaseActiveController::urlPrefix());
 			
 			$logoutString = "Logout Successful!";
 			$response = Yii::$app->response;
