@@ -184,27 +184,29 @@ class UserController extends BaseActiveController
 			if($pgeUser-> save())
 			{
 				$groups = $data['ReportingGroup'];
-					
-				foreach($groups as $g)
+				
+				if(is_array($groups))
 				{
-					$newGroup = new ReportingGroupEmployeeRef;
-					$newGroup->UserUID = $pgeUser->UserUID;
-					$newGroup->ReportingGroupUID = $g;
-					$newGroup->RoleUID = $role->RoleUID;
-					$newGroup->CreatedUserUID = $userCreatedUID;
-					$newGroup->CreateDatetime = Parent::getDate();
-					$newGroup->Revision = 0;
-					$newGroup->ActiveFlag = 1;
-					$newGroup -> save();
+					foreach($groups as $g)
+					{
+						$newGroup = new ReportingGroupEmployeeRef;
+						$newGroup->UserUID = $pgeUser->UserUID;
+						$newGroup->ReportingGroupUID = $g;
+						$newGroup->RoleUID = $role->RoleUID;
+						$newGroup->CreatedUserUID = $userCreatedUID;
+						$newGroup->CreateDatetime = Parent::getDate();
+						$newGroup->Revision = 0;
+						$newGroup->ActiveFlag = 1;
+						$newGroup -> save();
+					}
 				}
 				
 				SCUser::setClient(BaseActiveController::urlPrefix());
 				if($scUser-> save())
 				{					
-					//the project id of the pgedev project will need to change later
-					$projectName = 'PG&E Dev';
+					//get project based on client header
 					$project = Project::find()
-						->where(['ProjectName' => $projectName])
+						->where(['ProjectUrlPrefix' => $headers['X-Client']])
 						->one();
 					$projectID = $project->ProjectID;
 					$userID = $scUser->UserID;
