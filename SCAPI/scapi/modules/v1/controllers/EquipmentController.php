@@ -60,17 +60,16 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionView($id)
     {
-		// RBAC permission check
-		PermissionsController::requirePermission('equipmentView');
-
 		try
 		{
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
 			//set db target
-			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
+			Equipment::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('equipmentView');
 				
 			if($equipment = Equipment::findOne($id))
 			{
@@ -98,14 +97,14 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{
-		// RBAC permission check
-		PermissionsController::requirePermission('equipmentCreate');
-
 		try
 		{
 			//set db target
 			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
+			Equipment::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('equipmentCreate');
 			
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -146,15 +145,13 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionUpdate($id)
 	{
-		// RBAC permission check
-		PermissionsController::requirePermission('equipmentUpdate');
-
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
-			SCUser::setClient($headers['X-Client']);
+			Equipment::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('equipmentUpdate');
 			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
@@ -198,13 +195,13 @@ class EquipmentController extends BaseActiveController
 	public function actionGetEquipment() {
 		// Will combine actionViewAllByUserByProject and actionEquipmentView
 		// after rbac is complete
-		$headers = getallheaders();
-		DailyEquipmentCalibrationVw::setClient($headers['X-Client']);
-		ProjectUser::setClient($headers['X-Client']);
-		$response = Yii::$app->response;
-		$response-> format = Response::FORMAT_JSON;
 		try{
 			//set db target
+			DailyEquipmentCalibrationVw::setClient(BaseActiveController::urlPrefix());
+
+			$response = Yii::$app->response;
+			$response-> format = Response::FORMAT_JSON;
+			
 			if(PermissionsController::can('getAllEquipment')) {
 				if ($equipArray = DailyEquipmentCalibrationVw::find()->all()) {
 					$equipData = array_map(function ($model) {
@@ -264,15 +261,13 @@ class EquipmentController extends BaseActiveController
 	 */
 	public function actionAcceptEquipment()
 	{
-		// RBAC permission check
-		PermissionsController::requirePermission('acceptEquipment');
-
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			Equipment::setClient($headers['X-Client']);
-			SCUser::setClient($headers['X-Client']);
+			Equipment::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('acceptEquipment');
 			
 			//capture put body
 			$put = file_get_contents("php://input");

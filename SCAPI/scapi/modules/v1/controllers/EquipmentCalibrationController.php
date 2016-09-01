@@ -52,15 +52,14 @@ class EquipmentCalibrationController extends BaseActiveController
 	
 	//Create a new equipment calibration record
 	public function actionCreate()
-	{
-		// RBAC permission check
-		PermissionsController::requirePermission('equipmentCalibrationCreate');
-		
+	{		
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			EquipmentCalibration::setClient($headers['X-Client']);
+			EquipmentCalibration::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('equipmentCalibrationCreate');
 			
 			//format response
 			$response = Yii::$app->response;

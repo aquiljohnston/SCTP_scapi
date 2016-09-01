@@ -6,7 +6,6 @@ use Yii;
 use app\modules\v1\models\ActivityCode;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
-// use app\modules\v1\authentication\TokenAuth;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -65,14 +64,14 @@ class ActivityCodeController extends BaseActiveController
 	 */
 	public function actionGetCodeDropdowns()
 	{
-		// RBAC permission check
-		PermissionsController::requirePermission('activityCodeGetDropdown');
-
 		try
 		{
 			//set db target
 			$headers = getallheaders();
-			ActivityCode::setClient($headers['X-Client']);
+			ActivityCode::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('activityCodeGetDropdown');
 		
 			$codes = ActivityCode::find()
 				->all();
