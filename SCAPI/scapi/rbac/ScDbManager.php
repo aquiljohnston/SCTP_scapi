@@ -4,9 +4,12 @@ namespace app\rbac;
 
 use Yii;
 use yii\rbac\DbManager;
+use app\modules\v1\models\BaseActiveRecord;
+use app\modules\v1\controllers\BaseActiveController;
 
 class ScDbManager extends DbManager
 {
+	public $db = '';
 	/**
      * @var string the name of the table storing authorization items. Defaults to "auth_item".
      */
@@ -23,4 +26,15 @@ class ScDbManager extends DbManager
      * @var string the name of the table storing rules. Defaults to "auth_rule".
      */
     public $ruleTable = '{{%rbac.auth_rule}}';
+	
+	public function __construct()
+	{
+		$this->db = $this->getDb();
+	}
+	
+	public function getDb()
+	{
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		return BaseActiveRecord::getDb();
+	}
 }

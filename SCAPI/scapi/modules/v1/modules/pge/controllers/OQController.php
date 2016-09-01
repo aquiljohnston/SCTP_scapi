@@ -47,9 +47,9 @@ class OQController extends Controller
 	public function actionGet($LANID)
 	{
 		try{
+			$headers = getallheaders();
+			WebManagementOQStatus::setClient($headers['X-Client']);
 			//TODO RBAC permission check
-			
-			//TODO check headers
 			
 			$oqs = WebManagementOQStatus::find()
 				->where(['UserLANID' => $LANID])
