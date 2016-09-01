@@ -35,5 +35,13 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->pgeDevDb;
 		}
+		if (self::$CLIENT_ID == self::$CT_STAGE_DB)
+		{
+			return Yii::$app->ctStageDb;
+		}
+		if (self::$CLIENT_ID == self::$PGE_STAGE_DB)
+		{
+			return Yii::$app->pgeStageDb;
+		}
 	}
 }

@@ -42,6 +42,20 @@ return [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
+		'ctStageDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker_Stage',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'pgeStageDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_PGE_GIS_STAGE',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
     ],
     'params' => $params,
 ];
