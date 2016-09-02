@@ -110,6 +110,8 @@ class UserController extends BaseActiveController
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 			
+			$groups = $data['ReportingGroup'];
+			
 			//handle the password
 			//get pass from data
 			$securedPass = $data["UserPassword"];
@@ -183,7 +185,7 @@ class UserController extends BaseActiveController
 			PGEUser::setClient($headers['X-Client']);
 			if($pgeUser-> save())
 			{
-				$groups = $data['ReportingGroup'];
+				
 				
 				if(is_array($groups))
 				{
@@ -374,18 +376,21 @@ class UserController extends BaseActiveController
 				//remove existing groups
 				ReportingGroupEmployeeRef::deleteAll(['UserUID' => $UID]);
 				
-				//loop reporting group array and create new row for each
-				foreach($reportingGroups as $group)
+				if(is_array($reportingGroups))
 				{
-					$newGroup = new ReportingGroupEmployeeRef;
-					$newGroup->UserUID = $UID;
-					$newGroup->ReportingGroupUID = $group;
-					$newGroup->RoleUID = $role->RoleUID;
-					$newGroup->CreatedUserUID = $modifiedUID;
-					$newGroup->CreateDatetime = Parent::getDate();
-					$newGroup->Revision = 0;
-					$newGroup->ActiveFlag = 1;
-					$newGroup->save();
+					//loop reporting group array and create new row for each
+					foreach($reportingGroups as $group)
+					{
+						$newGroup = new ReportingGroupEmployeeRef;
+						$newGroup->UserUID = $UID;
+						$newGroup->ReportingGroupUID = $group;
+						$newGroup->RoleUID = $role->RoleUID;
+						$newGroup->CreatedUserUID = $modifiedUID;
+						$newGroup->CreateDatetime = Parent::getDate();
+						$newGroup->Revision = 0;
+						$newGroup->ActiveFlag = 1;
+						$newGroup->save();
+					}
 				}
 				
 				SCUser::setClient(BaseActiveController::urlPrefix());

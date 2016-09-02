@@ -18,7 +18,6 @@ use Yii;
  * @Property String $MileageEntryActiveFlag
  * @property string $MileageEntryType
  * @property integer $MileageEntryMileageCardID
- * @property integer $MileageEntryMileageSummary
  * @property integer $MileageEntryActivityID
  * @property string $MileageEntryApprovedBy
  * @property integer $MileageEntryStatus
@@ -48,7 +47,7 @@ class MileageEntry extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryMileageSummary'], 'number'],
+            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
             [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus', 'MileageEntryUserID', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'integer'],
             [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryActiveFlag', 'MileageEntryWeekDay', 'MileageEntryArchiveFlag'], 'string'],
             [['MileageEntryDate', 'MileageEntryStartDate', 'MileageEntryEndDate',  'MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
@@ -72,7 +71,6 @@ class MileageEntry extends BaseActiveRecord
 			'MileageEntryActiveFlag' => 'Mileage Entry Active Flag',
 			'MileageEntryType' => 'Mileage Entry Type',
             'MileageEntryMileageCardID' => 'Mileage Entry Mileage Card ID',
-			'MileageEntryMileageSummary' => 'Mileage Entry Mileage Summary',
             'MileageEntryActivityID' => 'Mileage Entry Activity ID',
             'MileageEntryApprovedBy' => 'Mileage Entry Approved By',
             'MileageEntryStatus' => 'Mileage Entry Status',
