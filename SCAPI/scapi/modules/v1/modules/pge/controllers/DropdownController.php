@@ -265,7 +265,7 @@ class DropdownController extends Controller
 		
 		try{
 			//db target
-			$headers = getallheaders;
+			$headers = getallheaders();
 			WebManagementDropDownDispatchMapPlat::setClient($headers['X-Client']);
 			
 			//todo permission check
