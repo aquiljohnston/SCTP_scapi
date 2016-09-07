@@ -167,6 +167,10 @@ class UserController extends BaseActiveController
 			}
 			return $response;
 		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
@@ -326,6 +330,10 @@ class UserController extends BaseActiveController
 			
 			return $response;
 		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
@@ -422,6 +430,10 @@ class UserController extends BaseActiveController
 			$response -> data = $namePairs;
 			
 			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
 		}
 		catch(\Exception $e)  
 		{
@@ -520,6 +532,10 @@ class UserController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
@@ -565,6 +581,10 @@ class UserController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $projects;
 		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
@@ -593,6 +613,10 @@ class UserController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->setStatusCode(200);
 			$response->data = $users;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
 		}
 		catch(\Exception $e)  
 		{

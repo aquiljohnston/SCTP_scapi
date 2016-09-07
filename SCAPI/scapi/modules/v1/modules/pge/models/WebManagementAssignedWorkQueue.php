@@ -38,9 +38,9 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
     public function rules()
     {
         return [
-            [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'Notification ID', 'Surveyor', 'Employee Type', 'Status', 'Dispatch Method', 'IR UID', 'Assigned Work Queue UID', 'UserUID', 'ComplianceYearMonth'], 'string'],
-            [['Compliance Date'], 'safe'],
-            [['IR UID'], 'required']
+            [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'NotificationID', 'Surveyor', 'EmployeeType', 'Status', 'DispatchMethod', 'IRUID', 'AssignedWorkQueueUID', 'UserUID', 'ComplianceYearMonth'], 'string'],
+            [['ComplianceDate'], 'safe'],
+            [['IRUID'], 'required']
         ];
     }
 
@@ -56,12 +56,12 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
             'MapPlat' => 'Map Plat',
             'Notification ID' => 'Notification  ID',
             'Surveyor' => 'Surveyor',
-            'Employee Type' => 'Employee  Type',
-            'Compliance Date' => 'Compliance  Date',
+            'EmployeeType' => 'Employee  Type',
+            'ComplianceDate' => 'Compliance  Date',
             'Status' => 'Status',
-            'Dispatch Method' => 'Dispatch  Method',
-            'IR UID' => 'Ir  Uid',
-            'Assigned Work Queue UID' => 'Assigned  Work  Queue  Uid',
+            'DispatchMethod' => 'Dispatch  Method',
+            'IRUID' => 'Ir  Uid',
+            'AssignedWorkQueueUID' => 'Assigned  Work  Queue  Uid',
             'UserUID' => 'User Uid',
             'ComplianceYearMonth' => 'Compliance Year Month',
         ];
