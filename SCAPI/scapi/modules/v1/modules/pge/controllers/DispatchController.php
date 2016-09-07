@@ -16,6 +16,8 @@ use app\modules\v1\modules\pge\models\AssignedWorkQueue;
 use app\modules\v1\modules\pge\models\UserLogin;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use yii\db\Connection;
+use yii\helpers\VarDumper;
 
 class DispatchController extends Controller 
 {
@@ -113,8 +115,8 @@ class DispatchController extends Controller
 	
 	public function actionGetAssigned($division = null, $workCenter = null, $mapPlat = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null)
 	{
-		try
-		{
+		// try
+		// {
 			$headers = getallheaders();
 			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
 			
@@ -153,12 +155,12 @@ class DispatchController extends Controller
 				['like', 'WorkCenter', $filter],
 				['like', 'SurveyType', $filter],
 				['like', 'MapPlat', $filter],
-				['like', 'Notification ID', $filter],
-				['like', 'Compliance Date', $filter],
+				['like', 'NotificationID', $filter],
+				['like', 'ComplianceDate', $filter],
 				['like', 'Surveyor', $filter],
-				['like', 'Employee Type', $filter],
+				['like', 'EmployeeType', $filter],
 				['like', 'Status', $filter],
-				['like', 'Dispatch Method', $filter],
+				['like', 'DispatchMethod', $filter],
 				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
@@ -170,15 +172,15 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $assets;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
 	}
 	
 	public function actionGetAssignedWorkQueues()
@@ -189,16 +191,18 @@ class DispatchController extends Controller
 			$UID = BaseActiveController::getUserFromToken()->UserUID;
 			
 			$headers = getallheaders();
-			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($headers['X-Client']);
 			
-			$assignedWork = WebManagementAssignedWorkQueue::find()
-				->where(['UserUID'=>$UID])
-				->all();
+			$connection = BaseActiveRecord::getDb();
 			
+			$workQueueCommand = $connection->createCommand("SELECT * From fnTabletIR(:UserUID) Order by SortOrder, WorkCenter")
+				->bindParam(':UserUID', $UID,  \PDO::PARAM_STR);
+			$resultSet = $workQueueCommand->queryAll();
+
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $assignedWork;
+			$response->data = $resultSet;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
