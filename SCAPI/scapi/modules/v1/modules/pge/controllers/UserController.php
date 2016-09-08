@@ -217,13 +217,13 @@ class UserController extends BaseActiveController
 					{
 						$connection = SCUser::getDb();
 						$transaction = $connection-> beginTransaction();
-						$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :PARAMETER1,:PARAMETER2");
-						$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-						$timeCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+						$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
+						$timeCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
+						$timeCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
 						$timeCardCommand->execute();
-						$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :PARAMETER1,:PARAMETER2");
-						$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-						$mileageCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+						$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
+						$mileageCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
+						$mileageCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
 						$mileageCardCommand->execute();
 						$transaction->commit();
 					}
@@ -299,9 +299,12 @@ class UserController extends BaseActiveController
 				->one();
 
 			$currentRole = $scUser["UserAppRoleType"];
-
+	
 			SCUser::setClient(BaseActiveController::urlPrefix());
-			PermissionsController::requirePermission('userUpdate' . $currentRole);
+			// if ($currentRole != null)
+			// {				
+				// PermissionsController::requirePermission('userUpdate' . $currentRole);
+			// }
 			$modifiedUID = self::getUserFromToken()->UserUID;
 			
 			//options for bcrypt
