@@ -393,6 +393,7 @@ class ProjectController extends BaseActiveController
 			//loop usersAdded and create relationships and cards
 			foreach($usersAdded as $i)
 			{
+				SCUser::setClient(BaseActiveController::urlPrefix());
 				$user = SCUser::findOne($i);
 				$user->link('projects',$project);
 				//call sps to create new time cards and mileage cards
@@ -401,13 +402,13 @@ class ProjectController extends BaseActiveController
 					$userID = $i;
 					$connection = SCUser::getDb();
 					$transaction = $connection-> beginTransaction();
-					$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :PARAMETER1,:PARAMETER2");
-					$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+					$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
+					$timeCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
 					$timeCardCommand->execute();
-					$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :PARAMETER1,:PARAMETER2");
-					$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-					$mileageCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
+					$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
+					$mileageCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
+					$mileageCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
 					$mileageCardCommand->execute();
 					$transaction->commit();
 					
@@ -473,6 +474,10 @@ class ProjectController extends BaseActiveController
 			$response -> data = $data;
 			
 			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
 		}
 		catch(\Exception $e)  
 		{
