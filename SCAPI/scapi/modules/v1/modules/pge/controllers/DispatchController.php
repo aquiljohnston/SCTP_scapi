@@ -142,6 +142,11 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['Status'=>$status]);
 			}
 			
+			if($dispatchMethod != null)
+			{
+				$assetQuery->andWhere(['DispatchMethod'=>$dispatchMethod]);
+			}
+			
 			if($complianceMonth != null)
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
