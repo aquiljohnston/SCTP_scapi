@@ -37,8 +37,8 @@ class MapStampController extends \yii\web\Controller{
 
     public function actionGetTable($workCenter = null, $surveyor = null, $startDate = null, $endDate = null) {
         
-		// try
-		// {
+		try
+		{
 			$data = [];
 
 			$row1 = [];
@@ -80,7 +80,7 @@ class MapStampController extends \yii\web\Controller{
 			$row3["Notification ID"] = "667171777461";
 			$row3["Date"] = "05/05/2016";
 			$row3["Surveyor"] = "bob1";
-			$row3["Tab'"] = "Submitted / Pending";
+			$row3["Tab"] = "Submitted / Pending";
 			$data[] = $row3;
 
 			$row4 = [];
@@ -137,15 +137,15 @@ class MapStampController extends \yii\web\Controller{
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $filteredData;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
     public function actionGetDetail($id) {
         if($id === "") {
