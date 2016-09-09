@@ -20,6 +20,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchSurveyType;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 
 
 class DropdownController extends Controller
@@ -46,7 +47,8 @@ class DropdownController extends Controller
                     'get-division-dropdown' => ['get'],
                     'get-device-id-dropdown' => ['get'],
                     'get-reporting-group-dropdown' => ['get'],
-                    'get-role-dropdown' => ['get']
+                    'get-role-dropdown' => ['get'],
+                    'get-dispatch-method-dropdown' => ['get']
                 ],
             ];
         return $behaviors;
@@ -564,16 +566,24 @@ class DropdownController extends Controller
 
     public function actionGetDispatchMethodDropdown() {
         try{
-			$data = [];
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchAssignedDispatchMethod::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
 
-			$data = [null => "Select..."];
-			$data["Dispatched"] = "Dispatched";
-			$data["Self Dispatched"] = "Self Dispatched";
-			$data["Ad Hoc"] = "Ad Hoc";
-
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->DispatchMethod]= $data[$i]->DispatchMethod;
+            }
+			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
+			$response->data = $namePairs;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
