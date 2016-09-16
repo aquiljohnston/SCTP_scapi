@@ -16,13 +16,11 @@ use Yii;
  * @property integer $ActivityPayCode
  * @property double $ActivityLatitude
  * @property double $ActivityLongitude
- * @property string $ActivityStartDateTime
- * @property string $ActivityEndDateTime
  * @property string $ActivityArchiveFlag
  * @property string $ActivityCreateDate
- * @property integer $ActivityCreatedUserUID
+ * @property string $ActivityCreatedUserUID
  * @property string $ActivityModifiedDate
- * @property integer $ActivityModifiedUserUID
+ * @property string $ActivityModifiedUserUID
  * @property string $ActivityUID
  * @property integer $ActivityProjectID
  * @property string $ActivitySourceID
@@ -33,7 +31,7 @@ use Yii;
  * @property string $ActivityGPSSentence
  * @property string $ActivityShape
  * @property string $ActivityComments
- * @property string $ActivityBatteryLevel
+ * @property double $ActivityBatteryLevel
  * @property string $ActivityRevisionComments
  * @property string $ActivityElapsedSec
  *
@@ -56,10 +54,10 @@ class Activity extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ActivityStartTime', 'ActivityEndTime', 'ActivityStartDateTime', 'ActivityEndDateTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT'], 'safe'],
-            [['ActivityTitle', 'ActivityBillingCode', 'ActivityArchiveFlag', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityBatteryLevel', 'ActivityRevisionComments', 'ActivityElapsedSec'], 'string'],
-            [['ActivityCode', 'ActivityPayCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityProjectID'], 'integer'],
-            [['ActivityLatitude', 'ActivityLongitude'], 'number']
+            [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT'], 'safe'],
+            [['ActivityTitle', 'ActivityBillingCode', 'ActivityArchiveFlag', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityElapsedSec', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID'], 'string'],
+            [['ActivityCode', 'ActivityPayCode', 'ActivityProjectID'], 'integer'],
+            [['ActivityBatteryLevel', 'ActivityLatitude', 'ActivityLongitude'], 'number']
         ];
     }
 
@@ -78,8 +76,6 @@ class Activity extends BaseActiveRecord
             'ActivityPayCode' => 'Activity Pay Code',
             'ActivityLatitude' => 'Activity Latitude',
             'ActivityLongitude' => 'Activity Longitude',
-            'ActivityStartDateTime' => 'Activity Start Date Time',
-            'ActivityEndDateTime' => 'Activity End Date Time',
             'ActivityArchiveFlag' => 'Activity Archive Flag',
             'ActivityCreateDate' => 'Activity Create Date',
             'ActivityCreatedUserUID' => 'Activity Created User Uid',
