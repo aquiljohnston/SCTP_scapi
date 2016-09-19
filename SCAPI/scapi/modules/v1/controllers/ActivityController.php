@@ -8,6 +8,7 @@ use app\modules\v1\models\TimeEntry;
 use app\modules\v1\models\MileageEntry;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v1\modules\pge\controllers\PGEActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -77,8 +78,8 @@ class ActivityController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{		
-		try
-		{
+		// try
+		// {
 			//set db target
 			$headers = getallheaders();
 			Activity::setClient(BaseActiveController::urlPrefix());
@@ -101,11 +102,14 @@ class ActivityController extends BaseActiveController
 				//get number of activities
 				$activitySize = count($activityArray);
 				
+				$createdBy = Parent::getUserFromToken()->UserUID;
+				
 				for($i = 0; $i < $activitySize; $i++)
 				{
 					$activity = new Activity();
+					$clientActivity = new Activity();
 					$activityArray[$i]["ActivityCreateDate"] = Parent::getDate();
-					$activityArray[$i]["ActivityCreatedUserUID"] = Parent::getUserFromToken()->UserID;
+					$activityArray[$i]["ActivityCreatedUserUID"] = $createdBy;
 					//check array data
 					$timeLength = 0;
 					$mileageLength = 0;
@@ -125,10 +129,28 @@ class ActivityController extends BaseActiveController
 					
 					//load attributes to model
 					$activity->attributes = $activityArray[$i];
+					$activity->ActivityUID = BaseActiveController::generateUID("Activity", $activityArray[$i]["ActivitySourceID"]);
+					$clientActivity->attributes = $activity->attributes;
 					
-					//save activity 
+					Yii::Trace("SC Activity: " . json_encode($activity->attributes));
+					Yii::Trace("Client Activity: " . json_encode($clientActivity->attributes));
+					
+					//save activity to ct
 					if($activity->save())
 					{
+						//change db path to save on client db
+						Activity::setClient($headers['X-Client']);
+						$clientActivity->save();
+						
+						//handle pge inspection
+						if (array_key_exists("Inspection", $activityArray[$i]))
+						{
+							$savedInspection = PGEActivityController::create($activityArray[$i]["Inspection"], $clientActivity->ActivityUID ,$headers['X-Client']);
+						}
+						$data["activity"][$i]["Inspection"] = $savedInspection;
+						
+						//change path back to ct db
+						Activity::setClient(BaseActiveController::urlPrefix());
 						$response->setStatusCode(201);
 						//convert the new activity back to an array so it can be loaded into the response
 						$savedActivity= $activity->toArray();
@@ -149,8 +171,9 @@ class ActivityController extends BaseActiveController
 								$timeArray[$t]["TimeEntryActivityID"] = $activityArray[$i]["ActivityID"];
 								$timeEntry = new TimeEntry();
 								$timeEntry->attributes = $timeArray[$t];
-								$timeEntry->TimeEntryCreatedBy = $activityArray[$i]["ActivityCreatedUserUID"];
+								$timeEntry->TimeEntryCreatedBy = $createdBy;
 								$timeEntry->TimeEntryCreateDate = Parent::getDate();
+								Yii::Trace("Client Activity: " . json_encode($timeEntry->attributes));
 								if($timeEntry->save())
 									{
 										$response->setStatusCode(201);
@@ -161,7 +184,7 @@ class ActivityController extends BaseActiveController
 									{
 										//throw a bad request if any save fails
 										$response->setStatusCode(400);
-										$response->data = "Http:400 Bad Request";
+										$response->data = "Http: 400 Bad Request - Failed to Save Time Entry";
 										return $response;
 									}
 							}
@@ -174,8 +197,9 @@ class ActivityController extends BaseActiveController
 								$mileageArray[$m]["MileageEntryActivityID"]= $activityArray[$i]["ActivityID"];
 								$mileageEntry = new MileageEntry();
 								$mileageEntry->attributes = $mileageArray[$m];
-								$mileageEntry->MileageEntryCreatedBy = $activityArray[$i]["ActivityCreatedUserUID"];
+								$mileageEntry->MileageEntryCreatedBy = $createdBy;
 								$mileageEntry->MileageEntryCreateDate = Parent::getDate();
+								Yii::Trace("Client Activity: " . json_encode($mileageEntry->attributes));
 								if($mileageEntry->save())
 									{
 										$response->setStatusCode(201);
@@ -186,7 +210,7 @@ class ActivityController extends BaseActiveController
 									{
 										//throw a bad request if any save fails
 										$response->setStatusCode(400);
-										$response->data = "Http:400 Bad Request";
+										$response->data = "Http:400 Bad Request - Failed to Save Mileage Entry";
 										return $response;
 									}
 							}
@@ -197,10 +221,10 @@ class ActivityController extends BaseActiveController
 			//build and return the response json
 			$response->data = $data; 
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(\Exception $e) 
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 }
