@@ -8,6 +8,7 @@
 
 namespace app\modules\v1\modules\pge\controllers;
 
+use app\modules\v1\controllers\BaseActiveController;
 use Yii;
 use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
@@ -15,7 +16,7 @@ use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
-class MapStampController extends \yii\web\Controller{
+class MapStampController extends \yii\web\Controller {
     public function behaviors()
     {
         $behaviors = parent::behaviors();
@@ -151,55 +152,79 @@ class MapStampController extends \yii\web\Controller{
         if($id === "") {
             throw new BadRequestHttpException("Empty ID argument");
         }
+        $tableData = [];
         $data = [];
         $info = [];
-        $info['Map Number'] = '0001-A01';
-        $info['Schedule Month/Year'] = '02/2016';
-        $info['Previous Start Date'] = '05/11/2011';
-        $info['Current Start Date'] = '02/13/2016';
-        $info['Prior Feet of Main'] = '270,000';
-        $info['Prior Services'] = 1000;
-        $info['Survey Frequency Type'] = '5 Year';
-        $info['Notification ID'] = 66717172894967;
-        $info['Status'] = 'Completed';
+		
+        $info['Id'] = 1;
+        $info['Status'] = 'Reviewed';
+        $info['SurveyArea'] = '1';
+        $info['SurveyType'] = 'TR';
+        $info['DateSurveyed'] = '08/23/2016';
+        $info['SurveyorLanID'] = 'PGE4';
+        $info['InstType'] = 'DPIR';
+        $info['InstSerialNum'] = 'GI_900121821';
+        $info['WindSpeedStart'] = 10;
+        $info['WindSpeedMid'] = 12;
+        $info['Foot'] = false;
+        $info['Mobile'] = true;
+        $info['FeetOfMain'] = 3450;
+        $info['NumOfService'] = 56;
 
-        $data['info'] = $info;
+        $tableData[] = $info;
 
-        $tableData = [];
-        $row1['Survey Area'] = 1;
-        $row1['Type +'] = 'PIC';
-        $row1['Date Surveyed'] = '03/13/2016';
-        $row1['Surveyor LANID'] = 'JSFT';
-        $row1['Instrument'] = 'PIC 46781046';
-        $row1['Start Wind Speed'] = 2;
-        $row1['Mid-Day Wind Speed'] = 4;
-        $row1['Foot'] = true;
-        $row1['Mobile'] = true;
-        $row1['Feet of Main'] = 18845;
-        $row1['Services'] = 100;
-        $tableData[] = $row1;
+        $info2['Id'] = 2;
+        $info2['Status'] = 'Reviewed';
+        $info2['SurveyArea'] = '1';
+        $info2['SurveyType'] = 'TR';
+        $info2['DateSurveyed'] = '08/23/2016';
+        $info2['SurveyorLanID'] = 'PGE5';
+        $info2['InstType'] = 'DPIR';
+        $info2['InstSerialNum'] = 'GI_907161841';
+        $info2['WindSpeedStart'] = 10;
+        $info2['WindSpeedMid'] = 12;
+        $info2['Foot'] = true;
+        $info2['Mobile'] = false;
+        $info2['FeetOfMain'] = 1311;
+        $info2['NumOfService'] = 93;
 
-        $row2['Survey Area'] = 2;
-        $row2['Type +'] = 'LISA';
-        $row2['Date Surveyed'] = '03/13/2016';
-        $row2['Surveyor LANID'] = 'JSFT';
-        $row2['Instrument'] = 'PIC 758910461';
-        $row2['Start Wind Speed'] = 2;
-        $row2['Mid-Day Wind Speed'] = 4;
-        $row2['Foot'] = true;
-        $row2['Mobile'] = false;
-        $row2['Feet of Main'] = 18845;
-        $row2['Services'] = 100;
-        $tableData[] = $row2;
-
-        $data['Table Data'] = $tableData;
-        $data['Total Feet of Main'] = 207295;
-        $data['Total Services'] = 1100;
+        $tableData[] = $info2;
 
 
-        $response = Yii::$app->response;
+        $info3['Id'] = 3;
+        $info3['Status'] = 'In Progress';
+        $info3['SurveyArea'] = '1';
+        $info3['SurveyType'] = 'TR';
+        $info3['DateSurveyed'] = '08/23/2016';
+        $info3['SurveyorLanID'] = 'PGE5';
+        $info3['InstType'] = 'DPIR';
+        $info3['InstSerialNum'] = 'GI_907161841';
+        $info3['WindSpeedStart'] = 10;
+        $info3['WindSpeedMid'] = 12;
+        $info3['Foot'] = true;
+        $info3['Mobile'] = false;
+        $info3['FeetOfMain'] = 1311;
+        $info3['NumOfService'] = 93;
+
+        $tableData[] = $info3;
+
+        $data['TableData'] = [];
+        $data['Status'] = "Not Approved";
+        $data['PICTotalFeetOfMain'] = 103574;
+		$data['PICTotalServices'] = 497;
+        $data['TotalFeetOfMain'] = 207295;
+        $data['TotalServices'] = 1100;
+
+        foreach($tableData as $item) {
+            if($item['Id'] == $id) { // We want loose equals
+                $data['TableData'][] = $item;
+            }
+        }
+		
+		$response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
         $response->data = $data;
         return $response;
+
     }
 }
