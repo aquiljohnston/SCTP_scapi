@@ -390,4 +390,51 @@ class LeakLogController extends Controller {
             throw new \yii\web\HttpException(400);
         }
 	}
+
+	public function actionGetTransferFloc() {
+        $data = [];
+
+        $data['Lan ID'] = 'PGE1';
+        $data['Date'] = "8/29/2016 18:16";
+        $data['Map-Plat'] = '0042-D13 (3 Year)';
+
+        $data['Approval Lan ID'] = 'SUP1';
+        $data['Approval Date'] = '08/31/2016 09:43';
+
+        $currentData = [];
+        $currentData['Work Center'] = 'San Fransisco';
+        $currentData['FLOC'] = 'GD.PHYS.SNFA.0042.0D13';
+        $newData = [];
+        $newData['Work Center'] =
+            [
+                'San Francisco' => 'San Francisco',
+                'New York City' => 'New York City'
+            ];
+        $newData['FLOC'] =
+            [
+                'GD.PHYS.SNFC.0001.0F12' => 'GD.PHYS.SNFC.0001.0F12',
+                'GD.PHYS.SNFC.0002.0F13' => 'GD.PHYS.SNFC.0002.0F13'
+            ];
+        $records = [];
+        $toBeTransfered = [];
+        $toBeTransfered['Equipment'] = 3;
+        $toBeTransfered['Leaks'] = 4;
+        $records['toBeTransfered'] = $toBeTransfered;
+        $completed = [];
+        $completed['Equipment'] = 0;
+        $completed['Leaks'] = 0;
+        $records['Completed'] = $completed;
+
+        $data['approved'] = true;
+        $data['currentData'] = $currentData;
+        $data['newData'] = $newData;
+        $data['records'] = $records;
+
+
+        //send response
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $data;
+        return $response;
+    }
 }
