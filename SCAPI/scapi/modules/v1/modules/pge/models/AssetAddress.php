@@ -17,6 +17,7 @@ use Yii;
  * @property string $CreatedUserUID
  * @property string $ModifiedUserUID
  * @property string $SrcDTLT
+ * @property string $SrcOpenDTLT
  * @property string $SrvDTLT
  * @property string $SrvDTLTOffset
  * @property string $GPSType
@@ -81,6 +82,24 @@ use Yii;
  * @property string $ResponseDTLT
  * @property integer $CompletedFlag
  * @property string $CompletedDTLT
+ * @property string $GPSSource
+ * @property string $GPSTime
+ * @property integer $FixQuality
+ * @property integer $NumberOfSatellites
+ * @property double $HDOP
+ * @property double $AltitudemetersAboveMeanSeaLevel
+ * @property double $HeightofGeoid
+ * @property double $TimeSecondsSinceLastDGPS
+ * @property string $ChecksumData
+ * @property double $Bearing
+ * @property double $Speed
+ * @property string $GPSStatus
+ * @property integer $NumberOfGPSAttempts
+ * @property integer $AOCFlag
+ * @property integer $CGIFlag
+ * @property string $InspectionRequestUID
+ * @property string $MasterLeakLogUID
+ * @property string $ActivityUID
  */
 class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -98,11 +117,10 @@ class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetAddressUID', 'AssetUID', 'MapGridUID', 'ProjectID', 'CreatedUserUID', 'ModifiedUserUID', 'SrcDTLT', 'Revision', 'ActiveFlag', 'CompletedFlag'], 'required'],
-            [['AssetAddressUID', 'AssetUID', 'AssetInspectionUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'RouteNo', 'AssetAccountNo', 'AssetAccountName', 'AssetName', 'AssetLocationID', 'AssetLocationCode', 'AssetIDStatus', 'AssetIDNo', 'AssetIDNoCorection', 'ReverseGeoHouseNo', 'ReverseGeoStreet1', 'ReverseGeoCity', 'ReverseGeoState', 'ReverseGeoZip', 'ReverseGeoQuality', 'HouseNo', 'Street1', 'Street2', 'AptSuite', 'AptDesc', 'Apt', 'City', 'State', 'ZIP', 'County', 'CountyCode', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'Response', 'ResponceErrorDescription'], 'string'],
-            [['ProjectID', 'Revision', 'ActiveFlag', 'NewAssetFlag', 'NonAssetLocationFlag', 'AssetAddessCorrectionFlag', 'AssetIDNumberCorrectionFlag', 'AssetConfirmFlag', 'RouteSeq', 'SortOrder', 'HouseNoNAFlag', 'ApprovedFlag', 'SubmittedFlag', 'SubmittedUserUID', 'CompletedFlag'], 'integer'],
-            [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT'], 'safe'],
-            [['Latitude', 'Longitude', 'ReverseGeoLat', 'ReverseGeoLong'], 'number']
+            [['AssetAddressUID', 'AssetUID', 'AssetInspectionUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'RouteNo', 'AssetAccountNo', 'AssetAccountName', 'AssetName', 'AssetLocationID', 'AssetLocationCode', 'AssetIDStatus', 'AssetIDNo', 'AssetIDNoCorection', 'ReverseGeoHouseNo', 'ReverseGeoStreet1', 'ReverseGeoCity', 'ReverseGeoState', 'ReverseGeoZip', 'ReverseGeoQuality', 'HouseNo', 'Street1', 'Street2', 'AptSuite', 'AptDesc', 'Apt', 'City', 'State', 'ZIP', 'County', 'CountyCode', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'InspectionRequestUID', 'MasterLeakLogUID', 'ActivityUID'], 'string'],
+            [['ProjectID', 'Revision', 'ActiveFlag', 'NewAssetFlag', 'NonAssetLocationFlag', 'AssetAddessCorrectionFlag', 'AssetIDNumberCorrectionFlag', 'AssetConfirmFlag', 'RouteSeq', 'SortOrder', 'HouseNoNAFlag', 'ApprovedFlag', 'SubmittedFlag', 'SubmittedUserUID', 'CompletedFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'AOCFlag', 'CGIFlag'], 'integer'],
+            [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT', 'SrcOpenDTLT'], 'safe'],
+            [['Latitude', 'Longitude', 'ReverseGeoLat', 'ReverseGeoLong', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightofGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
         ];
     }
 
@@ -186,6 +204,25 @@ class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
             'ResponseDTLT' => 'Response Dtlt',
             'CompletedFlag' => 'Completed Flag',
             'CompletedDTLT' => 'Completed Dtlt',
+            'GPSSource' => 'Gpssource',
+            'GPSTime' => 'Gpstime',
+            'FixQuality' => 'Fix Quality',
+            'NumberOfSatellites' => 'Number Of Satellites',
+            'HDOP' => 'Hdop',
+            'AltitudemetersAboveMeanSeaLevel' => 'Altitudemeters Above Mean Sea Level',
+            'HeightofGeoid' => 'Heightof Geoid',
+            'TimeSecondsSinceLastDGPS' => 'Time Seconds Since Last Dgps',
+            'ChecksumData' => 'Checksum Data',
+            'Bearing' => 'Bearing',
+            'Speed' => 'Speed',
+            'GPSStatus' => 'Gpsstatus',
+            'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
+            'AOCFlag' => 'Aocflag',
+            'CGIFlag' => 'Cgiflag',
+            'InspectionRequestUID' => 'Inspection Request Uid',
+            'MasterLeakLogUID' => 'Master Leak Log Uid',
+            'ActivityUID' => 'Activity Uid',
+			'SrcOpenDTLT' => 'Src Open Dtlt',
         ];
     }
 }

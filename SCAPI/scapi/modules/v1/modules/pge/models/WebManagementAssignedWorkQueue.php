@@ -11,15 +11,16 @@ use Yii;
  * @property string $WorkCenter
  * @property string $SurveyType
  * @property string $MapPlat
- * @property string $Notification ID
+ * @property string $NotificationID
  * @property string $Surveyor
- * @property string $Employee Type
- * @property string $Compliance Date
+ * @property string $EmployeeType
+ * @property string $ComplianceDate
  * @property string $Status
- * @property string $Dispatch Method
- * @property string $IR UID
- * @property string $Assigned Work Queue UID
+ * @property string $DispatchMethod
+ * @property string $IRUID
+ * @property string $AssignedWorkQueueUID
  * @property string $UserUID
+ * @property string $MapGridUID
  * @property string $ComplianceYearMonth
  */
 class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRecord
@@ -38,7 +39,7 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
     public function rules()
     {
         return [
-            [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'NotificationID', 'Surveyor', 'EmployeeType', 'Status', 'DispatchMethod', 'IRUID', 'AssignedWorkQueueUID', 'UserUID', 'ComplianceYearMonth'], 'string'],
+            [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'NotificationID', 'Surveyor', 'EmployeeType', 'Status', 'DispatchMethod', 'IRUID', 'AssignedWorkQueueUID', 'UserUID', 'MapGridUID', 'ComplianceYearMonth'], 'string'],
             [['ComplianceDate'], 'safe'],
             [['IRUID'], 'required']
         ];
@@ -54,15 +55,16 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
             'WorkCenter' => 'Work Center',
             'SurveyType' => 'Survey Type',
             'MapPlat' => 'Map Plat',
-            'Notification ID' => 'Notification  ID',
+            'NotificationID' => 'Notification ID',
             'Surveyor' => 'Surveyor',
-            'EmployeeType' => 'Employee  Type',
-            'ComplianceDate' => 'Compliance  Date',
+            'EmployeeType' => 'Employee Type',
+            'ComplianceDate' => 'Compliance Date',
             'Status' => 'Status',
-            'DispatchMethod' => 'Dispatch  Method',
-            'IRUID' => 'Ir  Uid',
-            'AssignedWorkQueueUID' => 'Assigned  Work  Queue  Uid',
+            'DispatchMethod' => 'Dispatch Method',
+            'IRUID' => 'Iruid',
+            'AssignedWorkQueueUID' => 'Assigned Work Queue Uid',
             'UserUID' => 'User Uid',
+            'MapGridUID' => 'Map Grid Uid',
             'ComplianceYearMonth' => 'Compliance Year Month',
         ];
     }

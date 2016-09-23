@@ -8,7 +8,7 @@ use app\modules\v1\models\TimeEntry;
 use app\modules\v1\models\MileageEntry;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\modules\pge\controllers\PGEActivityController;
+use app\modules\v1\modules\pge\controllers\AssetAddressController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -129,7 +129,7 @@ class ActivityController extends BaseActiveController
 					
 					//load attributes to model
 					$activity->attributes = $activityArray[$i];
-					$activity->ActivityUID = BaseActiveController::generateUID("Activity", $activityArray[$i]["ActivitySourceID"]);
+					//$activity->ActivityUID = BaseActiveController::generateUID("Activity", $activityArray[$i]["ActivitySourceID"]);
 					$clientActivity->attributes = $activity->attributes;
 					
 					Yii::Trace("SC Activity: " . json_encode($activity->attributes));
@@ -141,23 +141,25 @@ class ActivityController extends BaseActiveController
 						//change db path to save on client db
 						Activity::setClient($headers['X-Client']);
 						$clientActivity->save();
+
+						//convert the new activity back to an array so it can be loaded into the response
+						$savedActivity= $activity->toArray();
+						//$activityArray[$i] = $savedActivity;
+						
+						//update response json with new activity data
+						//$data["activity"][$i] = $activityArray[$i];
+						$data["activity"][$i] = $savedActivity;
 						
 						//handle pge inspection
-						if (array_key_exists("Inspection", $activityArray[$i]))
+						if (array_key_exists("AssetAddress", $activityArray[$i]))
 						{
-							$savedInspection = PGEActivityController::create($activityArray[$i]["Inspection"], $clientActivity->ActivityUID ,$headers['X-Client']);
+							$savedAssetAddress = AssetAddressController::create($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
+							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
 						}
-						$data["activity"][$i]["Inspection"] = $savedInspection;
 						
 						//change path back to ct db
 						Activity::setClient(BaseActiveController::urlPrefix());
 						$response->setStatusCode(201);
-						//convert the new activity back to an array so it can be loaded into the response
-						$savedActivity= $activity->toArray();
-						$activityArray[$i] = $savedActivity;
-						
-						//update response json with new activity data
-						$data["activity"][$i] = $activityArray[$i];
 					
 						//set up empty arrays
 						$data["activity"][$i]["timeEntry"] = array();
@@ -168,7 +170,7 @@ class ActivityController extends BaseActiveController
 						{
 							for($t = 0; $t < $timeLength; $t++)
 							{
-								$timeArray[$t]["TimeEntryActivityID"] = $activityArray[$i]["ActivityID"];
+								$timeArray[$t]["TimeEntryActivityID"] = $data["activity"][$i]["ActivityID"];
 								$timeEntry = new TimeEntry();
 								$timeEntry->attributes = $timeArray[$t];
 								$timeEntry->TimeEntryCreatedBy = $createdBy;
@@ -194,7 +196,7 @@ class ActivityController extends BaseActiveController
 						{
 							for($m = 0; $m < $mileageLength; $m++)
 							{
-								$mileageArray[$m]["MileageEntryActivityID"]= $activityArray[$i]["ActivityID"];
+								$mileageArray[$m]["MileageEntryActivityID"]= $$data["activity"][$i]["ActivityID"];
 								$mileageEntry = new MileageEntry();
 								$mileageEntry->attributes = $mileageArray[$m];
 								$mileageEntry->MileageEntryCreatedBy = $createdBy;
