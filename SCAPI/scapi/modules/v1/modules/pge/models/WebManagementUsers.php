@@ -17,6 +17,8 @@ use Yii;
  * @property string $OQ
  * @property string $Role
  * @property string $UserUID
+ * @property string $WorkCenter
+ * @property string $HomeWorkCenterUID
  */
 class WebManagementUsers extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -34,7 +36,7 @@ class WebManagementUsers extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['GroupName', 'Status', 'LastName', 'UserFirstName', 'UserLANID', 'UserEmployeeType', 'OQ', 'Role', 'UserUID', 'FullName'], 'string'],
+            [['GroupName', 'Status', 'LastName', 'UserFirstName', 'UserLANID', 'UserEmployeeType', 'OQ', 'Role', 'UserUID', 'FullName', 'WorkCenter', 'HomeWorkCenterUID'], 'string'],
             [['Status', 'OQ'], 'required']
         ];
     }
@@ -55,6 +57,8 @@ class WebManagementUsers extends \app\modules\v1\models\BaseActiveRecord
             'OQ' => 'Oq',
 			'Role' => 'Role',
 			'UserUID' => 'User UID',
+			'WorkCenter' => 'Work Center',
+			'HomeWorkCenterUID' => 'HomeWorkCenterUID',
         ];
     }
 }
