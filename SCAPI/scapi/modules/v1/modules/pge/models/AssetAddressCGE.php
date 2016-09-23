@@ -10,7 +10,7 @@ use Yii;
  * @property integer $AssetAddressCGEID
  * @property string $AssetAddressCGEUID
  * @property string $AssetAddressUID
- * @property string $AssetAddressInspectionUID
+ * @property string $AssetInspectionUID
  * @property string $MasterLeakLogUID
  * @property string $MapGridUID
  * @property integer $ProjectID
@@ -53,6 +53,21 @@ use Yii;
  * @property string $ResponseDTLT
  * @property integer $CompletedFlag
  * @property string $CompletedDTLT
+ * @property string $GPSSource
+ * @property string $GPSTime
+ * @property integer $FixQuality
+ * @property integer $NumberOfSatellites
+ * @property double $HDOP
+ * @property double $AltitudemetersAboveMeanSeaLevel
+ * @property double $HeightOfGeoid
+ * @property double $TimeSecondsSinceLastDGPS
+ * @property string $ChecksumData
+ * @property double $Bearing
+ * @property double $Speed
+ * @property string $GPSStatus
+ * @property integer $NumberOfGPSAttempts
+ * @property string $InspectionRequestUID
+ * @property string $ActivityUID
  */
 class AssetAddressCGE extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -70,11 +85,11 @@ class AssetAddressCGE extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetAddressCGEUID', 'AssetAddressUID', 'MasterLeakLogUID', 'MapGridUID', 'ProjectID', 'CreatedUserUID', 'ModifiedUserUID', 'SrcDTLT', 'Revision', 'ActiveFlag', 'CompletedFlag'], 'required'],
-            [['AssetAddressCGEUID', 'AssetAddressUID', 'AssetAddressInspectionUID', 'MasterLeakLogUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'CGENIFType', 'CGEReasonType', 'NIFReasonType', 'CGECardNo', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ResponseStatusType', 'Response', 'ResponceErrorDescription'], 'string'],
-            [['ProjectID', 'Revision', 'ActiveFlag', 'CGECardFlag', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag'], 'integer'],
+            [['AssetAddressCGEUID', 'AssetAddressUID', 'MasterLeakLogUID', 'MapGridUID', 'CreatedUserUID', 'ModifiedUserUID', 'SrcDTLT'], 'required'],
+            [['AssetAddressCGEUID', 'AssetAddressUID', 'AssetInspectionUID', 'MasterLeakLogUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'CGENIFType', 'CGEReasonType', 'NIFReasonType', 'CGECardNo', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'InspectionRequestUID', 'ActivityUID'], 'string'],
+            [['ProjectID', 'Revision', 'ActiveFlag', 'CGECardFlag', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'SrcOpenDTLT', 'SrcClosedDTLT', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT'], 'safe'],
-            [['Latitude', 'Longitude'], 'number']
+            [['Latitude', 'Longitude', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
         ];
     }
 
@@ -87,7 +102,7 @@ class AssetAddressCGE extends \app\modules\v1\models\BaseActiveRecord
             'AssetAddressCGEID' => 'Asset Address Cgeid',
             'AssetAddressCGEUID' => 'Asset Address Cgeuid',
             'AssetAddressUID' => 'Asset Address Uid',
-            'AssetAddressInspectionUID' => 'Asset Address Inspection Uid',
+            'AssetInspectionUID' => 'Asset Inspection Uid',
             'MasterLeakLogUID' => 'Master Leak Log Uid',
             'MapGridUID' => 'Map Grid Uid',
             'ProjectID' => 'Project ID',
@@ -130,6 +145,21 @@ class AssetAddressCGE extends \app\modules\v1\models\BaseActiveRecord
             'ResponseDTLT' => 'Response Dtlt',
             'CompletedFlag' => 'Completed Flag',
             'CompletedDTLT' => 'Completed Dtlt',
+            'GPSSource' => 'Gpssource',
+            'GPSTime' => 'Gpstime',
+            'FixQuality' => 'Fix Quality',
+            'NumberOfSatellites' => 'Number Of Satellites',
+            'HDOP' => 'Hdop',
+            'AltitudemetersAboveMeanSeaLevel' => 'Altitudemeters Above Mean Sea Level',
+            'HeightOfGeoid' => 'Height Of Geoid',
+            'TimeSecondsSinceLastDGPS' => 'Time Seconds Since Last Dgps',
+            'ChecksumData' => 'Checksum Data',
+            'Bearing' => 'Bearing',
+            'Speed' => 'Speed',
+            'GPSStatus' => 'Gpsstatus',
+            'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
+            'InspectionRequestUID' => 'Inspection Request Uid',
+            'ActivityUID' => 'Activity Uid',
         ];
     }
 }
