@@ -21,6 +21,8 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchSurveyType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchFLOC;
+use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
 
 
 class DropdownController extends Controller
@@ -48,7 +50,10 @@ class DropdownController extends Controller
                     'get-device-id-dropdown' => ['get'],
                     'get-reporting-group-dropdown' => ['get'],
                     'get-role-dropdown' => ['get'],
-                    'get-dispatch-method-dropdown' => ['get']
+                    'get-dispatch-method-dropdown' => ['get'],
+                    'get-user-work-center-dropdown' => ['get'],
+                    'get-user-home-work-center-dropdown' => ['get'],
+                    'get-floc-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -725,6 +730,108 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->RoleName]= $data[$i]->RoleName;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetUserWorkCenterDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownUserWorkCenter::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownUserWorkCenter::find()
+                ->all();
+			$namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetUserHomeWorkCenterDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownUserWorkCenter::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownUserWorkCenter::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenterUID]= $data[$i]->WorkCenter;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetFlocDropdown($division, $workCenter, $surveyType) {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchFLOC::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownDispatchFLOC::find()
+				->where(['Division'=>$division])
+				->andWhere(['WorkCenter'=>$workCenter])
+				->andWhere(['SurveyType'=>$surveyType])
+                ->all();
+
+            $namePairs = [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {		
+				$namePairs[]=[
+				'id'=>$data[$i]->FLOC, 
+				'name'=>$data[$i]->FLOC];
             }
 			
 			$response = Yii::$app->response;
