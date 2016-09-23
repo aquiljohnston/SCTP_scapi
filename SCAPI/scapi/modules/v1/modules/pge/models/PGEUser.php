@@ -34,6 +34,7 @@ use Yii;
  * @property string $UserCreatedDTLTOffset
  * @property string $UserModifiedDTLTOffset
  * @property string $UserInactiveDTLTOffset
+ * @property string $HomeWorkCenterUID
  */
 class PGEUser extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -51,7 +52,7 @@ class PGEUser extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['UserUID', 'UserCreatedUID', 'UserModifiedUID', 'UserComments', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'UserPassword', 'UserEmployeeType', 'UserCompanyName', 'UserCompanyPhone', 'UserSupervisorUserUID', 'UserName', 'UserAppRoleType', 'UserPhone'], 'string'],
+            [['UserUID', 'UserCreatedUID', 'UserModifiedUID', 'UserComments', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'UserPassword', 'UserEmployeeType', 'UserCompanyName', 'UserCompanyPhone', 'UserSupervisorUserUID', 'UserName', 'UserAppRoleType', 'UserPhone', 'HomeWorkCenterUID'], 'string'],
             [['ProjectID', 'UserRevision', 'UserActiveFlag', 'UserInActiveFlag'], 'integer'],
             [['UserCreatedDate', 'UserModifiedDate', 'UserInactiveDTLT', 'UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'safe']
         ];
@@ -90,6 +91,7 @@ class PGEUser extends \app\modules\v1\models\BaseActiveRecord
             'UserCreatedDTLTOffset' => 'User Created Dtltoffset',
             'UserModifiedDTLTOffset' => 'User Modified Dtltoffset',
             'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
+            'HomeWorkCenterUID' => 'Home Work Center Uid',
         ];
     }
 }
