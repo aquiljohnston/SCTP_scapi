@@ -45,7 +45,7 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $mapPlat = null, $surveyType = null, $complianceMonth = null, $filter = null)
+	public function actionGetUnassigned($division = null, $workCenter = null, $floc = null, $surveyType = null, $complianceMonth = null, $filter = null)
 	{
 		try
 		{
@@ -65,9 +65,9 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($mapPlat != null)
+			if($floc != null)
 			{
-				$assetQuery->andWhere(['MapPlat'=>$mapPlat]);
+				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
 			
 			if($surveyType != null)
@@ -113,10 +113,10 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($division = null, $workCenter = null, $mapPlat = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null)
+	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null)
 	{
-		// try
-		// {
+		try
+		{
 			$headers = getallheaders();
 			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
 			
@@ -132,9 +132,14 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($mapPlat != null)
+			if($surveyType != null)
 			{
-				$assetQuery->andWhere(['MapPlat'=>$mapPlat]);
+				$assetQuery->andWhere(['SurveyType'=>$surveyType]);
+			}
+			
+			if($floc != null)
+			{
+				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
 			
 			if($status != null)
@@ -177,15 +182,15 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $assets;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	public function actionGetAssignedWorkQueues()
@@ -220,7 +225,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($filter = null)
+	public function actionGetSurveyors($filter = null, $workCenter = null)
 	{
 		try
 		{
@@ -229,8 +234,13 @@ class DispatchController extends Controller
 			
 			//TODO need to add a new column to the view with lastname, firstname
 			$userQuery = UserLogin::find()
-				->select(['UserUID', new \yii\db\Expression("CONCAT(UserLastName, ', ', UserFirstName)as UserFullName"), 'UserLANID'])
+				->select(['UserUID', new \yii\db\Expression("CONCAT(UserLastName, ', ', UserFirstName)as UserFullName"), 'UserLANID', 'WorkCenter'])
 				->orderBy('UserLastName');
+			
+			if($workCenter != null)
+			{
+				$userQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
 			
 			if($filter != null)
 			{
@@ -239,6 +249,7 @@ class DispatchController extends Controller
 				['like', 'UserLastName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLANID', $filter],
+				['like', 'WorkCenter', $filter],
 				]);
 			}
 			

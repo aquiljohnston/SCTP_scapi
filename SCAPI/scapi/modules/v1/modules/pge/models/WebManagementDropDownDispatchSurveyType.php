@@ -8,6 +8,8 @@ use Yii;
  * This is the model class for table "vWebManagementDropDownDispatchSurveyType".
  *
  * @property string $SurveyType
+ * @property string $Division
+ * @property string $WorkCenter
  */
 class WebManagementDropDownDispatchSurveyType extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -25,7 +27,7 @@ class WebManagementDropDownDispatchSurveyType extends \app\modules\v1\models\Bas
     public function rules()
     {
         return [
-            [['SurveyType'], 'string']
+            [['SurveyType', 'Division', 'WorkCenter'], 'string']
         ];
     }
 
@@ -36,6 +38,8 @@ class WebManagementDropDownDispatchSurveyType extends \app\modules\v1\models\Bas
     {
         return [
             'SurveyType' => 'Survey Type',
+			'Division' => 'Division',
+			'WorkCenter' => 'Work Center',
         ];
     }
 }
