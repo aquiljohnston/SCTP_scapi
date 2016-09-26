@@ -17,6 +17,7 @@ use Yii;
  * @property string $SAP Released
  * @property integer $Assigned
  * @property string $ComplianceYearMonth
+ * @property string $FLOC
  */
 class WebManagementDispatch extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -34,7 +35,7 @@ class WebManagementDispatch extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['Division', 'WorkCenter', 'SurveyType', 'Map/Plat', 'Notification ID', 'ComplianceYearMonth', 'InspectionRequestUID'], 'string'],
+            [['Division', 'WorkCenter', 'SurveyType', 'Map/Plat', 'Notification ID', 'ComplianceYearMonth', 'InspectionRequestUID', 'FLOC'], 'string'],
             [['ComplianceDueDate', 'SAP Released'], 'safe'],
             [['Assigned'], 'required'],
             [['Assigned'], 'integer']
@@ -57,6 +58,7 @@ class WebManagementDispatch extends \app\modules\v1\models\BaseActiveRecord
             'SAP Released' => 'Sap  Released',
             'Assigned' => 'Assigned',
             'ComplianceYearMonth' => 'Compliance Year Month',
+            'FLOC' => 'Floc',
         ];
     }
 }

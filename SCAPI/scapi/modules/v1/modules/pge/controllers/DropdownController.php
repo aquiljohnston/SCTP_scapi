@@ -471,7 +471,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetSurveyTypeDropdown() {
+    public function actionGetSurveyTypeDropdown($division, $workCenter) {
         try{
 			//db target
 			$headers = getallheaders();
@@ -480,14 +480,20 @@ class DropdownController extends Controller
 			//todo permission check
 			
 			$data = WebManagementDropDownDispatchSurveyType::find()
+				->select('SurveyType')
+				->where(['Division'=>$division])
+				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [];
             $dataSize = count($data);
 
-            for($i=0; $i < $dataSize; $i++)
-            {
-                $namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
+			for($i=0; $i < $dataSize; $i++)
+            {		
+				$namePairs[]=[
+				'id'=>$data[$i]->SurveyType, 
+				'name'=>$data[$i]->SurveyType];
             }
+			
 			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
