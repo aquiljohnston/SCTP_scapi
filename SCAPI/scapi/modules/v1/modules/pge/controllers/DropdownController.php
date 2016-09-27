@@ -18,17 +18,22 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchComplianceDat
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchDivision;
-use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchSurveyType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchFLOC;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
+//assigned todo combine views
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedComplianceDate;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedFLOC;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedSurveyFreq;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedWorkCenter;
-
+use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
+//AOC todo combine views
+use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAOCType;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
 
 class DropdownController extends Controller
 {
@@ -839,7 +844,7 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedWorkCenterDropdown($division = null)
+	public function actionGetAssignedWorkCenterDropdown($division)
     {
         try{
 			//set db target
@@ -1050,4 +1055,159 @@ class DropdownController extends Controller
         }
     }
 	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
+	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
+	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
+	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCType;
+	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
+	
+	public function actionGetAocDivisionDropdown()
+    {
+        try{
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownAOCDivision::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
+			$data = WebManagementDropDownAOCDivision::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->Division]= $data[$i]->Division;
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAocWorkCenterDropdown($division)
+    {
+        try{
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownAOCWorkCenter::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
+			$data = WebManagementDropDownAOCWorkCenter::find()
+				->where(['Division'=>$division])
+                ->all();
+            $namePairs= [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[]=[
+				'id'=>$data[$i]->WorkCenter, 
+				'name'=>$data[$i]->WorkCenter];
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAocSurveyorDropdown($division, $workCenter)
+    {
+        try{
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownAOCSurveyor::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
+			$data = WebManagementDropDownAOCSurveyor::find()
+				->where(['Division'=>$division])
+				->andWhere(['WorkCenter'=>$workCenter])
+                ->all();
+            $namePairs= [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[]=[
+				'id'=>$data[$i]->Surveyor, 
+				'name'=>$data[$i]->Surveyor];
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAocTypeDropdown($division, $workCenter, $surveyor)
+    {
+        try{
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownAOCType::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
+			$data = WebManagementDropDownAOCType::find()
+				->where(['Division'=>$division])
+				->andWhere(['WorkCenter'=>$workCenter])
+				->andWhere(['Surveyor'=>$surveyor])
+                ->all();
+            $namePairs= [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[]=[
+				'id'=>$data[$i]->AOCType, 
+				'name'=>$data[$i]->AOCType];
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	/////////////////////AOC DROPDOWNS END////////////////////////
+	
 }
