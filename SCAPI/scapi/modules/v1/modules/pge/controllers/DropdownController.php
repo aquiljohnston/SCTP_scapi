@@ -23,6 +23,11 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchSurveyType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchFLOC;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedComplianceDate;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedFLOC;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedSurveyFreq;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedWorkCenter;
 
 
 class DropdownController extends Controller
@@ -510,6 +515,7 @@ class DropdownController extends Controller
         }
     }
 
+	//dispatch
     public function actionGetComplianceMonthDropdown() {
 		try{
 			//db target
@@ -526,70 +532,6 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
-            }
-			
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $namePairs;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-    public function actionGetStatusDropdown() {
-        try{
-			//db target
-			$headers = getallheaders();
-			WebManagementDropDownDispatchStatus::setClient($headers['X-Client']);
-			
-			//todo permission check
-			$data = WebManagementDropDownDispatchStatus::find()
-                ->all();
-            $namePairs = [null => "Select..."];
-            $dataSize = count($data);
-
-            for($i=0; $i < $dataSize; $i++)
-            {
-                $namePairs[$data[$i]->Status]= $data[$i]->Status;
-            }
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $namePairs;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-    public function actionGetDispatchMethodDropdown() {
-        try{
-			//db target
-			$headers = getallheaders();
-			WebManagementDropDownDispatchAssignedDispatchMethod::setClient($headers['X-Client']);
-			
-			//todo permission check
-			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
-                ->all();
-            $namePairs = [null => "Select..."];
-            $dataSize = count($data);
-
-            for($i=0; $i < $dataSize; $i++)
-            {
-                $namePairs[$data[$i]->DispatchMethod]= $data[$i]->DispatchMethod;
             }
 			
 			$response = Yii::$app->response;
@@ -657,6 +599,7 @@ class DropdownController extends Controller
         }
     }
 	
+	//user?
 	public function actionGetReportingGroupDropdown() {
 		try{
 			//db target
@@ -689,6 +632,7 @@ class DropdownController extends Controller
         }
     }
 	
+	//user?
 	public function actionGetReportingGroupUIDDropdown() {
 		try{
 			//db target
@@ -721,6 +665,7 @@ class DropdownController extends Controller
         }
     }
 	
+	//user
 	public function actionGetRoleDropdown() {
 		try{
 			//db target
@@ -753,6 +698,7 @@ class DropdownController extends Controller
         }
     }
 	
+	//user? dispatch? assigned?
 	public function actionGetUserWorkCenterDropdown() {
 		try{
 			//db target
@@ -785,6 +731,7 @@ class DropdownController extends Controller
         }
     }
 	
+	//user?
 	public function actionGetUserHomeWorkCenterDropdown() {
 		try{
 			//db target
@@ -817,6 +764,7 @@ class DropdownController extends Controller
         }
     }
 	
+	//dispatch
 	public function actionGetFlocDropdown($division, $workCenter, $surveyType) {
 		try{
 			//db target
@@ -854,4 +802,252 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	//////////////////////ASSIGNED DROPDOWNS BEGIN/////////////////////
+	
+	public function actionGetAssignedDivisionDropdown()
+    {
+        try{
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownAssignedDivision::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
+			$data = WebManagementDropDownAssignedDivision::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->Division]= $data[$i]->Division;
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAssignedWorkCenterDropdown($division = null)
+    {
+        try{
+			//set db target
+			$headers = getallheaders();
+			WebManagementDropDownAssignedWorkCenter::setClient($headers['X-Client']);
+			
+            //todo permission check
+			
+			$data = WebManagementDropDownAssignedWorkCenter::find()
+				->where(['Division'=>$division])
+                ->all();
+            $namePairs= [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[]=[
+				'id'=>$data[$i]->WorkCenter, 
+				'name'=>$data[$i]->WorkCenter];
+            }
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	 public function actionGetAssignedSurveyFreqDropdown($division, $workCenter) {
+        try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownAssignedSurveyFreq::setClient($headers['X-Client']);
+			
+			//todo permission check
+			
+			$data = WebManagementDropDownAssignedSurveyFreq::find()
+				->select('SurveyType')
+				->where(['Division'=>$division])
+				->andWhere(['WorkCenter'=>$workCenter])
+                ->all();
+            $namePairs = [];
+            $dataSize = count($data);
+
+			for($i=0; $i < $dataSize; $i++)
+            {		
+				$namePairs[]=[
+				'id'=>$data[$i]->SurveyType, 
+				'name'=>$data[$i]->SurveyType];
+            }
+			
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAssignedFlocDropdown($division, $workCenter, $surveyType) {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownAssignedFLOC::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownAssignedFLOC::find()
+				->where(['Division'=>$division])
+				->andWhere(['WorkCenter'=>$workCenter])
+				->andWhere(['SurveyType'=>$surveyType])
+                ->all();
+
+            $namePairs = [];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {		
+				$namePairs[]=[
+				'id'=>$data[$i]->FLOC, 
+				'name'=>$data[$i]->FLOC];
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAssignedComplianceMonthDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownAssignedComplianceDate::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownAssignedComplianceDate::find()
+				->orderBy('ComplianceSort')
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAssignedStatusDropdown() {
+        try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchStatus::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownDispatchStatus::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->Status]= $data[$i]->Status;
+            }
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetAssignedDispatchMethodDropdown() {
+        try{
+			//db target
+			$headers = getallheaders();
+			WebManagementDropDownDispatchAssignedDispatchMethod::setClient($headers['X-Client']);
+			
+			//todo permission check
+			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->DispatchMethod]= $data[$i]->DispatchMethod;
+            }
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
 }
