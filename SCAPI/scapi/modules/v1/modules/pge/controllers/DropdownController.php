@@ -1055,10 +1055,6 @@ class DropdownController extends Controller
         }
     }
 	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
-	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
-	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
-	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCType;
-	// use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
 	
 	public function actionGetAocDivisionDropdown()
     {

@@ -12,93 +12,72 @@ use \Yii;
 use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use app\modules\v1\modules\pge\models\WebManagementAOC;
 
-class AOCController extends Controller
+class AocController extends Controller
 {
 
-    public function actionGet($workCenter = null, $week = null)
+    public function actionGet($division = null, $workCenter = null, $surveyor = null, $type = null, $startDate = null, $endDate = null, $filter = null)
     {
 		try
 		{
-			$data = [];
-
-			$gavin = [];
-			$gavin["Badge #"] = 56183;
-			$gavin["Status"] = "In Progress";
-			$gavin["Employee"] = "Free, Gavin";
-			$gavin["Date/Time"] = "07/25/2016 17:03";
-			$gavin["AOC Code"] = "AC";
-			$gavin["Meter"] = "235294";
-			$gavin["House #"] = "123";
-			$gavin["Street"] = "Ashford-Dunwoody Rd";
-			$gavin["City"] = "Dunwoody";
-			$gavin["State"] = "GA";
-			$gavin["Zip"] = "30346";
-			$gavin["Images"] = "";
-			$gavin["Comment"] = "This is a comment";
-			$gavin["WorkCenter"] = "Cydaea";
-			$data[] = $gavin;
-
-			$chris = [];
-			$chris["Badge"] = "56183";
-			$chris["Status"] = "In Progress";
-			$chris["Employee"] = "Smith, Chris";
-			$chris["Date/Time"] = "07/18/2016 08:25";
-			$chris["AOC Code"] = "AC";
-			$chris["Meter"] = "1235464";
-			$chris["House #"] = "100";
-			$chris["Street"] = "Northwood Dr";
-			$chris["City"] = "Concord";
-			$chris["State"] = "CA";
-			$chris["Zip"] = "94520-4508";
-			$chris["Images"] = "";
-			$chris["Comment"] = "This is probably a comment";
-			$chris["WorkCenter"] = "Izual";
-			$data[] = $chris;
-
-			$burnie = [];
-			$burnie["Badge"] = "402953";
-			$burnie["Status"] = "In Progress";
-			$burnie["Employee"] = "Berns, Burnie";
-			$burnie["Date/Time"] = "07/15/2016 08:25";
-			$burnie["AOC Code"] = "AC";
-			$burnie["Meter"] = "5235464";
-			$burnie["House #"] = "400";
-			$burnie["Street"] = "Roswell Rd";
-			$burnie["City"] = "Sandy Springs";
-			$burnie["State"] = "GA";
-			$burnie["Zip"] = "30319";
-			$burnie["Images"] = "AF4REJN3OI4SI422.jpg";
-			$burnie["Comment"] = "Roosters don't have teeth";
-			$burnie["WorkCenter"] = "Urzael";
-			$data[] = $burnie;
-
-
-			$filteredData = [];
-			if($week != null) {
-				$explodedWeek = explode(" - ", $week);
-				$firstDay = $explodedWeek[0];
-				$lastDay = $explodedWeek[1];
-			} else {
-				// These variables will not be used if this branch is reached
-				// We set them to avoid IDE warnings.
-				$firstDay = null;
-				$lastDay = null;
+			//set db
+			$headers = getallheaders();
+			WebManagementAOC::setClient($headers['X-Client']);
+			
+			$aocQuery = WebManagementAOC::find();
+			
+			if($division != null)
+			{
+				$aocQuery->andWhere(['Division'=>$division]);
 			}
-			for ($i = 0; $i < count($data); $i++) {
-				if ($workCenter == null || $data[$i]["WorkCenter"] == $workCenter) {
-					$theDay = $data[$i]["Date/Time"];
-					if($week == null || BaseActiveController::inDateRange($theDay, $firstDay, $lastDay)) {
-						$filteredData[] = $data[$i];
-					}
-				}
+			
+			if($workCenter != null)
+			{
+				$aocQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
-
-
+			
+			if($surveyor != null)
+			{
+				$aocQuery->andWhere(['Surveyor'=>$surveyor]);
+			}
+			
+			if($type != null)
+			{
+				$aocQuery->andWhere(['AOCType'=>$type]);
+			}
+			
+			if($startDate != null && $endDate != null)
+			{
+				$aocQuery->andWhere(['between', 'Date', $startDate, $endDate]);
+			}
+			
+			if($aocQuery != null)
+			{
+				$aocQuery->andFilterWhere([
+				'or',
+				['like', 'Date', $filter],
+				['like', 'Time', $filter],
+				['like', 'Surveyor', $filter],
+				['like', 'WorkCenter', $filter],
+				['like', 'FLOC', $filter],
+				['like', 'SurveyType', $filter],
+				['like', 'AOCType', $filter],
+				['like', 'MeterNumber', $filter],
+				['like', 'HouseNo', $filter],
+				['like', 'Street', $filter],
+				['like', 'Apt', $filter],
+				['like', 'City', $filter],
+				['like', 'Comments', $filter],
+				]);
+			}
+			
+			$aocs = $aocQuery->all();
+			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
+			$response->data = $aocs;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
