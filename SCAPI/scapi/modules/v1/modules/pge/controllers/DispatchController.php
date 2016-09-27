@@ -45,7 +45,7 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $floc = null, $surveyType = null, $complianceMonth = null, $filter = null)
+	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null)
 	{
 		try
 		{
@@ -65,14 +65,14 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($floc != null)
-			{
-				$assetQuery->andWhere(['FLOC'=>$floc]);
-			}
-			
 			if($surveyType != null)
 			{
 				$assetQuery->andWhere(['SurveyType'=>$surveyType]);
+			}
+			
+			if($floc != null)
+			{
+				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
 			
 			if($complianceMonth != null)
@@ -87,7 +87,7 @@ class DispatchController extends Controller
 				['like', 'Division', $filter],
 				['like', 'WorkCenter', $filter],
 				['like', 'SurveyType', $filter],
-				['like', 'MapPlat', $filter],
+				['like', 'FLOC', $filter],
 				['like', 'Notification ID', $filter],
 				['like', 'ComplianceDueDate', $filter],
 				['like', 'SAP Released', $filter],
