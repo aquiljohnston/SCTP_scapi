@@ -2,6 +2,7 @@
 
 namespace app\modules\v1\controllers;
 
+use app\modules\v1\modules\pge\models\WebManagementLeakLogDropDown;
 use Yii;
 use app\authentication\TokenAuth;
 use yii\filters\VerbFilter;
@@ -142,23 +143,68 @@ class DropdownController extends Controller
     }
 
 
-    public function actionGetWorkCenterDropdown()
+    public function actionGetLeakLogWorkCenterDropdown()
     {
         //TODO RBAC permission check
         try{
-            //TODO check headers
 
-            //stub data
-            $dropdown = [null => "Select..."];
-            $dropdown["Zoltun Kulle"] = "Zoltun Kulle";
-            $dropdown["Cydaea"] = "Cydaea";
-            $dropdown["Izual"] = "Izual";
-            $dropdown["Urzael"] = "Urzael";
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
-            //send response
-            $response = Yii::$app->response;
-            $response ->format = Response::FORMAT_JSON;
-            $response->data = $dropdown;
+            $values = WebManagementLeakLogDropDown::find()
+                ->select(['WorkCenter'])
+                ->distinct()
+                ->all();
+
+            $namePairs = [
+                null => "Select...",
+            ];
+            foreach ($values as $value) {
+                $namePairs[$value["WorkCenter"]] = $value["WorkCenter"];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetLeakLogSurveyorDropdown($workCenter)
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementLeakLogDropDown::find()
+                ->select(['Surveyor'])
+                ->where(['WorkCenter' => $workCenter])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["Surveyor"],
+                    "name" => $value["Surveyor"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
             return $response;
         }
         catch(ForbiddenHttpException $e)

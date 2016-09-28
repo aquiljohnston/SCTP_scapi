@@ -8,6 +8,7 @@
 
 namespace app\modules\v1\modules\pge\controllers;
 
+use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
@@ -251,106 +252,40 @@ class LeakLogController extends Controller {
     }
 
 
-    public function actionGetMgmt($workCenter, $surveyor = null, $startDate, $endDate)
+    public function actionGetMgmt($workCenter, $surveyor = null, $startDate, $endDate, $search = null)
 	{
-		try{
-			$leak1 = [];
-			$leak1["Leak"] = "1";
-			$leak1["Approved"] = "0";
-			$leak1["HCA"] = "0";
-			$leak1["Date"] = "05/10/2016";
-			$leak1["Employee"] = "Doe, John (johndoe)";
-			$leak1["Work Center"] = "Izual";
-			$leak1["Map"] = "161-30-5-C";
-			$leak1["Plat"] = "161-30-5-C";
-			$leak1["Survey Type"] = "5 Year";
-			$leak1["Pipeline Type"] = "GD";
-			$leak1["#of Services"] = "0";
-			$leak1["Feet Of Main"] = "0";
-			$leak1["Hours"] = "1";
-			$leak1["Exception"] = "";
-			$leak1["Status"] = "Not Approved";
-			$leak1["Tab"] = "Not Approved";
-			
-			$leak2 = [];
-			$leak2["Leak"] = "1";
-			$leak2["Approved"] = "1";
-			$leak2["HCA"] = "0";
-			$leak2["Date"] = "05/11/2016";
-			$leak2["Employee"] = "Doe, Jane (janedoe)";
-			$leak2["Work Center"] = "Izual";
-			$leak2["Map"] = "161-30-5-C";
-			$leak2["Plat"] = "161-30-5-C";
-			$leak2["Survey Type"] = "1 Year";
-			$leak2["Pipeline Type"] = "GD";
-			$leak2["#of Services"] = "120";
-			$leak2["Feet Of Main"] = "2020";
-			$leak2["Hours"] = "1";
-			$leak2["Exception"] = "";
-			$leak2["Status"] = "Not Submitted";
-			$leak2["Tab"] = "Approved / Not Submitted";
+        //TODO RBAC permission check
+        try{
 
-			$leak3 = [];
-			$leak3["Leak"] = "1";
-			$leak3["Approved"] = "1";
-			$leak3["HCA"] = "0";
-			$leak3["Date"] = "05/12/2016";
-			$leak3["Employee"] = "Smith, Bob (bob1)";
-			$leak3["Work Center"] = "Cydaea";
-			$leak3["Map"] = "141-31-3-C";
-			$leak3["Plat"] = "141-31-3-C";
-			$leak3["Survey Type"] = "Semi-Annual";
-			$leak3["Pipeline Type"] = "GD";
-			$leak3["#of Services"] = "20";
-			$leak3["Feet Of Main"] = "500";
-			$leak3["Hours"] = "3";
-			$leak3["Exception"] = "";
-			$leak3["Status"] = "Pending";
-			$leak3['Tab'] = 'Submitted / Pending';
+            $headers = getallheaders();
+            WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
-			$leak4 = [];
-			$leak4["Leak"] = "1";
-			$leak4["Approved"] = "1";
-			$leak4["HCA"] = "0";
-			$leak4["Date"] = "05/12/2016";
-			$leak4["Employee"] = "Randalt, Bill (bill2)";
-			$leak4["Work Center"] = "Urzael";
-			$leak4["Map"] = "141-31-3-C";
-			$leak4["Plat"] = "141-31-3-C";
-			$leak4["Survey Type"] = "Special";
-			$leak4["Pipeline Type"] = "GD";
-			$leak4["#of Services"] = "1";
-			$leak4["Feet Of Main"] = "15";
-			$leak4["Hours"] = "8";
-			$leak4["Exception"] = "1";
-			$leak4["Status"] = "Rejected";
-			$leak4["Tab"] = "Exceptions";
+            $values = WebManagementMasterLeakLog::find()
+                ->where(['WorkCenter' => $workCenter]);
 
-			$leak5 = [];
-			$leak5["Leak"] = "1";
-			$leak5["Approved"] = "1";
-			$leak5["HCA"] = "0";
-			$leak5["Date"] = "05/12/2016";
-			$leak5["Employee"] = "Milstone, Fred (fred3)";
-			$leak5["Work Center"] = "Urzael";
-			$leak5["Map"] = "141-31-3-C";
-			$leak5["Plat"] = "141-31-3-C";
-			$leak5["Survey Type"] = "Immediate Response";
-			$leak5["Pipeline Type"] = "GD";
-			$leak5["#of Services"] = "0";
-			$leak5["Feet Of Main"] = "0";
-			$leak5["Hours"] = "0";
-			$leak5["Exception"] = "";
-			$leak5["Status"] = "Completed";
-			$leak5["Tab"] = "Completed";
+            if ($surveyor)
+                $values = $values->where(["Surveyor" => $surveyor]);
 
-			$leaks[] = $leak1;
-			$leaks[] = $leak2;
-			$leaks[] = $leak3;
-			$leaks[] = $leak4;
-			$leaks[] = $leak5;
-			$leakCount = count($leaks);
-			
+            if ($search) {
+                $values = $values->where([
+                    'or',
+                    ['like', 'Leaks', $search],
+                    ['like', 'Division', $search],
+                    ['like', 'Approved', $search],
+                    ['like', 'HCA', $search],
+                    ['like', 'Date', $search],
+                    ['like', 'Surveyor', $search],
+                    ['like', 'WorkCenter', $search],
+                    ['like', 'FLOC', $search],
+                    ['like', 'SurveyFreq', $search],
+                    ['like', 'FeetOfMain', $search],
+                    ['like', 'NumofServices', $search],
+                    ['like', 'Hours', $search]
+                ]);
+            }
+
+            $leaks = $values->all();
+
 			$data = [];
 			$data['Not Approved'] = [];
 			$data['Approved / Not Submitted'] = [];
@@ -359,20 +294,14 @@ class LeakLogController extends Controller {
 			$data['Completed'] = [];
 			
 			//filter leaks
-			for($i = 0 ; $i < $leakCount ; $i++)
-			{
-				$username = explode('(', $leaks[$i]['Employee']);
-				$username = trim($username[1], ')');
-				if($leaks[$i]["Work Center"] == $workCenter)
-				{
-					if($surveyor == null || $username == $surveyor)
-					{
-						if(BaseActiveController::inDateRange($leaks[$i]["Date"], $startDate, $endDate))
-						{
-							$data[$leaks[$i]['Tab']][] = $leaks[$i];
-						}
-					}
-				}
+            foreach ($leaks as $leak) {
+                if(BaseActiveController::inDateRange($leak["Date"], $startDate, $endDate))
+                {
+                    // TODO: there's no status that comes back from the db view.
+                    // When there is, uncomment this and remove the other line.
+                    //$data[$leak['Status']][] = $leak;
+                    $data['Not Approved'][] = $leak;
+                }
 			}
 
 			//send response
