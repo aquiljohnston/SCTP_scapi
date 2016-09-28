@@ -225,7 +225,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($filter = null, $workCenter = null)
+	public function actionGetSurveyors($workCenter = null, $filter = null)
 	{
 		try
 		{

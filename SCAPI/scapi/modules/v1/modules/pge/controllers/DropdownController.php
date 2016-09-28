@@ -22,6 +22,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchSurveyType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchFLOC;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
+use app\modules\v1\modules\pge\models\WebManagementUsers;
 //assigned todo combine views
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedComplianceDate;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
@@ -703,15 +704,18 @@ class DropdownController extends Controller
         }
     }
 	
-	//user? dispatch? assigned?
+	//dispatch, assigned
 	public function actionGetUserWorkCenterDropdown() {
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownUserWorkCenter::setClient($headers['X-Client']);
+			WebManagementUsers::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownUserWorkCenter::find()
+			$data = WebManagementUsers::find()
+				->select('WorkCenter')
+				->distinct()
+				->where(['not', ['WorkCenter'=> null]])
                 ->all();
 			$namePairs = [null => "Select..."];
             $dataSize = count($data);
@@ -1056,6 +1060,7 @@ class DropdownController extends Controller
     }
 	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
 	
+	/////////////////////AOC DROPDOWNS Begin////////////////////////
 	public function actionGetAocDivisionDropdown()
     {
         try{
@@ -1202,8 +1207,7 @@ class DropdownController extends Controller
         {
             throw new \yii\web\HttpException(400);
         }
-    }
-	
+    }	
 	/////////////////////AOC DROPDOWNS END////////////////////////
 	
 }
