@@ -9,6 +9,8 @@ use app\modules\v1\models\MileageEntry;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\modules\pge\controllers\AssetAddressController;
+use app\modules\v1\modules\pge\controllers\WindSpeedController;
+use app\modules\v1\modules\pge\controllers\EquipmentController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -155,6 +157,20 @@ class ActivityController extends BaseActiveController
 						{
 							$savedAssetAddress = AssetAddressController::create($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
 							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
+						}
+						
+						//handle pge wind speed entries
+						if (array_key_exists("WindSpeed", $activityArray[$i]))
+						{
+							$savedWindSpeed = WindSpeedController::create($activityArray[$i]["WindSpeed"], $headers['X-Client'], $createdBy);
+							$data["activity"][$i]["WindSpeed"] = $savedWindSpeed;
+						}
+						
+						//handle pge equipment calibration
+						if (array_key_exists("EquipmentCalibration", $activityArray[$i]))
+						{
+							$savedEquipmentCalibration = EquipmentController::calibrationCreate($activityArray[$i]["EquipmentCalibration"], $headers['X-Client'], $createdBy);
+							$data["activity"][$i]["EquipmentCalibration"] = $savedEquipmentCalibration;
 						}
 						
 						//change path back to ct db
