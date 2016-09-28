@@ -89,4 +89,33 @@ class AocController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionGetModal($AOCUID)
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			WebManagementAOC::setClient($headers['X-Client']);
+			
+			$data = WebManagementAOC::find()
+				->select(['LANID', new \yii\db\Expression("CONCAT(Date, ' ', Time)as Date"), new \yii\db\Expression("CONCAT([Map/Plat], ' (', SurveyType, ')')as [Map/Plat]"), 'Photo1', 'Photo2', 'Photo3'])
+				->where(['AOCUID'=>$AOCUID])
+				->one();
+				
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 }
