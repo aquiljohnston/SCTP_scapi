@@ -169,6 +169,7 @@ class AssetAddressController extends Controller
 						$AOC->ModifiedUserUID = $userUID;
 						$AOC->ActivityUID = $ActivityUID;
 						$AOC->SrcOpenDTLT = $AOC->SrcDTLT;
+						$AOC->DateFound = $AOC->SrcDTLT;
 						
 						//save model
 						if($AOC->save())
@@ -205,6 +206,7 @@ class AssetAddressController extends Controller
 						$indication->ModifiedUserUID = $userUID;
 						$indication->ActivityUID = $ActivityUID;
 						$indication->SrcOpenDTLT = $indication->SrcDTLT;
+						$indication->FoundDateTime = $indication->SrcDTLT;
 						
 						//save model
 						if($indication->save())
