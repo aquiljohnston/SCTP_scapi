@@ -143,7 +143,43 @@ class DropdownController extends Controller
     }
 
 
-    public function actionGetLeakLogWorkCenterDropdown()
+    public function actionGetLeakLogDivisionDropdown()
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementLeakLogDropDown::find()
+                ->select(['Division'])
+                ->distinct()
+                ->all();
+
+            $namePairs = [
+                null => "Select...",
+            ];
+            foreach ($values as $value) {
+                $namePairs[$value["Division"]] = $value["Division"];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetLeakLogWorkCenterDropdown($division)
     {
         //TODO RBAC permission check
         try{
@@ -153,19 +189,21 @@ class DropdownController extends Controller
 
             $values = WebManagementLeakLogDropDown::find()
                 ->select(['WorkCenter'])
+                ->where(['Division' => $division])
                 ->distinct()
                 ->all();
 
-            $namePairs = [
-                null => "Select...",
-            ];
+            $results = [];
             foreach ($values as $value) {
-                $namePairs[$value["WorkCenter"]] = $value["WorkCenter"];
+                $results[] = [
+                    "id" => $value["WorkCenter"],
+                    "name" => $value["WorkCenter"]
+                ];
             }
 
             $response = Yii::$app ->response;
             $response -> format = Response::FORMAT_JSON;
-            $response -> data = $namePairs;
+            $response -> data = $results;
 
             return $response;
         }
