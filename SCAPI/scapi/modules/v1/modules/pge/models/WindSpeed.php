@@ -11,7 +11,7 @@ use Yii;
  * @property string $WindSpeedUID
  * @property string $InspectionRequestUID
  * @property integer $ProjectID
- * @property string $sourceID
+ * @property string $SourceID
  * @property string $CreatedUserUID
  * @property string $ModifiedUserUID
  * @property string $srcDTLT
@@ -45,7 +45,7 @@ class WindSpeed extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['WindSpeedUID', 'InspectionRequestUID', 'sourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'MapPlat', 'MapGridUID', 'SurveyType'], 'string'],
+            [['WindSpeedUID', 'InspectionRequestUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'MapPlat', 'MapGridUID', 'SurveyType'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'AlertFlag'], 'integer'],
             [['srcDTLT', 'srvDTLT', 'srvDTLTOffset', 'EntryTime'], 'safe'],
             [['WindSpeed', 'Latitude', 'Longitude'], 'number']
@@ -62,7 +62,7 @@ class WindSpeed extends \app\modules\v1\models\BaseActiveRecord
             'WindSpeedUID' => 'Wind Speed Uid',
             'InspectionRequestUID' => 'Inspection Request Uid',
             'ProjectID' => 'Project ID',
-            'sourceID' => 'Source ID',
+            'SourceID' => 'Source ID',
             'CreatedUserUID' => 'Created User Uid',
             'ModifiedUserUID' => 'Modified User Uid',
             'srcDTLT' => 'Src Dtlt',
