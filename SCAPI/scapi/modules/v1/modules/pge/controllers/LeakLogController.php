@@ -293,14 +293,11 @@ class LeakLogController extends Controller {
 			$data['Exceptions'] = [];
 			$data['Completed'] = [];
 			
-			//filter leaks
+			// filter leaks
             foreach ($leaks as $leak) {
                 if(BaseActiveController::inDateRange($leak["Date"], $startDate, $endDate))
                 {
-                    // TODO: there's no status that comes back from the db view.
-                    // When there is, uncomment this and remove the other line.
-                    //$data[$leak['Status']][] = $leak;
-                    $data['Not Approved'][] = $leak;
+                    $data[$leak["Status"]][] = $leak;
                 }
 			}
 
