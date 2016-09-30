@@ -21,8 +21,6 @@ use yii\helpers\VarDumper;
 
 class DispatchController extends Controller 
 {
-	
-	public $modelClass = 'app\modules\v1\modules\pge\models\PGEUser'; 
 
 	public function behaviors()
 	{
