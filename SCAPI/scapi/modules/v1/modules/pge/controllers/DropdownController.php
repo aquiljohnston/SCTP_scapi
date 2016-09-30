@@ -730,7 +730,9 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs = [];
+            $namePairs[] = [
+				'id'=>'All', 
+				'name'=>'All'];
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
@@ -763,15 +765,21 @@ class DropdownController extends Controller
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownDispatch::find()
+			$dataQuery = WebManagementDropDownDispatch::find()
 				->select('FLOC')
 				->distinct()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['SurveyType'=>$surveyType])
-                ->all();
+				->andWhere(['WorkCenter'=>$workCenter]);
+			if($surveyType!='All')
+			{
+				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
+			}
+            
+			$data = $dataQuery->all();
 
-            $namePairs = [];
+            $namePairs[] = [
+				'id'=>'All', 
+				'name'=>'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -803,16 +811,24 @@ class DropdownController extends Controller
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownDispatch::find()
+			$dataQuery = WebManagementDropDownDispatch::find()
 				->select('ComplianceYearMonth, ComplianceSort')
 				->distinct()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['SurveyType'=>$surveyType])
-				->andWhere(['FLOC'=>$floc])
-				->orderBy('ComplianceSort')
-                ->all();
-            $namePairs = [];
+				->andWhere(['WorkCenter'=>$workCenter]);
+			if($surveyType != 'All')
+			{
+				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
+			}
+			if($floc != 'All')
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}	
+			$data = $dataQuery->orderBy('ComplianceSort')
+				->all();
+            $namePairs[] = [
+				'id'=>'All', 
+				'name'=>'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -925,7 +941,9 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs = [];
+            $namePairs[] = [
+				'id'=>'All', 
+				'name'=>'All'];
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
@@ -958,13 +976,17 @@ class DropdownController extends Controller
 			WebManagementDropDownAssignedFLOC::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownAssignedFLOC::find()
+			$dataQuery = WebManagementDropDownAssignedFLOC::find()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['SurveyType'=>$surveyType])
-                ->all();
-
-            $namePairs = [];
+				->andWhere(['WorkCenter'=>$workCenter]);
+			if($surveyType != 'All')
+			{
+				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
+			}
+            $data = $dataQuery->all();
+            $namePairs[] = [
+				'id'=>'All', 
+				'name'=>'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)

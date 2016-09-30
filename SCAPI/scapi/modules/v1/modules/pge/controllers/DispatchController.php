@@ -63,17 +63,17 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($surveyType != null)
+			if(!($surveyType == null || $surveyType == 'All'))
 			{
 				$assetQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
 			
-			if($floc != null)
+			if(!($floc == null || $floc == 'All'))
 			{
 				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
 			
-			if($complianceMonth != null)
+			if(!($complianceMonth == null || $complianceMonth == 'All'))
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
@@ -130,12 +130,12 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($surveyType != null)
+			if(!($surveyType == null || $surveyType == 'All'))
 			{
 				$assetQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
 			
-			if($floc != null)
+			if(!($floc == null || $floc == 'All'))
 			{
 				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
