@@ -29,7 +29,7 @@ class CTUser extends User
 		Yii::trace('Token has been cleared');
 	}
 	 
-	public function logout($destroySession = true, $userID)
+	public function logout($destroySession = true, $userID = null)
 	{
 		$this->clearToken($userID);
 		parent::logout();
