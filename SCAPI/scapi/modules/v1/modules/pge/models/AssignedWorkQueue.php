@@ -47,7 +47,7 @@ class AssignedWorkQueue extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             [['AssignedWorkQueueUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'AssignedInspectionRequestUID', 'AssignedUserUID', 'DispatchMethod'], 'string'],
-            [['ProjectID', 'CreatedUserUID', 'ModifiedUserUID', 'Revision', 'ActiveFlag'], 'required'],
+            [['CreatedUserUID', 'ModifiedUserUID'], 'required'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'AcceptedFlag', 'LockedFlag', 'PendingDeleteFlag'], 'integer'],
             [['SrvCreatedDTLT', 'SrvCreatedDTLTOffset', 'SrvModifiedDTLT', 'SrvModifiedDTLTOffset', 'AssignedDate', 'AcceptedDate'], 'safe']
         ];
