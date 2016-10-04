@@ -68,7 +68,7 @@ class InspectionRequest extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspectionRequestUID', 'ProjectID', 'CreatedUserUID', 'ModifiedUserUID', 'Revision', 'ActiveFlag'], 'required'],
+            [['InspectionRequestUID', 'CreatedUserUID', 'ModifiedUserUID'], 'required'],
             [['InspectionRequestUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'StatusType', 'PipelineType', 'SurveyType', 'LsNtfNo', 'OrderNo', 'MapID', 'Wall', 'Plat', 'MWC', 'FLOC', 'InspectionFrequencyType', 'ReturnComments', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ReturnedFromPGEStatusType'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'PrevServ', 'PrevFtOfMain', 'ReturnFlag', 'FileCount', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag'], 'integer'],
             [['CreateDTLT', 'ModifiedDTLT', 'ComplianceDueDate', 'ScheduledStartDate', 'ScheduledCompleteDate', 'ReleaseDate', 'ApprovedDTLT', 'SubmittedDTLT', 'RetrunedFromPGEDTLT', 'CompletedDTLT'], 'safe']

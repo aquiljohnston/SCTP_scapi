@@ -151,6 +151,8 @@ class BaseActiveController extends ActiveController
 	{
 		$url = explode(".", $_SERVER['SERVER_NAME']);
 		$prefix = $url[0];
+		//for local host
+		// $prefix = "apidev";
 		return $prefix;
 	}
 }
