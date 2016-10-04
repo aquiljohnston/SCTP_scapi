@@ -6,6 +6,7 @@ use Yii;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
+use yii\data\Pagination;
 use app\authentication\TokenAuth;
 use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\controllers\BaseActiveController;
@@ -43,7 +44,7 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null)
+	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
@@ -77,6 +78,14 @@ class DispatchController extends Controller
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
+
+			if ($listPerPage == null){
+			    $listPerPage = 10;
+            }
+
+            if ($page == null){
+                $page = 1;
+            }
 			
 			if($filter != null)
 			{
@@ -92,8 +101,17 @@ class DispatchController extends Controller
 				['like', 'Assigned', $filter],
 				]);
 			}
-			
-			$assets = $assetQuery->all();
+
+			// set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+
+            $assets = $assetQuery->offset($offset)
+                ->limit($listPerPage)
+                ->all();
 			
 			//send response
 			$response = Yii::$app->response;
@@ -111,7 +129,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null)
+	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
@@ -154,6 +172,14 @@ class DispatchController extends Controller
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
+
+            if ($listPerPage == null){
+                $listPerPage = 10;
+            }
+
+            if ($page == null){
+                $page = 1;
+            }
 			
 			if($filter != null)
 			{
@@ -172,8 +198,17 @@ class DispatchController extends Controller
 				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
-			
-			$assets = $assetQuery->all();
+
+            // set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+
+            $assets = $assetQuery->offset($offset)
+                ->limit($listPerPage)
+                ->all();
 			
 			//send response
 			$response = Yii::$app->response;
@@ -223,7 +258,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($workCenter = null, $filter = null)
+	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
@@ -250,8 +285,26 @@ class DispatchController extends Controller
 				['like', 'WorkCenter', $filter],
 				]);
 			}
-			
-			$users = $userQuery->asArray()->all();
+
+            if ($listPerPage == null){
+                $listPerPage = 10;
+            }
+
+            if ($page == null){
+                $page = 1;
+            }
+
+            // set pagination
+            $countUserQuery = clone $userQuery;
+            $pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countUserQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+
+            $users = $userQuery->offset($offset)
+                ->limit($listPerPage)
+                ->asArray()
+                ->all();
 			
 			//send response
 			$response = Yii::$app->response;
