@@ -237,7 +237,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = null, $page = null)
+	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		/*try
 		{*/
@@ -246,8 +246,8 @@ class DispatchController extends Controller
 			
 			//TODO need to add a new column to the view with lastname, firstname
 			$userQuery = UserLogin::find()
-				->select(['UserUID', new \yii\db\Expression("CONCAT(UserLastName, ', ', UserFirstName)as UserFullName"), 'UserLANID', 'WorkCenter'])
-				->orderBy('UserLastName');
+				->select('UserUID, UserFullName, UserLANID, WorkCenter');
+				
 			
 			if($workCenter != null)
 			{
@@ -265,16 +265,8 @@ class DispatchController extends Controller
 				]);
 			}
 
-            if ($listPerPage == null){
-                $listPerPage = 10;
-            }
-
-            if ($page == null){
-                $page = 1;
-            }
-
-            // set pagination
-            /*$countUserQuery = clone $userQuery;
+            //set pagination
+            $countUserQuery = clone $userQuery;
             $pages = new Pagination(['totalCount' => $countUserQuery->count()]);
             $offset = $listPerPage*($page-1);
             $pageSize = ceil($countUserQuery->count()/$listPerPage);
@@ -283,11 +275,12 @@ class DispatchController extends Controller
             $users = $userQuery->offset($offset)
                 ->asArray()
                 ->limit($listPerPage)
+				->orderBy('UserFullName')
                 ->all();
 
             $responseArray = [];
             $responseArray["pages"] = $pages;
-            $responseArray["users"] = $users;*/
+            $responseArray["users"] = $users;
 
            $users = $userQuery->asArray()->all();
 			
