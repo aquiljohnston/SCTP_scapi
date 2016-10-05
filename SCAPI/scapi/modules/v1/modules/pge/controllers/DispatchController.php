@@ -100,6 +100,7 @@ class DispatchController extends Controller
             $offset = $listPerPage*($page-1);
             $pageSize = ceil($countAssetQuery->count()/$listPerPage);
             $pages->setPageSize($pageSize);
+			$pages->pageParam = 'unassingedPage';
 
             $assets = $assetQuery->offset($offset)
                 ->limit($listPerPage)
@@ -195,6 +196,7 @@ class DispatchController extends Controller
             $offset = $listPerPage*($page-1);
             $pageSize = ceil($countAssetQuery->count()/$listPerPage);
             $pages->setPageSize($pageSize);
+			$pages->pageParam = 'assignedPage';
 
             $assets = $assetQuery->offset($offset)
                 ->limit($listPerPage)
@@ -255,6 +257,7 @@ class DispatchController extends Controller
             $offset = $listPerPage*($page-1);
             $pageSize = ceil($countUserQuery->count()/$listPerPage);
             $pages->setPageSize($pageSize);
+			$pages->pageParam = 'surveyorPage';
 
             $users = $userQuery->offset($offset)
                 ->asArray()
