@@ -38,7 +38,7 @@ class DispatchController extends Controller
 					'get-assigned' => ['get'],
 					'get-surveyors' => ['get'],
 					'dispatch' => ['post'],
-					'unassign' => ['delete'],
+					'unassign' => ['put'],
                 ],
             ];
 		return $behaviors;	
@@ -362,23 +362,60 @@ class DispatchController extends Controller
 	public function actionUnassign()
 	{
 		try{
+			//get UID of user making request
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$UserUID = BaseActiveController::getUserFromToken()->UserUID;
+			
 			$headers = getallheaders();
 			AssignedWorkQueue::setClient($headers['X-Client']);
 			
-			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
 			
 			$count = count($data['Unassign']);
+			$responseData = [];
 			
 			for($i = 0; $i < $count; $i++)
 			{
-				AssignedWorkQueue::deleteAll(['AssignedWorkQueueUID' => $data['Unassign'][$i]]);
+				//Find Existing Record
+				$previousRecord = AssignedWorkQueue::find()
+					->where(['AssignedWorkQueueUID' => $data['Unassign'][$i]])
+					->andWhere(['ActiveFlag' => 1])
+					->one();
+				//Deactivate Previous Record
+				$previousRecord->ActiveFlag = 0;
+				//get previous record revision and increment by one
+				$revisionCount =$previousRecord->Revision +1;
+				if($previousRecord->update())
+				{
+					//Create new inactive record for audit purposes
+					$newRecord = new AssignedWorkQueue();
+					$newRecord->attributes = $previousRecord->attributes;
+					$newRecord->Revision = $revisionCount;
+					$newRecord->RevisionComments = 'Unassigned';
+					$newRecord->ModifiedUserUID = $UserUID;
+					
+					if($newRecord->save())
+					{
+						$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>1];
+					}
+					else
+					{
+						$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
+					}
+				}
+				else
+				{
+					$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
+				}
+				
 			}
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->statusCode = 204;
+			$response->statusCode = 200;
+			$response->data = $responseData;
 			return $response;
 		}
 		catch(ForbiddenHttpException $e)
