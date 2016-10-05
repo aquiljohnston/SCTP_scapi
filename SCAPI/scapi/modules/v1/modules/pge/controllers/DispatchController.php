@@ -112,11 +112,17 @@ class DispatchController extends Controller
             $assets = $assetQuery->offset($offset)
                 ->limit($listPerPage)
                 ->all();
+
+
+            $responseArray = [];
+
+            $responseArray["pages"] = $pages;
+            $responseArray["assets"] = $assets;
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $assets;
+			$response->data = $responseArray;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -209,11 +215,16 @@ class DispatchController extends Controller
             $assets = $assetQuery->offset($offset)
                 ->limit($listPerPage)
                 ->all();
-			
+
+            $responseArray = [];
+
+            $responseArray["pages"] = $pages;
+            $responseArray["assets"] = $assets;
+
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $assets;
+			$response->data = $responseArray;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -228,8 +239,8 @@ class DispatchController extends Controller
 	
 	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = null, $page = null)
 	{
-		try
-		{
+		/*try
+		{*/
 			$headers = getallheaders();
 			UserLogin::setClient($headers['X-Client']);
 			
@@ -263,23 +274,29 @@ class DispatchController extends Controller
             }
 
             // set pagination
-            $countUserQuery = clone $userQuery;
+            /*$countUserQuery = clone $userQuery;
             $pages = new Pagination(['totalCount' => $countUserQuery->count()]);
             $offset = $listPerPage*($page-1);
             $pageSize = ceil($countUserQuery->count()/$listPerPage);
             $pages->setPageSize($pageSize);
 
             $users = $userQuery->offset($offset)
-                ->limit($listPerPage)
                 ->asArray()
+                ->limit($listPerPage)
                 ->all();
+
+            $responseArray = [];
+            $responseArray["pages"] = $pages;
+            $responseArray["users"] = $users;*/
+
+           $users = $userQuery->asArray()->all();
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $users;
 			return $response;
-		}
+		/*}
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
@@ -287,7 +304,7 @@ class DispatchController extends Controller
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
-        }
+        }*/
 	}
 	
 	public function actionDispatch()
