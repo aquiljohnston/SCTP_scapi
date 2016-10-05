@@ -71,7 +71,7 @@ class WorkQueueController extends Controller
         }
 	}
 	
-	public static function lock($workQueueArray, $client, $userUID)
+	public static function lockRecords($workQueueArray, $client, $userUID)
 	{
 		try
 		{
@@ -151,6 +151,8 @@ class WorkQueueController extends Controller
 					}
 					else
 					{
+						$previousRecord->ActiveFlag = 1;
+						$previousRecord->update();
 						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
 					}
 				}
