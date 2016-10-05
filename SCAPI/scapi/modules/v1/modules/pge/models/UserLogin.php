@@ -14,6 +14,7 @@ use Yii;
  * @property string $UserLANID
  * @property integer $TabletLogin
  * @property string $WorkCenter
+ * @property string $UserFullName
  */
 class UserLogin extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -31,7 +32,7 @@ class UserLogin extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['UserUID', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'WorkCenter'], 'string'],
+            [['UserUID', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'WorkCenter', 'UserFullName'], 'string'],
             [['TabletLogin'], 'required'],
             [['TabletLogin'], 'integer']
         ];
@@ -50,6 +51,7 @@ class UserLogin extends \app\modules\v1\models\BaseActiveRecord
             'UserLANID' => 'User Lanid',
             'TabletLogin' => 'Tablet Login',
             'WorkCenter' => 'Work Center',
+            'UserFullName' => 'UserFullName',
         ];
     }
 }
