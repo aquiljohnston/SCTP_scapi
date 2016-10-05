@@ -192,7 +192,7 @@ class ActivityController extends BaseActiveController
 						//handle pge lock work queue
 						if (array_key_exists("WorkQueue", $activityArray[$i]))
 						{
-							$lockedWorkQueue = WorkQueueController::lock($activityArray[$i]["WorkQueue"], $headers['X-Client'], $createdBy);
+							$lockedWorkQueue = WorkQueueController::lockRecords($activityArray[$i]["WorkQueue"], $headers['X-Client'], $createdBy);
 							$data["activity"][$i]["WorkQueue"] = $lockedWorkQueue;
 						}
 						
