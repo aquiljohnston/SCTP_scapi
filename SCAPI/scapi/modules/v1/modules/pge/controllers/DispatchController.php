@@ -44,7 +44,7 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
+	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -78,14 +78,6 @@ class DispatchController extends Controller
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
-
-			if ($listPerPage == null){
-			    $listPerPage = 10;
-            }
-
-            if ($page == null){
-                $page = 1;
-            }
 			
 			if($filter != null)
 			{
@@ -135,7 +127,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
+	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -179,14 +171,6 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
 
-            if ($listPerPage == null){
-                $listPerPage = 10;
-            }
-
-            if ($page == null){
-                $page = 1;
-            }
-			
 			if($filter != null)
 			{
 				$assetQuery->andFilterWhere([
@@ -239,8 +223,8 @@ class DispatchController extends Controller
 	
 	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
-		/*try
-		{*/
+		try
+		{
 			$headers = getallheaders();
 			UserLogin::setClient($headers['X-Client']);
 			
@@ -281,15 +265,13 @@ class DispatchController extends Controller
             $responseArray = [];
             $responseArray["pages"] = $pages;
             $responseArray["users"] = $users;
-
-           $users = $userQuery->asArray()->all();
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $users;
+			$response->data = $responseArray;
 			return $response;
-		/*}
+		}
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
@@ -297,7 +279,7 @@ class DispatchController extends Controller
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
-        }*/
+        }
 	}
 	
 	public function actionDispatch()
