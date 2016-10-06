@@ -6,6 +6,7 @@ use Yii;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
+use yii\data\Pagination;
 use app\authentication\TokenAuth;
 use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\controllers\BaseActiveController;
@@ -37,13 +38,13 @@ class DispatchController extends Controller
 					'get-assigned' => ['get'],
 					'get-surveyors' => ['get'],
 					'dispatch' => ['post'],
-					'unassign' => ['delete'],
+					'unassign' => ['put'],
                 ],
             ];
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null)
+	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -63,17 +64,17 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($surveyType != null)
+			if(!($surveyType == null || $surveyType == 'All'))
 			{
 				$assetQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
 			
-			if($floc != null)
+			if(!($floc == null || $floc == 'All'))
 			{
 				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
 			
-			if($complianceMonth != null)
+			if(!($complianceMonth == null || $complianceMonth == 'All'))
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
@@ -92,13 +93,29 @@ class DispatchController extends Controller
 				['like', 'Assigned', $filter],
 				]);
 			}
-			
-			$assets = $assetQuery->all();
+
+			// set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+			$pages->pageParam = 'unassignedPage';
+
+            $assets = $assetQuery->offset($offset)
+                ->limit($listPerPage)
+                ->all();
+
+
+            $responseArray = [];
+
+            $responseArray["pages"] = $pages;
+            $responseArray["assets"] = $assets;
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $assets;
+			$response->data = $responseArray;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -111,7 +128,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null)
+	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -130,12 +147,12 @@ class DispatchController extends Controller
 				$assetQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
-			if($surveyType != null)
+			if(!($surveyType == null || $surveyType == 'All'))
 			{
 				$assetQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
 			
-			if($floc != null)
+			if(!($floc == null || $floc == 'All'))
 			{
 				$assetQuery->andWhere(['FLOC'=>$floc]);
 			}
@@ -154,7 +171,7 @@ class DispatchController extends Controller
 			{
 				$assetQuery->andWhere(['ComplianceYearMonth'=>$complianceMonth]);
 			}
-			
+
 			if($filter != null)
 			{
 				$assetQuery->andFilterWhere([
@@ -172,45 +189,28 @@ class DispatchController extends Controller
 				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
-			
-			$assets = $assetQuery->all();
-			
-			//send response
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $assets;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-	}
-	
-	public function actionGetAssignedWorkQueues()
-	{
-		try
-		{
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			$UID = BaseActiveController::getUserFromToken()->UserUID;
-			
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
-			
-			$connection = BaseActiveRecord::getDb();
-			
-			$workQueueCommand = $connection->createCommand("SELECT * From fnTabletIR(:UserUID) Order by SortOrder, WorkCenter")
-				->bindParam(':UserUID', $UID,  \PDO::PARAM_STR);
-			$resultSet = $workQueueCommand->queryAll();
+
+            // set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+			$pages->pageParam = 'assignedPage';
+
+            $assets = $assetQuery->offset($offset)
+                ->limit($listPerPage)
+                ->all();
+
+            $responseArray = [];
+
+            $responseArray["pages"] = $pages;
+            $responseArray["assets"] = $assets;
 
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $resultSet;
+			$response->data = $responseArray;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -223,7 +223,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($workCenter = null, $filter = null)
+	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -232,8 +232,8 @@ class DispatchController extends Controller
 			
 			//TODO need to add a new column to the view with lastname, firstname
 			$userQuery = UserLogin::find()
-				->select(['UserUID', new \yii\db\Expression("CONCAT(UserLastName, ', ', UserFirstName)as UserFullName"), 'UserLANID', 'WorkCenter'])
-				->orderBy('UserLastName');
+				->select('UserUID, UserFullName, UserLANID, WorkCenter');
+				
 			
 			if($workCenter != null)
 			{
@@ -250,13 +250,29 @@ class DispatchController extends Controller
 				['like', 'WorkCenter', $filter],
 				]);
 			}
-			
-			$users = $userQuery->asArray()->all();
+
+            //set pagination
+            $countUserQuery = clone $userQuery;
+            $pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countUserQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+			$pages->pageParam = 'surveyorPage';
+
+            $users = $userQuery->offset($offset)
+                ->asArray()
+                ->limit($listPerPage)
+				->orderBy('UserFullName')
+                ->all();
+
+            $responseArray = [];
+            $responseArray["pages"] = $pages;
+            $responseArray["users"] = $users;
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $users;
+			$response->data = $responseArray;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -324,23 +340,60 @@ class DispatchController extends Controller
 	public function actionUnassign()
 	{
 		try{
+			//get UID of user making request
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$UserUID = BaseActiveController::getUserFromToken()->UserUID;
+			
 			$headers = getallheaders();
 			AssignedWorkQueue::setClient($headers['X-Client']);
 			
-			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
 			
 			$count = count($data['Unassign']);
+			$responseData = [];
 			
 			for($i = 0; $i < $count; $i++)
 			{
-				AssignedWorkQueue::deleteAll(['AssignedWorkQueueUID' => $data['Unassign'][$i]]);
+				//Find Existing Record
+				$previousRecord = AssignedWorkQueue::find()
+					->where(['AssignedWorkQueueUID' => $data['Unassign'][$i]])
+					->andWhere(['ActiveFlag' => 1])
+					->one();
+				//Deactivate Previous Record
+				$previousRecord->ActiveFlag = 0;
+				//get previous record revision and increment by one
+				$revisionCount =$previousRecord->Revision +1;
+				if($previousRecord->update())
+				{
+					//Create new inactive record for audit purposes
+					$newRecord = new AssignedWorkQueue();
+					$newRecord->attributes = $previousRecord->attributes;
+					$newRecord->Revision = $revisionCount;
+					$newRecord->RevisionComments = 'Unassigned';
+					$newRecord->ModifiedUserUID = $UserUID;
+					
+					if($newRecord->save())
+					{
+						$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>1];
+					}
+					else
+					{
+						$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
+					}
+				}
+				else
+				{
+					$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
+				}
+				
 			}
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->statusCode = 204;
+			$response->statusCode = 200;
+			$response->data = $responseData;
 			return $response;
 		}
 		catch(ForbiddenHttpException $e)

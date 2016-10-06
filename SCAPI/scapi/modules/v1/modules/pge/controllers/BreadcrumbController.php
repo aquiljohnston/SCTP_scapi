@@ -36,8 +36,8 @@ class BreadcrumbController extends Controller
 	
 	public function actionCreate()
 	{
-		// try
-		// {
+		try
+		{
 			//get http headers
 			$headers = getallheaders();
 			
@@ -77,31 +77,29 @@ class BreadcrumbController extends Controller
 					if($pgeBreadcrumb->save())
 					{
 						$response->setStatusCode(201);
-						$responseArray[] = $pgeBreadcrumb;
+						$responseArray[] = ['BreadcrumbUID'=>$pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag'=>1];
 					}
 					else
 					{
-						$response->setStatusCode(400);
-						$responseArray[] = "Failed to Save PGE Breadcrumb";
+						$responseArray[] = ['BreadcrumbUID'=>$pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag'=>0];
 					}
 				}
 				else
 				{
-					$response->setStatusCode(400);
-					$responseArray[] = "Failed to Save SC Breadcrumb";
+					$responseArray[] = ['BreadcrumbUID'=>$pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag'=>0];
 				}
 			}
 			//return data in response
 			$response->data = $responseArray;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }
