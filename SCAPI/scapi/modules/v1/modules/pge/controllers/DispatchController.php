@@ -360,31 +360,34 @@ class DispatchController extends Controller
 					->where(['AssignedWorkQueueUID' => $data['Unassign'][$i]])
 					->andWhere(['ActiveFlag' => 1])
 					->one();
-				//Deactivate Previous Record
-				$previousRecord->ActiveFlag = 0;
-				//get previous record revision and increment by one
-				$revisionCount =$previousRecord->Revision +1;
-				if($previousRecord->update())
+				if($previousRecord!=null)
 				{
-					//Create new inactive record for audit purposes
-					$newRecord = new AssignedWorkQueue();
-					$newRecord->attributes = $previousRecord->attributes;
-					$newRecord->Revision = $revisionCount;
-					$newRecord->RevisionComments = 'Unassigned';
-					$newRecord->ModifiedUserUID = $UserUID;
-					
-					if($newRecord->save())
+					//Deactivate Previous Record
+					$previousRecord->ActiveFlag = 0;
+					//get previous record revision and increment by one
+					$revisionCount =$previousRecord->Revision +1;
+					if($previousRecord->update())
 					{
-						$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>1];
+						//Create new inactive record for audit purposes
+						$newRecord = new AssignedWorkQueue();
+						$newRecord->attributes = $previousRecord->attributes;
+						$newRecord->Revision = $revisionCount;
+						$newRecord->RevisionComments = 'Unassigned';
+						$newRecord->ModifiedUserUID = $UserUID;
+						
+						if($newRecord->save())
+						{
+							$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>1];
+						}
+						else
+						{
+							$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
+						}
 					}
 					else
 					{
 						$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
 					}
-				}
-				else
-				{
-					$responseData[] = ['AssignedWorkQueueUID'=>$data['Unassign'][$i], 'Success'=>0];
 				}
 				
 			}
