@@ -11,6 +11,7 @@ use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\modules\pge\controllers\AssetAddressController;
 use app\modules\v1\modules\pge\controllers\WindSpeedController;
 use app\modules\v1\modules\pge\controllers\EquipmentController;
+use app\modules\v1\modules\pge\controllers\WorkQueueController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -23,7 +24,25 @@ use yii\web\Response;
 class ActivityController extends BaseActiveController
 {
     public $modelClass = 'app\modules\v1\models\Activity';
-
+	
+	/**
+	* sets verb filters for http request
+	* @return an array of behaviors
+	*/
+	public function behaviors()
+	{
+		$behaviors = parent::behaviors();
+		$behaviors['verbs'] = 
+			[
+                'class' => VerbFilter::className(),
+                'actions' => [
+					'create' => ['post'],
+					'view' => ['get'],
+                ],  
+            ];
+		return $behaviors;	
+	}
+	
 	/**
 	 * Unsets the default actions so that we can override them
 	 *
@@ -131,7 +150,6 @@ class ActivityController extends BaseActiveController
 					
 					//load attributes to model
 					$activity->attributes = $activityArray[$i];
-					//$activity->ActivityUID = BaseActiveController::generateUID("Activity", $activityArray[$i]["ActivitySourceID"]);
 					$clientActivity->attributes = $activity->attributes;
 					
 					Yii::Trace("SC Activity: " . json_encode($activity->attributes));
@@ -146,10 +164,8 @@ class ActivityController extends BaseActiveController
 
 						//convert the new activity back to an array so it can be loaded into the response
 						$savedActivity= $activity->toArray();
-						//$activityArray[$i] = $savedActivity;
 						
 						//update response json with new activity data
-						//$data["activity"][$i] = $activityArray[$i];
 						$data["activity"][$i] = $savedActivity;
 						
 						//handle pge inspection
@@ -169,8 +185,15 @@ class ActivityController extends BaseActiveController
 						//handle pge equipment calibration
 						if (array_key_exists("EquipmentCalibration", $activityArray[$i]))
 						{
-							$savedEquipmentCalibration = EquipmentController::calibrationCreate($activityArray[$i]["EquipmentCalibration"], $headers['X-Client'], $createdBy);
-							$data["activity"][$i]["EquipmentCalibration"] = $savedEquipmentCalibration;
+							$savedEquipmentCalibrations = EquipmentController::calibrationParse($activityArray[$i]["EquipmentCalibration"], $headers['X-Client'], $createdBy);
+							$data["activity"][$i]["EquipmentCalibration"] = $savedEquipmentCalibrations;
+						}
+						
+						//handle pge lock work queue
+						if (array_key_exists("WorkQueue", $activityArray[$i]))
+						{
+							$lockedWorkQueue = WorkQueueController::lockRecords($activityArray[$i]["WorkQueue"], $headers['X-Client'], $createdBy);
+							$data["activity"][$i]["WorkQueue"] = $lockedWorkQueue;
 						}
 						
 						//change path back to ct db
