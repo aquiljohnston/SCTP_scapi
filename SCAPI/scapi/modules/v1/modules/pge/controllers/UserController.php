@@ -23,6 +23,7 @@ use app\modules\v1\controllers\DeleteMethodNotAllowed;
 use app\modules\v1\controllers\PermissionsController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
+use yii\data\Pagination;
 use yii\filters\VerbFilter;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -544,7 +545,7 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	public function actionGet($group = null, $type = null, $filter = null)
+	public function actionGet($group = null, $type = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -583,12 +584,28 @@ class UserController extends BaseActiveController
 				]);
 			}
 			
-			$users = $userQuery->all();
+			//set pagination
+			$countUserQuery = clone $userQuery;
+			$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+            $offset = $listPerPage*($page-1);
+            $pageSize = ceil($countUserQuery->count()/$listPerPage);
+            $pages->setPageSize($pageSize);
+			$pages->pageParam = 'userPage';
+			
+			//execute query with paging
+			$users = $userQuery->offset($offset)
+                ->limit($listPerPage)
+				->all();
+			
+			//pass paging and user data into response array
+			$responseArray = [];
+            $responseArray["pages"] = $pages;
+            $responseArray["users"] = $users;
 			
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			$response->data = $users;
+			$response->data = $responseArray;
 			return $response;
 		}
 		catch(ForbiddenHttpException $e)
