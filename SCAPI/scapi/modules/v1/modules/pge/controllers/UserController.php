@@ -407,7 +407,7 @@ class UserController extends BaseActiveController
 						$auth->revokeAll($scUser["UserID"]);
 						$auth->assign($userRole, $scUser["UserID"]);
 					}
-					$response->setStatusCode(201);
+					$response->setStatusCode(200);
 					$pgeUser->UserPassword = '';
 					$response->data = $pgeUser; 
 				}
