@@ -32,6 +32,8 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownAOCType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
 //dispatch dropdowns
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatch;
+//tablet dropdowns
+use app\modules\v1\modules\pge\models\DropDowns;
 
 class DropdownController extends Controller
 {
@@ -74,6 +76,7 @@ class DropdownController extends Controller
                     'get-assigned-survey-freq-dropdown' => ['get'],
                     'get-assigned-work-center-dropdown' => ['get'],
                     'get-assigned-division-dropdown' => ['get'],
+                    'get-tablet-survey-dropdowns' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -1109,7 +1112,7 @@ class DropdownController extends Controller
     }
 	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
 	
-	/////////////////////AOC DROPDOWNS Begin////////////////////////
+	/////////////////////AOC DROPDOWNS BEGIN////////////////////////
 	public function actionGetAocDivisionDropdown()
     {
         try{
@@ -1259,4 +1262,58 @@ class DropdownController extends Controller
     }	
 	/////////////////////AOC DROPDOWNS END////////////////////////
 	
+	/////////////////////TABLET DROPDOWNS BEGIN////////////////////////
+	//route to provide data for all survey dropdowns on the tablet
+	public function actionGetTabletSurveyDropdowns()
+	{
+		// try
+		// {
+			//set db target
+			$headers = getallheaders();
+			DropDowns::setClient($headers['X-Client']);
+			
+			$responseData['SurveyDropdowns'] = [];
+			
+			//pipeline types
+			$responseData['SurveyDropdowns']['PipelineTypes']= DropdownController::tabletSurveyQuery('ddPipelineType');
+			
+			//standby release reasons
+			$responseData['SurveyDropdowns']['StandbyReleaseReasons']= DropdownController::tabletSurveyQuery('ddVoyStandbyReason');
+			
+			//AOC types
+			$responseData['SurveyDropdowns']['AOCTypes']= DropdownController::tabletSurveyQuery('ddVoyAOCType');
+			
+			//CGI reasons
+			$responseData['SurveyDropdowns']['CGIReasons']= DropdownController::tabletSurveyQuery('ddVoyCGIReasonType');
+			
+			//DIMP Riser types
+			$responseData['SurveyDropdowns']['dimpRiserTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPRiserType');
+			
+			//send response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
+	}
+	
+	//helper method for standard tablet survey query
+	public static function tabletSurveyQuery($filter)
+	{
+		return DropDowns::find()
+				->select(['FilterName', 'SortSeq', 'FieldDisplay'])
+				->where(['FilterName'=>$filter])
+				->andWhere(['ActiveFlag'=>1])
+				->orderBy('SortSeq')
+				->all();
+	}
+	/////////////////////TABLET DROPDOWNS END////////////////////////	
 }
