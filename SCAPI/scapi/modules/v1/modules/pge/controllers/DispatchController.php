@@ -44,13 +44,15 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
 			//set db
 			$headers = getallheaders();
 			WebManagementDispatch::setClient($headers['X-Client']);
+			
+			$responseArray = [];
 			
 			$assetQuery = WebManagementDispatch::find()->where(['Assigned' => 0]);
 			
@@ -93,7 +95,9 @@ class DispatchController extends Controller
 				['like', 'Assigned', $filter],
 				]);
 			}
-
+			
+			if($page != null)
+			{
 			// set pagination
             $countAssetQuery = clone $assetQuery;
             $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
@@ -102,14 +106,14 @@ class DispatchController extends Controller
             $pages->setPageSize($pageSize);
 			$pages->pageParam = 'unassignedPage';
 
-            $assets = $assetQuery->offset($offset)
-                ->limit($listPerPage)
-                ->all();
+			$assetQuery->offset($offset)
+				->limit($listPerPage);
+				
+			$responseArray["pages"] = $pages;
+			}
 
+			$assets = $assetQuery->all();
 
-            $responseArray = [];
-
-            $responseArray["pages"] = $pages;
             $responseArray["assets"] = $assets;
 			
 			//send response
@@ -128,12 +132,14 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
 			$headers = getallheaders();
 			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
+			
+			 $responseArray = [];
 			
 			$assetQuery = WebManagementAssignedWorkQueue::find();
 			
@@ -190,21 +196,24 @@ class DispatchController extends Controller
 				]);
 			}
 
-            // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
-			$pages->pageParam = 'assignedPage';
+			if($page != null)
+			{
+				// set pagination
+				$countAssetQuery = clone $assetQuery;
+				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+				$offset = $listPerPage*($page-1);
+				$pageSize = ceil($countAssetQuery->count()/$listPerPage);
+				$pages->setPageSize($pageSize);
+				$pages->pageParam = 'assignedPage';
+			
+				$assetQuery->offset($offset)
+                ->limit($listPerPage);
+				
+				$responseArray["pages"] = $pages;
+			}
+            
+			$assets= $assetQuery->all();
 
-            $assets = $assetQuery->offset($offset)
-                ->limit($listPerPage)
-                ->all();
-
-            $responseArray = [];
-
-            $responseArray["pages"] = $pages;
             $responseArray["assets"] = $assets;
 
 			//send response
@@ -223,10 +232,12 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
+			 $responseArray = [];
+			
 			$headers = getallheaders();
 			UserLogin::setClient($headers['X-Client']);
 			
@@ -251,22 +262,25 @@ class DispatchController extends Controller
 				]);
 			}
 
-            //set pagination
-            $countUserQuery = clone $userQuery;
-            $pages = new Pagination(['totalCount' => $countUserQuery->count()]);
-            $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countUserQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
-			$pages->pageParam = 'surveyorPage';
+			if($page != null)
+			{
+				//set pagination
+				$countUserQuery = clone $userQuery;
+				$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+				$offset = $listPerPage*($page-1);
+				$pageSize = ceil($countUserQuery->count()/$listPerPage);
+				$pages->setPageSize($pageSize);
+				$pages->pageParam = 'surveyorPage';
 
-            $users = $userQuery->offset($offset)
-                ->asArray()
-                ->limit($listPerPage)
-				->orderBy('UserFullName')
-                ->all();
+				$userQuery->offset($offset)
+					->limit($listPerPage);
 
-            $responseArray = [];
-            $responseArray["pages"] = $pages;
+				$responseArray["pages"] = $pages;
+			}
+			
+			$users = $userQuery->orderBy('UserFullName')
+				->asArray()
+				->all();
             $responseArray["users"] = $users;
 			
 			//send response
