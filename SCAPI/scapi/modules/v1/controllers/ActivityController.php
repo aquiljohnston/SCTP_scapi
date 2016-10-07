@@ -2,6 +2,7 @@
 
 namespace app\modules\v1\controllers;
 
+use app\modules\v1\modules\pge\controllers\TaskOutController;
 use Yii;
 use app\modules\v1\models\Activity;
 use app\modules\v1\models\TimeEntry;
@@ -152,8 +153,8 @@ class ActivityController extends BaseActiveController
 					$activity->attributes = $activityArray[$i];
 					$clientActivity->attributes = $activity->attributes;
 					
-					Yii::Trace("SC Activity: " . json_encode($activity->attributes));
-					Yii::Trace("Client Activity: " . json_encode($clientActivity->attributes));
+					Yii::trace("SC Activity: " . json_encode($activity->attributes));
+					Yii::trace("Client Activity: " . json_encode($clientActivity->attributes));
 					
 					//save activity to ct
 					if($activity->save())
@@ -174,7 +175,7 @@ class ActivityController extends BaseActiveController
 							$savedAssetAddress = AssetAddressController::create($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
 							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
 						}
-						
+
 						//handle pge wind speed entries
 						if (array_key_exists("WindSpeed", $activityArray[$i]))
 						{
@@ -195,7 +196,16 @@ class ActivityController extends BaseActiveController
 							$lockedWorkQueue = WorkQueueController::lockRecords($activityArray[$i]["WorkQueue"], $headers['X-Client'], $createdBy);
 							$data["activity"][$i]["WorkQueue"] = $lockedWorkQueue;
 						}
-						
+
+
+						if (array_key_exists('TaskOutMaps', $activityArray[$i])) {
+						    Yii::trace("Array key TaskOutMaps Exists!");
+						    TaskOutController::processJSON(json_encode($activityArray[$i]));
+                        } else {
+						    Yii::trace("Array key TaskOutMaps does not exist!");
+                        }
+
+
 						//change path back to ct db
 						Activity::setClient(BaseActiveController::urlPrefix());
 						$response->setStatusCode(201);
@@ -256,7 +266,9 @@ class ActivityController extends BaseActiveController
 									}
 							}
 						}
-					}
+					} else {
+					    Yii::trace("Could not validate the Activity");
+                    }
 				}
 			}
 			//build and return the response json
