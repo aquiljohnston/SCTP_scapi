@@ -75,33 +75,33 @@ class WorkQueueController extends Controller
 	{
 		try
 		{
-				$responseData = [];
+			$responseData = [];
 
-				if($workQueueArray != null)
+			if($workQueueArray != null)
+			{
+				//loop calibration entries
+				$workQueueCount = (count($workQueueArray));
+				for ($i = 0; $i < $workQueueCount; $i++)
 				{
-					//loop calibration entries
-					$workQueueCount = (count($workQueueArray));
-					for ($i = 0; $i < $workQueueCount; $i++)
+					if($workQueueArray[$i]['DispatchMethod'] == 'Dispatched')
 					{
-						if($workQueueArray[$i]['DispatchMethod'] == 'Dispatched')
-						{
-							$responseData[] = self::lockDispatched($workQueueArray[$i], $client, $userUID);
-						}
-						elseif($workQueueArray[$i]['DispatchMethod'] == 'Self Dispatched')
-						{
-							$responseData[] = self::lockSelfDispatched($workQueueArray[$i], $client, $userUID);
-						}
-						elseif($workQueueArray[$i]['DispatchMethod'] == 'Ad Hoc')
-						{
-							$responseData[] = self::lockAdHoc($workQueueArray[$i], $client, $userUID);
-						}
-						else
-						{
-							$responseData[] = ['IRUID'=>$workQueueArray[$i]['IRUID'], 'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'], 'LockedFlag'=>0];
-						}
+						$responseData[] = self::lockDispatched($workQueueArray[$i], $client, $userUID);
+					}
+					elseif($workQueueArray[$i]['DispatchMethod'] == 'Self Dispatch')
+					{
+						$responseData[] = self::lockSelfDispatched($workQueueArray[$i], $client, $userUID);
+					}
+					elseif($workQueueArray[$i]['DispatchMethod'] == 'Ad Hoc')
+					{
+						$responseData[] = self::lockAdHoc($workQueueArray[$i], $client, $userUID);
+					}
+					else
+					{
+						$responseData[] = ['AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'], 'LockedFlag'=>0];
 					}
 				}
-				return $responseData;
+			}
+			return $responseData;
 		}
         catch(ForbiddenHttpException $e)
         {
@@ -118,48 +118,48 @@ class WorkQueueController extends Controller
 	{
 		try
 		{
-				$headers = getallheaders();
-				BaseActiveRecord::setClient($headers['X-Client']);
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//get previous record
+			$previousRecord = AssignedWorkQueue::find()
+				->where(['AssignedWorkQueueUID' => $workQueue['AssignedWorkQueueUID']])
+				->andWhere(['ActiveFlag' => 1])
+				->one();
+			$previousRecord->ModifiedUserUID = $userUID;
+			//deactivate previous record
+			$previousRecord->ActiveFlag = 0;
+			//get previous revision and increment by 1
+			$revisionCount = $previousRecord->Revision + 1;
+			
+			if($previousRecord->update())
+			{
+				//new AssignedWorkQueue model
+				$newRecord = new AssignedWorkQueue;
+				$newRecord->attributes = $workQueue;
+				//additionalFields
+				$newRecord->CreatedUserUID = $userUID;
+				$newRecord->ModifiedUserUID = $userUID;
+				$newRecord->Revision = $revisionCount;
+				$newRecord->RevisionComments = 'In Progress: Record Locked';
+				$newRecord->LockedFlag = 1;
+				$newRecord->AssignedUserUID = $userUID;
 				
-				//get previous record
-				$previousRecord = AssignedWorkQueue::find()
-					->where(['AssignedWorkQueueUID' => $workQueue['AssignedWorkQueueUID']])
-					->andWhere(['ActiveFlag' => 1])
-					->one();
-				$previousRecord->ModifiedUserUID = $userUID;
-				//deactivate previous record
-				$previousRecord->ActiveFlag = 0;
-				//get previous revision and increment by 1
-				$revisionCount = $previousRecord->Revision + 1;
-				
-				if($previousRecord->update())
+				if($newRecord->save())
 				{
-					//new AssignedWorkQueue model
-					$newRecord = new AssignedWorkQueue;
-					$newRecord->attributes = $workQueue;
-					//additionalFields
-					$newRecord->CreatedUserUID = $userUID;
-					$newRecord->ModifiedUserUID = $userUID;
-					$newRecord->Revision = $revisionCount;
-					$newRecord->RevisionComments = 'In Progress: Record Locked';
-					$newRecord->LockedFlag = 1;
-					$newRecord->AssignedUserUID = $userUID;
-					
-					if($newRecord->save())
-					{
-						return $newRecord;
-					}
-					else
-					{
-						$previousRecord->ActiveFlag = 1;
-						$previousRecord->update();
-						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
-					}
+					return $newRecord;
 				}
 				else
 				{
+					$previousRecord->ActiveFlag = 1;
+					$previousRecord->update();
 					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
 				}
+			}
+			else
+			{
+				return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+			}
 		}
         catch(ForbiddenHttpException $e)
         {
@@ -212,59 +212,59 @@ class WorkQueueController extends Controller
 	{
 		try
 		{
-				$headers = getallheaders();
-				BaseActiveRecord::setClient($headers['X-Client']);
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//get map data based on map gridUID
+			$mapGrid  = TabletMapGrids::find()
+				->where(['MapGridsUID'=> $workQueue['MapGridUID']])
+				->one();
 				
-				//get map data based on map gridUID
-				$mapGrid  = TabletMapGrids::find()
-					->where(['MapGridsUID'=> $workQueue['MapGridUID']])
-					->one();
-					
-				//create new sudo inspection request
-				$sudoIR = new InspectionRequest();
+			//create new sudo inspection request
+			$sudoIR = new InspectionRequest();
+			
+			//pass data to sudo IR
+			$sudoIR->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
+			$sudoIR->SourceID = $workQueue['SourceID'];
+			$sudoIR->MapGridUID = $workQueue['MapGridUID'];
+			$sudoIR->CreatedUserUID = $userUID;
+			$sudoIR->ModifiedUserUID = $userUID;
+			$sudoIR->CreateDTLT = BaseActiveController::getDate();
+			$sudoIR->ModifiedDTLT = BaseActiveController::getDate();
+			$sudoIR->Comments = "Sudo Inspection Request For An Ad Hoc Record";
+			//$sudoIR->SurveyType = $workQueue->SurveyType; //not sure if this is sent from tablet
+			$sudoIR->MapID = $mapGrid['FuncLocMap'] . "-" . $mapGrid['FuncLocPlat'];
+			$sudoIR->Wall = $mapGrid['FuncLocMap'];
+			$sudoIR->Plat = $mapGrid['FuncLocPlat'];
+			$sudoIR->MWC = $mapGrid['FuncLocMWC'];
+			$sudoIR->FLOC = $mapGrid['FLOC'];
+			
+			//save sudo IR
+			if($sudoIR->save())
+			{
+				//update for missing fields
+				//new AssignedWorkQueue model
+				$newRecord = new AssignedWorkQueue;
+				$newRecord->attributes = $workQueue;
+				//additionalFields
+				$newRecord->CreatedUserUID = $userUID;
+				$newRecord->ModifiedUserUID = $userUID;
+				$newRecord->LockedFlag = 1;
+				$newRecord->AssignedUserUID = $userUID;
 				
-				//pass data to sudo IR
-				$sudoIR->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
-				$sudoIR->SourceID = $workQueue['SourceID'];
-				$sudoIR->MapGridUID = $workQueue['MapGridUID'];
-				$sudoIR->CreatedUserUID = $userUID;
-				$sudoIR->ModifiedUserUID = $userUID;
-				$sudoIR->CreateDTLT = BaseActiveController::getDate();
-				$sudoIR->ModifiedDTLT = BaseActiveController::getDate();
-				$sudoIR->Comments = "Sudo Inspection Request For An Ad Hoc Record";
-				//$sudoIR->SurveyType = $workQueue->SurveyType; //not sure if this is sent from tablet
-				$sudoIR->MapID = $mapGrid['FuncLocMap'] . "-" . $mapGrid['FuncLocPlat'];
-				$sudoIR->Wall = $mapGrid['FuncLocMap'];
-				$sudoIR->Plat = $mapGrid['FuncLocPlat'];
-				$sudoIR->MWC = $mapGrid['FuncLocMWC'];
-				$sudoIR->FLOC = $mapGrid['FLOC'];
-				
-				//save sudo IR
-				if($sudoIR->save())
+				if($newRecord->save())
 				{
-					//update for missing fields
-					//new AssignedWorkQueue model
-					$newRecord = new AssignedWorkQueue;
-					$newRecord->attributes = $workQueue;
-					//additionalFields
-					$newRecord->CreatedUserUID = $userUID;
-					$newRecord->ModifiedUserUID = $userUID;
-					$newRecord->LockedFlag = 1;
-					$newRecord->AssignedUserUID = $userUID;
-					
-					if($newRecord->save())
-					{
-						return $newRecord;
-					}
-					else
-					{
-						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
-					}
+					return $newRecord;
 				}
 				else
 				{
 					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
 				}
+			}
+			else
+			{
+				return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+			}
 		}
         catch(ForbiddenHttpException $e)
         {
