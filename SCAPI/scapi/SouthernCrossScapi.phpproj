@@ -17,7 +17,7 @@
     <CustomXdebugPort>9000</CustomXdebugPort>
     <PublishEvent>None</PublishEvent>
     <DebugMappingMethod>Automatic</DebugMappingMethod>
-    <PHPDevPort>9091</PHPDevPort>
+    <PHPDevPort>9090</PHPDevPort>
     <SpecificPageValue>web/index.php</SpecificPageValue>
     <StartAction>SpecificPage</StartAction>
     <WebRoot>web</WebRoot>
