@@ -943,6 +943,7 @@ class DropdownController extends Controller
 				->select('SurveyType')
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
+				->andWhere(['not', ['SurveyType' => null]])
                 ->all();
             $namePairs[] = [
 				'id'=>'All', 
