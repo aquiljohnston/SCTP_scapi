@@ -338,8 +338,7 @@ class DispatchController extends Controller
 					$assignment->AssignedWorkQueueUID = BaseActiveController::generateUID('AssignedWorkQueue', $data['SourceID']);
 					$assignment->AssignedInspectionRequestUID = $data['Assignments'][$i]['IR'];
 					$assignment->AssignedUserUID = $data['Assignments'][$i]['User'];
-					Yii::trace("Assignment " . $counter . ": " . json_encode($assignment->attributes));
-					$counter++;
+
 					if($assignment->save())
 					{
 						$responseData[] = $assignment;
