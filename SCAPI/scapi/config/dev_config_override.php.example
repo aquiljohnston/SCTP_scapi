@@ -1,0 +1,32 @@
+<?php
+// This file is an example.
+// On a development environment a file with the name dev_config_override.php can be created and the configuration keys
+// specified in it will override the normal ones
+// The file dev_config_override.php was added to .gitignore but this one ( dev_config_override.php.example ) was kept
+// as an example/template
+
+return [
+    'components' => [
+        'cache' => [
+            'class' => 'yii\caching\FileCache',
+        ],
+        'errorHandler' => [
+            //'errorAction' => 'site/error',
+        ],
+		'ctDevDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=ServerIP;Database=dbName',
+			'username' => 'Username',
+			'password' => 'password',
+			'charset' => 'utf8',
+		],
+		'pgeDevDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=ServerIP;Database=dbName',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+    ],
+];
+
