@@ -310,28 +310,40 @@ class DispatchController extends Controller
 			$responseData = [];
 			
 			$assetCount = count($data['Assignments']);
-			
+
 			for($i = 0; $i < $assetCount; $i++)
 			{
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				$userUID = BaseActiveController::getUserFromToken()->UserUID;
-				
 				AssignedWorkQueue::setClient($headers['X-Client']);
-				$assignment = new AssignedWorkQueue;
-				$assignment->SourceID = $data['SourceID'];
-				$assignment->DispatchMethod = 'Dispatched';
-				$assignment->AssignedDate = BaseActiveController::getDate();
-				$assignment->CreatedUserUID = $userUID;
-				$assignment->ProjectID = 1;
-				$assignment->ActiveFlag = 1;
-				$assignment->Revision = 0;
-				$assignment->ModifiedUserUID = $userUID;
-				$assignment->AssignedWorkQueueUID = BaseActiveController::generateUID('AssignedWorkQueue', $data['SourceID']);
-				$assignment->AssignedInspectionRequestUID = $data['Assignments'][$i]['IR'];
-				$assignment->AssignedUserUID = $data['Assignments'][$i]['User'];
-				if($assignment->save())
+				$currentRecords = AssignedWorkQueue::find()
+					->where(['ActiveFlag' => 1])
+					->andWhere(['AssignedInspectionRequestUID' => $data['Assignments'][$i]['IR']])
+					->andWhere(['AssignedUserUID' => $data['Assignments'][$i]['User']])
+					->count();
+
+				if ($currentRecords < 1)
 				{
-					$responseData[] = $assignment;
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+					$userUID = BaseActiveController::getUserFromToken()->UserUID;
+					
+					AssignedWorkQueue::setClient($headers['X-Client']);
+					$assignment = new AssignedWorkQueue;
+					$assignment->SourceID = $data['SourceID'];
+					$assignment->DispatchMethod = 'Dispatched';
+					$assignment->AssignedDate = BaseActiveController::getDate();
+					$assignment->CreatedUserUID = $userUID;
+					$assignment->ProjectID = 1;
+					$assignment->ActiveFlag = 1;
+					$assignment->Revision = 0;
+					$assignment->ModifiedUserUID = $userUID;
+					$assignment->AssignedWorkQueueUID = BaseActiveController::generateUID('AssignedWorkQueue', $data['SourceID']);
+					$assignment->AssignedInspectionRequestUID = $data['Assignments'][$i]['IR'];
+					$assignment->AssignedUserUID = $data['Assignments'][$i]['User'];
+					Yii::trace("Assignment " . $counter . ": " . json_encode($assignment->attributes));
+					$counter++;
+					if($assignment->save())
+					{
+						$responseData[] = $assignment;
+					}
 				}
 			}
 			
