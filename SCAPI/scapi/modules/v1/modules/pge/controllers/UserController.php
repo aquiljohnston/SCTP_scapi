@@ -588,9 +588,9 @@ class UserController extends BaseActiveController
 			$countUserQuery = clone $userQuery;
 			$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
             $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countUserQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
+			$pages->setPageSize($listPerPage);
 			$pages->pageParam = 'userPage';
+			$pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
 			
 			//execute query with paging
 			$users = $userQuery->offset($offset)
