@@ -102,10 +102,12 @@ class DispatchController extends Controller
             $countAssetQuery = clone $assetQuery;
             $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
             $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
+            $pages->setPageSize($listPerPage);
 			$pages->pageParam = 'unassignedPage';
+			$pages->params = ['per-page' => $listPerPage, 'unassignedPage' => $page];
 
+			//tao is bad 
+			
 			$assetQuery->offset($offset)
 				->limit($listPerPage);
 				
@@ -202,9 +204,9 @@ class DispatchController extends Controller
 				$countAssetQuery = clone $assetQuery;
 				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
 				$offset = $listPerPage*($page-1);
-				$pageSize = ceil($countAssetQuery->count()/$listPerPage);
-				$pages->setPageSize($pageSize);
+				$pages->setPageSize($listPerPage);
 				$pages->pageParam = 'assignedPage';
+				$pages->params = ['per-page' => $listPerPage, 'assignedPage' => $page];
 			
 				$assetQuery->offset($offset)
                 ->limit($listPerPage);
@@ -268,9 +270,9 @@ class DispatchController extends Controller
 				$countUserQuery = clone $userQuery;
 				$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
 				$offset = $listPerPage*($page-1);
-				$pageSize = ceil($countUserQuery->count()/$listPerPage);
-				$pages->setPageSize($pageSize);
+				$pages->setPageSize($listPerPage);
 				$pages->pageParam = 'surveyorPage';
+				$pages->params = ['per-page' => $listPerPage, 'surveyorPage' => $page];
 
 				$userQuery->offset($offset)
 					->limit($listPerPage);
