@@ -5,6 +5,8 @@
 // The file dev_config_override.php was added to .gitignore but this one ( dev_config_override.php.example ) was kept
 // as an example/template
 
+define('DEV_DISABLE_PERMISSION_CHECK', true);
+
 return [
     'components' => [
         'cache' => [
