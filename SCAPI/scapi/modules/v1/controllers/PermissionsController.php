@@ -31,6 +31,9 @@ class PermissionsController extends Controller {
 
     public static function can($permissionName, $token = null)
     {
+        if (YII_ENV_DEV && defined('DEV_DISABLE_PERMISSION_CHECK') && DEV_DISABLE_PERMISSION_CHECK) {
+            return true;
+        }
 		SCUser::setClient(BaseActiveController::urlPrefix());
         if($token === null) {
             $token = Yii::$app->request->getAuthUser();
