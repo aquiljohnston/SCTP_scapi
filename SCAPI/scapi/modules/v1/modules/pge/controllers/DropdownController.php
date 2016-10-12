@@ -1277,7 +1277,37 @@ class DropdownController extends Controller
 			$responseData['SurveyDropdowns']['CGIReasons']= DropdownController::tabletSurveyQuery('ddVoyCGIReasonType');
 			
 			//DIMP Riser types
-			$responseData['SurveyDropdowns']['dimpRiserTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPRiserType');
+			$responseData['SurveyDropdowns']['DimpRiserTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPRiserType');
+			
+			//Service Head Adapter Types
+			$responseData['SurveyDropdowns']['ServiceHeadAdapterTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPServiceHeadAdapterType');
+			/////////////////////////////////////////////////////////////////
+			//Facility Type GD Types
+			$responseData['SurveyDropdowns']['FacilityTypes']= DropdownController::tabletSurveyQuery('ddFacilityType');
+			
+			// Above or Below Types
+			$responseData['SurveyDropdowns']['AboveOrBelow']= DropdownController::tabletSurveyQuery('ddAboveBelowType');
+			
+			//Initial Leak Source Types
+			$responseData['SurveyDropdowns']['InitialLeakSourceTypes']= DropdownController::tabletSurveyQuery('ddInitialLeakSourceType');
+			
+			//Reported By Types
+			$responseData['SurveyDropdowns']['ReportedBy']= DropdownController::tabletSurveyQuery('ddReportedByType');
+			
+			//Surface Over Reading Locations Types
+			$responseData['SurveyDropdowns']['SurfaceOverReadingLocation']= DropdownController::tabletSurveyQuery('ddSORLType');
+			
+			//Grade By Instrument Types
+			$responseData['SurveyDropdowns']['GradeByInstTypes']= DropdownController::tabletSurveyQuery('ddGradeByInstType');
+			
+			//Grade types
+			$responseData['SurveyDropdowns']['Grade']= DropdownController::tabletSurveyQuery('ddGradeType');
+			
+			//Info Code Types
+			$responseData['SurveyDropdowns']['InfoCodes']= DropdownController::tabletSurveyQuery('ddInfoCodeType');
+			
+			//yes no
+			$responseData['SurveyDropdowns']['YesNo']= DropdownController::tabletSurveyQuery('ddYesNo');
 			
 			//send response
 			$response = Yii::$app->response;
