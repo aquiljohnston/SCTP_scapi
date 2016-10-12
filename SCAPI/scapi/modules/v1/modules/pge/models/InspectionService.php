@@ -7,11 +7,11 @@ use Yii;
 /**
  * This is the model class for table "tInspectionService".
  *
- * @property integer $tInspecitonServicesID
- * @property string $InspecitonServicesUID
+ * @property integer $tInspectionServicesID
+ * @property string $InspectionServicesUID
  * @property string $MasterLeakLogUID
  * @property string $MapGridUID
- * @property string $InspectionRequestLogUID
+ * @property string $InspectionRequestUID
  * @property string $InspecitonEquipmentUID
  * @property integer $ProjectID
  * @property string $SourceID
@@ -37,7 +37,7 @@ use Yii;
  * @property integer $EstimatedServices
  * @property double $EstimatedHours
  * @property integer $ApprovedFlag
- * @property string $AprovaedByUserUID
+ * @property string $ApprovedByUserUID
  * @property string $ApprovedDTLT
  * @property integer $SubmittedFlag
  * @property string $SubmittedStatusType
@@ -68,7 +68,7 @@ class InspectionService extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspecitonServicesUID', 'MasterLeakLogUID', 'MapGridUID', 'InspectionRequestLogUID', 'InspecitonEquipmentUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'StatusType', 'EquipmentType', 'InstrumentType', 'SerialNumber', 'EquipmentModeType', 'AprovaedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'SurveyMode'], 'string'],
+            [['InspectionServicesUID', 'MasterLeakLogUID', 'MapGridUID', 'InspectionRequestUID', 'InspectionEquipmentUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'StatusType', 'EquipmentType', 'InstrumentType', 'SerialNumber', 'EquipmentModeType', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'SurveyMode'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'CalibrationVerificationFlag', 'WindSpeedStart', 'WindSpeedEnd', 'EstimatedFeet', 'EstimatedServices', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag', 'PlaceHolderFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT'], 'safe'],
             [['CalibrationLevel', 'EstimatedHours'], 'number']
@@ -81,12 +81,12 @@ class InspectionService extends \app\modules\v1\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'tInspecitonServicesID' => 'T Inspeciton Services ID',
-            'InspecitonServicesUID' => 'Inspeciton Services Uid',
+            'tInspectionServicesID' => 'T Inspection Services ID',
+            'InspectionServicesUID' => 'Inspection Services Uid',
             'MasterLeakLogUID' => 'Master Leak Log Uid',
             'MapGridUID' => 'Map Grid Uid',
-            'InspectionRequestLogUID' => 'Inspection Request Log Uid',
-            'InspecitonEquipmentUID' => 'Inspeciton Equipment Uid',
+            'InspectionRequestUID' => 'Inspection Request Uid',
+            'InspectionEquipmentUID' => 'Inspection Equipment Uid',
             'ProjectID' => 'Project ID',
             'SourceID' => 'Source ID',
             'CreatedUserUID' => 'Created User Uid',
@@ -111,7 +111,7 @@ class InspectionService extends \app\modules\v1\models\BaseActiveRecord
             'EstimatedServices' => 'Estimated Services',
             'EstimatedHours' => 'Estimated Hours',
             'ApprovedFlag' => 'Approved Flag',
-            'AprovaedByUserUID' => 'Aprovaed By User Uid',
+            'ApprovedByUserUID' => 'Approved By User Uid',
             'ApprovedDTLT' => 'Approved Dtlt',
             'SubmittedFlag' => 'Submitted Flag',
             'SubmittedStatusType' => 'Submitted Status Type',
