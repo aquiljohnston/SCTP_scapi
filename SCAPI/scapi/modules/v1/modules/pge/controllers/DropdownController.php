@@ -733,18 +733,14 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
-            $dataSize = count($data);
-
-			for($i=0; $i < $dataSize; $i++)
-            {		
-				$namePairs[]=[
-				'id'=>$data[$i]->SurveyType, 
-				'name'=>$data[$i]->SurveyType];
-            }
+				
+			$namePairs = ['All' => 'All'];
+			$dataSize = count($data);
 			
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
+            }
 			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
@@ -779,17 +775,13 @@ class DropdownController extends Controller
 			}
             
 			$data = $dataQuery->all();
-
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
-            $dataSize = count($data);
-
+			
+			$namePairs = ['All' => 'All'];
+			$dataSize = count($data);
+			
             for($i=0; $i < $dataSize; $i++)
-            {		
-				$namePairs[]=[
-				'id'=>$data[$i]->FLOC, 
-				'name'=>$data[$i]->FLOC];
+            {
+                $namePairs[$data[$i]->FLOC]= $data[$i]->FLOC;
             }
 			
 			$response = Yii::$app->response;
@@ -829,16 +821,13 @@ class DropdownController extends Controller
 			}	
 			$data = $dataQuery->orderBy('ComplianceSort')
 				->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
-            $dataSize = count($data);
-
+				
+			$namePairs = ['All' => 'All'];
+			$dataSize = count($data);
+			
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->ComplianceYearMonth, 
-				'name'=>$data[$i]->ComplianceYearMonth];
+                $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
             }
 			
 			$response = Yii::$app->response;
