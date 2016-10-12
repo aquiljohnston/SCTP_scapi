@@ -23,6 +23,7 @@ use Yii;
  * @property string $MapGridUID
  * @property string $ComplianceYearMonth
  * @property string $FLOC
+ * @property string $AssignedDate
  */
 class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -41,7 +42,7 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
     {
         return [
             [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'NotificationID', 'Surveyor', 'EmployeeType', 'Status', 'DispatchMethod', 'IRUID', 'AssignedWorkQueueUID', 'UserUID', 'MapGridUID', 'ComplianceYearMonth', 'FLOC'], 'string'],
-            [['ComplianceDate'], 'safe'],
+            [['ComplianceDate', 'AssignedDate'], 'safe'],
             [['IRUID'], 'required']
         ];
     }
@@ -68,6 +69,7 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
             'MapGridUID' => 'Map Grid Uid',
             'ComplianceYearMonth' => 'Compliance Year Month',
             'FLOC' => 'Floc',
+			'AssignedDate' => 'AssignedDate',
         ];
     }
 }

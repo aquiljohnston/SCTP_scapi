@@ -105,8 +105,6 @@ class DispatchController extends Controller
             $pages->setPageSize($listPerPage);
 			$pages->pageParam = 'unassignedPage';
 			$pages->params = ['per-page' => $listPerPage, 'unassignedPage' => $page];
-
-			//tao is bad 
 			
 			$assetQuery->offset($offset)
 				->limit($listPerPage);
@@ -195,6 +193,7 @@ class DispatchController extends Controller
 				['like', 'Status', $filter],
 				['like', 'DispatchMethod', $filter],
 				['like', 'ComplianceYearMonth', $filter],
+				['like', 'AssignedDate', $filter],
 				]);
 			}
 
