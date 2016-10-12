@@ -193,6 +193,7 @@ class DispatchController extends Controller
 				['like', 'Status', $filter],
 				['like', 'DispatchMethod', $filter],
 				['like', 'ComplianceYearMonth', $filter],
+				['like', 'AssignedDate', $filter],
 				]);
 			}
 
