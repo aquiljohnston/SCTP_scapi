@@ -24,7 +24,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedFLOC;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedSurveyFreq;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedWorkCenter;
-use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
+use app\modules\v1\modules\pge\models\WebManagementAssignedWorkQueueStatus;
 //AOC todo combine views
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
@@ -1033,10 +1033,10 @@ class DropdownController extends Controller
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownDispatchStatus::setClient($headers['X-Client']);
+			WebManagementAssignedWorkQueueStatus::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownDispatchStatus::find()
+			$data = WebManagementAssignedWorkQueueStatus::find()
                 ->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
