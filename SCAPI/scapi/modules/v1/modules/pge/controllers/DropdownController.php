@@ -934,16 +934,12 @@ class DropdownController extends Controller
 				->andWhere(['WorkCenter'=>$workCenter])
 				->andWhere(['not', ['SurveyType' => null]])
                 ->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
+            $namePairs = ['All' => 'All'];
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
             {		
-				$namePairs[]=[
-				'id'=>$data[$i]->SurveyType, 
-				'name'=>$data[$i]->SurveyType];
+				$namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
             }
 			
 			
@@ -977,16 +973,12 @@ class DropdownController extends Controller
 				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
             $data = $dataQuery->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
+            $namePairs = ['All' => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {		
-				$namePairs[]=[
-				'id'=>$data[$i]->FLOC, 
-				'name'=>$data[$i]->FLOC];
+				$namePairs[$data[$i]->FLOC]= $data[$i]->FLOC;
             }
 			
 			$response = Yii::$app->response;
@@ -1014,7 +1006,7 @@ class DropdownController extends Controller
 			$data = WebManagementDropDownAssignedComplianceDate::find()
 				->orderBy('ComplianceSort')
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -1046,7 +1038,7 @@ class DropdownController extends Controller
 			//todo permission check
 			$data = WebManagementDropDownDispatchStatus::find()
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -1078,7 +1070,7 @@ class DropdownController extends Controller
 			//todo permission check
 			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
