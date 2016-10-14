@@ -587,6 +587,7 @@ class UserController extends BaseActiveController
 			//set pagination
 			$countUserQuery = clone $userQuery;
 			$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+			$pages->pageSizeLimit = [1,100];
             $offset = $listPerPage*($page-1);
 			$pages->setPageSize($listPerPage);
 			$pages->pageParam = 'userPage';
