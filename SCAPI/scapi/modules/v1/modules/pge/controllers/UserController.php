@@ -111,7 +111,7 @@ class UserController extends BaseActiveController
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 			
-			$groups = $data['ReportingGroup'];
+			$reportingGroups = $data['ReportingGroups'];
 			
 			//handle the password
 			//get pass from data
@@ -188,13 +188,13 @@ class UserController extends BaseActiveController
 			{
 				
 				
-				if(is_array($groups))
+				if(is_array($reportingGroups))
 				{
-					foreach($groups as $g)
+					foreach($reportingGroups as $group)
 					{
 						$newGroup = new ReportingGroupEmployeeRef;
 						$newGroup->UserUID = $pgeUser->UserUID;
-						$newGroup->ReportingGroupUID = $g;
+						$newGroup->ReportingGroupUID = $group;
 						$newGroup->RoleUID = $role->RoleUID;
 						$newGroup->CreatedUserUID = $userCreatedUID;
 						$newGroup->CreateDatetime = Parent::getDate();
@@ -282,6 +282,7 @@ class UserController extends BaseActiveController
 			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
+			
 			$reportingGroups = $data['ReportingGroups'];
 			
 			$response = Yii::$app->response;
