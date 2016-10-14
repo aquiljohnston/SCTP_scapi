@@ -252,7 +252,7 @@ class LeakLogController extends Controller {
     }
 
 
-    public function actionGetMgmt($workCenter, $surveyor = null, $startDate, $endDate, $search = null)
+    public function actionGetMgmt($workCenter, $surveyor = null, $startDate = null, $endDate = null, $search = null)
 	{
         //TODO RBAC permission check
         try{
@@ -261,13 +261,16 @@ class LeakLogController extends Controller {
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
             $values = WebManagementMasterLeakLog::find()
-                ->where(['WorkCenter' => $workCenter]);
+                ->where(['WorkCenter' => $workCenter])
+                ->orderBy(['Date'=>SORT_ASC, 'Surveyor'=>SORT_ASC, 'FLOC'=>SORT_ASC, 'Hours'=>SORT_ASC]);
 
-            if ($surveyor)
-                $values = $values->where(["Surveyor" => $surveyor]);
+
+            if ($surveyor) {
+                $values = $values->andWhere(["Surveyor" => $surveyor]);
+            }
 
             if ($search) {
-                $values = $values->where([
+                $values = $values->andWhere([
                     'or',
                     ['like', 'Leaks', $search],
                     ['like', 'Division', $search],
@@ -283,7 +286,9 @@ class LeakLogController extends Controller {
                     ['like', 'Hours', $search]
                 ]);
             }
-
+            if ($startDate!==null && $endDate !== null) {
+                $values = $values->andWhere('Date BETWEEN :startDate AND :endDate',[':startDate'=>$startDate,':endDate'=>$endDate]);
+            }
             $leaks = $values->all();
 
 			$data = [];
@@ -292,14 +297,13 @@ class LeakLogController extends Controller {
 			$data['Submitted / Pending'] = [];
 			$data['Exceptions'] = [];
 			$data['Completed'] = [];
-			
-			// filter leaks
-            foreach ($leaks as $leak) {
-                if(BaseActiveController::inDateRange($leak["Date"], $startDate, $endDate))
-                {
+
+            if ($startDate!==null && $endDate !== null) {
+                // filter leaks
+                foreach ($leaks as $leak) {
                     $data[$leak["Status"]][] = $leak;
                 }
-			}
+            }
 
 			//send response
 			$response = Yii::$app->response;
