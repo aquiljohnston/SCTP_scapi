@@ -101,6 +101,7 @@ class DispatchController extends Controller
 			// set pagination
             $countAssetQuery = clone $assetQuery;
             $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+			$pages->pageSizeLimit = [1,100];
             $offset = $listPerPage*($page-1);
             $pages->setPageSize($listPerPage);
 			$pages->pageParam = 'unassignedPage';
@@ -202,6 +203,7 @@ class DispatchController extends Controller
 				// set pagination
 				$countAssetQuery = clone $assetQuery;
 				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
 				$offset = $listPerPage*($page-1);
 				$pages->setPageSize($listPerPage);
 				$pages->pageParam = 'assignedPage';
@@ -268,6 +270,7 @@ class DispatchController extends Controller
 				//set pagination
 				$countUserQuery = clone $userQuery;
 				$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
 				$offset = $listPerPage*($page-1);
 				$pages->setPageSize($listPerPage);
 				$pages->pageParam = 'surveyorPage';
