@@ -10,6 +10,7 @@ namespace app\modules\v1\modules\pge\controllers;
 
 use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use Yii;
+use yii\data\Pagination;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
@@ -252,7 +253,7 @@ class LeakLogController extends Controller {
     }
 
 
-    public function actionGetMgmt($workCenter, $surveyor = null, $startDate = null, $endDate = null, $search = null)
+    public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
 	{
         //TODO RBAC permission check
         try{
@@ -260,17 +261,24 @@ class LeakLogController extends Controller {
             $headers = getallheaders();
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
-            $values = WebManagementMasterLeakLog::find()
-                ->where(['WorkCenter' => $workCenter])
-                ->orderBy(['Date'=>SORT_ASC, 'Surveyor'=>SORT_ASC, 'FLOC'=>SORT_ASC, 'Hours'=>SORT_ASC]);
+            $query = WebManagementMasterLeakLog::find()
+                ->where(['Division' => $division]);
 
-
-            if ($surveyor) {
-                $values = $values->andWhere(["Surveyor" => $surveyor]);
+            $status=trim($status);
+            if ($status) {
+                $query->andWhere(["Status"=> $status]);
             }
 
-            if ($search) {
-                $values = $values->andWhere([
+            if ($workCenter) {
+                $query->andWhere(["WorkCenter" => $workCenter]);
+            }
+
+            if ($surveyor) {
+                $query->andWhere(["Surveyor" => $surveyor]);
+            }
+
+            if (trim($search)) {
+                $query->andWhere([
                     'or',
                     ['like', 'Leaks', $search],
                     ['like', 'Division', $search],
@@ -287,23 +295,49 @@ class LeakLogController extends Controller {
                 ]);
             }
             if ($startDate!==null && $endDate !== null) {
-                $values = $values->andWhere('Date BETWEEN :startDate AND :endDate',[':startDate'=>$startDate,':endDate'=>$endDate]);
+                $query->andWhere(['between','Date', $startDate, $endDate]);
             }
-            $leaks = $values->all();
 
-			$data = [];
-			$data['Not Approved'] = [];
-			$data['Approved / Not Submitted'] = [];
-			$data['Submitted / Pending'] = [];
-			$data['Exceptions'] = [];
-			$data['Completed'] = [];
+            $countQuery = clone $query;
+            $totalCount = $countQuery->count();
+            $pages = new Pagination(['totalCount'=>$totalCount]);
+            $pages->setPage(($page-1));
+            $pages->setPageSize($perPage);
 
-            if ($startDate!==null && $endDate !== null) {
-                // filter leaks
-                foreach ($leaks as $leak) {
-                    $data[$leak["Status"]][] = $leak;
-                }
-            }
+            $query->orderBy(['Date'=>SORT_ASC, 'Surveyor'=>SORT_ASC, 'FLOC'=>SORT_ASC, 'Hours'=>SORT_ASC]);
+
+            $leaks = $query->offset($pages->getOffset())
+                ->limit($pages->getLimit())
+                ->all();
+
+            $data = [];
+            $data['results'] = $leaks;
+            $data['totalCount']  = $totalCount;
+            $data['offset'] = $pages->getOffset();
+            $data['limit'] = $pages->getLimit();
+//            $command = $query->createCommand();
+//            $data['sql'] = $command->sql;
+
+            $counts = [];
+
+            //TODO rewrite to improve performance
+            $counts['notApproved'] = $countQuery
+                ->where(['Status'=>'Not Approved'])
+                ->count();
+            $counts['approvedOrNotSubmitted'] = $countQuery
+                ->where(['Status'=>'Approved / Not Submitted'])
+                ->count();
+            $counts['submittedOrPending'] = $countQuery
+                ->where(['Status'=>'Submitted / Pending'])
+                ->count();
+            $counts['exceptions'] = $countQuery
+                ->where(['Status'=>'Exceptions'])
+                ->count();
+            $counts['completed'] = $countQuery
+                ->where(['Status'=>'Completed'])
+                ->count();
+
+            $data['counts'] = $counts;
 
 			//send response
 			$response = Yii::$app->response;
@@ -316,7 +350,7 @@ class LeakLogController extends Controller {
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
-        {
+        {   Yii::trace($e->getMessage());
             throw new \yii\web\HttpException(400);
         }
 	}
