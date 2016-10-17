@@ -172,7 +172,7 @@ class ActivityController extends BaseActiveController
 						//handle pge inspection
 						if (array_key_exists("AssetAddress", $activityArray[$i]))
 						{
-							$savedAssetAddress = AssetAddressController::create($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
+							$savedAssetAddress = AssetAddressController::assetAddressParse($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
 							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
 						}
 
