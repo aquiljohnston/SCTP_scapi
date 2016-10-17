@@ -301,8 +301,18 @@ class LeakLogController extends Controller {
             $countQuery = clone $query;
             $totalCount = $countQuery->count();
             $pages = new Pagination(['totalCount'=>$totalCount]);
+            $pages->pageSizeLimit = [1,100];
             $pages->setPage(($page-1));
             $pages->setPageSize($perPage);
+
+            //$offset = $listPerPage*($page-1);
+
+            $pages->pageParam = 'page';
+            $pages->params = ['per-page' => $perPage, 'page' => $page];
+
+
+            $responseArray["pages"] = $pages;
+
 
             $query->orderBy(['Date'=>SORT_ASC, 'Surveyor'=>SORT_ASC, 'FLOC'=>SORT_ASC, 'Hours'=>SORT_ASC]);
 
@@ -312,9 +322,10 @@ class LeakLogController extends Controller {
 
             $data = [];
             $data['results'] = $leaks;
-            $data['totalCount']  = $totalCount;
-            $data['offset'] = $pages->getOffset();
-            $data['limit'] = $pages->getLimit();
+            $data['pages'] = $pages;
+//            $data['totalCount']  = $totalCount;
+//            $data['offset'] = $pages->getOffset();
+//            $data['limit'] = $pages->getLimit();
 //            $command = $query->createCommand();
 //            $data['sql'] = $command->sql;
 
