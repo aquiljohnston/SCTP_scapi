@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <RuntimePath>C:\Users\jason\Downloads\SOUTHERN_CROSS_SETUP\SOUTHERN_CROSS_SETUP\PHP\php.exe</RuntimePath>
+    <RuntimePath>C:\src\SouthernCross\PHP\php.exe</RuntimePath>
     <SpecificPageValue>index.php</SpecificPageValue>
     <StartAction>DontOpenPage</StartAction>
   </PropertyGroup>

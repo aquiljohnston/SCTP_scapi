@@ -44,7 +44,7 @@ class DropdownController extends Controller
         return $behaviors;
     }
     public function actionGetMapPlatDropdown() {
-		
+
 		$data = [null => "Select..."];
         $data["161-30-5-C"] = "161-30-5-C";
         $data["141-31-3-C"] = "141-31-3-C";
@@ -338,7 +338,7 @@ class DropdownController extends Controller
             //set db target
             $headers = getallheaders();
             EmployeeType::setClient(BaseActiveController::urlPrefix());
-			
+
 			// RBAC permission check
 			PermissionsController::requirePermission('employeeTypeGetDropdown');
 
@@ -394,7 +394,7 @@ class DropdownController extends Controller
      * Belongs to LeakLogDetail
      */
     public function actionGetMapPlatDependentDropdown($division = null, $surveyor = null, $date = null) {
-		
+
 		try{
 			$data = [];
 
@@ -456,9 +456,9 @@ class DropdownController extends Controller
     /*
      * Belongs to LeakLogDetail
      */
-    public function actionGetSurveyorDependentDropdown($division = null, $mapPlat = null, $date = null, $workCenter = null) {
+    public function actionGetSurveyorDependentDropdown($division = null, $workCenter = null, $mapPlat = null, $date = null) {
 		try{
-		
+
 			$data = [];
 
 			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
@@ -496,8 +496,6 @@ class DropdownController extends Controller
 			$data["110-11-3-A"]["Date"] = "05/14/2016";
 			$data["110-11-3-A"]["WorkCenter"] = "Urzael";
 
-			$filteredData = [];
-			
 			foreach($data as $datum) {
 				if($division == null || $division == $datum["Division"]) {
 					if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
@@ -513,7 +511,6 @@ class DropdownController extends Controller
 					}
 				}
 			}
-
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
@@ -535,7 +532,7 @@ class DropdownController extends Controller
      */
     public function actionGetDateDependentDropdown($division = null, $surveyor = null, $mapPlat = null) {
 		try{
-		
+
 			$data = [];
 
 			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
@@ -566,7 +563,7 @@ class DropdownController extends Controller
 			$filteredData = [];
 			foreach($data as $datum) {
 				if($division == null || $division == $datum["Division"]) {
-					if($surveyor == null || $surveyor == $datum["Surveyor"]) {
+					if($surveyor == null || $surveyor == $datum["Surveyor"] || $surveyor == 'All') {
 						if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
 							$entry = [];
 							$entry["id"] = $datum["Date"];
@@ -576,7 +573,6 @@ class DropdownController extends Controller
 					}
 				}
 			}
-
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
@@ -596,7 +592,7 @@ class DropdownController extends Controller
     public function actionGetReportDropdown() {
 		try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["Report 1"] = "Report 1";
 			$data["Report 2"] = "Report 2";
@@ -622,7 +618,7 @@ class DropdownController extends Controller
     public function actionGetSurveyTypeDropdown() {
         try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["1 YR"] = "1 YR";
 			$data["3 YR"] = "3 YR";
@@ -646,7 +642,7 @@ class DropdownController extends Controller
     public function actionGetComplianceMonthDropdown() {
 		try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["01"] = "January";
 			$data["02"] = "February";
@@ -723,11 +719,11 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetDeviceIdDropdown() {
 		try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["12345678"] = "12345678";
 			$data["87654321"] = "87654321";
