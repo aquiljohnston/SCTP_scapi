@@ -13,7 +13,7 @@ $config = [
 		'v1' => [
 			'class' => 'app\modules\v1\Module',
 		],
-	],	
+	],
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
@@ -57,14 +57,14 @@ $config = [
         ],
 		'ctDevDb' => [
 			'class' => 'yii\db\Connection',
-			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker',
+			'dsn' => 'sqlsrv:Server=(localdb)\MSSQLLocalDB;Database=CometTracker',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
 		'pgeDevDb' => [
 			'class' => 'yii\db\Connection',
-			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_PGE_GIS_DEV',
+			'dsn' => 'sqlsrv:Server=(localdb)\MSSQLLocalDB;Database=vCAT_PGE_GIS_DEV',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',
@@ -98,7 +98,7 @@ if (YII_ENV_DEV) {
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
-		//TO DO add dynamic IPs 
+		//TO DO add dynamic IPs
 		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
 
@@ -106,7 +106,7 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
 		//Allow IPs to access gii: server, local host
-		//TO DO add dynamic IPs 
+		//TO DO add dynamic IPs
 		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
 }
