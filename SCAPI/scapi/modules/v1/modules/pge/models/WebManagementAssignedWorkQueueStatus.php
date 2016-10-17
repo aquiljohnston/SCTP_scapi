@@ -5,18 +5,18 @@ namespace app\modules\v1\modules\pge\models;
 use Yii;
 
 /**
- * This is the model class for table "vWebManagementDropDownDispatchStatus".
+ * This is the model class for table "vWebManagementAssignedWorkQueueStatus".
  *
  * @property string $Status
  */
-class WebManagementDropDownDispatchStatus extends \app\modules\v1\models\BaseActiveRecord
+class WebManagementAssignedWorkQueueStatus extends \app\modules\v1\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vWebManagementDropDownDispatchStatus';
+        return 'vWebManagementAssignedWorkQueueStatus';
     }
 
     /**
@@ -25,6 +25,7 @@ class WebManagementDropDownDispatchStatus extends \app\modules\v1\models\BaseAct
     public function rules()
     {
         return [
+            [['Status'], 'required'],
             [['Status'], 'string']
         ];
     }
