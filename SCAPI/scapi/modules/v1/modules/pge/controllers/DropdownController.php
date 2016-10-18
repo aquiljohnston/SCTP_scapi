@@ -24,7 +24,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedFLOC;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedSurveyFreq;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedWorkCenter;
-use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchStatus;
+use app\modules\v1\modules\pge\models\WebManagementAssignedWorkQueueStatus;
 //AOC todo combine views
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
@@ -34,6 +34,9 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatch;
 //tablet dropdowns
 use app\modules\v1\modules\pge\models\DropDowns;
+use app\modules\v1\modules\pge\models\TabletMeter;
+use app\modules\v1\modules\pge\models\TabletFilter;
+use app\modules\v1\modules\pge\models\TabletRegulator;
 
 class DropdownController extends Controller
 {
@@ -534,18 +537,14 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
-            $dataSize = count($data);
-
-			for($i=0; $i < $dataSize; $i++)
-            {		
-				$namePairs[]=[
-				'id'=>$data[$i]->SurveyType, 
-				'name'=>$data[$i]->SurveyType];
-            }
+				
+			$namePairs = ['All' => 'All'];
+			$dataSize = count($data);
 			
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
+            }
 			
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
@@ -580,17 +579,13 @@ class DropdownController extends Controller
 			}
             
 			$data = $dataQuery->all();
-
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
-            $dataSize = count($data);
-
+			
+			$namePairs = ['All' => 'All'];
+			$dataSize = count($data);
+			
             for($i=0; $i < $dataSize; $i++)
-            {		
-				$namePairs[]=[
-				'id'=>$data[$i]->FLOC, 
-				'name'=>$data[$i]->FLOC];
+            {
+                $namePairs[$data[$i]->FLOC]= $data[$i]->FLOC;
             }
 			
 			$response = Yii::$app->response;
@@ -630,16 +625,13 @@ class DropdownController extends Controller
 			}	
 			$data = $dataQuery->orderBy('ComplianceSort')
 				->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
-            $dataSize = count($data);
-
+				
+			$namePairs = ['All' => 'All'];
+			$dataSize = count($data);
+			
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->ComplianceYearMonth, 
-				'name'=>$data[$i]->ComplianceYearMonth];
+                $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
             }
 			
 			$response = Yii::$app->response;
@@ -746,16 +738,12 @@ class DropdownController extends Controller
 				->andWhere(['WorkCenter'=>$workCenter])
 				->andWhere(['not', ['SurveyType' => null]])
                 ->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
+            $namePairs = ['All' => 'All'];
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
             {		
-				$namePairs[]=[
-				'id'=>$data[$i]->SurveyType, 
-				'name'=>$data[$i]->SurveyType];
+				$namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
             }
 			
 			
@@ -789,16 +777,12 @@ class DropdownController extends Controller
 				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
             $data = $dataQuery->all();
-            $namePairs[] = [
-				'id'=>'All', 
-				'name'=>'All'];
+            $namePairs = ['All' => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {		
-				$namePairs[]=[
-				'id'=>$data[$i]->FLOC, 
-				'name'=>$data[$i]->FLOC];
+				$namePairs[$data[$i]->FLOC]= $data[$i]->FLOC;
             }
 			
 			$response = Yii::$app->response;
@@ -826,7 +810,7 @@ class DropdownController extends Controller
 			$data = WebManagementDropDownAssignedComplianceDate::find()
 				->orderBy('ComplianceSort')
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -853,12 +837,12 @@ class DropdownController extends Controller
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownDispatchStatus::setClient($headers['X-Client']);
+			WebManagementAssignedWorkQueueStatus::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownDispatchStatus::find()
+			$data = WebManagementAssignedWorkQueueStatus::find()
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -890,7 +874,7 @@ class DropdownController extends Controller
 			//todo permission check
 			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
                 ->all();
-            $namePairs = [null => "Select..."];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
@@ -999,14 +983,12 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs= [];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->Surveyor, 
-				'name'=>$data[$i]->Surveyor];
+				$namePairs[$data[$i]->Surveyor]= $data[$i]->Surveyor;
             }
             //send response
             $response = Yii::$app->response;
@@ -1038,14 +1020,12 @@ class DropdownController extends Controller
 				->andWhere(['WorkCenter'=>$workCenter])
 				->andWhere(['Surveyor'=>$surveyor])
                 ->all();
-            $namePairs= [];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->AOCType, 
-				'name'=>$data[$i]->AOCType];
+				$namePairs[$data[$i]->AOCType]= $data[$i]->AOCType;
             }
             //send response
             $response = Yii::$app->response;
@@ -1068,8 +1048,8 @@ class DropdownController extends Controller
 	//route to provide data for all survey dropdowns on the tablet
 	public function actionGetTabletSurveyDropdowns()
 	{
-		// try
-		// {
+		try
+		{
 			//set db target
 			$headers = getallheaders();
 			DropDowns::setClient($headers['X-Client']);
@@ -1089,22 +1069,61 @@ class DropdownController extends Controller
 			$responseData['SurveyDropdowns']['CGIReasons']= DropdownController::tabletSurveyQuery('ddVoyCGIReasonType');
 			
 			//DIMP Riser types
-			$responseData['SurveyDropdowns']['dimpRiserTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPRiserType');
+			$responseData['SurveyDropdowns']['DimpRiserTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPRiserType');
+			
+			//Service Head Adapter Types
+			$responseData['SurveyDropdowns']['ServiceHeadAdapterTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPServiceHeadAdapterType');
+			
+			//Facility Type GD Types
+			$responseData['SurveyDropdowns']['FacilityTypes']= DropdownController::tabletSurveyQuery('ddFacilityType');
+			
+			// Above or Below Types
+			$responseData['SurveyDropdowns']['AboveOrBelow']= DropdownController::tabletSurveyQuery('ddAboveBelowType');
+			
+			//Initial Leak Source Types
+			$responseData['SurveyDropdowns']['InitialLeakSourceTypes']= DropdownController::tabletSurveyQuery('ddInitialLeakSourceType');
+			
+			//Reported By Types
+			$responseData['SurveyDropdowns']['ReportedBy']= DropdownController::tabletSurveyQuery('ddReportedByType');
+			
+			//Surface Over Reading Locations Types
+			$responseData['SurveyDropdowns']['SurfaceOverReadingLocation']= DropdownController::tabletSurveyQuery('ddSORLType');
+			
+			//Grade By Instrument Types
+			$responseData['SurveyDropdowns']['GradeByInstTypes']= DropdownController::tabletSurveyQuery('ddGradeByInstType');
+			
+			//Grade types
+			$responseData['SurveyDropdowns']['Grade']= DropdownController::tabletSurveyQuery('ddGradeType');
+			
+			//Info Code Types
+			$responseData['SurveyDropdowns']['InfoCodes']= DropdownController::tabletSurveyQuery('ddInfoCodeType');
+			
+			//yes no
+			$responseData['SurveyDropdowns']['YesNo']= DropdownController::tabletSurveyQuery('ddYesNo');
+			
+			//meter
+			$responseData['SurveyDropdowns']['Meter'] = TabletMeter::find()->all();
+			
+			//filter
+			$responseData['SurveyDropdowns']['Filter'] = TabletFilter::find()->all();
+			
+			//regulator
+			$responseData['SurveyDropdowns']['Regulator'] = TabletRegulator::find()->all();
 			
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $responseData;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	//helper method for standard tablet survey query

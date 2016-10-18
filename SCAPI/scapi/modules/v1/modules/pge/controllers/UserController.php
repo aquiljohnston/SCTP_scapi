@@ -111,7 +111,7 @@ class UserController extends BaseActiveController
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 			
-			$groups = $data['ReportingGroup'];
+			$reportingGroups = $data['ReportingGroups'];
 			
 			//handle the password
 			//get pass from data
@@ -188,13 +188,13 @@ class UserController extends BaseActiveController
 			{
 				
 				
-				if(is_array($groups))
+				if(is_array($reportingGroups))
 				{
-					foreach($groups as $g)
+					foreach($reportingGroups as $group)
 					{
 						$newGroup = new ReportingGroupEmployeeRef;
 						$newGroup->UserUID = $pgeUser->UserUID;
-						$newGroup->ReportingGroupUID = $g;
+						$newGroup->ReportingGroupUID = $group;
 						$newGroup->RoleUID = $role->RoleUID;
 						$newGroup->CreatedUserUID = $userCreatedUID;
 						$newGroup->CreateDatetime = Parent::getDate();
@@ -282,6 +282,7 @@ class UserController extends BaseActiveController
 			
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
+			
 			$reportingGroups = $data['ReportingGroups'];
 			
 			$response = Yii::$app->response;
@@ -407,7 +408,7 @@ class UserController extends BaseActiveController
 						$auth->revokeAll($scUser["UserID"]);
 						$auth->assign($userRole, $scUser["UserID"]);
 					}
-					$response->setStatusCode(201);
+					$response->setStatusCode(200);
 					$pgeUser->UserPassword = '';
 					$response->data = $pgeUser; 
 				}
@@ -587,10 +588,11 @@ class UserController extends BaseActiveController
 			//set pagination
 			$countUserQuery = clone $userQuery;
 			$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+			$pages->pageSizeLimit = [1,100];
             $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countUserQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
+			$pages->setPageSize($listPerPage);
 			$pages->pageParam = 'userPage';
+			$pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
 			
 			//execute query with paging
 			$users = $userQuery->offset($offset)

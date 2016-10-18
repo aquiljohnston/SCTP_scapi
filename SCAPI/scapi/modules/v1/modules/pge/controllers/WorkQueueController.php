@@ -12,6 +12,8 @@ use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\modules\pge\models\AssignedWorkQueue;
 use app\modules\v1\modules\pge\models\InspectionRequest;
 use app\modules\v1\modules\pge\models\TabletMapGrids;
+use app\modules\v1\modules\pge\models\AssetInspection;
+use app\modules\v1\modules\pge\models\Asset;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
@@ -242,19 +244,42 @@ class WorkQueueController extends Controller
 			//save sudo IR
 			if($sudoIR->save())
 			{
-				//update for missing fields
-				//new AssignedWorkQueue model
-				$newRecord = new AssignedWorkQueue;
-				$newRecord->attributes = $workQueue;
-				//additionalFields
-				$newRecord->CreatedUserUID = $userUID;
-				$newRecord->ModifiedUserUID = $userUID;
-				$newRecord->LockedFlag = 1;
-				$newRecord->AssignedUserUID = $userUID;
+				//get asset UID based on map grid
+				$asset = Asset::find()
+					->select('AssetUID')
+					->where(['MapGridUID' => $workQueue['MapGridUID']])
+					->andWhere(['ActiveFlag' => 1])
+					->one();
+					
+				$assetInspection = new AssetInspection;
+				$assetInspection->AssetInspectionUID = $workQueue['AssetInspectionUID'];
+				$assetInspection->AssetUID = $asset->AssetUID;
+				$assetInspection->MapGridUID = $workQueue['MapGridUID'];
+				$assetInspection->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
+				$assetInspection->SourceID = $workQueue['SourceID'];
+				$assetInspection->CreatedUserUID = $userUID;
+				$assetInspection->ModifiedUserUID = $userUID;
 				
-				if($newRecord->save())
+				if($assetInspection->save())
 				{
-					return $newRecord;
+					//update for missing fields
+					//new AssignedWorkQueue model
+					$newRecord = new AssignedWorkQueue;
+					$newRecord->attributes = $workQueue;
+					//additionalFields
+					$newRecord->CreatedUserUID = $userUID;
+					$newRecord->ModifiedUserUID = $userUID;
+					$newRecord->LockedFlag = 1;
+					$newRecord->AssignedUserUID = $userUID;
+					
+					if($newRecord->save())
+					{
+						return $newRecord;
+					}
+					else
+					{
+						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+					}
 				}
 				else
 				{

@@ -109,6 +109,14 @@ if (YII_ENV_DEV) {
 		//TO DO add dynamic IPs
 		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
+
+    // allows overriding config settings on a development environment
+    if (file_exists(__DIR__.'/dev_config_override.php')) {
+        $devConfigOverride = require(__DIR__.'/dev_config_override.php');
+        if (is_array($devConfigOverride)) {
+            $config = array_replace_recursive($config, $devConfigOverride);
+        }
+    }
 }
 
 return $config;
