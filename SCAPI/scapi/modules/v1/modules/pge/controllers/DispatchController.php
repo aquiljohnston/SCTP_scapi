@@ -92,7 +92,6 @@ class DispatchController extends Controller
 				['like', 'Notification ID', $filter],
 				['like', 'ComplianceDueDate', $filter],
 				['like', 'SAP Released', $filter],
-				['like', 'Assigned', $filter],
 				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
@@ -187,11 +186,10 @@ class DispatchController extends Controller
 				['like', 'Division', $filter],
 				['like', 'WorkCenter', $filter],
 				['like', 'SurveyType', $filter],
-				['like', 'MapPlat', $filter],
+				['like', 'FLOC', $filter],
 				['like', 'NotificationID', $filter],
 				['like', 'ComplianceDate', $filter],
 				['like', 'Surveyor', $filter],
-				['like', 'EmployeeType', $filter],
 				['like', 'Status', $filter],
 				['like', 'DispatchMethod', $filter],
 				['like', 'ComplianceYearMonth', $filter],
