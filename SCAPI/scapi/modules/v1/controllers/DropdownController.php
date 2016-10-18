@@ -43,18 +43,53 @@ class DropdownController extends Controller
             ];
         return $behaviors;
     }
-    public function actionGetMapPlatDropdown() {
+    public function actionGetMapPlatDropdown($division, $workcenter, $surveyor, $date) {
 
-		$data = [null => "Select..."];
-        $data["161-30-5-C"] = "161-30-5-C";
-        $data["141-31-3-C"] = "141-31-3-C";
-        $data["171-40-1-B"] = "171-40-1-B";
-        $data["130-15-5-F"] = "130-15-5-F";
+        if($division != null && $workcenter != null)
+        {
+            // by division and workcenter
+            $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Map/Plat'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workcenter])
+                    ->distinct()
+                    ->all();
+        }
+        else if($division != null && $workcenter != null && $surveyor != null)
+        {
+            // by division and workcenter and surveyor
+            $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Map/Plat'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workcenter])
+                    ->andWhere(['Surveyor' => $surveyor])
+                    ->distinct()
+                    ->all();
+        }
+        else if($division != null && $workcenter != null && $date != null)
+        {
+            // by division and workcenter and date
+            $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Map/Plat'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workcenter])
+                    ->andWhere(['Date' => $date])
+                    ->distinct()
+                    ->all();
+        }
 
-        //send response
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
-        $response->data = $data;
+        $results = [];
+        foreach ($values as $value) {
+            $results[] = [
+                "id" => $value["Surveyor"],
+                "name" => $value["Surveyor"]
+            ];
+        }
+
+        $response = Yii::$app ->response;
+        $response -> format = Response::FORMAT_JSON;
+        $response -> data = $results;
+
         return $response;
     }
 
@@ -255,81 +290,6 @@ class DropdownController extends Controller
         }
     }
 
-    //required format for the dynaic dropdowns
-    //['id'=>'<sub-cat_id_2>', 'name'=>'<sub-cat-name2>']
-    public function actionGetWorkCenterDependentDropdown($division = null)
-    {
-        //TODO RBAC permission check
-        try{
-            //TODO check headers
-
-            //stub data
-            $dropdown = [];
-            $data = [];
-            if($division == null)
-            {
-                $data["id"] = "Zoltun Kulle";
-                $data["name"] = "Zoltun Kulle";
-                $dropdown[] = $data;
-                $data = [];
-                $data["id"] = "Cydaea";
-                $data["name"] = "Cydaea";
-                $dropdown[] = $data;
-                $data = [];
-                $data["id"] = "Izual";
-                $data["name"] = "Izual";
-                $dropdown[] = $data;
-                $data = [];
-                $data["id"] = "Urzael";
-                $data["name"] = "Urzael";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Belial")
-            {
-                $data["id"] = "Zoltun Kulle";
-                $data["name"] = "Zoltun Kulle";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Azmodan")
-            {
-                $data["id"] = "Cydaea";
-                $data["name"] = "Cydaea";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Diablo")
-            {
-                $data["id"] = "Izual";
-                $data["name"] = "Izual";
-                $dropdown[] = $data;
-                $data = [];
-            }
-            elseif ($division == "Malthael")
-            {
-                $data["id"] = "Urzael";
-                $data["name"] = "Urzael";
-                $dropdown[] = $data;
-                $data = [];
-            }
-
-            //send response
-            $response = Yii::$app->response;
-            $response ->format = Response::FORMAT_JSON;
-            $response->data = $dropdown;
-            return $response;
-        }
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
     //return a json containing pairs of EmployeeTypes
     public function actionGetEmployeeTypeDropdown()
     {
@@ -383,7 +343,8 @@ class DropdownController extends Controller
             $response->format = Response::FORMAT_JSON;
             $response->data = $data;
             return $response;
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             throw new BadRequestHttpException;
         }
     }
@@ -393,55 +354,58 @@ class DropdownController extends Controller
     /*
      * Belongs to LeakLogDetail
      */
-    public function actionGetMapPlatDependentDropdown($division = null, $surveyor = null, $date = null) {
+    public function actionGetMapPlatDependentDropdown($division = null, $workCenter = null, $surveyor = null, $date = null) {
 
 		try{
-			$data = [];
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
-			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
-			$data["161-30-5-C"]["Division"] = "Diablo";
-			$data["161-30-5-C"]["Surveyor"] = "johndoe";
-			$data["161-30-5-C"]["Date"] = "05/10/2016";
+			if($division != null && $workCenter != null)
+            {
+                // by division and workcenter
+                $values = WebManagementLeakLogDropDown::find()
+                        ->select(['Map/Plat'])
+                        ->where(['Division' => $division])
+                        ->andWhere(['WorkCenter' => $workCenter])
+                        ->distinct()
+                        ->all();
+            }
+            else if($division != null && $workCenter != null && $surveyor != null)
+            {
+                // by division and workcenter and surveyor
+                $values = WebManagementLeakLogDropDown::find()
+                        ->select(['Map/Plat'])
+                        ->where(['Division' => $division])
+                        ->andWhere(['WorkCenter' => $workCenter])
+                        ->andWhere(['Surveyor' => $surveyor])
+                        ->distinct()
+                        ->all();
+            }
+            else if($division != null && $workCenter != null && $date != null)
+            {
+                // by division and workcenter and date
+                $values = WebManagementLeakLogDropDown::find()
+                        ->select(['Map/Plat'])
+                        ->where(['Division' => $division])
+                        ->where(['WorkCenter' => $workCenter])
+                        ->where(['Date' => $date])
+                        ->distinct()
+                        ->all();
+            }
 
-			$data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
-			$data["161-30-3-C"]["Division"] = "Diablo";
-			$data["161-30-3-C"]["Surveyor"] = "janedoe";
-			$data["161-30-3-C"]["Date"] = "05/11/2016";
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["Map/Plat"],
+                    "name" => $value["Map/Plat"]
+                ];
+            }
 
-			$data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
-			$data["141-31-3-C"]["Division"] = "Azmodan";
-			$data["141-31-3-C"]["Surveyor"] = "bob1";
-			$data["141-31-3-C"]["Date"] = "05/12/2016";
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
 
-			$data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
-			$data["120-31-6-F"]["Division"] = "Malthael";
-			$data["120-31-6-F"]["Surveyor"] = "bill2";
-			$data["120-31-6-F"]["Date"] = "05/13/2016";
-
-			$data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
-			$data["110-11-3-A"]["Division"] = "Malthael";
-			$data["110-11-3-A"]["Surveyor"] = "fred3";
-			$data["110-11-3-A"]["Date"] = "05/14/2016";
-
-			$filteredData = [];
-			foreach($data as $datum) {
-				if($division == null || $division == $datum["Division"]) {
-					if($surveyor == null || $surveyor == $datum["Surveyor"]) {
-						if($date == null || $date == $datum["Date"]) {
-							$entry = [];
-							$entry["id"] = $datum["MapPlat"];
-							$entry["name"] = $datum["MapPlat"];
-							$filteredData[] = $entry;
-						}
-					}
-				}
-			}
-
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
+            return $response;
 		}
         catch(ForbiddenHttpException $e)
         {
@@ -457,66 +421,69 @@ class DropdownController extends Controller
      * Belongs to LeakLogDetail
      */
     public function actionGetSurveyorDependentDropdown($division = null, $workCenter = null, $mapPlat = null, $date = null) {
-		try{
+		//TODO RBAC permission check
+        try{
 
-			$data = [];
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
-			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
-			$data["161-30-5-C"]["Division"] = "Diablo";
-			$data["161-30-5-C"]["SurveyorDisplay"] = "Doe, John (johndoe)";
-			$data["161-30-5-C"]["Surveyor"] = "johndoe";
-			$data["161-30-5-C"]["Date"] = "05/10/2016";
-			$data["161-30-5-C"]["WorkCenter"] = "Izual";
+            if($workCenter == null)
+            {
+                // just by division
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->distinct()
+                    ->all();
+            }
+            else if ($mapPlat == null)
+            {
+                // by division and workcenter
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->distinct()
+                    ->all();
+            }
+            else if($date == null)
+            {
+                /// by division and workcenter and mapplat
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['Map/Plat' => $mapPlat])
+                    ->distinct()
+                    ->all();
+            }
+            else
+            {
+                /// by division and workcenter and mapplat and date
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['Map/Plat' => $mapPlat])
+                    ->andWhere(['Date' => $date])
+                    ->distinct()
+                    ->all();
+            }
 
-			$data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
-			$data["161-30-3-C"]["Division"] = "Diablo";
-			$data["161-30-3-C"]["SurveyorDisplay"] = "Doe, Jane (janedoe)";
-			$data["161-30-3-C"]["Surveyor"] = "janedoe";
-			$data["161-30-3-C"]["Date"] = "05/11/2016";
-			$data["161-30-3-C"]["WorkCenter"] = "Izual";
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["Surveyor"],
+                    "name" => $value["Surveyor"]
+                ];
+            }
 
-			$data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
-			$data["141-31-3-C"]["Division"] = "Azmodan";
-			$data["141-31-3-C"]["SurveyorDisplay"] = "Smith, Bob (bob1)";
-			$data["141-31-3-C"]["Surveyor"] = "bob1";
-			$data["141-31-3-C"]["Date"] = "05/12/2016";
-			$data["141-31-3-C"]["WorkCenter"] = "Cydaea";
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
 
-			$data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
-			$data["120-31-6-F"]["Division"] = "Malthael";
-			$data["120-31-6-F"]["SurveyorDisplay"] = "Randalt, Bill (bill2)";
-			$data["120-31-6-F"]["Surveyor"] = "bill2";
-			$data["120-31-6-F"]["Date"] = "05/13/2016";
-			$data["120-31-6-F"]["WorkCenter"] = "Urzael";
-
-			$data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
-			$data["110-11-3-A"]["Division"] = "Malthael";
-			$data["110-11-3-A"]["SurveyorDisplay"] = "Milstone, Fred (fred3)";
-			$data["110-11-3-A"]["Surveyor"] = "fred3";
-			$data["110-11-3-A"]["Date"] = "05/14/2016";
-			$data["110-11-3-A"]["WorkCenter"] = "Urzael";
-
-			foreach($data as $datum) {
-				if($division == null || $division == $datum["Division"]) {
-					if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
-						if($date == null || $date == $datum["Date"]) {
-							if($workCenter == null || $workCenter == $datum["WorkCenter"])
-							{
-								$entry = [];
-								$entry["id"] = $datum["Surveyor"];
-								$entry["name"] = $datum["SurveyorDisplay"];
-								$filteredData[] = $entry;
-							}
-						}
-					}
-				}
-			}
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
-		}
+            return $response;
+        }
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
@@ -530,55 +497,50 @@ class DropdownController extends Controller
     /*
      * Belongs to LeakLogDetail
      */
-    public function actionGetDateDependentDropdown($division = null, $surveyor = null, $mapPlat = null) {
+    public function actionGetDateDependentDropdown($division = null, $workCenter = null, $surveyor = null, $mapPlat = null) {
 		try{
 
-			$data = [];
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
-			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
-			$data["161-30-5-C"]["Division"] = "Diablo";
-			$data["161-30-5-C"]["Surveyor"] = "johndoe";
-			$data["161-30-5-C"]["Date"] = "05/10/2016";
+            if($division != null && $workCenter != null && ($surveyor == null || $mapPlat == null))
+            {
+                // just by division and workCenter
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Date'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->distinct()
+                    ->all();
+            }
+            else if ($division != null && $workCenter != null && $surveyor != null && $mapPlat != null)
+            {
+                // by division and workcenter and surveyor and mapplat
+                $values = WebManagementLeakLogDropDown::find()
+                     ->select(['Date'])
+                     ->where(['Division' => $division])
+                     ->andWhere(['WorkCenter' => $workCenter])
+                     ->andWhere(['Surveyor' => $surveyor])
+                     ->andWhere(['Map/Plat' => $mapPlat])
+                     ->distinct()
+                     ->all();
+            }
 
-			$data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
-			$data["161-30-3-C"]["Division"] = "Diablo";
-			$data["161-30-3-C"]["Surveyor"] = "janedoe";
-			$data["161-30-3-C"]["Date"] = "05/11/2016";
 
-			$data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
-			$data["141-31-3-C"]["Division"] = "Azmodan";
-			$data["141-31-3-C"]["Surveyor"] = "bob1";
-			$data["141-31-3-C"]["Date"] = "05/12/2016";
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["Date"],
+                    "name" => $value["Date"]
+                ];
+            }
 
-			$data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
-			$data["120-31-6-F"]["Division"] = "Malthael";
-			$data["120-31-6-F"]["Surveyor"] = "bill2";
-			$data["120-31-6-F"]["Date"] = "05/13/2016";
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
 
-			$data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
-			$data["110-11-3-A"]["Division"] = "Malthael";
-			$data["110-11-3-A"]["Surveyor"] = "fred3";
-			$data["110-11-3-A"]["Date"] = "05/14/2016";
-
-			$filteredData = [];
-			foreach($data as $datum) {
-				if($division == null || $division == $datum["Division"]) {
-					if($surveyor == null || $surveyor == $datum["Surveyor"] || $surveyor == 'All') {
-						if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
-							$entry = [];
-							$entry["id"] = $datum["Date"];
-							$entry["name"] = $datum["Date"];
-							$filteredData[] = $entry;
-						}
-					}
-				}
-			}
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
-		}
+            return $response;
+        }
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
