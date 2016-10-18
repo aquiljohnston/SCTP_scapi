@@ -34,6 +34,7 @@ use Yii;
  * @property string $UserCreatedDTLTOffset
  * @property string $UserModifiedDTLTOffset
  * @property string $UserInactiveDTLTOffset
+ * @property integer $UserArchiveFlag
  * @property string $HomeWorkCenterUID
  */
 class PGEUser extends \app\modules\v1\models\BaseActiveRecord
@@ -53,7 +54,7 @@ class PGEUser extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             [['UserUID', 'UserCreatedUID', 'UserModifiedUID', 'UserComments', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'UserPassword', 'UserEmployeeType', 'UserCompanyName', 'UserCompanyPhone', 'UserSupervisorUserUID', 'UserName', 'UserAppRoleType', 'UserPhone', 'HomeWorkCenterUID'], 'string'],
-            [['ProjectID', 'UserRevision', 'UserActiveFlag', 'UserInActiveFlag'], 'integer'],
+            [['ProjectID', 'UserRevision', 'UserActiveFlag', 'UserInActiveFlag', 'UserArchiveFlag'], 'integer'],
             [['UserCreatedDate', 'UserModifiedDate', 'UserInactiveDTLT', 'UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset'], 'safe']
         ];
     }
@@ -91,6 +92,7 @@ class PGEUser extends \app\modules\v1\models\BaseActiveRecord
             'UserCreatedDTLTOffset' => 'User Created Dtltoffset',
             'UserModifiedDTLTOffset' => 'User Modified Dtltoffset',
             'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
+            'UserArchiveFlag' => 'User Archive Flag',
             'HomeWorkCenterUID' => 'Home Work Center Uid',
         ];
     }

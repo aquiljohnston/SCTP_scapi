@@ -44,13 +44,15 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetUnassigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
 			//set db
 			$headers = getallheaders();
 			WebManagementDispatch::setClient($headers['X-Client']);
+			
+			$responseArray = [];
 			
 			$assetQuery = WebManagementDispatch::find()->where(['Assigned' => 0]);
 			
@@ -90,27 +92,30 @@ class DispatchController extends Controller
 				['like', 'Notification ID', $filter],
 				['like', 'ComplianceDueDate', $filter],
 				['like', 'SAP Released', $filter],
-				['like', 'Assigned', $filter],
+				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
+			
+			if($page != null)
+			{
+				// set pagination
+				$countAssetQuery = clone $assetQuery;
+				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
+				$offset = $listPerPage*($page-1);
+				$pages->setPageSize($listPerPage);
+				$pages->pageParam = 'unassignedPage';
+				$pages->params = ['per-page' => $listPerPage, 'unassignedPage' => $page];
+				
+				$assetQuery->offset($offset)
+					->limit($listPerPage);
+					
+				$responseArray['pages'] = $pages;
+			}
 
-			// set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
-			$pages->pageParam = 'unassignedPage';
+			$assets = $assetQuery->all();
 
-            $assets = $assetQuery->offset($offset)
-                ->limit($listPerPage)
-                ->all();
-
-
-            $responseArray = [];
-
-            $responseArray["pages"] = $pages;
-            $responseArray["assets"] = $assets;
+            $responseArray['assets'] = $assets;
 			
 			//send response
 			$response = Yii::$app->response;
@@ -128,12 +133,14 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssigned($division = null, $workCenter = null, $surveyType = null, $floc = null, $status = null, $dispatchMethod = null, $complianceMonth = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
 			$headers = getallheaders();
 			WebManagementAssignedWorkQueue::setClient($headers['X-Client']);
+			
+			 $responseArray = [];
 			
 			$assetQuery = WebManagementAssignedWorkQueue::find();
 			
@@ -179,33 +186,37 @@ class DispatchController extends Controller
 				['like', 'Division', $filter],
 				['like', 'WorkCenter', $filter],
 				['like', 'SurveyType', $filter],
-				['like', 'MapPlat', $filter],
+				['like', 'FLOC', $filter],
 				['like', 'NotificationID', $filter],
 				['like', 'ComplianceDate', $filter],
 				['like', 'Surveyor', $filter],
-				['like', 'EmployeeType', $filter],
 				['like', 'Status', $filter],
 				['like', 'DispatchMethod', $filter],
 				['like', 'ComplianceYearMonth', $filter],
+				['like', 'AssignedDate', $filter],
 				]);
 			}
 
-            // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countAssetQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
-			$pages->pageParam = 'assignedPage';
+			if($page != null)
+			{
+				// set pagination
+				$countAssetQuery = clone $assetQuery;
+				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
+				$offset = $listPerPage*($page-1);
+				$pages->setPageSize($listPerPage);
+				$pages->pageParam = 'assignedPage';
+				$pages->params = ['per-page' => $listPerPage, 'assignedPage' => $page];
+			
+				$assetQuery->offset($offset)
+                ->limit($listPerPage);
+				
+				$responseArray['pages'] = $pages;
+			}
+            
+			$assets= $assetQuery->all();
 
-            $assets = $assetQuery->offset($offset)
-                ->limit($listPerPage)
-                ->all();
-
-            $responseArray = [];
-
-            $responseArray["pages"] = $pages;
-            $responseArray["assets"] = $assets;
+            $responseArray['assets'] = $assets;
 
 			//send response
 			$response = Yii::$app->response;
@@ -223,10 +234,12 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = null, $page = null)
 	{
 		try
 		{
+			 $responseArray = [];
+			
 			$headers = getallheaders();
 			UserLogin::setClient($headers['X-Client']);
 			
@@ -251,23 +264,27 @@ class DispatchController extends Controller
 				]);
 			}
 
-            //set pagination
-            $countUserQuery = clone $userQuery;
-            $pages = new Pagination(['totalCount' => $countUserQuery->count()]);
-            $offset = $listPerPage*($page-1);
-            $pageSize = ceil($countUserQuery->count()/$listPerPage);
-            $pages->setPageSize($pageSize);
-			$pages->pageParam = 'surveyorPage';
+			if($page != null)
+			{
+				//set pagination
+				$countUserQuery = clone $userQuery;
+				$pages = new Pagination(['totalCount' => $countUserQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
+				$offset = $listPerPage*($page-1);
+				$pages->setPageSize($listPerPage);
+				$pages->pageParam = 'surveyorPage';
+				$pages->params = ['per-page' => $listPerPage, 'surveyorPage' => $page];
 
-            $users = $userQuery->offset($offset)
-                ->asArray()
-                ->limit($listPerPage)
-				->orderBy('UserFullName')
-                ->all();
+				$userQuery->offset($offset)
+					->limit($listPerPage);
 
-            $responseArray = [];
-            $responseArray["pages"] = $pages;
-            $responseArray["users"] = $users;
+				$responseArray['pages'] = $pages;
+			}
+			
+			$users = $userQuery->orderBy('UserFullName')
+				->asArray()
+				->all();
+            $responseArray['users'] = $users;
 			
 			//send response
 			$response = Yii::$app->response;
@@ -296,28 +313,39 @@ class DispatchController extends Controller
 			$responseData = [];
 			
 			$assetCount = count($data['Assignments']);
-			
+
 			for($i = 0; $i < $assetCount; $i++)
 			{
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				$userUID = BaseActiveController::getUserFromToken()->UserUID;
-				
 				AssignedWorkQueue::setClient($headers['X-Client']);
-				$assignment = new AssignedWorkQueue;
-				$assignment->SourceID = $data['SourceID'];
-				$assignment->DispatchMethod = 'Dispatched';
-				$assignment->AssignedDate = BaseActiveController::getDate();
-				$assignment->CreatedUserUID = $userUID;
-				$assignment->ProjectID = 1;
-				$assignment->ActiveFlag = 1;
-				$assignment->Revision = 0;
-				$assignment->ModifiedUserUID = $userUID;
-				$assignment->AssignedWorkQueueUID = BaseActiveController::generateUID('AssignedWorkQueue', $data['SourceID']);
-				$assignment->AssignedInspectionRequestUID = $data['Assignments'][$i]['IR'];
-				$assignment->AssignedUserUID = $data['Assignments'][$i]['User'];
-				if($assignment->save())
+				$currentRecords = AssignedWorkQueue::find()
+					->where(['ActiveFlag' => 1])
+					->andWhere(['AssignedInspectionRequestUID' => $data['Assignments'][$i]['IR']])
+					->andWhere(['AssignedUserUID' => $data['Assignments'][$i]['User']])
+					->count();
+
+				if ($currentRecords < 1)
 				{
-					$responseData[] = $assignment;
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+					$userUID = BaseActiveController::getUserFromToken()->UserUID;
+					
+					AssignedWorkQueue::setClient($headers['X-Client']);
+					$assignment = new AssignedWorkQueue;
+					$assignment->SourceID = $data['SourceID'];
+					$assignment->DispatchMethod = 'Dispatched';
+					$assignment->AssignedDate = BaseActiveController::getDate();
+					$assignment->CreatedUserUID = $userUID;
+					$assignment->ProjectID = 1;
+					$assignment->ActiveFlag = 1;
+					$assignment->Revision = 0;
+					$assignment->ModifiedUserUID = $userUID;
+					$assignment->AssignedWorkQueueUID = BaseActiveController::generateUID('AssignedWorkQueue', $data['SourceID']);
+					$assignment->AssignedInspectionRequestUID = $data['Assignments'][$i]['IR'];
+					$assignment->AssignedUserUID = $data['Assignments'][$i]['User'];
+
+					if($assignment->save())
+					{
+						$responseData[] = $assignment;
+					}
 				}
 			}
 			
