@@ -34,6 +34,9 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatch;
 //tablet dropdowns
 use app\modules\v1\modules\pge\models\DropDowns;
+use app\modules\v1\modules\pge\models\TabletMeter;
+use app\modules\v1\modules\pge\models\TabletFilter;
+use app\modules\v1\modules\pge\models\TabletRegulator;
 
 class DropdownController extends Controller
 {
@@ -1179,14 +1182,12 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs= [];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->Surveyor, 
-				'name'=>$data[$i]->Surveyor];
+				$namePairs[$data[$i]->Surveyor]= $data[$i]->Surveyor;
             }
             //send response
             $response = Yii::$app->response;
@@ -1218,14 +1219,12 @@ class DropdownController extends Controller
 				->andWhere(['WorkCenter'=>$workCenter])
 				->andWhere(['Surveyor'=>$surveyor])
                 ->all();
-            $namePairs= [];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->AOCType, 
-				'name'=>$data[$i]->AOCType];
+				$namePairs[$data[$i]->AOCType]= $data[$i]->AOCType;
             }
             //send response
             $response = Yii::$app->response;
@@ -1248,8 +1247,8 @@ class DropdownController extends Controller
 	//route to provide data for all survey dropdowns on the tablet
 	public function actionGetTabletSurveyDropdowns()
 	{
-		// try
-		// {
+		try
+		{
 			//set db target
 			$headers = getallheaders();
 			DropDowns::setClient($headers['X-Client']);
@@ -1273,7 +1272,7 @@ class DropdownController extends Controller
 			
 			//Service Head Adapter Types
 			$responseData['SurveyDropdowns']['ServiceHeadAdapterTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPServiceHeadAdapterType');
-			/////////////////////////////////////////////////////////////////
+			
 			//Facility Type GD Types
 			$responseData['SurveyDropdowns']['FacilityTypes']= DropdownController::tabletSurveyQuery('ddFacilityType');
 			
@@ -1301,20 +1300,29 @@ class DropdownController extends Controller
 			//yes no
 			$responseData['SurveyDropdowns']['YesNo']= DropdownController::tabletSurveyQuery('ddYesNo');
 			
+			//meter
+			$responseData['SurveyDropdowns']['Meter'] = TabletMeter::find()->all();
+			
+			//filter
+			$responseData['SurveyDropdowns']['Filter'] = TabletFilter::find()->all();
+			
+			//regulator
+			$responseData['SurveyDropdowns']['Regulator'] = TabletRegulator::find()->all();
+			
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $responseData;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	//helper method for standard tablet survey query
