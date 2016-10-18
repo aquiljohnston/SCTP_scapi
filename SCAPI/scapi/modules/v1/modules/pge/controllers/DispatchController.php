@@ -93,6 +93,7 @@ class DispatchController extends Controller
 				['like', 'ComplianceDueDate', $filter],
 				['like', 'SAP Released', $filter],
 				['like', 'Assigned', $filter],
+				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
 			
