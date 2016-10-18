@@ -264,11 +264,6 @@ class LeakLogController extends Controller {
             $query = WebManagementMasterLeakLog::find()
                 ->where(['Division' => $division]);
 
-            $status=trim($status);
-            if ($status) {
-                $query->andWhere(["Status"=> $status]);
-            }
-
             if ($workCenter) {
                 $query->andWhere(["WorkCenter" => $workCenter]);
             }
@@ -298,26 +293,25 @@ class LeakLogController extends Controller {
                 $query->andWhere(['between','Date', $startDate, $endDate]);
             }
 
+            $countersQuery = clone $query;
+            $status=trim($status);
+            if ($status) {
+                $query->andWhere(["Status"=> $status]);
+            }
             $countQuery = clone $query;
+
             $totalCount = $countQuery->count();
             $pages = new Pagination(['totalCount'=>$totalCount]);
             $pages->pageSizeLimit = [1,100];
-            $pages->setPage(($page-1));
+            $pages->setPage(($page));
             $pages->setPageSize($perPage);
 
-            //$offset = $listPerPage*($page-1);
-
-            $pages->pageParam = 'page';
-            $pages->params = ['per-page' => $perPage, 'page' => $page];
-
-
-            $responseArray["pages"] = $pages;
-
+            $offset = $perPage*($page-1);
 
             $query->orderBy(['Date'=>SORT_ASC, 'Surveyor'=>SORT_ASC, 'FLOC'=>SORT_ASC, 'Hours'=>SORT_ASC]);
 
-            $leaks = $query->offset($pages->getOffset())
-                ->limit($pages->getLimit())
+            $leaks = $query->offset($offset)
+                ->limit($perPage)
                 ->all();
 
             $data = [];
@@ -328,25 +322,39 @@ class LeakLogController extends Controller {
 //            $data['limit'] = $pages->getLimit();
 //            $command = $query->createCommand();
 //            $data['sql'] = $command->sql;
+//            $data['page'] = $page;
+//            $data['perPage'] = $perPage;
 
             $counts = [];
+            $counts['notApproved'] = 0;
+            $counts['approvedOrNotSubmitted'] = 0;
+            $counts['submittedOrPending'] = 0;
+            $counts['exceptions'] = 0;
+            $counts['completed'] = 0;
 
-            //TODO rewrite to improve performance
-            $counts['notApproved'] = $countQuery
-                ->where(['Status'=>'Not Approved'])
-                ->count();
-            $counts['approvedOrNotSubmitted'] = $countQuery
-                ->where(['Status'=>'Approved / Not Submitted'])
-                ->count();
-            $counts['submittedOrPending'] = $countQuery
-                ->where(['Status'=>'Submitted / Pending'])
-                ->count();
-            $counts['exceptions'] = $countQuery
-                ->where(['Status'=>'Exceptions'])
-                ->count();
-            $counts['completed'] = $countQuery
-                ->where(['Status'=>'Completed'])
-                ->count();
+            if ($division && $status && $workCenter) {
+                $countQueryNA = clone $countersQuery;
+                $countQueryA = clone $countersQuery;
+                $countQuerySP = clone $countersQuery;
+                $countQueryE = clone $countersQuery;
+                $countQueryC = clone $countersQuery;
+                //TODO rewrite to improve performance
+                $counts['notApproved'] = $countQueryNA
+                    ->andWhere(['Status'=>'Not Approved'])
+                    ->count();
+                $counts['approvedOrNotSubmitted'] = $countQueryA
+                    ->andWhere(['Status'=>'Approved / Not Submitted'])
+                    ->count();
+                $counts['submittedOrPending'] = $countQuerySP
+                    ->andWhere(['Status'=>'Submitted / Pending'])
+                    ->count();
+                $counts['exceptions'] = $countQueryE
+                    ->andWhere(['Status'=>'Exceptions'])
+                    ->count();
+                $counts['completed'] = $countQueryC
+                    ->andWhere(['Status'=>'Completed'])
+                    ->count();
+            }
 
             $data['counts'] = $counts;
 
