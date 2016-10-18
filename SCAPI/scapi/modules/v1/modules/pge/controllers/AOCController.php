@@ -13,17 +13,20 @@ use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v1\modules\pge\models\WebManagementAOC;
+use yii\data\Pagination;
 
 class AocController extends Controller
 {
 
-    public function actionGet($division = null, $workCenter = null, $surveyor = null, $type = null, $startDate = null, $endDate = null, $filter = null)
+    public function actionGet($division = null, $workCenter = null, $surveyor = null, $type = null, $startDate = null, $endDate = null, $filter = null, $listPerPage = null, $page = null)
     {
 		try
 		{
 			//set db
 			$headers = getallheaders();
 			WebManagementAOC::setClient($headers['X-Client']);
+			
+			$responseArray = [];
 			
 			$aocQuery = WebManagementAOC::find();
 			
@@ -72,12 +75,31 @@ class AocController extends Controller
 				]);
 			}
 			
+			if($page != null)
+			{
+				//set pagination
+				$countAOCQuery = clone $aocQuery;
+				$pages = new Pagination(['totalCount' => $countAOCQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
+				$offset = $listPerPage*($page-1);
+				$pages->setPageSize($listPerPage);
+				$pages->pageParam = 'aocPage';
+				$pages->params = ['per-page' => $listPerPage, 'aocPage' => $page];
+				
+				$aocQuery->offset($offset)
+					->limit($listPerPage);
+					
+				$responseArray['pages'] = $pages;
+			}
+			
 			$aocs = $aocQuery->all();
+			
+			$responseArray['aocs'] = $aocs;
 			
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			$response->data = $aocs;
+			$response->data = $responseArray;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)

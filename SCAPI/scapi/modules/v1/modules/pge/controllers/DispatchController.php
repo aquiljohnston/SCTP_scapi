@@ -93,29 +93,30 @@ class DispatchController extends Controller
 				['like', 'ComplianceDueDate', $filter],
 				['like', 'SAP Released', $filter],
 				['like', 'Assigned', $filter],
+				['like', 'ComplianceYearMonth', $filter],
 				]);
 			}
 			
 			if($page != null)
 			{
-			// set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-			$pages->pageSizeLimit = [1,100];
-            $offset = $listPerPage*($page-1);
-            $pages->setPageSize($listPerPage);
-			$pages->pageParam = 'unassignedPage';
-			$pages->params = ['per-page' => $listPerPage, 'unassignedPage' => $page];
-			
-			$assetQuery->offset($offset)
-				->limit($listPerPage);
+				// set pagination
+				$countAssetQuery = clone $assetQuery;
+				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+				$pages->pageSizeLimit = [1,100];
+				$offset = $listPerPage*($page-1);
+				$pages->setPageSize($listPerPage);
+				$pages->pageParam = 'unassignedPage';
+				$pages->params = ['per-page' => $listPerPage, 'unassignedPage' => $page];
 				
-			$responseArray["pages"] = $pages;
+				$assetQuery->offset($offset)
+					->limit($listPerPage);
+					
+				$responseArray['pages'] = $pages;
 			}
 
 			$assets = $assetQuery->all();
 
-            $responseArray["assets"] = $assets;
+            $responseArray['assets'] = $assets;
 			
 			//send response
 			$response = Yii::$app->response;
@@ -212,12 +213,12 @@ class DispatchController extends Controller
 				$assetQuery->offset($offset)
                 ->limit($listPerPage);
 				
-				$responseArray["pages"] = $pages;
+				$responseArray['pages'] = $pages;
 			}
             
 			$assets= $assetQuery->all();
 
-            $responseArray["assets"] = $assets;
+            $responseArray['assets'] = $assets;
 
 			//send response
 			$response = Yii::$app->response;
@@ -279,13 +280,13 @@ class DispatchController extends Controller
 				$userQuery->offset($offset)
 					->limit($listPerPage);
 
-				$responseArray["pages"] = $pages;
+				$responseArray['pages'] = $pages;
 			}
 			
 			$users = $userQuery->orderBy('UserFullName')
 				->asArray()
 				->all();
-            $responseArray["users"] = $users;
+            $responseArray['users'] = $users;
 			
 			//send response
 			$response = Yii::$app->response;
