@@ -17,6 +17,9 @@ class WebManagementMasterLeakLog extends \app\modules\v1\models\BaseActiveRecord
      */
     public static function tableName()
     {
+//        if (YII_ENV_DEV) {
+//            return 'llmgmt';
+//        }
         return 'vWebManagementMasterLeakLog';
     }
 //
