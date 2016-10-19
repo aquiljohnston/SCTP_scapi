@@ -35,11 +35,35 @@ class LeakLogController extends Controller {
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get-details' => ['get'],
+                    'get-detailsbymasterleaklogid' => ['get'],
 					'get-mgnt' => ['get'],
                 ],
             ];
 		return $behaviors;
 	}
+
+    public function actionGetDetailsbymasterleaklogid($masterLeakLogUID)
+	{
+        try
+		{
+            $data = [];
+            $headers = getallheaders();
+            WebManagementMasterLeakLog::setClient($headers['X-Client']);
+            $masterLeakLogRecords = WebManagementMasterLeakLog::find()
+                ->where(['MasterLeakLogUID' => $masterLeakLogUID])
+                ->all();
+            return $this::actionGetDetails($masterLeakLogRecords[0]['Division'], $masterLeakLogRecords[0]['WorkCenter'], $masterLeakLogRecords[0]['Map/Plat'], $masterLeakLogRecords[0]['Surveyor'], $masterLeakLogRecords[0]['Date']);
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
 
     public function actionGetDetails($division, $workCenter, $mapPlat, $surveyor, $date)
 	{
