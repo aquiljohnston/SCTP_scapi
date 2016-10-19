@@ -18,13 +18,8 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
-//assigned todo combine views
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedComplianceDate;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedFLOC;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedSurveyFreq;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedWorkCenter;
-use app\modules\v1\modules\pge\models\WebManagementAssignedWorkQueueStatus;
+//assigned
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssigned;
 //AOC todo combine views
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
@@ -658,11 +653,13 @@ class DropdownController extends Controller
         try{
 			//set db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedDivision::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
             //todo permission check
 			
-			$data = WebManagementDropDownAssignedDivision::find()
+			$data = WebManagementDropDownAssigned::find()
+				->select('Division')
+				->distinct()
                 ->all();
             $namePairs = [null => "Select..."];
             $dataSize = count($data);
@@ -692,11 +689,13 @@ class DropdownController extends Controller
         try{
 			//set db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedWorkCenter::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
             //todo permission check
 			
-			$data = WebManagementDropDownAssignedWorkCenter::find()
+			$data = WebManagementDropDownAssigned::find()
+				->select('WorkCenter')
+				->distinct()
 				->where(['Division'=>$division])
                 ->all();
             $namePairs= [];
@@ -728,22 +727,23 @@ class DropdownController extends Controller
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedSurveyFreq::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
 			
-			$data = WebManagementDropDownAssignedSurveyFreq::find()
-				->select('SurveyType')
+			$data = WebManagementDropDownAssigned::find()
+				->select('SurveyFreq')
+				->distinct()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['not', ['SurveyType' => null]])
+				->andWhere(['not', ['SurveyFreq' => null]])
                 ->all();
             $namePairs = ['All' => 'All'];
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
             {		
-				$namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
+				$namePairs[$data[$i]->SurveyFreq]= $data[$i]->SurveyFreq;
             }
 			
 			
@@ -766,15 +766,17 @@ class DropdownController extends Controller
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedFLOC::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$dataQuery = WebManagementDropDownAssignedFLOC::find()
+			$dataQuery = WebManagementDropDownAssigned::find()
+				->select('FLOC')
+				->distinct()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter]);
 			if($surveyType != 'All')
 			{
-				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyType]);
 			}
             $data = $dataQuery->all();
             $namePairs = ['All' => 'All'];
@@ -800,15 +802,33 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedComplianceMonthDropdown() {
+	public function actionGetAssignedComplianceMonthDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null) {
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedComplianceDate::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownAssignedComplianceDate::find()
-				->orderBy('ComplianceSort')
+			$dataQuery = WebManagementDropDownAssigned::find()
+				->select('ComplianceYearMonth')
+				->distinct();
+			if($division != null)
+			{
+				$dataQuery->andWhere(['Division'=>$division]);
+			}
+			if($workCenter != null)
+			{
+				$dataQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
+			if(!($surveyFreq == null || $surveyFreq == 'All'))
+			{
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyFreq]);
+			}
+			if(!($floc == null || $floc == 'All'))
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}			
+			$data = $dataQuery->orderBy('ComplianceSort')
                 ->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
@@ -833,21 +853,44 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedStatusDropdown() {
+	public function actionGetAssignedStatusDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null) 
+	{
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementAssignedWorkQueueStatus::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementAssignedWorkQueueStatus::find()
-                ->all();
+			$dataQuery = WebManagementDropDownAssigned::find()
+				->select('statustype')
+				->distinct();
+			if($division != null)
+			{
+				$dataQuery->andWhere(['Division'=>$division]);
+			}
+			if($workCenter != null)
+			{
+				$dataQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
+			if(!($surveyFreq == null || $surveyFreq == 'All'))
+			{
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyFreq]);
+			}
+			if(!($floc == null || $floc == 'All'))
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}
+			if($complianceYearMonth != null)
+			{
+				$dataQuery->andWhere(['ComplianceYearMonth'=>$complianceYearMonth]);
+			}
+            $data = $dataQuery->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[$data[$i]->Status]= $data[$i]->Status;
+                $namePairs[$data[$i]->statustype]= $data[$i]->statustype;
             }
 
 			$response = Yii::$app->response;
@@ -865,15 +908,42 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedDispatchMethodDropdown() {
+	public function actionGetAssignedDispatchMethodDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null, $surveyStatus = null) 
+	{
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownDispatchAssignedDispatchMethod::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
-                ->all();
+			$dataQuery = WebManagementDropDownAssigned::find()
+                ->select('DispatchMethod')
+				->distinct();
+			if($division != null)
+			{
+				$dataQuery->andWhere(['Division'=>$division]);
+			}
+			if($workCenter != null)
+			{
+				$dataQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
+			if(!($surveyFreq == null || $surveyFreq == 'All'))
+			{
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyFreq]);
+			}
+			if(!($floc == null || $floc == 'All'))
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}
+			if($complianceYearMonth != null)
+			{
+				$dataQuery->andWhere(['ComplianceYearMonth'=>$complianceYearMonth]);
+			}
+			if($surveyStatus != null)
+			{
+				$dataQuery->andWhere(['statustype'=>$surveyStatus]);
+			}
+            $data = $dataQuery->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
 
@@ -1015,11 +1085,14 @@ class DropdownController extends Controller
 			
             //todo permission check
 			
-			$data = WebManagementDropDownAOCType::find()
+			$dataQuery = WebManagementDropDownAOCType::find()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['Surveyor'=>$surveyor])
-                ->all();
+				->andWhere(['WorkCenter'=>$workCenter]);
+			if($surveyor != null)
+			{
+				$dataQuery->andWhere(['Surveyor'=>$surveyor]);
+			}
+            $data = $dataQuery->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
 
