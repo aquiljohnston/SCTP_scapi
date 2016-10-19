@@ -803,14 +803,14 @@ class DropdownController extends Controller
     }
 	
 	public function actionGetAssignedComplianceMonthDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null) {
-		try{
+		// try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
 			$dataQuery = WebManagementDropDownAssigned::find()
-				->select('ComplianceYearMonth')
+				->select('ComplianceYearMonth', 'ComplianceSort')
 				->distinct();
 			if($division != null)
 			{
@@ -842,15 +842,15 @@ class DropdownController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+		// }
+        // catch(ForbiddenHttpException $e)
+        // {
+            // throw new ForbiddenHttpException;
+        // }
+        // catch(\Exception $e)
+        // {
+            // throw new \yii\web\HttpException(400);
+        // }
     }
 	
 	public function actionGetAssignedStatusDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null) 
