@@ -25,13 +25,15 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
-//dispatch dropdowns
+//dispatch
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatch;
-//tablet dropdowns
+//tablet
+//survey
 use app\modules\v1\modules\pge\models\DropDowns;
 use app\modules\v1\modules\pge\models\TabletMeter;
 use app\modules\v1\modules\pge\models\TabletFilter;
 use app\modules\v1\modules\pge\models\TabletRegulator;
+use app\modules\v1\modules\pge\models\TabletRouteName;
 
 class DropdownController extends Controller
 {
@@ -75,6 +77,7 @@ class DropdownController extends Controller
                     'get-assigned-work-center-dropdown' => ['get'],
                     'get-assigned-division-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
+					'survey-route-name-dropdown' => ['post'],
                 ],
             ];
         return $behaviors;
@@ -1208,6 +1211,45 @@ class DropdownController extends Controller
 				->andWhere(['ActiveFlag'=>1])
 				->orderBy('SortSeq')
 				->all();
+	}
+	
+	//get all pipeline route names based on a map grid uid
+	public function actionSurveyRouteNameDropdown()
+	{
+		try
+		{
+			$post = file_get_contents("php://input");
+			$mapGrids = json_decode($post, true);
+			
+			$responseData['RouteNames'] = [];
+			
+			//set db target
+			$headers = getallheaders();
+			TabletRouteName::setClient($headers['X-Client']);
+			
+			$mapGridCount = count($mapGrids['MapGridUIDs']);
+			
+			for($i = 0; $i < $mapGridCount; $i++)
+			{
+			$responseData['RouteNames'][$mapGrids['MapGridUIDs'][$i]] = TabletRouteName::find()
+				->where(['MapGridUID' => $mapGrids['MapGridUIDs'][$i]])
+				->all();
+			}
+				
+			//send response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}		
 	}
 	/////////////////////TABLET DROPDOWNS END////////////////////////	
 }
