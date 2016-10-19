@@ -1,2 +1,3 @@
 SCAPI/scapi/composer.lock
 SCAPI/scapi/controllers/HandlePasswordController.php
+SCAPI/scapi/config/dev_config_override.php
