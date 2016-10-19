@@ -65,6 +65,10 @@ class LeakLogController extends Controller {
                 if(count($masterLeakLogRecords) == 1)
                 {
                     $data["MasterLeakLog"] = $masterLeakLogRecords[0];
+                    $freq = $data["MasterLeakLog"]['SurveyFreq'];
+                    $freq = str_replace('y', ' Year', $freq);
+                    $freq = str_replace('Y', ' Year', $freq);
+                    $data["MasterLeakLog"]['SurveyFreq'] = $freq;
                     $uid = $masterLeakLogRecords[0]['MasterLeakLogUID'];
                     $leakValues = WebManagementLeaks::find()
                         ->where(['MasterLeakLogUID' => $uid])
@@ -81,6 +85,8 @@ class LeakLogController extends Controller {
                     foreach ($serviceValues as $service) {
                         $data["Services"][] = $service;
                     }
+
+                    $data["SAPExceptions"] = null;
                 }
             }
             //send response
