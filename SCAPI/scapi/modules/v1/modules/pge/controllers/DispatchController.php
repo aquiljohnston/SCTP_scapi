@@ -113,7 +113,8 @@ class DispatchController extends Controller
 				$responseArray['pages'] = $pages;
 			}
 
-			$assets = $assetQuery->all();
+			$assets = $assetQuery->orderBy('ComplianceDueDate')
+				->all();
 
             $responseArray['assets'] = $assets;
 			
@@ -214,7 +215,8 @@ class DispatchController extends Controller
 				$responseArray['pages'] = $pages;
 			}
             
-			$assets= $assetQuery->all();
+			$assets= $assetQuery->orderBy('ComplianceDate')
+				->all();
 
             $responseArray['assets'] = $assets;
 
