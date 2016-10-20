@@ -11,36 +11,95 @@ use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use app\modules\v1\modules\pge\models\WebManagementLeaks;
 use app\modules\v1\modules\pge\models\WebManagementEquipmentServices;
 use Yii;
-use yii\data\Pagination;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
 use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v1\modules\pge\models\TabletEquipment;
+use app\modules\v1\modules\pge\models\InspectionsEquipment;
+use app\modules\v1\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
-class LeakLogController extends Controller {
+class LeakLogController extends BaseActiveController {
+
+    public $modelClass = 'app\modules\v1\modules\pge\models\WebManagementMasterLeakLog';
 
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
 		//Implements Token Authentication to check for Auth Token in Json  Header
-		$behaviors['authenticator'] =
-		[
-			'class' => TokenAuth::className(),
-		];
+        //$behaviors['authenticator'] =
+        //[
+        //    'class' => TokenAuth::className(),
+        //];
 		$behaviors['verbs'] =
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+                    'approve-leak' => ['put'],
 					'get-details' => ['get'],
                     'get-detailsbymasterleaklogid' => ['get'],
 					'get-mgnt' => ['get'],
+
                 ],
             ];
+
 		return $behaviors;
 	}
+
+    public function actions()
+	{
+		$actions = parent::actions();
+		unset($actions['view']);
+		unset($actions['update']);
+		unset($actions['delete']);
+		return $actions;
+    }
+
+    public function actionApproveLeak()
+    {
+        try
+		{
+
+            $headers = getallheaders();
+            WebManagementMasterLeakLog::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+            $passed = 0;
+            $failed = 0;
+            foreach ($data['keylist'] as $leakNumber) {
+                $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.spUpdateLeakState @leakUid=:leakNumber");
+                $command->bindParam(":leakNumber", $leakNumber);
+                $value = $command->queryAll();
+                if($value)
+                {
+                    $passed++;
+                }
+                else
+                {
+                    $failed++;
+                }
+            }
+
+            $result = array($passed, $failed);
+            $response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $result;
+			return $response;
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
 
     public function actionGetDetailsbymasterleaklogid($masterLeakLogUID)
 	{
@@ -170,7 +229,7 @@ class LeakLogController extends Controller {
                     ['like', 'NumofServices', $search],
                     ['like', 'Hours', $search]
                 ]);
-            }
+                }
                 if ($startDate !== null && $endDate !== null) {
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
@@ -230,13 +289,13 @@ class LeakLogController extends Controller {
             $data = [];
             $data['results'] = $leaks;
             $data['pages'] = $pages;
-//            $data['totalCount']  = $totalCount;
-//            $data['offset'] = $pages->getOffset();
-//            $data['limit'] = $pages->getLimit();
-//            $command = $query->createCommand();
-//            $data['sql'] = $command->sql;
-//            $data['page'] = $page;
-//            $data['perPage'] = $perPage;
+            //            $data['totalCount']  = $totalCount;
+            //            $data['offset'] = $pages->getOffset();
+            //            $data['limit'] = $pages->getLimit();
+            //            $command = $query->createCommand();
+            //            $data['sql'] = $command->sql;
+            //            $data['page'] = $page;
+            //            $data['perPage'] = $perPage;
 
             $data['counts'] = $counts;
 
@@ -251,7 +310,8 @@ class LeakLogController extends Controller {
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
-        {   Yii::trace($e->getMessage());
+        {
+            Yii::trace($e->getMessage());
             throw new \yii\web\HttpException(400);
         }
 	}
