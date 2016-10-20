@@ -18,22 +18,22 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
-//assigned todo combine views
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedComplianceDate;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedDivision;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedFLOC;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedSurveyFreq;
-use app\modules\v1\modules\pge\models\WebManagementDropDownAssignedWorkCenter;
-use app\modules\v1\modules\pge\models\WebManagementAssignedWorkQueueStatus;
+//assigned
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssigned;
 //AOC todo combine views
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCDivision;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCSurveyor;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownAOCWorkCenter;
-//dispatch dropdowns
+//dispatch
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatch;
-//tablet dropdowns
+//tablet
+//survey
 use app\modules\v1\modules\pge\models\DropDowns;
+use app\modules\v1\modules\pge\models\TabletMeter;
+use app\modules\v1\modules\pge\models\TabletFilter;
+use app\modules\v1\modules\pge\models\TabletRegulator;
+use app\modules\v1\modules\pge\models\TabletRouteName;
 
 class DropdownController extends Controller
 {
@@ -77,38 +77,10 @@ class DropdownController extends Controller
                     'get-assigned-work-center-dropdown' => ['get'],
                     'get-assigned-division-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
+					'survey-route-name-dropdown' => ['post'],
                 ],
             ];
         return $behaviors;
-    }
-    public function actionGetMapPlatDropdown() {
-		
-		$data = [null => "Select..."];
-        $data["161-30-5-C"] = "161-30-5-C";
-        $data["141-31-3-C"] = "141-31-3-C";
-        $data["171-40-1-B"] = "171-40-1-B";
-        $data["130-15-5-F"] = "130-15-5-F";
-
-        //send response
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
-        $response->data = $data;
-        return $response;
-    }
-
-    public function actionGetSurveyorDropdown() {
-        $data["Doe, Jane (janedoe)"] = "Doe, Jane";
-        $data["Doe, John (johndoe)"] = "Doe, John";
-        $data["Milstone, Fred (fred3)"] = "Milstone, Fred";
-        $data["Randalt, Bill (bill2)"] ="Randalt, Bill";
-        $data["Smith, Bob (bob1)"] = "Smith, Bob";
-
-
-        //send response
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
-        $response->data = $data;
-        return $response;
     }
 
     public function actionGetWeekDropdown()
@@ -151,36 +123,6 @@ class DropdownController extends Controller
         }
     }
 
-
-    public function actionGetWorkCenterDropdown()
-    {
-        //TODO RBAC permission check
-        try{
-            //TODO check headers
-
-            //stub data
-            $dropdown = [null => "Select..."];
-            $dropdown["Zoltun Kulle"] = "Zoltun Kulle";
-            $dropdown["Cydaea"] = "Cydaea";
-            $dropdown["Izual"] = "Izual";
-            $dropdown["Urzael"] = "Urzael";
-
-            //send response
-            $response = Yii::$app->response;
-            $response ->format = Response::FORMAT_JSON;
-            $response->data = $dropdown;
-            return $response;
-        }
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
     /*
      * Belongs to LeakLogDetail
 	 * This is using the wrong View*
@@ -211,146 +153,6 @@ class DropdownController extends Controller
             $response ->format = Response::FORMAT_JSON;
             $response->data = $namePairs;
             return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-    /*
-     * Belongs to LeakLogDetail
-     */
-    public function actionGetSurveyorDependentDropdown($division = null, $mapPlat = null, $date = null, $workCenter = null) {
-		try{
-		
-			$data = [];
-
-			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
-			$data["161-30-5-C"]["Division"] = "Diablo";
-			$data["161-30-5-C"]["SurveyorDisplay"] = "Doe, John (johndoe)";
-			$data["161-30-5-C"]["Surveyor"] = "johndoe";
-			$data["161-30-5-C"]["Date"] = "05/10/2016";
-			$data["161-30-5-C"]["WorkCenter"] = "Izual";
-
-			$data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
-			$data["161-30-3-C"]["Division"] = "Diablo";
-			$data["161-30-3-C"]["SurveyorDisplay"] = "Doe, Jane (janedoe)";
-			$data["161-30-3-C"]["Surveyor"] = "janedoe";
-			$data["161-30-3-C"]["Date"] = "05/11/2016";
-			$data["161-30-3-C"]["WorkCenter"] = "Izual";
-
-			$data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
-			$data["141-31-3-C"]["Division"] = "Azmodan";
-			$data["141-31-3-C"]["SurveyorDisplay"] = "Smith, Bob (bob1)";
-			$data["141-31-3-C"]["Surveyor"] = "bob1";
-			$data["141-31-3-C"]["Date"] = "05/12/2016";
-			$data["141-31-3-C"]["WorkCenter"] = "Cydaea";
-
-			$data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
-			$data["120-31-6-F"]["Division"] = "Malthael";
-			$data["120-31-6-F"]["SurveyorDisplay"] = "Randalt, Bill (bill2)";
-			$data["120-31-6-F"]["Surveyor"] = "bill2";
-			$data["120-31-6-F"]["Date"] = "05/13/2016";
-			$data["120-31-6-F"]["WorkCenter"] = "Urzael";
-
-			$data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
-			$data["110-11-3-A"]["Division"] = "Malthael";
-			$data["110-11-3-A"]["SurveyorDisplay"] = "Milstone, Fred (fred3)";
-			$data["110-11-3-A"]["Surveyor"] = "fred3";
-			$data["110-11-3-A"]["Date"] = "05/14/2016";
-			$data["110-11-3-A"]["WorkCenter"] = "Urzael";
-
-			$filteredData = [];
-			
-			foreach($data as $datum) {
-				if($division == null || $division == $datum["Division"]) {
-					if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
-						if($date == null || $date == $datum["Date"]) {
-							if($workCenter == null || $workCenter == $datum["WorkCenter"])
-							{
-								$entry = [];
-								$entry["id"] = $datum["Surveyor"];
-								$entry["name"] = $datum["SurveyorDisplay"];
-								$filteredData[] = $entry;
-							}
-						}
-					}
-				}
-			}
-
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-
-    }
-    /*
-     * Belongs to LeakLogDetail
-     */
-    public function actionGetDateDependentDropdown($division = null, $surveyor = null, $mapPlat = null) {
-		try{
-		
-			$data = [];
-
-			$data["161-30-5-C"]["MapPlat"] = "161-30-5-C";
-			$data["161-30-5-C"]["Division"] = "Diablo";
-			$data["161-30-5-C"]["Surveyor"] = "johndoe";
-			$data["161-30-5-C"]["Date"] = "05/10/2016";
-
-			$data["161-30-3-C"]["MapPlat"] = "161-30-3-C";
-			$data["161-30-3-C"]["Division"] = "Diablo";
-			$data["161-30-3-C"]["Surveyor"] = "janedoe";
-			$data["161-30-3-C"]["Date"] = "05/11/2016";
-
-			$data["141-31-3-C"]["MapPlat"] = "141-31-3-C";
-			$data["141-31-3-C"]["Division"] = "Azmodan";
-			$data["141-31-3-C"]["Surveyor"] = "bob1";
-			$data["141-31-3-C"]["Date"] = "05/12/2016";
-
-			$data["120-31-6-F"]["MapPlat"] = "120-31-6-F";
-			$data["120-31-6-F"]["Division"] = "Malthael";
-			$data["120-31-6-F"]["Surveyor"] = "bill2";
-			$data["120-31-6-F"]["Date"] = "05/13/2016";
-
-			$data["110-11-3-A"]["MapPlat"] = "110-11-3-A";
-			$data["110-11-3-A"]["Division"] = "Malthael";
-			$data["110-11-3-A"]["Surveyor"] = "fred3";
-			$data["110-11-3-A"]["Date"] = "05/14/2016";
-
-			$filteredData = [];
-			foreach($data as $datum) {
-				if($division == null || $division == $datum["Division"]) {
-					if($surveyor == null || $surveyor == $datum["Surveyor"]) {
-						if($mapPlat == null || $mapPlat == $datum["MapPlat"]) {
-							$entry = [];
-							$entry["id"] = $datum["Date"];
-							$entry["name"] = $datum["Date"];
-							$filteredData[] = $entry;
-						}
-					}
-				}
-			}
-
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
 		}
         catch(ForbiddenHttpException $e)
         {
@@ -854,11 +656,13 @@ class DropdownController extends Controller
         try{
 			//set db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedDivision::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
             //todo permission check
 			
-			$data = WebManagementDropDownAssignedDivision::find()
+			$data = WebManagementDropDownAssigned::find()
+				->select('Division')
+				->distinct()
                 ->all();
             $namePairs = [null => "Select..."];
             $dataSize = count($data);
@@ -888,11 +692,13 @@ class DropdownController extends Controller
         try{
 			//set db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedWorkCenter::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
             //todo permission check
 			
-			$data = WebManagementDropDownAssignedWorkCenter::find()
+			$data = WebManagementDropDownAssigned::find()
+				->select('WorkCenter')
+				->distinct()
 				->where(['Division'=>$division])
                 ->all();
             $namePairs= [];
@@ -924,22 +730,23 @@ class DropdownController extends Controller
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedSurveyFreq::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
 			
-			$data = WebManagementDropDownAssignedSurveyFreq::find()
-				->select('SurveyType')
+			$data = WebManagementDropDownAssigned::find()
+				->select('SurveyFreq')
+				->distinct()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['not', ['SurveyType' => null]])
+				->andWhere(['not', ['SurveyFreq' => null]])
                 ->all();
             $namePairs = ['All' => 'All'];
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
             {		
-				$namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
+				$namePairs[$data[$i]->SurveyFreq]= $data[$i]->SurveyFreq;
             }
 			
 			
@@ -962,15 +769,17 @@ class DropdownController extends Controller
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedFLOC::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$dataQuery = WebManagementDropDownAssignedFLOC::find()
+			$dataQuery = WebManagementDropDownAssigned::find()
+				->select('FLOC')
+				->distinct()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter]);
 			if($surveyType != 'All')
 			{
-				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyType]);
 			}
             $data = $dataQuery->all();
             $namePairs = ['All' => 'All'];
@@ -996,15 +805,33 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedComplianceMonthDropdown() {
+	public function actionGetAssignedComplianceMonthDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null) {
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownAssignedComplianceDate::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownAssignedComplianceDate::find()
-				->orderBy('ComplianceSort')
+			$dataQuery = WebManagementDropDownAssigned::find()
+				->select('ComplianceYearMonth, ComplianceSort')
+				->distinct();
+			if($division != null)
+			{
+				$dataQuery->andWhere(['Division'=>$division]);
+			}
+			if($workCenter != null)
+			{
+				$dataQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
+			if(!($surveyFreq == null || $surveyFreq == 'All'))
+			{
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyFreq]);
+			}
+			if(!($floc == null || $floc == 'All'))
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}			
+			$data = $dataQuery->orderBy('ComplianceSort')
                 ->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
@@ -1029,21 +856,44 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedStatusDropdown() {
+	public function actionGetAssignedStatusDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null) 
+	{
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementAssignedWorkQueueStatus::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementAssignedWorkQueueStatus::find()
-                ->all();
+			$dataQuery = WebManagementDropDownAssigned::find()
+				->select('statustype')
+				->distinct();
+			if($division != null)
+			{
+				$dataQuery->andWhere(['Division'=>$division]);
+			}
+			if($workCenter != null)
+			{
+				$dataQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
+			if(!($surveyFreq == null || $surveyFreq == 'All'))
+			{
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyFreq]);
+			}
+			if(!($floc == null || $floc == 'All'))
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}
+			if($complianceYearMonth != null)
+			{
+				$dataQuery->andWhere(['ComplianceYearMonth'=>$complianceYearMonth]);
+			}
+            $data = $dataQuery->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[$data[$i]->Status]= $data[$i]->Status;
+                $namePairs[$data[$i]->statustype]= $data[$i]->statustype;
             }
 
 			$response = Yii::$app->response;
@@ -1061,15 +911,42 @@ class DropdownController extends Controller
         }
     }
 	
-	public function actionGetAssignedDispatchMethodDropdown() {
+	public function actionGetAssignedDispatchMethodDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null, $surveyStatus = null) 
+	{
         try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownDispatchAssignedDispatchMethod::setClient($headers['X-Client']);
+			WebManagementDropDownAssigned::setClient($headers['X-Client']);
 			
 			//todo permission check
-			$data = WebManagementDropDownDispatchAssignedDispatchMethod::find()
-                ->all();
+			$dataQuery = WebManagementDropDownAssigned::find()
+                ->select('DispatchMethod')
+				->distinct();
+			if($division != null)
+			{
+				$dataQuery->andWhere(['Division'=>$division]);
+			}
+			if($workCenter != null)
+			{
+				$dataQuery->andWhere(['WorkCenter'=>$workCenter]);
+			}
+			if(!($surveyFreq == null || $surveyFreq == 'All'))
+			{
+				$dataQuery->andWhere(['SurveyFreq'=>$surveyFreq]);
+			}
+			if(!($floc == null || $floc == 'All'))
+			{
+				$dataQuery->andWhere(['FLOC'=>$floc]);
+			}
+			if($complianceYearMonth != null)
+			{
+				$dataQuery->andWhere(['ComplianceYearMonth'=>$complianceYearMonth]);
+			}
+			if($surveyStatus != null)
+			{
+				$dataQuery->andWhere(['statustype'=>$surveyStatus]);
+			}
+            $data = $dataQuery->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
 
@@ -1179,14 +1056,12 @@ class DropdownController extends Controller
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-            $namePairs= [];
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->Surveyor, 
-				'name'=>$data[$i]->Surveyor];
+				$namePairs[$data[$i]->Surveyor]= $data[$i]->Surveyor;
             }
             //send response
             $response = Yii::$app->response;
@@ -1213,19 +1088,20 @@ class DropdownController extends Controller
 			
             //todo permission check
 			
-			$data = WebManagementDropDownAOCType::find()
+			$dataQuery = WebManagementDropDownAOCType::find()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter])
-				->andWhere(['Surveyor'=>$surveyor])
-                ->all();
-            $namePairs= [];
+				->andWhere(['WorkCenter'=>$workCenter]);
+			if($surveyor != null)
+			{
+				$dataQuery->andWhere(['Surveyor'=>$surveyor]);
+			}
+            $data = $dataQuery->all();
+            $namePairs = [null => 'All'];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->AOCType, 
-				'name'=>$data[$i]->AOCType];
+				$namePairs[$data[$i]->AOCType]= $data[$i]->AOCType;
             }
             //send response
             $response = Yii::$app->response;
@@ -1248,8 +1124,8 @@ class DropdownController extends Controller
 	//route to provide data for all survey dropdowns on the tablet
 	public function actionGetTabletSurveyDropdowns()
 	{
-		// try
-		// {
+		try
+		{
 			//set db target
 			$headers = getallheaders();
 			DropDowns::setClient($headers['X-Client']);
@@ -1273,7 +1149,7 @@ class DropdownController extends Controller
 			
 			//Service Head Adapter Types
 			$responseData['SurveyDropdowns']['ServiceHeadAdapterTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPServiceHeadAdapterType');
-			/////////////////////////////////////////////////////////////////
+			
 			//Facility Type GD Types
 			$responseData['SurveyDropdowns']['FacilityTypes']= DropdownController::tabletSurveyQuery('ddFacilityType');
 			
@@ -1301,20 +1177,29 @@ class DropdownController extends Controller
 			//yes no
 			$responseData['SurveyDropdowns']['YesNo']= DropdownController::tabletSurveyQuery('ddYesNo');
 			
+			//meter
+			$responseData['SurveyDropdowns']['Meter'] = TabletMeter::find()->all();
+			
+			//filter
+			$responseData['SurveyDropdowns']['Filter'] = TabletFilter::find()->all();
+			
+			//regulator
+			$responseData['SurveyDropdowns']['Regulator'] = TabletRegulator::find()->all();
+			
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $responseData;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	//helper method for standard tablet survey query
@@ -1326,6 +1211,46 @@ class DropdownController extends Controller
 				->andWhere(['ActiveFlag'=>1])
 				->orderBy('SortSeq')
 				->all();
+	}
+	
+	//get all pipeline route names based on a map grid uid
+	public function actionSurveyRouteNameDropdown()
+	{
+		try
+		{
+			$post = file_get_contents("php://input");
+			$mapGrids = json_decode($post, true);
+			
+			$responseData['RouteNames'] = [];
+			
+			//set db target
+			$headers = getallheaders();
+			TabletRouteName::setClient($headers['X-Client']);
+			
+			$mapGridCount = count($mapGrids['MapGridUIDs']);
+			
+			for($i = 0; $i < $mapGridCount; $i++)
+			{
+			$responseData['RouteNames'][$mapGrids['MapGridUIDs'][$i]] = TabletRouteName::find()
+				->select('RouteName')
+				->where(['MapGridUID' => $mapGrids['MapGridUIDs'][$i]])
+				->all();
+			}
+				
+			//send response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}		
 	}
 	/////////////////////TABLET DROPDOWNS END////////////////////////	
 }

@@ -13,7 +13,7 @@ $config = [
 		'v1' => [
 			'class' => 'app\modules\v1\Module',
 		],
-	],	
+	],
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
@@ -98,7 +98,7 @@ if (YII_ENV_DEV) {
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
-		//TO DO add dynamic IPs 
+		//TO DO add dynamic IPs
 		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
 
@@ -106,7 +106,7 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
 		//Allow IPs to access gii: server, local host
-		//TO DO add dynamic IPs 
+		//TO DO add dynamic IPs
 		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
     ];
 

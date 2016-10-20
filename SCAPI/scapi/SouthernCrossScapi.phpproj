@@ -168,6 +168,8 @@
     <Compile Include="modules\v1\modules\pge\models\WebManagementDropDownRoles.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementLeakLogDropDown.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementEquipmentServices.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementLeaks.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementMasterLeakLog.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementOQStatus.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementUsers.php" />

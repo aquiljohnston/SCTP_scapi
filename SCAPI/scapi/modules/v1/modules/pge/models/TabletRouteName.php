@@ -5,18 +5,19 @@ namespace app\modules\v1\modules\pge\models;
 use Yii;
 
 /**
- * This is the model class for table "vWebManagementDropDownDispatchDivision".
+ * This is the model class for table "vTabletRouteName".
  *
- * @property string $Division
+ * @property string $MapGridUID
+ * @property string $RouteName
  */
-class WebManagementDropDownDispatchDivision extends \app\modules\v1\models\BaseActiveRecord
+class TabletRouteName extends \app\modules\v1\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vWebManagementDropDownDispatchDivision';
+        return 'vTabletRouteName';
     }
 
     /**
@@ -25,7 +26,7 @@ class WebManagementDropDownDispatchDivision extends \app\modules\v1\models\BaseA
     public function rules()
     {
         return [
-            [['Division'], 'string']
+            [['MapGridUID', 'RouteName'], 'string']
         ];
     }
 
@@ -35,7 +36,8 @@ class WebManagementDropDownDispatchDivision extends \app\modules\v1\models\BaseA
     public function attributeLabels()
     {
         return [
-            'Division' => 'Division',
+            'MapGridUID' => 'Map Grid Uid',
+            'RouteName' => 'Route Name',
         ];
     }
 }
