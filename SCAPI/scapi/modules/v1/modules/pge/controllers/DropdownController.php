@@ -1232,6 +1232,7 @@ class DropdownController extends Controller
 			for($i = 0; $i < $mapGridCount; $i++)
 			{
 			$responseData['RouteNames'][$mapGrids['MapGridUIDs'][$i]] = TabletRouteName::find()
+				->select('RouteName')
 				->where(['MapGridUID' => $mapGrids['MapGridUIDs'][$i]])
 				->all();
 			}
