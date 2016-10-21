@@ -462,6 +462,7 @@ class UserController extends BaseActiveController
 			
 			//get user
 			$user = SCUser::findOne($userID);
+			$user->UserPassword = '';
 			
 			$equipment = [];
 			//get equipment for user
