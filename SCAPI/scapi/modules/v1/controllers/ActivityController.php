@@ -100,8 +100,8 @@ class ActivityController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{		
-		// try
-		// {
+		try
+		{
 			//set db target
 			$headers = getallheaders();
 			Activity::setClient(BaseActiveController::urlPrefix());
@@ -109,9 +109,12 @@ class ActivityController extends BaseActiveController
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
 			
+			//get uid of user making request
+			$createdBy = Parent::getUserFromToken()->UserUID;
+			
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
+			$data = json_decode($post, true);			
 			$activityArray = $data["activity"];
 			
 			//create and format response json
@@ -124,10 +127,11 @@ class ActivityController extends BaseActiveController
 				//get number of activities
 				$activitySize = count($activityArray);
 				
-				$createdBy = Parent::getUserFromToken()->UserUID;
-				
 				for($i = 0; $i < $activitySize; $i++)
 				{
+					//save json to archive
+					BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
+					
 					$activity = new Activity();
 					$clientActivity = new Activity();
 					$activityArray[$i]["ActivityCreateDate"] = Parent::getDate();
@@ -234,9 +238,7 @@ class ActivityController extends BaseActiveController
 								else
 									{
 										//throw a bad request if any save fails
-										$response->setStatusCode(400);
-										$response->data = "Http: 400 Bad Request - Failed to Save Time Entry";
-										return $response;
+										$data["activity"][$i]["timeEntry"][$t] = 'Http: 400 Bad Request - Failed to Save Time Entry';
 									}
 							}
 						}
@@ -260,9 +262,8 @@ class ActivityController extends BaseActiveController
 								else
 									{
 										//throw a bad request if any save fails
-										$response->setStatusCode(400);
-										$response->data = "Http:400 Bad Request - Failed to Save Mileage Entry";
-										return $response;
+										$data["activity"][$i]["mileageEntry"][$m] = 'Http:400 Bad Request - Failed to Save Mileage Entry';
+
 									}
 							}
 						}
@@ -274,10 +275,11 @@ class ActivityController extends BaseActiveController
 			//build and return the response json
 			$response->data = $data; 
 			return $response;
-		// }
-		// catch(\Exception $e) 
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(\Exception $e) 
+		{
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }

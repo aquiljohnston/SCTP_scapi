@@ -6,6 +6,9 @@ use Yii;
 use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\models\SCUser;
 use app\authentication\TokenAuth;
+use app\modules\v1\modules\pge\models\TabletDataInsertArchive;
+use app\modules\v1\modules\pge\models\TabletDataInsertBreadcrumbArchive;
+use app\modules\v1\modules\pge\models\TabletJSONDataInsertError;
 use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
 use yii\web\ForbiddenHttpException;
@@ -156,5 +159,44 @@ class BaseActiveController extends ActiveController
             $prefix = 'apidev';
         }
 		return $prefix;
+	}
+	
+	// TabletDataInsertArchive;
+	// TabletDataInsertBreadcrumbArchive;
+	// TabletJSONDataInsertError;
+	public static function archiveJson($json, $type, $userUID, $client)
+	{
+		TabletDataInsertArchive::setClient($client);
+		
+		$archiveRecord =  new TabletDataInsertArchive;
+		$archiveRecord->CreatedUserUID = $userUID;
+		$archiveRecord->TransactionType = $type;
+		$archiveRecord->InsertedData = $json;
+		
+		$archiveRecord->save();
+	}
+	
+	public static function archiveBreadcrumbJson($json, $userUID, $client)
+	{
+		TabletDataInsertBreadcrumbArchive::setClient($client);
+		
+		$archiveBreadcrumb = new TabletDataInsertBreadcrumbArchive;
+		$archiveBreadcrumb->UserUID = $userUID;
+		$archiveBreadcrumb->InsertedData = $json;
+		$archiveBreadcrumb->TransactionType = 'Breadcrumb';
+		
+		$archiveBreadcrumb->save();
+	}
+	
+	public static function archiveErrorJson($json, $error, $client)
+	{
+		TabletJSONDataInsertError::setClient($client);
+		
+		$archiveError = new TabletJSONDataInsertError;
+		$archiveError->InsertedData = $json;
+		$archiveError->ErrorNumber = $error->getCode();
+		$archiveError->ErrorMessage = $error->getMessage();
+		
+		$archiveError->save();
 	}
 }
