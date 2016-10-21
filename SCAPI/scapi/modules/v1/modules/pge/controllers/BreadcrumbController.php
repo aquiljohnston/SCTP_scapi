@@ -51,6 +51,10 @@ class BreadcrumbController extends Controller
 			
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			$userUID = BaseActiveController::getUserFromToken()->UserUID;
+			
+			//save json to archive
+			BaseActiveController::archiveBreadcrumbJson($post, $userUID, $headers['X-Client']);
+			
 			$breadcrumbs = $data["Breadcrumbs"];
 			$breadcrumbCount = count($breadcrumbs);
 			$responseArray = [];
@@ -99,6 +103,7 @@ class BreadcrumbController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
