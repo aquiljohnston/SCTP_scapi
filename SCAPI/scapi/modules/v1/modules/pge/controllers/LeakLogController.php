@@ -21,6 +21,7 @@ use app\modules\v1\modules\pge\models\InspectionsEquipment;
 use app\modules\v1\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use yii\data\Pagination;
 
 class LeakLogController extends BaseActiveController {
 
