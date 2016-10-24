@@ -15,6 +15,9 @@ use app\authentication\TokenAuth;
 use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use app\modules\v1\modules\pge\models\WebManagementMapStamps;
+use yii\data\Pagination;
+
 
 class MapStampController extends \yii\web\Controller {
     public function behaviors()
@@ -29,125 +32,129 @@ class MapStampController extends \yii\web\Controller {
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'get-table' => ['get'],
+                    'get-mgmt' => ['get'],
                     'get-detail' => ['get']
                 ],
             ];
         return $behaviors;
     }
 
-    public function actionGetTable($workCenter = null, $surveyor = null, $startDate = null, $endDate = null) {
-        
-		try
-		{
-			$data = [];
+    public function actionGetMgmt($division, $workCenter=null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
+    {
+        //TODO RBAC permission check
+        try{
 
-			$row1 = [];
-			$row1["Division"] = "Diablo";
-			$row1["WorkCenter"] = "Izual";
-			$row1["MapPlat"] = "161-30-5-C";
-			$row1["Status"] = "In Progress";
-			$row1["Type"] = "1 YR";
-			$row1["# of Days"] = "1";
-			$row1["# of Leaks"] = "12";
-			$row1["Notification ID"] = "667171777461";
-			$row1["Date"] = "08/05/2016";
-			$row1["Surveyor"] = "johndoe";
-			$row1["Tab"] = "Not Approved";
-			$data[] = $row1;
+            $headers = getallheaders();
+            WebManagementMapStamps::setClient($headers['X-Client']);
 
-			$row2 = [];
-			$row2["Division"] = "Diablo";
-			$row2["WorkCenter"] = "Izual";
-			$row2["MapPlat"] = "161-30-5-C";
-			$row2["Status"] = "In Progress";
-			$row2["Type"] = "3 YR";
-			$row2["# of Days"] = "1";
-			$row2["# of Leaks"] = "12";
-			$row2["Notification ID"] = "667171777461";
-			$row2["Date"] = "08/05/2016";
-			$row2["Surveyor"] = "janedoe";
-			$row2["Tab"] = "Approved / Not Submitted";
-			$data[] = $row2;
+            $counts = [];
+            $counts['inProgress'] = 0;
+            $counts['pending'] = 0;
+            $counts['exceptions'] = 0;
+            $counts['completed'] = 0;
 
-			$row3 = [];
-			$row3["Division"] = "Azmodan";
-			$row3["WorkCenter"] = "Cydaea";
-			$row3["MapPlat"] = "141-31-3-C";
-			$row3["Status"] = "In Progress";
-			$row3["Type"] = "5 YR";
-			$row3["# of Days"] = "1";
-			$row3["# of Leaks"] = "12";
-			$row3["Notification ID"] = "667171777461";
-			$row3["Date"] = "05/05/2016";
-			$row3["Surveyor"] = "bob1";
-			$row3["Tab"] = "Submitted / Pending";
-			$data[] = $row3;
+            if ($division && $workCenter) {
+                $query = WebManagementMapStamps::find();
+                $query->where(['Division' => $division]);
+                $query->andWhere(['WorkCenter' => $workCenter]);
 
-			$row4 = [];
-			$row4["Division"] = "Malthael";
-			$row4["WorkCenter"] = "Urzael";
-			$row4["MapPlat"] = "141-31-3-C";
-			$row4["Status"] = "In Progress";
-			$row4["Type"] = "TR";
-			$row4["# of Days"] = "1";
-			$row4["# of Leaks"] = "12";
-			$row4["Notification ID"] = "667171777461";
-			$row4["Date"] = "05/05/2016";
-			$row4['Surveyor'] = 'bill2';
-			$row4['Tab'] = 'Exceptions';
-			$data[] = $row4;
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', 'WorkCenter', $search],
+                        ['like', 'FLOC', $search],
+                        ['like', 'SurveyFreq', $search],
+                        ['like', 'Type', $search],
+                        ['like', 'ComplianceDate', $search],
+                        ['like', 'TotalNbOfDays', $search],
+                        ['like', 'TotalNbOfLeaks', $search],
+                        ['like', 'TotalFeetOfMain', $search],
+                        ['like', 'TotalNbOfServices', $search],
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    $query->andWhere(['between', 'ComplianceDate', $startDate, $endDate]);
+                }
 
+                $countersQuery = clone $query;
+                $status = trim($status);
+                if ($status) {
+                    $query->andWhere(["Status" => $status]);
+                }
+                $countQuery = clone $query;
 
-			$row4 = [];
-			$row4["Division"] = "Malthael";
-			$row4["WorkCenter"] = "Urzael";
-			$row4["MapPlat"] = "110-11-3-A";
-			$row4["Status"] = "In Progress";
-			$row4["Type"] = "3 YR";
-			$row4["# of Days"] = "1";
-			$row4["# of Leaks"] = "12";
-			$row4["Notification ID"] = "667171777461";
-			$row4["Date"] = "05/05/2016";
-			$row4['Surveyor'] = 'fred3';
-			$row4['Tab'] = 'Completed';
-			$data[] = $row4;
+                $totalCount = $countQuery->count();
+                $pages = new Pagination(['totalCount' => $totalCount]);
+                $pages->pageSizeLimit = [1, 100];
+                $pages->setPage(($page));
+                $pages->setPageSize($perPage);
 
+                $offset = $perPage * ($page - 1);
 
-			$filteredData = [];
-			$filteredData['Not Approved'] = [];
-			$filteredData['Approved / Not Submitted'] = [];
-			$filteredData['Submitted / Pending'] = [];
-			$filteredData['Exceptions'] = [];
-			$filteredData['Completed'] = [];
+                $query->orderBy(['ComplianceDate' => SORT_ASC, 'FLOC' => SORT_ASC]);
 
+                $entries = $query->offset($offset)
+                    ->limit($perPage)
+                    ->all();
 
-			$datesPresent = $startDate != null && $endDate != null;
-			for($i = 0; $i < count($data); $i++) {
-				if($workCenter == null || $data[$i]['WorkCenter'] == $workCenter) {
-					if($surveyor == null || $data[$i]['Surveyor'] == $surveyor) {
-						if(!$datesPresent || BaseActiveController::inDateRange($data[$i]['Date'], $startDate, $endDate)) {
-							$filteredData[$data[$i]['Tab']][] = $data[$i];
-						}
-					}
-				}
-			}
+                if ($division && $status && $workCenter) {
+                    $countQueryInProgress = clone $countersQuery;
+                    $countQueryPending = clone $countersQuery;
+                    $countQueryExceptions = clone $countersQuery;
+                    $countQueryCompleted = clone $countersQuery;
+                    //TODO rewrite to improve performance
+                    $counts['inProgress'] = $countQueryInProgress
+                        ->andWhere(['Status'=>'In Progress'])
+                        ->count();
+                    $counts['pending'] = $countQueryPending
+                        ->andWhere(['Status'=>'Pending'])
+                        ->count();
+                    $counts['exceptions'] = $countQueryExceptions
+                        ->andWhere(['Status'=>'Exceptions'])
+                        ->count();
+                    $counts['completed'] = $countQueryCompleted
+                        ->andWhere(['Status'=>'Completed'])
+                        ->count();
+                }
+            } else {
+                $pages = new Pagination(['totalCount' => 0]);
+                $pages->pageSizeLimit = [1, 100];
+                $pages->setPage(($page));
+                $pages->setPageSize($perPage);
+                $entries =[];
+            } // end division and workcenter check
 
+            $data = [];
+            $data['results'] = $entries;
+            $data['pages'] = $pages;
+            //            $data['totalCount']  = $totalCount;
+            //            $data['offset'] = $pages->getOffset();
+            //            $data['limit'] = $pages->getLimit();
+            //            $command = $query->createCommand();
+            //            $data['sql'] = $command->sql;
+            //            $data['page'] = $page;
+            //            $data['perPage'] = $perPage;
 
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $filteredData;
-			return $response;
-		}
+            $data['counts'] = $counts;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        }
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
         {
+            Yii::trace($e->getMessage());
             throw new \yii\web\HttpException(400);
         }
     }
+
     public function actionGetDetail($id) {
         if($id === "") {
             throw new BadRequestHttpException("Empty ID argument");
