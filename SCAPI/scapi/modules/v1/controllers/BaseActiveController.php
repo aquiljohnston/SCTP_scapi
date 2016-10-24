@@ -154,7 +154,10 @@ class BaseActiveController extends ActiveController
 	{
 		$url = explode(".", $_SERVER['SERVER_NAME']);
 		$prefix = $url[0];
-        if($_SERVER['SERVER_NAME'] === 'localhost')
+        if(YII_ENV_DEV && (strpos($_SERVER['SERVER_NAME'],'local')!==false
+                ||  $_SERVER['SERVER_NAME'] === '0.0.0.0'
+                || strpos($_SERVER['SERVER_NAME'],'192.168.')===0)
+        )
         {
             $prefix = 'apidev';
         }
