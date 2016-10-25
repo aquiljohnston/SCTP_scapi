@@ -15,7 +15,7 @@ use app\authentication\TokenAuth;
 use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
-use app\modules\v1\modules\pge\models\WebManagementMapStamps;
+use app\modules\v1\modules\pge\models\WebManagementMapStampManagement;
 use yii\data\Pagination;
 
 
@@ -45,16 +45,17 @@ class MapStampController extends \yii\web\Controller {
         try{
 
             $headers = getallheaders();
-            WebManagementMapStamps::setClient($headers['X-Client']);
+            WebManagementMapStampManagement::setClient($headers['X-Client']);
 
             $counts = [];
             $counts['inProgress'] = 0;
-            $counts['pending'] = 0;
-            $counts['exceptions'] = 0;
+            $counts['approvedNotSubmitted'] = 0;
+            $counts['submittedPending'] = 0;
+            $counts['returned'] = 0;
             $counts['completed'] = 0;
 
             if ($division && $workCenter) {
-                $query = WebManagementMapStamps::find();
+                $query = WebManagementMapStampManagement::find();
                 $query->where(['Division' => $division]);
                 $query->andWhere(['WorkCenter' => $workCenter]);
 
@@ -64,13 +65,13 @@ class MapStampController extends \yii\web\Controller {
                         ['like', 'Division', $search],
                         ['like', 'WorkCenter', $search],
                         ['like', 'FLOC', $search],
-                        ['like', 'SurveyFreq', $search],
-                        ['like', 'Type', $search],
+                        ['like', 'SurveyType', $search],
+                        ['like', 'InspectionType', $search],
                         ['like', 'ComplianceDate', $search],
-                        ['like', 'TotalNbOfDays', $search],
-                        ['like', 'TotalNbOfLeaks', $search],
+                        ['like', 'TotalNoOfDays', $search],
+                        ['like', 'TotalNoOfLeaks', $search],
                         ['like', 'TotalFeetOfMain', $search],
-                        ['like', 'TotalNbOfServices', $search],
+                        ['like', 'TotalServices', $search],
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
@@ -80,7 +81,7 @@ class MapStampController extends \yii\web\Controller {
                 $countersQuery = clone $query;
                 $status = trim($status);
                 if ($status) {
-                    $query->andWhere(["Status" => $status]);
+                    $query->andWhere(['MapStampStatus' => $status]);
                 }
                 $countQuery = clone $query;
 
@@ -100,27 +101,31 @@ class MapStampController extends \yii\web\Controller {
 
                 if ($division && $status && $workCenter) {
                     $countQueryInProgress = clone $countersQuery;
+                    $countQueryApprovedNotSubmitted = clone $countersQuery;
                     $countQueryPending = clone $countersQuery;
-                    $countQueryExceptions = clone $countersQuery;
+                    $countQueryReturned = clone $countersQuery;
                     $countQueryCompleted = clone $countersQuery;
                     //TODO rewrite to improve performance
                     $counts['inProgress'] = $countQueryInProgress
-                        ->andWhere(['Status'=>'In Progress'])
+                        ->andWhere(['MapStampStatus'=>'In Progress'])
                         ->count();
-                    $counts['pending'] = $countQueryPending
-                        ->andWhere(['Status'=>'Pending'])
+                    $counts['approvedNotSubmitted'] = $countQueryApprovedNotSubmitted
+                        ->andWhere(['MapStampStatus'=>'Approved/NotSubmitted'])
                         ->count();
-                    $counts['exceptions'] = $countQueryExceptions
-                        ->andWhere(['Status'=>'Exceptions'])
+                    $counts['submittedPending'] = $countQueryPending
+                        ->andWhere(['MapStampStatus'=>'Submit/Pending'])
+                        ->count();
+                    $counts['returned'] = $countQueryReturned
+                        ->andWhere(['MapStampStatus'=>'Returned'])
                         ->count();
                     $counts['completed'] = $countQueryCompleted
-                        ->andWhere(['Status'=>'Completed'])
+                        ->andWhere(['MapStampStatus'=>'Completed'])
                         ->count();
                 }
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
-                $pages->setPage(($page));
+                $pages->setPage(0);
                 $pages->setPageSize($perPage);
                 $entries =[];
             } // end division and workcenter check

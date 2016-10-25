@@ -282,7 +282,7 @@ class LeakLogController extends BaseActiveController {
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
-                $pages->setPage(($page));
+                $pages->setPage(0);
                 $pages->setPageSize($perPage);
                 $leaks =[];
             } // end division and workcenter check
