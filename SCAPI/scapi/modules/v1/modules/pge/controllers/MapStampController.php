@@ -89,15 +89,15 @@ class MapStampController extends \yii\web\Controller {
                 $totalCount = $countQuery->count();
                 $pages = new Pagination(['totalCount' => $totalCount]);
                 $pages->pageSizeLimit = [1, 100];
-                $pages->setPage(($page));
                 $pages->setPageSize($perPage);
-
-                $offset = $perPage * ($page - 1);
+                $pages->setPage($page,true);
+                $offset = $pages->getOffset();//$perPage * ($page - 1);
+                $limit = $pages->getLimit();
 
                 $query->orderBy(['ComplianceDate' => SORT_ASC, 'FLOC' => SORT_ASC]);
 
                 $entries = $query->offset($offset)
-                    ->limit($perPage)
+                    ->limit($limit)
                     ->all();
 
                 if ($division && $status && $workCenter) {
