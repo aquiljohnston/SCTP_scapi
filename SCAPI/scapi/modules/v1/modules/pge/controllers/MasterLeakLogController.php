@@ -50,8 +50,11 @@ class MasterLeakLogController extends Controller
 			$headers = getallheaders();
 			MasterLeakLog::setClient($headers['X-Client']);
 			
-			$put = file_get_contents("php://input");
-			$data = json_decode($put, true);
+			$post = file_get_contents("php://input");
+			$data = json_decode($post, true);
+			
+			//save json to archive
+			BaseActiveController::archiveJson($post, 'MasterLeakLogCreate', $UserUID, $headers['X-Client']);
 			
 			$logArray = $data['MasterLeakLog']['Logs'];
 			$equipmentArray = $data['MasterLeakLog']['Equipment'];
@@ -151,6 +154,7 @@ class MasterLeakLogController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}

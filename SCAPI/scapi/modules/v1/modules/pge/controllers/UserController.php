@@ -96,7 +96,9 @@ class UserController extends BaseActiveController
 			
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			PermissionsController::requirePermission('userCreate');
-		
+			
+			// UID of current user that is creating new user
+			$userCreatedUID = self::getUserFromToken()->UserUID;
 			
 			//create response
 			$response = Yii::$app->response;
@@ -158,9 +160,7 @@ class UserController extends BaseActiveController
 				PermissionsController::requirePermission('userCreateAdmin');
 			}
 			
-			// UID of current user that is creating new user
 			SCUser::setClient(BaseActiveController::urlPrefix());
-			$userCreatedUID = self::getUserFromToken()->UserUID;
 			if(array_key_exists('Source', $data))
 			{
 				$userUID = BaseActiveController::generateUID('User', $data['Source']);
