@@ -1090,7 +1090,8 @@ class DropdownController extends Controller
 			
 			$dataQuery = WebManagementDropDownAOCType::find()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter]);
+				->andWhere(['WorkCenter'=>$workCenter])
+				->andWhere(['not', ['AOCType'=> null]]);
 			if($surveyor != null)
 			{
 				$dataQuery->andWhere(['Surveyor'=>$surveyor]);
@@ -1221,7 +1222,7 @@ class DropdownController extends Controller
 			$post = file_get_contents("php://input");
 			$mapGrids = json_decode($post, true);
 			
-			$responseData['RouteNames'] = [];
+			$responseData['SurveyRouteNames'] = [];
 			
 			//set db target
 			$headers = getallheaders();
@@ -1231,10 +1232,23 @@ class DropdownController extends Controller
 			
 			for($i = 0; $i < $mapGridCount; $i++)
 			{
-			$responseData['RouteNames'][$mapGrids['MapGridUIDs'][$i]] = TabletRouteName::find()
-				->select('RouteName')
-				->where(['MapGridUID' => $mapGrids['MapGridUIDs'][$i]])
-				->all();
+				$routeNames = TabletRouteName::find()
+					->select('RouteName')
+					->where(['MapGridUID' => $mapGrids['MapGridUIDs'][$i]])
+					->all();
+				
+				$routeNameArray = [];
+				$routeNameCount = count($routeNames);
+				
+				for($j = 0; $j < $routeNameCount; $j++)
+				{
+					$routeNameArray[] = $routeNames[$j]->RouteName;
+				}
+				
+				$responseData['SurveyRouteNames'][]=[
+				'MapGridUID' => $mapGrids['MapGridUIDs'][$i],
+				'RouteNames' => $routeNameArray
+				]; 
 			}
 				
 			//send response
