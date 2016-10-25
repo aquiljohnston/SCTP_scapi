@@ -1090,7 +1090,8 @@ class DropdownController extends Controller
 			
 			$dataQuery = WebManagementDropDownAOCType::find()
 				->where(['Division'=>$division])
-				->andWhere(['WorkCenter'=>$workCenter]);
+				->andWhere(['WorkCenter'=>$workCenter])
+				->andWhere(['not', ['AOCType'=> null]]);
 			if($surveyor != null)
 			{
 				$dataQuery->andWhere(['Surveyor'=>$surveyor]);

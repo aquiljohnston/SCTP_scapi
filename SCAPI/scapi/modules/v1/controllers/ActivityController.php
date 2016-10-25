@@ -238,7 +238,7 @@ class ActivityController extends BaseActiveController
 								else
 									{
 										//throw a bad request if any save fails
-										$data["activity"][$i]["timeEntry"][$t] = 'Http: 400 Bad Request - Failed to Save Time Entry';
+										$data["activity"][$i]["timeEntry"][$t] = 'Failed to Save Time Entry';
 									}
 							}
 						}
@@ -262,7 +262,7 @@ class ActivityController extends BaseActiveController
 								else
 									{
 										//throw a bad request if any save fails
-										$data["activity"][$i]["mileageEntry"][$m] = 'Http:400 Bad Request - Failed to Save Mileage Entry';
+										$data["activity"][$i]["mileageEntry"][$m] = 'Failed to Save Mileage Entry';
 
 									}
 							}
