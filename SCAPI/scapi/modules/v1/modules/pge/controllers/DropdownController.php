@@ -865,7 +865,7 @@ class DropdownController extends Controller
 			
 			//todo permission check
 			$dataQuery = WebManagementDropDownAssigned::find()
-				->select('statustype')
+				->select('StatusType')
 				->distinct();
 			if($division != null)
 			{
@@ -893,7 +893,7 @@ class DropdownController extends Controller
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[$data[$i]->statustype]= $data[$i]->statustype;
+                $namePairs[$data[$i]->StatusType]= $data[$i]->StatusType;
             }
 
 			$response = Yii::$app->response;
