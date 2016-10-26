@@ -163,94 +163,26 @@ class MapStampController extends \yii\web\Controller {
         if($id === "") {
             throw new BadRequestHttpException("Empty ID argument");
         }
-        $tableData = [];
-        $data = [];
-        $info = [];
-		
-        $info['Id'] = 1;
-        $info['Status'] = 'Reviewed';
-        $info['SurveyArea'] = '1';
-        $info['SurveyType'] = 'TR';
-        $info['DateSurveyed'] = '08/23/2016';
-        $info['SurveyorLanID'] = 'PGE4';
-        $info['InstType'] = 'DPIR';
-        $info['InstSerialNum'] = 'GI_900121821';
-        $info['WindSpeedStart'] = 10;
-        $info['WindSpeedMid'] = 12;
-        $info['Foot'] = false;
-        $info['Mobile'] = true;
-        $info['FeetOfMain'] = 3450;
-        $info['NumOfService'] = 56;
 
-        $tableData[] = $info;
-
-        $info2['Id'] = 2;
-        $info2['Status'] = 'Reviewed';
-        $info2['SurveyArea'] = '1';
-        $info2['SurveyType'] = 'TR';
-        $info2['DateSurveyed'] = '08/23/2016';
-        $info2['SurveyorLanID'] = 'PGE5';
-        $info2['InstType'] = 'DPIR';
-        $info2['InstSerialNum'] = 'GI_907161841';
-        $info2['WindSpeedStart'] = 10;
-        $info2['WindSpeedMid'] = 12;
-        $info2['Foot'] = true;
-        $info2['Mobile'] = false;
-        $info2['FeetOfMain'] = 1311;
-        $info2['NumOfService'] = 93;
-
-        $tableData[] = $info2;
-
-
-        $info3['Id'] = 3;
-        $info3['Status'] = 'In Progress';
-        $info3['SurveyArea'] = '1';
-        $info3['SurveyType'] = 'TR';
-        $info3['DateSurveyed'] = '08/23/2016';
-        $info3['SurveyorLanID'] = 'PGE5';
-        $info3['InstType'] = 'DPIR';
-        $info3['InstSerialNum'] = 'GI_907161841';
-        $info3['WindSpeedStart'] = 10;
-        $info3['WindSpeedMid'] = 12;
-        $info3['Foot'] = true;
-        $info3['Mobile'] = false;
-        $info3['FeetOfMain'] = 1311;
-        $info3['NumOfService'] = 93;
-
-        $tableData[] = $info3;
-
-        $data['TableData'] = [];
-        $data['Status'] = "Not Approved";
-        $data['PICTotalFeetOfMain'] = 103574;
-		$data['PICTotalServices'] = 497;
-        $data['TotalFeetOfMain'] = 207295;
-        $data['TotalServices'] = 1100;
-
-//        foreach($tableData as $item) {
-//            if($item['Id'] == $id) { // We want loose equals
-//                $data['TableData'][] = $item;
-//            }
-//        }
         $headers = getallheaders();
         WebManagementMapStampManagement::setClient($headers['X-Client']);
         WebManagementMapStampDetail::setClient($headers['X-Client']);
 
-        $entryMgmt = [];
+        $generalInfo = [];
         $entriesDetails = [];
         $data = [];
 
         if ($id) {
-//            $queryMgmt = WebManagementMapStampManagement::find()->where(['InspectionRequestUID'=>$id]);
-//            $queryDetails = WebManagementMapStampDetail::find()->where(['IRUID'=>$id]);
-//
-//            $entryMgmt = $queryMgmt->limit(1)->all();
-//            $entriesDetails = $queryDetails->all();
+            $queryMgmt = WebManagementMapStampManagement::find()->where(['InspectionRequestUID'=>$id]);
+            $queryDetails = WebManagementMapStampDetail::find()->where(['IRUID'=>$id]);
 
+            $generalInfo = $queryMgmt->one();
+            $entriesDetails = $queryDetails->all();
         }
-        $entriesDetails = $tableData;
-        $data['generalInfo'] = $entryMgmt;
+//        Yii::trace(print_r($generalInfo,true));
+
+        $data['generalInfo'] = $generalInfo;
 		$data['results'] = $entriesDetails;
-//        $data['results'] = $tableData;
 
 		$response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
