@@ -188,6 +188,7 @@ class DropdownController extends Controller
 
             $values = WebManagementLeakLogDropDown::find()
                 ->select(['Division'])
+                ->where(['not', ['Division' => null]])
                 ->distinct()
                 ->all();
 
@@ -510,6 +511,7 @@ class DropdownController extends Controller
                     ->select(['Date'])
                     ->where(['Division' => $division])
                     ->andWhere(['WorkCenter' => $workCenter])
+					->andWhere(['not' ,['Date' => null]])
                     ->distinct()
                     ->all();
             }
@@ -522,6 +524,7 @@ class DropdownController extends Controller
                      ->andWhere(['WorkCenter' => $workCenter])
                      ->andWhere(['Surveyor' => $surveyor])
                      ->andWhere(['Map/Plat' => $mapPlat])
+					 ->andWhere(['not' ,['Date' => null]])
                      ->distinct()
                      ->all();
             }
