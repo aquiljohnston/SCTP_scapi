@@ -39,6 +39,7 @@ class LeakLogController extends BaseActiveController {
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+                    'submit-leak' => ['put'],
                     'approve-leak' => ['put'],
 					'get-details' => ['get'],
                     'get-detailsbymasterleaklogid' => ['get'],
@@ -59,6 +60,37 @@ class LeakLogController extends BaseActiveController {
 		return $actions;
     }
 
+    public function actionSubmitLeak()
+    {
+        try
+		{
+            $headers = getallheaders();
+            WebManagementMasterLeakLog::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+            $masterLeakUid = $data['masterleakUID'];
+            $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.stub_spSubmitMasterLeak @masterLeakUid=:masterLeakUid, @userId=:userId");
+            $command->bindParam(":masterLeakUid", $masterLeakUid);
+            $command->bindParam(":userId", $data['user']);
+            $value = $command->queryAll();
+
+            $response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $value;
+			return $response;
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
     public function actionApproveLeak()
     {
         try
@@ -72,8 +104,9 @@ class LeakLogController extends BaseActiveController {
             $passed = 0;
             $failed = 0;
             foreach ($data['keylist'] as $leakNumber) {
-                $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.spUpdateLeakState @leakUid=:leakNumber");
+                $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.stub_spUpdateLeakState @leakUid=:leakNumber, @userId=:userId");
                 $command->bindParam(":leakNumber", $leakNumber);
+                $command->bindParam(":userId", $data['user']);
                 $value = $command->queryAll();
                 if($value)
                 {
