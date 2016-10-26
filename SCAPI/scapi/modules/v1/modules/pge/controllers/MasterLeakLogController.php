@@ -113,6 +113,7 @@ class MasterLeakLogController extends Controller
 							$inspectionService->CreatedUserUID = $UserUID;
 							$inspectionService->ModifiedUserUID = $UserUID;
 							$inspectionService->PlaceHolderFlag = 1;
+							$inspectionService->StatusType = 'In Progress';
 							//if new record saves set new record flag to true
 							if ($inspectionService->save())
 							{

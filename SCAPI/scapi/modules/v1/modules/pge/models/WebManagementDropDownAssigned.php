@@ -11,7 +11,7 @@ use Yii;
  * @property string $WorkCenter
  * @property string $SurveyFreq
  * @property string $FLOC
- * @property string $statustype
+ * @property string $StatusType
  * @property string $DispatchMethod
  * @property string $ComplianceYearMonth
  * @property string $ComplianceSort
@@ -32,7 +32,8 @@ class WebManagementDropDownAssigned extends \app\modules\v1\models\BaseActiveRec
     public function rules()
     {
         return [
-            [['Division', 'WorkCenter', 'SurveyFreq', 'FLOC', 'statustype', 'DispatchMethod', 'ComplianceYearMonth', 'ComplianceSort'], 'string']
+            [['Division', 'WorkCenter', 'SurveyFreq', 'FLOC', 'StatusType', 'DispatchMethod', 'ComplianceYearMonth', 'ComplianceSort'], 'string'],
+            [['StatusType'], 'required']
         ];
     }
 
@@ -46,7 +47,7 @@ class WebManagementDropDownAssigned extends \app\modules\v1\models\BaseActiveRec
             'WorkCenter' => 'Work Center',
             'SurveyFreq' => 'Survey Freq',
             'FLOC' => 'Floc',
-            'statustype' => 'Statustype',
+            'StatusType' => 'Status Type',
             'DispatchMethod' => 'Dispatch Method',
             'ComplianceYearMonth' => 'Compliance Year Month',
             'ComplianceSort' => 'Compliance Sort',

@@ -80,11 +80,13 @@ class LoginController extends Controller
 				$response->setStatusCode(401);
 				return $response;
 			}
-			//Fail
-			//Send error
+			
+			$authArray = ArrayHelper::toArray($auth);
+			$authArray['UserFirstName'] = $user->UserFirstName;
+			$authArray['UserLastName'] = $user->UserLastName;
 			
 			//add auth token to response
-			$response->data = $auth;
+			$response->data = $authArray;
 			return $response;
 		}
 		catch(\Exception $e) 

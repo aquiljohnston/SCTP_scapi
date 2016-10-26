@@ -1,0 +1,26 @@
+﻿CREATE TABLE [dbo].[tAssignedWorkQueue] (
+    [AssignedWorkQueueID]          INT                IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [AssignedWorkQueueUID]         VARCHAR (100)      NULL,
+    [ProjectID]                    INT                NULL,
+    [SourceID]                     VARCHAR (100)      NULL,
+    [CreatedUserUID]               VARCHAR (100)      NOT NULL,
+    [ModifiedUserUID]              VARCHAR (100)      NOT NULL,
+    [SrvCreatedDTLT]               DATETIME           CONSTRAINT [DF_t_AssignedWorkQueues_SrvDTLT] DEFAULT (getdate()) NULL,
+    [SrvCreatedDTLTOffset]         DATETIMEOFFSET (7) CONSTRAINT [DF_t_AssignedWorkQueues_SrvDTLTOffset] DEFAULT (sysdatetimeoffset()) NULL,
+    [SrvModifiedDTLT]              DATETIME           NULL,
+    [SrvModifiedDTLTOffset]        DATETIMEOFFSET (7) NULL,
+    [Comments]                     VARCHAR (2000)     NULL,
+    [RevisionComments]             VARCHAR (500)      NULL,
+    [Revision]                     INT                CONSTRAINT [DF_t_AssignedWorkQueues_Revision] DEFAULT ((0)) NOT NULL,
+    [ActiveFlag]                   BIT                CONSTRAINT [DF_tAssignedWorkQueue_ActiveFlag] DEFAULT ((1)) NOT NULL,
+    [AssignedInspectionRequestUID] VARCHAR (100)      NULL,
+    [AssignedUserUID]              VARCHAR (100)      NULL,
+    [AssignedDate]                 DATE               NULL,
+    [AcceptedDate]                 DATE               NULL,
+    [AcceptedFlag]                 BIT                CONSTRAINT [DF_t_AssignedWorkQueues_AcceptedFlag] DEFAULT ((0)) NULL,
+    [LockedFlag]                   BIT                CONSTRAINT [DF_t_AssignedWorkQueues_Locked] DEFAULT ((0)) NULL,
+    [PendingDeleteFlag]            BIT                CONSTRAINT [DF_t_AssignedWorkQueues_PendingReassignFlag] DEFAULT ((0)) NULL,
+    [DispatchMethod]               VARCHAR (20)       NULL,
+    CONSTRAINT [PK_t_AssignedWorkQueue] PRIMARY KEY CLUSTERED ([AssignedWorkQueueID] ASC)
+);
+

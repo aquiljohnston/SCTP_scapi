@@ -1,0 +1,27 @@
+﻿CREATE TABLE [dbo].[rFormParameter] (
+    [FormParametersID]             INT            IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
+    [FormParameterUID]             VARCHAR (100)  NOT NULL,
+    [ProjectID]                    INT            NOT NULL,
+    [CreatedUserUID]               VARCHAR (100)  NOT NULL,
+    [ModifiedUserUID]              VARCHAR (100)  NOT NULL,
+    [CreateDTLT]                   DATETIME       CONSTRAINT [DF_r_FormParameters_CreateDTLTOffset] DEFAULT (getdate()) NULL,
+    [ModifiedDTLT]                 DATETIME       NULL,
+    [InactiveDTLT]                 DATETIME       NULL,
+    [Comments]                     VARCHAR (2000) NULL,
+    [Revision]                     INT            CONSTRAINT [DF_r_FormParameters_Revision] DEFAULT ((0)) NOT NULL,
+    [ActiveFlag]                   BIT            NOT NULL,
+    [FormName]                     VARCHAR (200)  NULL,
+    [FormArea]                     INT            NULL,
+    [FieldName]                    VARCHAR (100)  NULL,
+    [FieldDisplayName]             VARCHAR (100)  NULL,
+    [FieldType]                    VARCHAR (200)  NULL,
+    [FieldDisplayFormatType]       VARCHAR (200)  NULL,
+    [FieldDropDownType]            VARCHAR (200)  NULL,
+    [FieldRequiredFlag]            BIT            NULL,
+    [FieldConditionalFlag]         BIT            NULL,
+    [FieldConditionaSortSeq]       INT            NULL,
+    [FieldConditionalBusinessRule] VARCHAR (2000) NULL,
+    [FieldActive]                  BIT            NULL,
+    CONSTRAINT [PK_r_FormParameters] PRIMARY KEY CLUSTERED ([FormParametersID] ASC)
+);
+
