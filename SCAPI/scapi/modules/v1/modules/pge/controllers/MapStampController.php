@@ -49,7 +49,6 @@ class MapStampController extends \yii\web\Controller {
 
             $counts = [];
             $counts['inProgress'] = 0;
-            $counts['approvedNotSubmitted'] = 0;
             $counts['submittedPending'] = 0;
             $counts['returned'] = 0;
             $counts['completed'] = 0;
@@ -104,16 +103,12 @@ class MapStampController extends \yii\web\Controller {
 
                 if ($division && $status && $workCenter) {
                     $countQueryInProgress = clone $countersQuery;
-                    $countQueryApprovedNotSubmitted = clone $countersQuery;
                     $countQueryPending = clone $countersQuery;
                     $countQueryReturned = clone $countersQuery;
                     $countQueryCompleted = clone $countersQuery;
                     //TODO rewrite to improve performance
                     $counts['inProgress'] = $countQueryInProgress
                         ->andWhere(['MapStampStatus'=>'In Progress'])
-                        ->count();
-                    $counts['approvedNotSubmitted'] = $countQueryApprovedNotSubmitted
-                        ->andWhere(['MapStampStatus'=>'Approved/NotSubmitted'])
                         ->count();
                     $counts['submittedPending'] = $countQueryPending
                         ->andWhere(['MapStampStatus'=>'Submit/Pending'])
