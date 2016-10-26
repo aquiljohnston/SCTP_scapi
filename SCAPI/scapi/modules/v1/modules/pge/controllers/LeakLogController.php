@@ -278,15 +278,17 @@ class LeakLogController extends BaseActiveController {
                 $totalCount = $countQuery->count();
                 $pages = new Pagination(['totalCount' => $totalCount]);
                 $pages->pageSizeLimit = [1, 100];
-                $pages->setPage(($page));
                 $pages->setPageSize($perPage);
-
-                $offset = $perPage * ($page - 1);
+                $pages->setPage($page,true);
+                $offset = $pages->getOffset();//$perPage * ($page - 1);
+                $limit = $pages->getLimit();
+//                Yii::trace(PHP_EOL.PHP_EOL.'page '.$page.'   per page '.$perPage.'   offset '.$offset);
+//                Yii::trace(PHP_EOL.'p getpage'.$pages->getPage().' p per page'.$pages->getPageSize().' p offset '.$pages->getOffset().'  p limit '.$pages->getLimit(). PHP_EOL);
 
                 $query->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC, 'FLOC' => SORT_ASC, 'Hours' => SORT_ASC]);
 
                 $leaks = $query->offset($offset)
-                    ->limit($perPage)
+                    ->limit($limit)
                     ->all();
 
                 if ($division && $status && $workCenter) {
@@ -315,7 +317,7 @@ class LeakLogController extends BaseActiveController {
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
-                $pages->setPage(($page));
+                $pages->setPage(0);
                 $pages->setPageSize($perPage);
                 $leaks =[];
             } // end division and workcenter check
