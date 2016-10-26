@@ -86,6 +86,8 @@ class MapStampController extends \yii\web\Controller {
                 }
                 $countQuery = clone $query;
 
+                /* page index is 0 based */
+                $page = max($page-1,0);
                 $totalCount = $countQuery->count();
                 $pages = new Pagination(['totalCount' => $totalCount]);
                 $pages->pageSizeLimit = [1, 100];
