@@ -1,0 +1,139 @@
+﻿CREATE TABLE [dbo].[zpgeSERVICELOCATION] (
+    [OBJECTID]                       INT              IDENTITY (1, 1) NOT NULL,
+    [ANCILLARYROLE]                  SMALLINT         NULL,
+    [ENABLED]                        SMALLINT         NULL,
+    [GLOBALID]                       UNIQUEIDENTIFIER NOT NULL,
+    [SOURCEACCURACY]                 NVARCHAR (14)    NULL,
+    [CONSTRUCTIONSTATUS]             NVARCHAR (10)    NULL,
+    [INSTALLEDJOBORDER]              NVARCHAR (40)    NULL,
+    [INSTALLEDCOMPLETIONDATE]        DATETIME2 (7)    NULL,
+    [CONVERSIONID]                   INT              NULL,
+    [CONVERSIONWORKPACKAGE]          NVARCHAR (40)    NULL,
+    [SYMBOLROTATION]                 NUMERIC (38, 8)  NULL,
+    [GASTRACEWEIGHT]                 INT              NULL,
+    [HOUSEADDRESS]                   NVARCHAR (255)   NULL,
+    [STREETNAME]                     NVARCHAR (255)   NULL,
+    [CITY]                           NVARCHAR (50)    NULL,
+    [ZIPCODE]                        NVARCHAR (15)    NULL,
+    [DELIVERYLOAD]                   NUMERIC (38, 8)  NULL,
+    [SCADAINDICATOR]                 NVARCHAR (3)     NULL,
+    [STREETNAME2]                    NVARCHAR (255)   NULL,
+    [APNNUMBER]                      NVARCHAR (255)   NULL,
+    [CURBMETERINDICATOR]             NVARCHAR (3)     NULL,
+    [LOCATIONDESCRIPTION]            NVARCHAR (255)   NULL,
+    [STRUCTUREINFORMATION]           NVARCHAR (255)   NULL,
+    [HOUSEADDRESSOLD]                NVARCHAR (20)    NULL,
+    [SUBTYPECD]                      INT              NULL,
+    [METERMANIFOLD]                  NVARCHAR (50)    NULL,
+    [MAPSCALE]                       INT              NULL,
+    [DIVISION]                       INT              NULL,
+    [COUNTY]                         NVARCHAR (15)    NULL,
+    [PLAT]                           NVARCHAR (10)    NULL,
+    [WALLMAP]                        NVARCHAR (10)    NULL,
+    [CREATEUSER]                     NVARCHAR (30)    NULL,
+    [CREATEDATE]                     DATETIME2 (7)    NULL,
+    [UPDATEUSER]                     NVARCHAR (30)    NULL,
+    [UPDATEDATE]                     DATETIME2 (7)    NULL,
+    [TENPERCENTERINDICATOR]          NVARCHAR (3)     NULL,
+    [CPTYPE]                         NVARCHAR (25)    NULL,
+    [CPANAME]                        NVARCHAR (50)    NULL,
+    [FOURORMORESTORIESINDICATOR]     NVARCHAR (3)     NULL,
+    [LAST10PERCENTERREADDATE]        DATETIME2 (7)    NULL,
+    [METERPROTECTIONPROGRAMIND]      NVARCHAR (3)     NULL,
+    [METERINSIDEINDICATOR]           NVARCHAR (3)     NULL,
+    [NUMBEROFCURBMETERS]             SMALLINT         NULL,
+    [NUMBEROFPGECUSTOMERSBYADDRESS]  SMALLINT         NULL,
+    [PLANNINGMODELNAME]              NVARCHAR (50)    NULL,
+    [SCADAFACILITYID]                NVARCHAR (50)    NULL,
+    [THERMALBILLINGAREANAME]         NVARCHAR (100)   NULL,
+    [TRACTNUMBER]                    NVARCHAR (10)    NULL,
+    [SYMBOLSCALE]                    INT              NULL,
+    [ASSESSEDCOATINGTYPE]            NVARCHAR (5)     NULL,
+    [ASSESSEDDATEOFOPERATION]        DATETIME2 (7)    NULL,
+    [ASSESSEDDIAMETER]               NVARCHAR (10)    NULL,
+    [ASSESSEDLENGTH]                 INT              NULL,
+    [ASSESSEDMATERIAL]               INT              NULL,
+    [ASSESSEDPLASTICTYPE]            NVARCHAR (10)    NULL,
+    [BLOCK]                          NVARCHAR (10)    NULL,
+    [SERVICEID]                      INT              NULL,
+    [SERVICETAPGUID]                 UNIQUEIDENTIFIER NULL,
+    [CAPNUMBER]                      NVARCHAR (30)    NULL,
+    [ASSESSEDMULTIMATERIALIDC]       NVARCHAR (3)     NULL,
+    [ASSESSEDMULTISIZEIDC]           NVARCHAR (3)     NULL,
+    [SAPOBJECTID]                    NVARCHAR (50)    NULL,
+    [CRITICALINDICATOR]              NVARCHAR (3)     NULL,
+    [EXPANSIONLOOPINDICATOR]         NVARCHAR (3)     NULL,
+    [EXPANSIONLOOPTYPE]              NVARCHAR (5)     NULL,
+    [HARDTOLOCATEINDICATOR]          NVARCHAR (3)     NULL,
+    [LOCATINGWIREBONDEDTOMAININD]    NVARCHAR (3)     NULL,
+    [LOCATINGWIREBONDEDTORISERIND]   NVARCHAR (3)     NULL,
+    [LOCATINGWIREBONDEDTOSVCIND]     NVARCHAR (3)     NULL,
+    [LOCATINGWIRENICOMAININD]        NVARCHAR (3)     NULL,
+    [LOCATINGWIRESTRAPCASE]          NVARCHAR (3)     NULL,
+    [LOCATINGWIRESTRAPPEDTORISERIND] NVARCHAR (3)     NULL,
+    [LOCATINGWIRETERMCURBVALVE]      NVARCHAR (3)     NULL,
+    [LOCATINGWIREWRAPAROUNDTEEIND]   NVARCHAR (3)     NULL,
+    [MLXAGREEMENT]                   NVARCHAR (20)    NULL,
+    [MLXDATE]                        DATETIME2 (7)    NULL,
+    [NONCORRODIBLERISERINDICATOR]    NVARCHAR (3)     NULL,
+    [PGEREMOTEUNITNUMBER]            NVARCHAR (50)    NULL,
+    [PUBLICASSEMBLYINDICATOR]        NVARCHAR (3)     NULL,
+    [REMOTEINSTALLATIONDATE]         DATETIME2 (7)    NULL,
+    [REMOTEMODEL]                    NVARCHAR (50)    NULL,
+    [REMOTEPIPETOSOILSITEINDICATOR]  NVARCHAR (3)     NULL,
+    [RISERDATEOFMANUFACTURE]         DATETIME2 (7)    NULL,
+    [RISERINSTALLATIONDATE]          DATETIME2 (7)    NULL,
+    [RISERMANUFACTURER]              NVARCHAR (50)    NULL,
+    [RISERSIZE]                      NVARCHAR (50)    NULL,
+    [SPECIALFACILITIES]              NVARCHAR (3)     NULL,
+    [SPECIALFACILITIESDATE]          DATETIME2 (7)    NULL,
+    [SPECIALFACILITYJOBORDER]        NVARCHAR (30)    NULL,
+    [TENPCTERLASTREADDATE]           DATETIME2 (7)    NULL,
+    [WORKCENTER]                     NVARCHAR (10)    NULL,
+    [SHAPE]                          [sys].[geometry] NULL,
+    [RWNUMBER]                       INT              NULL,
+    [DELIVERYPRESSURE]               NVARCHAR (20)    NULL,
+    [SAPMAINTENANCESTATUS]           NVARCHAR (10)    NULL,
+    PRIMARY KEY CLUSTERED ([OBJECTID] ASC)
+);
+
+
+GO
+CREATE NONCLUSTERED INDEX [I0BLOCK]
+    ON [dbo].[zpgeSERVICELOCATION]([BLOCK] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [I0HOUSEADDRESS7]
+    ON [dbo].[zpgeSERVICELOCATION]([HOUSEADDRESS] ASC, [STREETNAME] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [I0SERVICETAPGUID]
+    ON [dbo].[zpgeSERVICELOCATION]([SERVICETAPGUID] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [I0SERVICEID]
+    ON [dbo].[zpgeSERVICELOCATION]([SERVICEID] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [I0RISERSIZE]
+    ON [dbo].[zpgeSERVICELOCATION]([RISERSIZE] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [I0CPANAME]
+    ON [dbo].[zpgeSERVICELOCATION]([CPANAME] ASC);
+
+
+GO
+CREATE SPATIAL INDEX [FDO_SHAPE]
+    ON [dbo].[zpgeSERVICELOCATION] ([SHAPE])
+    USING GEOMETRY_GRID
+    WITH  (
+            BOUNDING_BOX = (XMAX = 20081600, XMIN = -16800800, YMAX = 32802000, YMIN = -32802000),
+            GRIDS = (LEVEL_1 = MEDIUM, LEVEL_2 = MEDIUM, LEVEL_3 = MEDIUM, LEVEL_4 = MEDIUM)
+          );
+

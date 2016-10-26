@@ -1,3 +1,8 @@
 SCAPI/scapi/composer.lock
 SCAPI/scapi/controllers/HandlePasswordController.php
 SCAPI/scapi/config/dev_config_override.php
+/SCAPI/database/vCAT_PGE_GIS/vCAT_PGE_GIS/obj
+/SCAPI/database/vCAT_PGE_GIS/vCAT_PGE_GIS/bin
+/SCAPI/database/vCAT_PGE_GIS/.vs/vCAT_PGE_GIS/v14
+/SCAPI/database/vCAT_PGE_GIS/vCAT_PGE_GIS/vCAT_PGE_GIS.jfm
+/SCAPI/database/vCAT_PGE_GIS/vCAT_PGE_GIS/vCAT_PGE_GIS.dbmdl
