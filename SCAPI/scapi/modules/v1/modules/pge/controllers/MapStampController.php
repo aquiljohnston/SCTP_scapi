@@ -75,8 +75,23 @@ class MapStampController extends \yii\web\Controller {
                         ['like', 'TotalServices', $search],
                     ]);
                 }
+
+                // selects all entries for which the filter startData or the filter end date
+                // are in the interval defined by the MapStamp DetailStartDate and MapStampDetailEndDate
                 if ($startDate !== null && $endDate !== null) {
                     $query->andWhere(['between', 'ComplianceDate', $startDate, $endDate]);
+// TO DO enable this when the DetailStartDate and DetailEndDate are different
+//                    $query->andWhere([
+//                        'or',
+//                        ['and',
+//                            ['<=', 'DetailStartDate', $startDate],
+//                            ['>=', 'DetailEndDate', $startDate]
+//                        ],
+//                        ['and',
+//                            ['<=', 'DetailStartDate', $endDate],
+//                            ['>=', 'DetailEndDate', $endDate]
+//                        ],
+//                    ]);
                 }
 
                 $countersQuery = clone $query;
@@ -132,13 +147,13 @@ class MapStampController extends \yii\web\Controller {
             $data = [];
             $data['results'] = $entries;
             $data['pages'] = $pages;
-            //            $data['totalCount']  = $totalCount;
-            //            $data['offset'] = $pages->getOffset();
-            //            $data['limit'] = $pages->getLimit();
-            //            $command = $query->createCommand();
-            //            $data['sql'] = $command->sql;
-            //            $data['page'] = $page;
-            //            $data['perPage'] = $perPage;
+//            $data['totalCount']  = $totalCount;
+//            $data['offset'] = $pages->getOffset();
+//            $data['limit'] = $pages->getLimit();
+            $command = $query->createCommand();
+            $data['sql'] = $command->sql;
+//            $data['page'] = $page;
+//            $data['perPage'] = $perPage;
 
             $data['counts'] = $counts;
 
