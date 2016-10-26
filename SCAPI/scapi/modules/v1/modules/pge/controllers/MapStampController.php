@@ -15,6 +15,7 @@ use app\authentication\TokenAuth;
 use yii\web\Response;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use app\modules\v1\modules\pge\models\WebManagementMapStampDetail;
 use app\modules\v1\modules\pge\models\WebManagementMapStampManagement;
 use yii\data\Pagination;
 
@@ -225,12 +226,32 @@ class MapStampController extends \yii\web\Controller {
         $data['TotalFeetOfMain'] = 207295;
         $data['TotalServices'] = 1100;
 
-        foreach($tableData as $item) {
-            if($item['Id'] == $id) { // We want loose equals
-                $data['TableData'][] = $item;
-            }
+//        foreach($tableData as $item) {
+//            if($item['Id'] == $id) { // We want loose equals
+//                $data['TableData'][] = $item;
+//            }
+//        }
+        $headers = getallheaders();
+        WebManagementMapStampManagement::setClient($headers['X-Client']);
+        WebManagementMapStampDetail::setClient($headers['X-Client']);
+
+        $entryMgmt = [];
+        $entriesDetails = [];
+        $data = [];
+
+        if ($id) {
+//            $queryMgmt = WebManagementMapStampManagement::find()->where(['InspectionRequestUID'=>$id]);
+//            $queryDetails = WebManagementMapStampDetail::find()->where(['IRUID'=>$id]);
+//
+//            $entryMgmt = $queryMgmt->limit(1)->all();
+//            $entriesDetails = $queryDetails->all();
+
         }
-		
+        $entriesDetails = $tableData;
+        $data['generalInfo'] = $entryMgmt;
+		$data['results'] = $entriesDetails;
+//        $data['results'] = $tableData;
+
 		$response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
         $response->data = $data;
