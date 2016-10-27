@@ -70,7 +70,7 @@ class LeakLogController extends BaseActiveController {
             $put = file_get_contents("php://input");
 			$data = json_decode($put, true);
             $masterLeakUid = $data['masterleakUID'];
-            $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.stub_spSubmitMasterLeak @masterLeakUid=:masterLeakUid, @userId=:userId");
+            $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.spWebManagementMasterLeakLogSubmit @MasterLeakLogUID=:masterLeakUid, @SubmittedUID=:userId");
             $command->bindParam(":masterLeakUid", $masterLeakUid);
             $command->bindParam(":userId", $data['user']);
             $value = $command->queryAll();
@@ -95,7 +95,6 @@ class LeakLogController extends BaseActiveController {
     {
         try
 		{
-
             $headers = getallheaders();
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
@@ -103,12 +102,13 @@ class LeakLogController extends BaseActiveController {
 			$data = json_decode($put, true);
             $passed = 0;
             $failed = 0;
-            foreach ($data['keylist'] as $leakNumber) {
-                $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC dbo.stub_spUpdateLeakState @leakUid=:leakNumber, @userId=:userId");
-                $command->bindParam(":leakNumber", $leakNumber);
-                $command->bindParam(":userId", $data['user']);
+            $status = 'Unknown';
+            foreach ($data['keylist'] as $indicationUID) {
+                $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC spWebManagementLeakLogApproval @AddressIndicationUID=:AddressIndicationUID, @ApproverUID=:ApproverUID");
+                $command->bindParam(":AddressIndicationUID", $indicationUID);
+                $command->bindParam(":ApproverUID", $data['user']);
                 $value = $command->queryAll();
-                if($value)
+                if($value[0]['Succeeded'] == 1)
                 {
                     $passed++;
                 }
@@ -116,9 +116,13 @@ class LeakLogController extends BaseActiveController {
                 {
                     $failed++;
                 }
+                $status = $value[0]['StatusType'];
             }
 
-            $result = array($passed, $failed);
+            $result = [];
+            $result['Passed'] = $passed;
+            $result['Failed'] = $failed;
+            $result['StatusType'] = $status;
             $response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $result;

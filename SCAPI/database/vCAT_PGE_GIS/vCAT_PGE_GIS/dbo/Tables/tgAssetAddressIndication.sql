@@ -7,9 +7,9 @@
     [MasterLeakLogUID]                       VARCHAR (100)      NULL,
     [ProjectID]                              INT                NULL,
     [SourceID]                               VARCHAR (100)      NULL,
-    [CreatedUserUID]                         VARCHAR (100)      NOT NULL,
-    [ModifiedUserUID]                        VARCHAR (100)      CONSTRAINT [DF_tgAssetAddressIndication_ModifiedUserUID] DEFAULT ('') NOT NULL,
-    [SrcDTLT]                                DATETIME           NOT NULL,
+    [CreatedUserUID]                         VARCHAR (100)      NULL,
+    [ModifiedUserUID]                        VARCHAR (100)      CONSTRAINT [DF_tgAssetAddressIndication_ModifiedUserUID] DEFAULT ('') NULL,
+    [SrcDTLT]                                DATETIME           NULL,
     [SrvDTLT]                                DATETIME           CONSTRAINT [DF_g_AssetIndications_SrvDTLT] DEFAULT (getdate()) NULL,
     [SrvDTLTOffset]                          DATETIMEOFFSET (7) CONSTRAINT [DF_g_AssetIndications_SrvDTLTOffset] DEFAULT (sysdatetimeoffset()) NULL,
     [SrcOpenDTLT]                            DATETIME           NULL,
@@ -96,7 +96,7 @@
     [ResponseComments]                       VARCHAR (500)      NULL,
     [ResponceErrorComments]                  VARCHAR (500)      NULL,
     [ResponseDTLT]                           DATETIME           NULL,
-    [CompletedFlag]                          BIT                CONSTRAINT [DF_tgAssetAddressIndication_CompletedFlag] DEFAULT ((0)) NOT NULL,
+    [CompletedFlag]                          BIT                CONSTRAINT [DF_tgAssetAddressIndication_CompletedFlag] DEFAULT ((0)) NULL,
     [CompletedDTLT]                          DATETIME           NULL,
     [AboveBelowGroundType]                   VARCHAR (200)      NULL,
     [FoundDateTime]                          DATETIME           NULL,
@@ -120,4 +120,6 @@
     [SAPComments]                            VARCHAR (500)      NULL,
     CONSTRAINT [PK_g_AssetIndications] PRIMARY KEY CLUSTERED ([AssetAddressIndicationsID] ASC)
 );
+
+
 
