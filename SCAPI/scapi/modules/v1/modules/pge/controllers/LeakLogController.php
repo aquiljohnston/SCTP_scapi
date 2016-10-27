@@ -102,7 +102,7 @@ class LeakLogController extends BaseActiveController {
 			$data = json_decode($put, true);
             $passed = 0;
             $failed = 0;
-
+            $status = 'Unknown';
             foreach ($data['keylist'] as $indicationUID) {
                 $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC spWebManagementLeakLogApproval @AddressIndicationUID=:AddressIndicationUID, @ApproverUID=:ApproverUID");
                 $command->bindParam(":AddressIndicationUID", $indicationUID);
@@ -116,9 +116,13 @@ class LeakLogController extends BaseActiveController {
                 {
                     $failed++;
                 }
+                $status = $value[0]['StatusType'];
             }
 
-            $result = array($passed, $failed);
+            $result = [];
+            $result['Passed'] = $passed;
+            $result['Failed'] = $failed;
+            $result['StatusType'] = $status;
             $response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $result;
