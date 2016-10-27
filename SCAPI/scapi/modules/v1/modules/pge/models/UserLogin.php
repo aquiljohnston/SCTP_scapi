@@ -8,7 +8,7 @@ use Yii;
  * This is the model class for table "vUserLogin".
  *
  * @property string $UserUID
- * @property string $UserLoginID
+ * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
  * @property string $UserLANID
@@ -32,7 +32,7 @@ class UserLogin extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['UserUID', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'WorkCenter', 'UserFullName'], 'string'],
+            [['UserUID', 'UserName', 'UserFirstName', 'UserLastName', 'UserLANID', 'WorkCenter', 'UserFullName'], 'string'],
             [['TabletLogin'], 'required'],
             [['TabletLogin'], 'integer']
         ];
@@ -45,7 +45,7 @@ class UserLogin extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             'UserUID' => 'User Uid',
-            'UserLoginID' => 'User Login ID',
+            'UserName' => 'UserName',
             'UserFirstName' => 'User First Name',
             'UserLastName' => 'User Last Name',
             'UserLANID' => 'User Lanid',
