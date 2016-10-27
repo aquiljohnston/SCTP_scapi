@@ -21,8 +21,11 @@
     [Office]                     VARCHAR (50)   NULL,
     [OfficeAbbreviation]         CHAR (3)       NULL,
     [EZTechClientCode]           VARCHAR (10)   CONSTRAINT [DF_rWorkCenter_EZTechClientCode] DEFAULT ('') NULL,
+    [SupervisorUID]              VARCHAR (100)  NULL,
     CONSTRAINT [PK_rWorkCenter] PRIMARY KEY CLUSTERED ([rWorkCenterID] ASC)
 );
+
+
 
 
 GO

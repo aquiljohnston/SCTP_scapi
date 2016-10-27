@@ -1,14 +1,18 @@
-﻿Create Procedure spWebManagementLeakLogApproval
+﻿
+CREATE Procedure [dbo].[spWebManagementLeakLogApproval]
 (
 @AddressIndicationUID varchar(100)
 ,@ApproverUID varchar(100)
+,@ReturnVal varchar(200) OUTPUT
 )
 AS
-Declare @ReviewdStatusType varchar(200) = 'Reviewd'
+Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 	,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
 	,@Revision int
-	,@ReturnVal bit = 1
+	--,@ReturnVal bit = 1
 	,@MasterLeakLogUID varchar(100)
+
+	Set @ReturnVal = 1
 
 	Select @Revision = Count(*) From [dbo].[tgAssetAddressIndication] where AssetAddressIndicationUID =  @AddressIndicationUID
 
@@ -32,7 +36,6 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 				SourceID,
 				CreatedUserUID,
 				ModifiedUserUID,
-				
 				GPSType,
 				GPSSentence,
 				Latitude,
@@ -339,4 +342,4 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 
 	END CATCH
 
-Return @ReturnVal
+--Return @ReturnVal

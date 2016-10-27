@@ -1,14 +1,19 @@
-﻿Create Procedure spWebManagementMasterLeakLogSubmit
+﻿
+CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
 ,@SubmittedUID varchar(100)
+,@ReturnVal varchar(200) OUTPUT
 )
 AS
 Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 	,@SubmitPending varchar(200) = 'SubmitPending'
 	,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
 	,@Revision int
-	,@ReturnVal bit = 0
+	--,@ReturnVal bit = 0
+	
+	Set @ReturnVal = 0
+	
 	
 	IF (Select Count(*)
 				from [dbo].[tgAssetAddressIndication] 
@@ -104,4 +109,4 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 
 		END
 
-Return @ReturnVal
+--Return @ReturnVal
