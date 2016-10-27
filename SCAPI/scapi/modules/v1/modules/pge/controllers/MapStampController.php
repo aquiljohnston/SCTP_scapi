@@ -76,22 +76,14 @@ class MapStampController extends \yii\web\Controller {
                     ]);
                 }
 
-                // selects all entries for which the filter startData or the filter end date
-                // are in the interval defined by the MapStamp DetailStartDate and MapStampDetailEndDate
+                // selects all entries for which the interval defined by MapStamp DetailStartDate and MapStamp DetailEndDate
+                // intersects the interval defined by the date filter
                 if ($startDate !== null && $endDate !== null) {
-                    $query->andWhere(['between', 'ComplianceDate', $startDate, $endDate]);
-// TO DO enable this when the DetailStartDate and DetailEndDate are different
-//                    $query->andWhere([
-//                        'or',
-//                        ['and',
-//                            ['<=', 'DetailStartDate', $startDate],
-//                            ['>=', 'DetailEndDate', $startDate]
-//                        ],
-//                        ['and',
-//                            ['<=', 'DetailStartDate', $endDate],
-//                            ['>=', 'DetailEndDate', $endDate]
-//                        ],
-//                    ]);
+                    $query->andWhere([
+                        'or',
+                        ['between', 'DetailStartDate', $startDate, $endDate],
+                        ['between', 'DetailEndDate', $startDate, $endDate]
+                    ]);
                 }
 
                 $countersQuery = clone $query;
