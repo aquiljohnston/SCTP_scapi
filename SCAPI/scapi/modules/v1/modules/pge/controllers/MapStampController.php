@@ -150,8 +150,8 @@ class MapStampController extends \yii\web\Controller {
 //            $data['totalCount']  = $totalCount;
 //            $data['offset'] = $pages->getOffset();
 //            $data['limit'] = $pages->getLimit();
-            $command = $query->createCommand();
-            $data['sql'] = $command->sql;
+//            $command = $query->createCommand();
+//            $data['sql'] = $command->sql;
 //            $data['page'] = $page;
 //            $data['perPage'] = $perPage;
 
