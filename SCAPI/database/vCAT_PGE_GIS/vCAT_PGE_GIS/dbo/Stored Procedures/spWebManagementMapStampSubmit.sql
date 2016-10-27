@@ -1,19 +1,24 @@
 ﻿
 
+
+
 CREATE Procedure [dbo].[spWebManagementMapStampSubmit]
 (
 @InspectionRequestUID varchar(100)
 ,@SubmittedUID varchar(100)
-,@ReturnVal varchar(200) OUTPUT
+--,@ReturnVal varchar(200) OUTPUT
 )
 AS
+
+SET NOCOUNT ON
+
 Declare @InProgressStatusType varchar(200) = 'In Progress'
 	,@SubmitPendingStatusType varchar(200) = 'Submit/Pending'
 	--,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
 	,@Revision int
-	--,@ReturnVal bit = 0
+	,@ReturnVal bit = 0
 
-	Set @ReturnVal = 0
+	--Set @ReturnVal = 0
 	
 	IF (Select Count(*)
 				from [dbo].[tInspectionService]
@@ -144,4 +149,6 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 
 		END
 
---Return @ReturnVal
+SET NOCOUNT OFF
+
+Select @ReturnVal as Succeeded, StatusType From tInspectionRequest where InspectionRequestUID = @InspectionRequestUID and ActiveFlag = 1

@@ -1,18 +1,23 @@
 ﻿
+
+
 CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
 ,@SubmittedUID varchar(100)
-,@ReturnVal varchar(200) OUTPUT
+--,@ReturnVal varchar(200) OUTPUT
 )
 AS
+
+SET NOCOUNT ON
+
 Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 	,@SubmitPending varchar(200) = 'SubmitPending'
 	,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
 	,@Revision int
-	--,@ReturnVal bit = 0
+	,@ReturnVal bit = 0
 	
-	Set @ReturnVal = 0
+	--Set @ReturnVal = 0
 	
 	
 	IF (Select Count(*)
@@ -109,4 +114,8 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 
 		END
 
---Return @ReturnVal
+SET NOCOUNT OFF
+
+--Select @ReturnVal as Succeeded
+
+Select @ReturnVal As Succeeded, StatusType From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1

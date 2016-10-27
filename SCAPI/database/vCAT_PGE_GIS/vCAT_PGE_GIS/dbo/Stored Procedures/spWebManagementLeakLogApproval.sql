@@ -1,18 +1,25 @@
 ﻿
+
+
+
 CREATE Procedure [dbo].[spWebManagementLeakLogApproval]
 (
 @AddressIndicationUID varchar(100)
 ,@ApproverUID varchar(100)
-,@ReturnVal varchar(200) OUTPUT
+--,@ReturnVal varchar(200) OUTPUT
 )
 AS
+
+SET NOCOUNT ON
+
 Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 	,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
 	,@Revision int
-	--,@ReturnVal bit = 1
+	,@ReturnVal bit = 1
 	,@MasterLeakLogUID varchar(100)
+	
 
-	Set @ReturnVal = 1
+	--Set @ReturnVal = 1
 
 	Select @Revision = Count(*) From [dbo].[tgAssetAddressIndication] where AssetAddressIndicationUID =  @AddressIndicationUID
 
@@ -262,9 +269,9 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 
 			IF (Select Count(*) 
 				from [dbo].[tgAssetAddressIndication] 
-				where AssetAddressIndicationUID =  @AddressIndicationUID 
+				where MasterLeakLogUID =  @MasterLeakLogUID
 					and ActiveFlag = 1 
-					and StatusType not in ('In Progress','Pending') ) = 0
+					and StatusType in ('In Progress','Pending') ) = 0
 
 			BEGIN
 
@@ -342,4 +349,6 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 
 	END CATCH
 
---Return @ReturnVal
+SET NOCOUNT OFF
+
+Select @ReturnVal As Succeeded, StatusType From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1

@@ -2,9 +2,10 @@
 
 
 
+
 CREATE View [dbo].[vUserLogin]
 AS
-Select u.UserUID, u.UserLoginID, u.UserFirstName, u.UserLastName, u.UserLANID, ISNULL(AllowLogin.GoodOQ, 0) [TabletLogin] , wc.WorkCenter, u.UserLastName +', ' + u.UserFirstName [UserFullName], u.UserAppRoleType
+Select u.UserUID, u.UserName, u.UserFirstName, u.UserLastName, u.UserLANID, ISNULL(AllowLogin.GoodOQ, 0) [TabletLogin] , wc.WorkCenter, u.UserLastName +', ' + u.UserFirstName [UserFullName], u.UserAppRoleType
 from UserTb u
 Left Join
 (Select UserUID
