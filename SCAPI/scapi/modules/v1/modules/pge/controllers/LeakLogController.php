@@ -186,10 +186,7 @@ class LeakLogController extends BaseActiveController {
                 if(count($masterLeakLogRecords) == 1)
                 {
                     $data["MasterLeakLog"] = $masterLeakLogRecords[0];
-                    $freq = $data["MasterLeakLog"]['SurveyFreq'];
-                    $freq = str_replace('y', ' Year', $freq);
-                    $freq = str_replace('Y', ' Year', $freq);
-                    $data["MasterLeakLog"]['SurveyFreq'] = $freq;
+
                     $uid = $masterLeakLogRecords[0]['MasterLeakLogUID'];
                     $leakValues = WebManagementLeaks::find()
                         ->where(['MasterLeakLogUID' => $uid])
