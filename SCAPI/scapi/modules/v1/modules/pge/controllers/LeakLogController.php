@@ -44,6 +44,7 @@ class LeakLogController extends BaseActiveController {
 					'get-details' => ['get'],
                     'get-detailsbymasterleaklogid' => ['get'],
 					'get-mgnt' => ['get'],
+                    'get-service-main-by-id'=>['get']
 
                 ],
             ];
@@ -403,5 +404,41 @@ class LeakLogController extends BaseActiveController {
         $response->format = Response::FORMAT_JSON;
         $response->data = $data;
         return $response;
+    }
+
+    /**
+     * @param string $id InspectionServicesUID
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetServiceMainById($id) {
+        try
+        {
+            $data = [];
+            $inspectionServicesUID = $id;
+            $headers = getallheaders();
+            WebManagementEquipmentServices::setClient($headers['X-Client']);
+            $smRecord = WebManagementEquipmentServices::find()
+                ->where(['InspectionServicesUID' => $inspectionServicesUID])
+                ->one();
+
+            $data['result'] = $smRecord;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 }
