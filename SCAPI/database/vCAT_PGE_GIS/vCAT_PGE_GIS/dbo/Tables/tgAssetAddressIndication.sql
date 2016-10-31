@@ -101,7 +101,7 @@
     [AboveBelowGroundType]                   VARCHAR (200)      NULL,
     [FoundDateTime]                          DATETIME           NULL,
     [GPSSource]                              VARCHAR (20)       NULL,
-    [GPSTime]                                VARCHAR (10)       NULL,
+    [GPSTime]                                VARCHAR (20)       NULL,
     [FixQuality]                             INT                NULL,
     [NumberOfSatellites]                     INT                NULL,
     [HDOP]                                   FLOAT (53)         NULL,
@@ -120,6 +120,8 @@
     [SAPComments]                            VARCHAR (500)      NULL,
     CONSTRAINT [PK_g_AssetIndications] PRIMARY KEY CLUSTERED ([AssetAddressIndicationsID] ASC)
 );
+
+
 
 
 

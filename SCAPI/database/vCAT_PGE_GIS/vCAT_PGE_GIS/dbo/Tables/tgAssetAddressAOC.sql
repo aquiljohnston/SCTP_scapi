@@ -51,7 +51,7 @@
     [DateFound]                       DATETIME           NULL,
     [MeterNumber]                     VARCHAR (50)       NULL,
     [GPSSource]                       VARCHAR (20)       NULL,
-    [GPSTime]                         VARCHAR (10)       NULL,
+    [GPSTime]                         VARCHAR (20)       NULL,
     [FixQuality]                      INT                NULL,
     [NumberOfSatellites]              INT                NULL,
     [HDOP]                            FLOAT (53)         NULL,
@@ -67,4 +67,6 @@
     [ActivityUID]                     VARCHAR (100)      NULL,
     CONSTRAINT [PK_g_AssetAOCs] PRIMARY KEY CLUSTERED ([AssetAddressAOCID] ASC)
 );
+
+
 

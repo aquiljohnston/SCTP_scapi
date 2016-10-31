@@ -74,7 +74,7 @@
     [CompletedFlag]                   BIT                CONSTRAINT [DF_tgAssetAddress_CompletedFlag] DEFAULT ((0)) NULL,
     [CompletedDTLT]                   DATETIME           NULL,
     [GPSSource]                       VARCHAR (20)       NULL,
-    [GPSTime]                         VARCHAR (10)       NULL,
+    [GPSTime]                         VARCHAR (20)       NULL,
     [FixQuality]                      INT                NULL,
     [NumberOfSatellites]              INT                NULL,
     [HDOP]                            FLOAT (53)         NULL,
@@ -95,4 +95,6 @@
     [ReverseGeoLocationString]        VARCHAR (200)      NULL,
     CONSTRAINT [PK_g_AssetAddress] PRIMARY KEY CLUSTERED ([AssetAddressID] ASC)
 );
+
+
 
