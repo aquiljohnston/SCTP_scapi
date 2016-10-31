@@ -51,7 +51,9 @@ class WebManagementEquipmentServices extends \app\modules\v1\models\BaseActiveRe
             "InspectionServicesUID" => "InspectionServicesUID",
             "MasterLeakLogUID" => "MasterLeakLogUID",
             "OperatorId" => "OperatorId",
-            "LockedFlag" => "LockedFlag"
+            "LockedFlag" => "LockedFlag",
+            "UserLANID" => "LAN ID",
+            "SurveyType" => "Survey Type"
         ];
     }
 }
