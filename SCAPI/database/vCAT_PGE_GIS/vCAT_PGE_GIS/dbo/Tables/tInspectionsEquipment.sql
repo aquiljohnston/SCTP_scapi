@@ -20,7 +20,7 @@
     [CalibrationLevel]            FLOAT (53)         NULL,
     [CalibrationVerificationFlag] BIT                NULL,
     [AlarmLevel]                  FLOAT (53)         NULL,
-    [MPRFlag]                     BIT                NULL,
+    [MPRFlag]                     BIT                CONSTRAINT [DF_tInspectionsEquipment_MPRFlag] DEFAULT ((0)) NULL,
     [PrNtfNo]                     VARCHAR (25)       NULL,
     [SAPEqID]                     VARCHAR (25)       NULL,
     [MWC]                         VARCHAR (25)       NULL,
@@ -30,6 +30,9 @@
     [SafteyIssue]                 VARCHAR (25)       NULL,
     [InstrumentAge]               VARCHAR (25)       NULL,
     [MasterLeakLogUID]            VARCHAR (100)      NULL,
+    [StatusType]                  VARCHAR (200)      CONSTRAINT [DF_tInspectionsEquipment_StatusType] DEFAULT ('Active') NULL,
     CONSTRAINT [PK_t_InspecitonsEquipment] PRIMARY KEY CLUSTERED ([InspecitonEquipmentID] ASC)
 );
+
+
 

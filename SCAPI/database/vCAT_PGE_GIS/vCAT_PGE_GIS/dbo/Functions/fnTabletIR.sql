@@ -3,6 +3,7 @@
 
 
 
+
 CREATE FUNCTION [dbo].[fnTabletIR](	@UserUID varchar(100) )
 
 
@@ -74,7 +75,7 @@ Select * From fnTabletIR('User_57590026_20160822135947_Postman') Order by SortOr
 	Join [dbo].[xReportingGroupAndWorkcenterxRef] xWC on xWC.ReportingGroupUID = rg.ReportingGroupUID
 	Join [dbo].[rWorkCenter] wc on wc.WorkCenterUID = xWC.WorkCenterUID
 	) U on t.WorkCenter = u.WorkCenter
-
+	Where t.SortOrder <> 0
 
 	--select * from #TempIR order by SortOrder, WorkCenter
 

@@ -20,7 +20,9 @@ use app\modules\v1\modules\pge\models\WebManagementMapStampManagement;
 use yii\data\Pagination;
 
 
-class MapStampController extends \yii\web\Controller {
+class MapStampController extends BaseActiveController {
+    public $modelClass = 'app\modules\v1\modules\pge\models\WebManagementMapStampDetail';
+
     public function behaviors()
     {
         $behaviors = parent::behaviors();
@@ -34,10 +36,51 @@ class MapStampController extends \yii\web\Controller {
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-mgmt' => ['get'],
-                    'get-detail' => ['get']
+                    'get-detail' => ['get'],
+                    'submit-stamp' => ['put'],
                 ],
             ];
         return $behaviors;
+    }
+
+    public function actions()
+	{
+		$actions = parent::actions();
+		unset($actions['view']);
+		unset($actions['update']);
+		unset($actions['delete']);
+		return $actions;
+    }
+
+    public function actionSubmitStamp()
+    {
+        try
+		{
+            $headers = getallheaders();
+            WebManagementMapStampDetail::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+            $inspectionRequestUID = $data['inspectionRequestUID'];
+            $command =  WebManagementMapStampDetail::getDb()->createCommand("EXEC dbo.spWebManagementMapStampSubmit @InspectionRequestUID=:inspectionRequestUID, @SubmittedUID=:userId");
+            $command->bindParam(":inspectionRequestUID", $inspectionRequestUID);
+            $command->bindParam(":userId", $data['user']);
+            $value = $command->queryAll();
+
+            $response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $value;
+			return $response;
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 
     public function actionGetMgmt($division, $workCenter=null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
