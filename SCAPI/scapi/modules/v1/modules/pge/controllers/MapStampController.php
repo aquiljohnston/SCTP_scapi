@@ -227,6 +227,7 @@ class MapStampController extends BaseActiveController {
             $queryDetails = WebManagementMapStampDetail::find()->where(['IRUID'=>$id]);
 
             $generalInfo = $queryMgmt->one();
+            $queryDetails->orderBy(['SurveyArea'=>SORT_ASC,'DateSurveyed' => SORT_ASC, 'InstSerialNum' => SORT_ASC]);
             $entriesDetails = $queryDetails->all();
         }
 //        Yii::trace(print_r($generalInfo,true));
