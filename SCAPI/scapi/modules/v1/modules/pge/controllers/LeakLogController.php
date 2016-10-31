@@ -271,6 +271,11 @@ class LeakLogController extends BaseActiveController {
                 }
 
                 $countersQuery = clone $query;
+                if($status == 'Exceptions')
+                {
+                    $status = 'Rejected';
+                }
+
                 $status = trim($status);
                 if ($status) {
                     $query->andWhere(["Status" => $status]);
@@ -312,7 +317,7 @@ class LeakLogController extends BaseActiveController {
                         ->andWhere(['Status'=>'Submitted / Pending'])
                         ->count();
                     $counts['exceptions'] = $countQueryE
-                        ->andWhere(['Status'=>'Exceptions'])
+                        ->andWhere(['Status'=>'Rejected'])
                         ->count();
                     $counts['completed'] = $countQueryC
                         ->andWhere(['Status'=>'Completed'])
