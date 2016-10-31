@@ -35,8 +35,10 @@ use Yii;
  * @property string $CalbDate
  * @property integer $IsUsedToday
  * @property string $MPRStatus
- * @property string $SafteyIssue
+ * @property string $SafetyIssue
  * @property string $InstrumentAge
+ * @property string $MasterLeakLogUID
+ * @property string $StatusType
  */
 class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -47,15 +49,14 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
     {
         return 'tInspectionsEquipment';
     }
-	
+
     /**
      * @inheritdoc
      */
     public function rules()
     {
         return [
-            [['InspecitonEquipmentUID', 'InspectorOQLogUID', 'EquipmentLogUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'EquipmentType',
-				'SerialNumber', 'PrNtfNo', 'SAPEqID', 'MWC', 'MPRStatus', 'SafteyIssue', 'InstrumentAge'], 'string'],
+            [['InspecitonEquipmentUID', 'InspectorOQLogUID', 'EquipmentLogUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'EquipmentType', 'SerialNumber', 'PrNtfNo', 'SAPEqID', 'MWC', 'MPRStatus', 'SafetyIssue', 'InstrumentAge', 'MasterLeakLogUID', 'StatusType'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'LastEquipmentDayFlag', 'CalibrationVerificationFlag', 'MPRFlag', 'IsUsedToday'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'CalbDate'], 'safe'],
             [['CalibrationLevel', 'AlarmLevel'], 'number']
@@ -96,8 +97,10 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
             'CalbDate' => 'Calb Date',
             'IsUsedToday' => 'Is Used Today',
             'MPRStatus' => 'Mprstatus',
-            'SafteyIssue' => 'Saftey Issue',
+            'SafetyIssue' => 'Safety Issue',
             'InstrumentAge' => 'Instrument Age',
+            'MasterLeakLogUID' => 'Master Leak Log Uid',
+            'StatusType' => 'Status Type',
         ];
     }
 }
