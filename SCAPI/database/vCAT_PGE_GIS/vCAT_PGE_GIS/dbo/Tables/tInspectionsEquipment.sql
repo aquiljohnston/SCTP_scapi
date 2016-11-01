@@ -17,9 +17,9 @@
     [LastEquipmentDayFlag]        BIT                NULL,
     [EquipmentType]               VARCHAR (200)      NULL,
     [SerialNumber]                VARCHAR (50)       NULL,
-    [CalibrationLevel]            FLOAT (53)         NULL,
+    [ReadPPM]                     FLOAT (53)         NULL,
     [CalibrationVerificationFlag] BIT                NULL,
-    [AlarmLevel]                  FLOAT (53)         NULL,
+    [AlarmPPM]                    FLOAT (53)         NULL,
     [MPRFlag]                     BIT                CONSTRAINT [DF_tInspectionsEquipment_MPRFlag] DEFAULT ((0)) NULL,
     [PrNtfNo]                     VARCHAR (25)       NULL,
     [SAPEqID]                     VARCHAR (25)       NULL,
@@ -27,12 +27,19 @@
     [CalbDate]                    DATETIME           NULL,
     [IsUsedToday]                 BIT                NULL,
     [MPRStatus]                   VARCHAR (10)       NULL,
-    [SafteyIssue]                 VARCHAR (25)       NULL,
+    [SafetyIssue]                 VARCHAR (25)       NULL,
     [InstrumentAge]               VARCHAR (25)       NULL,
     [MasterLeakLogUID]            VARCHAR (100)      NULL,
     [StatusType]                  VARCHAR (200)      CONSTRAINT [DF_tInspectionsEquipment_StatusType] DEFAULT ('Active') NULL,
+    [OMDExmQty]                   FLOAT (53)         NULL,
+    [LaserCalb]                   BIT                NULL,
+    [PLELRead]                    FLOAT (53)         NULL,
+    [PGASRead]                    FLOAT (53)         NULL,
+    [SCOPMethod]                  VARCHAR (50)       NULL,
     CONSTRAINT [PK_t_InspecitonsEquipment] PRIMARY KEY CLUSTERED ([InspecitonEquipmentID] ASC)
 );
+
+
 
 
 
