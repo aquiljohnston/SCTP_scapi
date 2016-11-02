@@ -7,6 +7,7 @@
  */
 
 namespace app\modules\v1\modules\pge\controllers;
+use app\modules\v1\modules\pge\models\AssetAddressIndication;
 use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use app\modules\v1\modules\pge\models\WebManagementLeaks;
 use app\modules\v1\modules\pge\models\WebManagementEquipmentServices;
@@ -45,7 +46,9 @@ class LeakLogController extends BaseActiveController {
                     'get-detailsbymasterleaklogid' => ['get'],
 					'get-mgnt' => ['get'],
                     'get-service-main-by-id'=>['get'],
-                    'update-service-main'=>['put']
+                    'update-service-main'=>['put'],
+                    'get-leak-log-by-id'=>['get'],
+                    'update-leak-log'=>['put']
                 ],
             ];
 
@@ -464,7 +467,7 @@ class LeakLogController extends BaseActiveController {
 
             $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
 //            $command->bindParam(":InspectionServicesUID", $id);
-//            $command->bindParam(":putData", $putData);
+//            $command->bindParam(":putData", $put);
 
             $result = $command->queryOne();
 
@@ -475,6 +478,82 @@ class LeakLogController extends BaseActiveController {
             return $response;
         }
 
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     * @param string $id AssetAddressIndicationUID
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetLeakLogById($id) {
+        try
+        {
+            $data = [];
+            $assetAddressIndicationUID = $id;
+            $headers = getallheaders();
+            AssetAddressIndication::setClient($headers['X-Client']);
+            $llRecord = AssetAddressIndication::find()
+                ->where(['AssetAddressIndicationUID' => $assetAddressIndicationUID])
+                ->one();
+
+            $data['result'] = $llRecord;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     * @param string $id AssetAddressIndicationUID
+     */
+    public function actionUpdateLeakLog($id = null) {
+        try
+        {
+            $headers = getallheaders();
+            AssetAddressIndication::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+            $putData = json_decode($put, true);
+
+            //            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
+            //            $sqlCommand = "EXEC spWebManagementLeakLogUpdate
+            //                            @AssetAddressIndicationUID=:AssetAddressIndicationUID,
+            //                            @putData=:putData";
+            $sqlCommand = "Select '1' as Succeeded;";
+
+            $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
+            //            $command->bindParam(":AssetAddressIndicationUID", $id);
+            //            $command->bindParam(":putData", $put);
+
+            $result = $command->queryOne();
+
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $result;
+
+            return $response;
+        }
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
