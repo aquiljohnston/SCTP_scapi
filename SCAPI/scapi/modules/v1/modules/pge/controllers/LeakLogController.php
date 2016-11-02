@@ -503,6 +503,7 @@ class LeakLogController extends BaseActiveController {
             AssetAddressIndication::setClient($headers['X-Client']);
             $llRecord = AssetAddressIndication::find()
                 ->where(['AssetAddressIndicationUID' => $assetAddressIndicationUID])
+                ->andWhere(['ActiveFlag'=>'1'])
                 ->one();
 
             $data['result'] = $llRecord;
