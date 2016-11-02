@@ -124,6 +124,8 @@ use Yii;
  * @property string $ActivityUID
  * @property string $AssetInspectionUID
  * @property integer $MapPlatLeakNumber
+ * @property integer $LockedFlag
+ * @property string $SAPComments
  */
 class AssetAddressIndication extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -141,8 +143,8 @@ class AssetAddressIndication extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetAddressIndicationUID', 'AssetAddressUID', 'InspectionRequestUID', 'MapGridUID', 'MasterLeakLogUID', 'AssetInspectionUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'ManualMapPlat', 'PipelineType', 'SurveyType', 'Map', 'Plat', 'RecordedMap', 'RecordedPlat', 'RecordedBlock', 'LandmarkType', 'Route', 'Line', 'HouseNo', 'Street1', 'City', 'DescriptionReadingLocation', 'County', 'CountyCode', 'FacilityType', 'LocationType', 'InitialLeakSourceType', 'ReportedByType', 'LeakNo', 'SAPNo', 'PavedType', 'SORLType', 'SORLOther', 'Within5FeetOfBuildingType', 'SuspectedCopperType', 'EquipmentFoundByUID', 'FoundBy', 'FoundBySerialNumber', 'InstrumentTypeGradeByType', 'EquipmentGradeByUID', 'GradeBy', 'GradeBySerialNumber', 'GradeType', 'InfoCodesType', 'PotentialHCAType', 'LeakDownGradedFlag', 'HCAConstructionSupervisorUserUID', 'HCADistributionPlanningEngineerUserUID', 'HCAPipelineEngineerUserUID', 'Photo1', 'Photo2', 'Photo3', 'OptionalData1', 'OptionalData2', 'OptionalData3', 'OptionalData4', 'OptionalData5', 'OptionalData6', 'OptionalData7', 'OptionalData8', 'OptionalData9', 'OptionalData10', 'OptionalData11', 'OptionalData12', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ResponseStatusType', 'ResponseComments', 'ResponceErrorComments', 'AboveBelowGroundType', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'ActivityUID'], 'string'],
-            [['ProjectID', 'Revision', 'ActiveFlag', 'HouseNoNAFlag', 'TwoPercentOrLessSuspectCopperFlag', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'MapPlatLeakNumber'], 'integer'],
+            [['AssetAddressIndicationsUID', 'AssetAddressUID', 'InspectionRequestUID', 'MapGridUID', 'MasterLeakLogUID', 'AssetInspectionUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'ManualMapPlat', 'PipelineType', 'SurveyType', 'Map', 'Plat', 'RecordedMap', 'RecordedPlat', 'RecordedBlock', 'LandmarkType', 'Route', 'Line', 'HouseNo', 'Street1', 'City', 'DescriptionReadingLocation', 'County', 'CountyCode', 'FacilityType', 'LocationType', 'InitialLeakSourceType', 'ReportedByType', 'LeakNo', 'SAPNo', 'PavedType', 'SORLType', 'SORLOther', 'Within5FeetOfBuildingType', 'SuspectedCopperType', 'EquipmentFoundByUID', 'FoundBy', 'FoundBySerialNumber', 'InstrumentTypeGradeByType', 'EquipmentGradeByUID', 'GradeBy', 'GradeBySerialNumber', 'GradeType', 'InfoCodesType', 'PotentialHCAType', 'LeakDownGradedFlag', 'HCAConstructionSupervisorUserUID', 'HCADistributionPlanningEngineerUserUID', 'HCAPipelineEngineerUserUID', 'Photo1', 'Photo2', 'Photo3', 'OptionalData1', 'OptionalData2', 'OptionalData3', 'OptionalData4', 'OptionalData5', 'OptionalData6', 'OptionalData7', 'OptionalData8', 'OptionalData9', 'OptionalData10', 'OptionalData11', 'OptionalData12', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ResponseStatusType', 'ResponseComments', 'ResponceErrorComments', 'AboveBelowGroundType', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'ActivityUID', 'SAPComments'], 'string'],
+            [['ProjectID', 'Revision', 'ActiveFlag', 'HouseNoNAFlag', 'TwoPercentOrLessSuspectCopperFlag', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'MapPlatLeakNumber', 'LockedFlag'], 'integer'],
             [['CreatedUserUID', 'ModifiedUserUID', 'SrcDTLT'], 'required'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'SrcOpenDTLT', 'SrcClosedDTLT', 'Grade2PlusRequested', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT', 'FoundDateTime'], 'safe'],
             [['Latitude', 'Longitude', 'ReadingGrade', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
@@ -272,6 +274,8 @@ class AssetAddressIndication extends \app\modules\v1\models\BaseActiveRecord
             'ActivityUID' => 'Activity Uid',
             'AssetInspectionUID' => 'Asset Inspection Uid',
 			'MapPlatLeakNumber' => 'Map Plat Leak Number',
+            'LockedFlag' => 'Locked Flag',
+            'SAPComments' => 'SAP Comments'
         ];
     }
 }
