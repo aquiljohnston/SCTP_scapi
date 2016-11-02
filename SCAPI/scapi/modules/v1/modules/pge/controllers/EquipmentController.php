@@ -111,23 +111,34 @@ class EquipmentController extends Controller
 			
 			if($calibrationData != null)
 			{
-				//new InspectionsEquipment model
-				$calibrationModel = new InspectionsEquipment();
-				//pass data to model
-				$calibrationModel->attributes = $calibrationData;
-				//additional fields
-				$calibrationModel->CreatedUserUID = $userUID;
-				$calibrationModel->ModifiedUserUID = $userUID;
-				
-				//save model
-				if($calibrationModel->save())
+				$existingCalibration = InspectionsEquipment::find()
+					->where(['InspecitonEquipmentUID' => $calibrationData['InspecitonEquipmentUID']])
+					->one();
+					
+				if ($existingCalibration == null)
 				{
-					//add to response array
-					$savedData = $calibrationModel;
+					//new InspectionsEquipment model
+					$calibrationModel = new InspectionsEquipment();
+					//pass data to model
+					$calibrationModel->attributes = $calibrationData;
+					//additional fields
+					$calibrationModel->CreatedUserUID = $userUID;
+					$calibrationModel->ModifiedUserUID = $userUID;
+					
+					//save model
+					if($calibrationModel->save())
+					{
+						//add to response array
+						$savedData = $calibrationModel;
+					}
+					else
+					{
+						$savedData = 'Failed to Create Equipment Calibration Record';
+					}
 				}
 				else
 				{
-					$savedData = 'Failed to Create Equipment Calibration Record';
+					$savedData = $existingCalibration;
 				}
 			}
 			return $savedData;		

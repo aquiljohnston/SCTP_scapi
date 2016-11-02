@@ -18,9 +18,9 @@ use Yii;
  * @property string $ModifiedUserUID
  * @property string $SourceID
  * @property integer $InGridFlag
- * @property string $srvDTLT
- * @property string $srvDTLTOffset
- * @property string $srcDTLT
+ * @property string $SrvDTLT
+ * @property string $SrvDTLTOffset
+ * @property string $SrcDTLT
  * @property integer $Revision
  * @property integer $ActiveFlag
  * @property string $StatusType
@@ -94,7 +94,7 @@ class AssetAddressInspection extends \app\modules\v1\models\BaseActiveRecord
         return [
             [['AssetAddressInspectionUID', 'AssetAddressUID', 'AssetInspectionUID', 'MapGridUID', 'InspectionRequestUID', 'MasterLeakLogUID', 'CreatedUserUID', 'ModifiedUserUID', 'SourceID', 'StatusType', 'GPSSource', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'GPSStatus', 'ActivityUID', 'RiserPipeSoilMeas', 'DIMPRiserType', 'ServiceHeadAdapterType', 'FilterSize', 'FilterMfg', 'FilterModel', 'Regulator1Size', 'Regulator1Mfg', 'Regulator1Model', 'Regulator2Size', 'Regulator2Mfg', 'Regulator2Model', 'Regulator3Size', 'Regulator3Mfg', 'Regulator3Model', 'MeterType', 'MeterMfg', 'MeterModel', 'Photo1', 'Photo2', 'Photo3'], 'string'],
             [['InGridFlag', 'Revision', 'ActiveFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'ElectrolysisSurveyFlag', 'DIMPSurveyFlag', 'ManifoldSetFlag', 'ServiceValueFlag', 'FilterFlag', 'Regulator1Flag', 'Regulator2Flag', 'Regulator3Flag', 'ECFlag', 'AMRFlag', 'DripTankFlag'], 'integer'],
-            [['srvDTLT', 'srvDTLTOffset', 'srcDTLT', 'SrcOpenDTLT'], 'safe'],
+            [['SrvDTLT', 'SrvDTLTOffset', 'SrcDTLT', 'SrcOpenDTLT'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightofGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
         ];
     }
@@ -116,9 +116,9 @@ class AssetAddressInspection extends \app\modules\v1\models\BaseActiveRecord
             'ModifiedUserUID' => 'Modified User Uid',
             'SourceID' => 'Source ID',
             'InGridFlag' => 'In Grid Flag',
-            'srvDTLT' => 'Srv Dtlt',
-            'srvDTLTOffset' => 'Srv Dtltoffset',
-            'srcDTLT' => 'Src Dtlt',
+            'SrvDTLT' => 'Srv Dtlt',
+            'SrvDTLTOffset' => 'Srv Dtltoffset',
+            'SrcDTLT' => 'Src Dtlt',
             'Revision' => 'Revision',
             'ActiveFlag' => 'Active Flag',
             'StatusType' => 'Status Type',
