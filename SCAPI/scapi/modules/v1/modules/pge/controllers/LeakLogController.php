@@ -48,7 +48,7 @@ class LeakLogController extends BaseActiveController {
                     'get-service-main-by-id'=>['get'],
                     'update-service-main'=>['put'],
                     'get-leak-log-by-id'=>['get'],
-                    'update-leak-log'=>['put']
+                    'update-leak-log'=>['put'],
                 ],
             ];
 
@@ -537,15 +537,15 @@ class LeakLogController extends BaseActiveController {
             $put = file_get_contents("php://input");
             $putData = json_decode($put, true);
 
-            //            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
-            //            $sqlCommand = "EXEC spWebManagementLeakLogUpdate
-            //                            @AssetAddressIndicationUID=:AssetAddressIndicationUID,
-            //                            @putData=:putData";
+//            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
+//            $sqlCommand = "EXEC spWebManagementLeakLogUpdate
+//                            @AssetAddressIndicationUID=:AssetAddressIndicationUID,
+//                            @putData=:putData";
             $sqlCommand = "Select '1' as Succeeded;";
 
             $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
-            //            $command->bindParam(":AssetAddressIndicationUID", $id);
-            //            $command->bindParam(":putData", $put);
+//            $command->bindParam(":AssetAddressIndicationUID", $id);
+//            $command->bindParam(":putData", $put);
 
             $result = $command->queryOne();
 
