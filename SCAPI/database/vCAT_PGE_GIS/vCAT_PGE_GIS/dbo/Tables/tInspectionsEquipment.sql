@@ -36,8 +36,11 @@
     [PLELRead]                    FLOAT (53)         NULL,
     [PGASRead]                    FLOAT (53)         NULL,
     [SCOPMethod]                  VARCHAR (50)       NULL,
+    [StationPass]                 BIT                CONSTRAINT [DF_tInspectionsEquipment_StationPass] DEFAULT ((0)) NULL,
     CONSTRAINT [PK_t_InspecitonsEquipment] PRIMARY KEY CLUSTERED ([InspecitonEquipmentID] ASC)
 );
+
+
 
 
 

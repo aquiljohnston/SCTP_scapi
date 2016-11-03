@@ -3,6 +3,7 @@
 
 
 
+
 CREATE View [dbo].[vUserLogin]
 AS
 Select u.UserUID, u.UserName, u.UserFirstName, u.UserLastName, u.UserLANID, ISNULL(AllowLogin.GoodOQ, 0) [TabletLogin] , wc.WorkCenter, u.UserLastName +', ' + u.UserFirstName [UserFullName], u.UserAppRoleType
@@ -23,5 +24,5 @@ from [dbo].[tInspectorOQLog] Where StatusType = 'Active' and ActiveFlag = 1) Mai
 Group By UserUID
 ) OQ ) AllowLogin on u.UserUID = AllowLogin.UserUID
 left Join (select * from rWorkCenter where ActiveFlag = 1) wc on u.HomeWorkCenterUID = wc.WorkCenterUID
-Where u.UserInActiveFlag = 0
+Where u.UserActiveFlag = 1 and  u.UserInActiveFlag = 0
 

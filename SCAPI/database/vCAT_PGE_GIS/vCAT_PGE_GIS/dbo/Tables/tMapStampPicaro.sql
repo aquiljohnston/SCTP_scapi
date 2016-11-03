@@ -15,12 +15,15 @@
     [Services]             INT           CONSTRAINT [DF_tMapStampPicaro_Services] DEFAULT ((0)) NULL,
     [WindSpeedStart]       FLOAT (53)    CONSTRAINT [DF_tMapStampPicaro_WindSpeedStart] DEFAULT ((0)) NULL,
     [WindSpeedMid]         FLOAT (53)    CONSTRAINT [DF_tMapStampPicaro_WindSpeedMid] DEFAULT ((0)) NULL,
-    [StatusType]           VARCHAR (200) CONSTRAINT [DF_tMapStampPicaro_StatusType] DEFAULT ('Not Approved') NULL,
+    [StatusType]           VARCHAR (200) CONSTRAINT [DF_tMapStampPicaro_StatusType] DEFAULT ('Pending') NULL,
     [SurveyorUID]          VARCHAR (100) CONSTRAINT [DF_tMapStampPicaro_SurveyorUID] DEFAULT ('') NULL,
     [SurveyDate]           DATE          CONSTRAINT [DF_tMapStampPicaro_SurveyDate] DEFAULT (getdate()) NULL,
     [Seq]                  INT           NULL,
-    [LockedFlag]           BIT           CONSTRAINT [DF_tMapStampPicaro_LockedFlag] DEFAULT ((0)) NULL
+    [LockedFlag]           BIT           CONSTRAINT [DF_tMapStampPicaro_LockedFlag] DEFAULT ((0)) NULL,
+    [Hours]                FLOAT (53)    CONSTRAINT [DF_tMapStampPicaro_Hours] DEFAULT ((0)) NULL
 );
+
+
 
 
 

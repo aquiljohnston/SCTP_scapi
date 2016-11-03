@@ -2,6 +2,7 @@
 
 
 
+
 CREATE Procedure [dbo].[spWebManagementLeakLogApproval]
 (
 @AddressIndicationUID varchar(100)
@@ -271,7 +272,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 				from [dbo].[tgAssetAddressIndication] 
 				where MasterLeakLogUID =  @MasterLeakLogUID
 					and ActiveFlag = 1 
-					and StatusType in ('In Progress','Pending') ) = 0
+					and StatusType in ('In Progress','Pending', 'InProgress' ) ) = 0
 
 			BEGIN
 

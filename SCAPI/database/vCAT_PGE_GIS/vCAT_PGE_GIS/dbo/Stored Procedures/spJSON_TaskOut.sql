@@ -6,6 +6,8 @@
 
 
 
+
+
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -808,7 +810,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 						
 					)
 					Values
@@ -825,7 +828,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'TR' --EquipmentModeType
@@ -836,6 +839,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 
 				END
@@ -875,7 +879,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 					)
 					Values
 					(
@@ -891,7 +896,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'TR' --EquipmentModeType
@@ -902,6 +907,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 
 
@@ -941,7 +947,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 					)
 					Values
 					(
@@ -957,7 +964,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_FOV' --EquipmentModeType
@@ -968,6 +975,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 					
 				END
@@ -1005,7 +1013,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 					)
 					Values
 					(
@@ -1021,7 +1030,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_LISA_Foot' --EquipmentModeType
@@ -1032,6 +1041,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 					
 				END
@@ -1071,7 +1081,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 					)
 					Values
 					(
@@ -1087,7 +1098,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_LISA_Mobile' --EquipmentModeType
@@ -1098,6 +1109,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 					
 				END
@@ -1136,7 +1148,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 					)
 					Values
 					(
@@ -1152,7 +1165,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_GAP_Foot' --EquipmentModeType
@@ -1163,6 +1176,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 					
 				END
@@ -1201,7 +1215,8 @@ AS
 						SurveyMode,
 						EquipmentType,
 						SerialNumber,
-						TaskOutUID
+						TaskOutUID,
+						CreateDateTime
 					)
 					Values
 					(
@@ -1217,7 +1232,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Active' --StatusType
+						,'Pending' --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_GAP_Mobile' --EquipmentModeType
@@ -1228,6 +1243,7 @@ AS
 						,@EquipmentType
 						,@EquipmentSerNo
 						,@INFTaskOutUID
+						,@SrcDTLT
 					)
 
 

@@ -1,5 +1,7 @@
 ﻿
 
+
+
 CREATE View [dbo].[vWebManagementMapStampDetail]
 AS
 select 
@@ -11,6 +13,7 @@ MapStampPicaroUID [SourceUID]
 , msp.SurveyDate [DateSurveyed]
 , ISNULL(u.UserLANID, '') [SurveyorLANID]
 , msp.PicaroEquipmentID [InstSerialNum]
+, 'G_COGIPICA' [InspType]
 , msp.WindSpeedStart
 , msp.WindSpeedMid
 , 0 [SurveyModeFoot]
@@ -33,12 +36,17 @@ select
 , [is].StatusType [Status]
 , Cast([is].MapAreaNumber as varchar(10)) [SurveyArea]
 , CASE WHEN CHARINDEX('PIC', EquipmentModeType) > 0 
-	THEN SUBSTRING(EquipmentModeType, CHARINDEX('_', EquipmentModeType), CHARINDEX('_', EquipmentModeType, CHARINDEX('_', EquipmentModeType)+ 1))
+	THEN 
+		CASE WHEN CHARINDEX('LISA', EquipmentModeType) > 0 THEN 'LISA'
+			 WHEN CHARINDEX('FOV', EquipmentModeType) > 0 THEN 'FOV'
+			 WHEN CHARINDEX('GAP', EquipmentModeType) > 0 THEN 'GAP'
+		END
 	ELSE EquipmentModeType
 	END [SurveyType]
 , [is2].SurveyDate [DateSurveyed]
 , ISNULL(u.UserLANID, '') [SurveyorLANID]
-, ie.SerialNumber [InstSeerialNum]
+, ie.SerialNumber [InstSerialNum]
+, ie.EquipmentType [InspType]
 , wsbegin.WindSpeed [WindSpeedStart]
 , wsmid.WindSpeed [WindSpeedMid]
 , CASE WHEN [is].SurveyMode = 'F' THEN 1 ELSE 0 END [SurveyModeFoot]
