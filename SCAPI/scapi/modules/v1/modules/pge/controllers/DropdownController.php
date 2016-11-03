@@ -78,6 +78,7 @@ class DropdownController extends Controller
                     'get-assigned-division-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
 					'survey-route-name-dropdown' => ['post'],
+                    'get-web-mgmt-leak-log-form-dropdowns' =>['get']
                 ],
             ];
         return $behaviors;
@@ -1266,5 +1267,116 @@ class DropdownController extends Controller
 			throw new \yii\web\HttpException(400);
 		}		
 	}
-	/////////////////////TABLET DROPDOWNS END////////////////////////	
+	/////////////////////TABLET DROPDOWNS END////////////////////////
+
+
+    /////////// WebManagement LeakLog form modal dropdowns //////////
+    //helper method for standard tablet survey query
+    public static function webDropdownQuery($filter)
+    {
+        return DropDowns::find()
+            ->select(['FilterName', 'SortSeq', 'FieldDisplay', 'OutValue'])
+            ->where(['FilterName'=>$filter])
+            ->andWhere(['ActiveFlag'=>1])
+            ->orderBy('SortSeq','FieldDisplay')
+            ->all();
+    }
+
+    public function actionGetWebMgmtLeakLogFormDropdowns() {
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            DropDowns::setClient($headers['X-Client']);
+
+            $responseData['dropdowns'] = [];
+
+            //﻿ ddAboveBelowType
+            $responseData['dropdowns']['ddAboveBelowType']= DropdownController::webDropdownQuery('ddAboveBelowType');
+
+            //﻿ ddFacilityType
+            $responseData['dropdowns']['ddFacilityType']= DropdownController::webDropdownQuery('ddFacilityType');
+
+
+            //﻿﻿ddGradeByInstType
+            $responseData['dropdowns']['ddGradeByInstType']= DropdownController::webDropdownQuery('ddGradeByInstType');
+
+            //﻿﻿ddGradeType
+            $responseData['dropdowns']['ddGradeType']= DropdownController::webDropdownQuery('ddGradeType');
+
+            // TODO revise this
+            //﻿﻿ddInstGradeByType
+            //$responseData['dropdowns']['ddInstGradeByType']= DropdownController::webDropdownQuery('ddInstGradeByType');
+            $responseData['dropdowns']['ddInstGradeByType']= [];
+
+            //﻿﻿ddInitialLeakSourceType
+            $responseData['dropdowns']['ddInitialLeakSourceType']= DropdownController::webDropdownQuery('ddInitialLeakSourceType');
+
+            //﻿﻿ddInstrumentType
+            //$responseData['dropdowns']['ddInstrumentType']= DropdownController::webDropdownQuery('ddInstrumentType');
+
+            //﻿﻿ddPipelineType
+            //$responseData['dropdowns']['ddPipelineType']= DropdownController::webDropdownQuery('ddPipelineType');
+
+            //﻿﻿ddSORLType
+            $responseData['dropdowns']['ddSORLType']= DropdownController::webDropdownQuery('ddSORLType');
+
+            //﻿﻿ddSurveyFrequencyTR
+            //$responseData['dropdowns']['ddSurveyFrequencyTR']= DropdownController::webDropdownQuery('ddSurveyFrequencyTR');
+
+            //﻿﻿ddSurveyType
+            //$responseData['dropdowns']['ddSurveyType']= DropdownController::webDropdownQuery('ddSurveyType');
+
+            // TODO revise this
+            //  ddWithin5FtBuildingType﻿- special
+            //$responseData['dropdowns']['ddWithin5FtBuildingType']= DropdownController::webDropdownQuery('ddWithin5FtBuildingType');
+            $responseData['dropdowns']['ddWithin5FtBuildingType']= DropdownController::webDropdownQuery('ddYesNo');
+
+            //﻿﻿ddReportedByType
+            $responseData['dropdowns']['ddReportedByType']= DropdownController::webDropdownQuery('ddReportedByType');
+
+            // TODO revise this
+            //﻿﻿ddSuspectCoperType  - special
+            //$responseData['dropdowns']['ddSuspectCoperType']= DropdownController::webDropdownQuery('ddSuspectCoperType');
+            $responseData['dropdowns']['ddSuspectCoperType']= DropdownController::webDropdownQuery('ddYesNo');
+
+            //﻿ ddPotentialHCAType - special
+            //$responseData['dropdowns']['ddPotentialHCAType']= DropdownController::webDropdownQuery('ddPotentialHCAType');
+            $responseData['dropdowns']['ddPotentialHCAType']= DropdownController::webDropdownQuery('ddYesNo');
+
+            //﻿ ﻿ddInfoCodeType
+            $responseData['dropdowns']['ddInfoCodeType']= DropdownController::webDropdownQuery('ddInfoCodeType');
+
+            // TODO revise this
+            //﻿ ﻿ddPaveW2WType  - special
+            // $responseData['dropdowns']['ddPaveW2WType']= DropdownController::webDropdownQuery('ddPaveW2WType');
+            $responseData['dropdowns']['ddPaveW2WType']= DropdownController::webDropdownQuery('ddYesNo');
+
+            //﻿﻿ddSORLType
+            $responseData['dropdowns']['ddSORLType']= DropdownController::webDropdownQuery('ddSORLType');
+
+            // cityList﻿
+            $responseData['dropdowns']['cityList']= [];
+
+            //﻿routeNames
+            $responseData['dropdowns']['routeNames']= [];
+
+
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $responseData;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+    /////////// WebManagement LeakLog form modal dropdowns end //////////
 }

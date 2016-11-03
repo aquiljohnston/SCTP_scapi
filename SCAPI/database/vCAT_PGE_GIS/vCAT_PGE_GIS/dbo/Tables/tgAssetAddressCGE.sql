@@ -46,7 +46,7 @@
     [CompletedFlag]                   BIT                CONSTRAINT [DF_tgAssetAddressCGE_CompletedFlag] DEFAULT ((0)) NULL,
     [CompletedDTLT]                   DATETIME           NULL,
     [GPSSource]                       VARCHAR (20)       NULL,
-    [GPSTime]                         VARCHAR (10)       NULL,
+    [GPSTime]                         VARCHAR (20)       NULL,
     [FixQuality]                      INT                NULL,
     [NumberOfSatellites]              INT                NULL,
     [HDOP]                            FLOAT (53)         NULL,
@@ -62,4 +62,6 @@
     [ActivityUID]                     VARCHAR (100)      NULL,
     CONSTRAINT [PK_g_AssetCGEs] PRIMARY KEY CLUSTERED ([AssetAddressCGEID] ASC)
 );
+
+
 

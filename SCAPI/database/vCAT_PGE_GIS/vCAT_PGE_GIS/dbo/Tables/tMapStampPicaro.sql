@@ -18,6 +18,9 @@
     [StatusType]           VARCHAR (200) CONSTRAINT [DF_tMapStampPicaro_StatusType] DEFAULT ('Not Approved') NULL,
     [SurveyorUID]          VARCHAR (100) CONSTRAINT [DF_tMapStampPicaro_SurveyorUID] DEFAULT ('') NULL,
     [SurveyDate]           DATE          CONSTRAINT [DF_tMapStampPicaro_SurveyDate] DEFAULT (getdate()) NULL,
-    [Seq]                  INT           NULL
+    [Seq]                  INT           NULL,
+    [LockedFlag]           BIT           CONSTRAINT [DF_tMapStampPicaro_LockedFlag] DEFAULT ((0)) NULL
 );
+
+
 

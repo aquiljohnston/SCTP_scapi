@@ -7,6 +7,7 @@
  */
 
 namespace app\modules\v1\modules\pge\controllers;
+use app\modules\v1\modules\pge\models\AssetAddressIndication;
 use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use app\modules\v1\modules\pge\models\WebManagementLeaks;
 use app\modules\v1\modules\pge\models\WebManagementEquipmentServices;
@@ -44,7 +45,10 @@ class LeakLogController extends BaseActiveController {
 					'get-details' => ['get'],
                     'get-detailsbymasterleaklogid' => ['get'],
 					'get-mgnt' => ['get'],
-
+                    'get-service-main-by-id'=>['get'],
+                    'update-service-main'=>['put'],
+                    'get-leak-log-by-id'=>['get'],
+                    'update-leak-log'=>['put'],
                 ],
             ];
 
@@ -186,10 +190,7 @@ class LeakLogController extends BaseActiveController {
                 if(count($masterLeakLogRecords) == 1)
                 {
                     $data["MasterLeakLog"] = $masterLeakLogRecords[0];
-                    $freq = $data["MasterLeakLog"]['SurveyFreq'];
-                    $freq = str_replace('y', ' Year', $freq);
-                    $freq = str_replace('Y', ' Year', $freq);
-                    $data["MasterLeakLog"]['SurveyFreq'] = $freq;
+
                     $uid = $masterLeakLogRecords[0]['MasterLeakLogUID'];
                     $leakValues = WebManagementLeaks::find()
                         ->where(['MasterLeakLogUID' => $uid])
@@ -273,6 +274,11 @@ class LeakLogController extends BaseActiveController {
                 }
 
                 $countersQuery = clone $query;
+                if($status == 'Exceptions')
+                {
+                    $status = 'Rejected';
+                }
+
                 $status = trim($status);
                 if ($status) {
                     $query->andWhere(["Status" => $status]);
@@ -314,7 +320,7 @@ class LeakLogController extends BaseActiveController {
                         ->andWhere(['Status'=>'Submitted / Pending'])
                         ->count();
                     $counts['exceptions'] = $countQueryE
-                        ->andWhere(['Status'=>'Exceptions'])
+                        ->andWhere(['Status'=>'Rejected'])
                         ->count();
                     $counts['completed'] = $countQueryC
                         ->andWhere(['Status'=>'Completed'])
@@ -403,5 +409,159 @@ class LeakLogController extends BaseActiveController {
         $response->format = Response::FORMAT_JSON;
         $response->data = $data;
         return $response;
+    }
+
+    /**
+     * @param string $id InspectionServicesUID
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetServiceMainById($id) {
+        try
+        {
+            $data = [];
+            $inspectionServicesUID = $id;
+            $headers = getallheaders();
+            WebManagementEquipmentServices::setClient($headers['X-Client']);
+            $smRecord = WebManagementEquipmentServices::find()
+                ->where(['InspectionServicesUID' => $inspectionServicesUID])
+                ->one();
+
+            $data['result'] = $smRecord;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     * @param string $id InspectionServicesUID
+     */
+    public function actionUpdateServiceMain($id = null) {
+        try
+        {
+            $headers = getallheaders();
+            WebManagementMasterLeakLog::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+            $putData = json_decode($put, true);
+
+//            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
+//            $sqlCommand = "EXEC spWebManagementServiceMainUpdate
+//                            @InspectionServicesUID=:InspectionServicesUID,
+//                            @putData=:putData";
+            $sqlCommand = "Select '1' as Succeeded;";
+
+            $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
+//            $command->bindParam(":InspectionServicesUID", $id);
+//            $command->bindParam(":putData", $put);
+
+            $result = $command->queryOne();
+
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $result;
+
+            return $response;
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     * @param string $id AssetAddressIndicationUID
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetLeakLogById($id) {
+        try
+        {
+            $data = [];
+            $assetAddressIndicationUID = $id;
+            $headers = getallheaders();
+            AssetAddressIndication::setClient($headers['X-Client']);
+            $llRecord = AssetAddressIndication::find()
+                ->where(['AssetAddressIndicationUID' => $assetAddressIndicationUID])
+                ->andWhere(['ActiveFlag'=>'1'])
+                ->one();
+
+            $data['result'] = $llRecord;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     * @param string $id AssetAddressIndicationUID
+     */
+    public function actionUpdateLeakLog($id = null) {
+        try
+        {
+            $headers = getallheaders();
+            AssetAddressIndication::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+            $putData = json_decode($put, true);
+
+//            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
+//            $sqlCommand = "EXEC spWebManagementLeakLogUpdate
+//                            @AssetAddressIndicationUID=:AssetAddressIndicationUID,
+//                            @putData=:putData";
+            $sqlCommand = "Select '1' as Succeeded;";
+
+            $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
+//            $command->bindParam(":AssetAddressIndicationUID", $id);
+//            $command->bindParam(":putData", $put);
+
+            $result = $command->queryOne();
+
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $result;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 }

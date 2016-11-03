@@ -140,7 +140,7 @@ class AssetAddressController extends Controller
 					$inspection->CreatedUserUID = $userUID;
 					$inspection->ModifiedUserUID = $userUID;
 					$inspection->ActivityUID = $ActivityUID;
-					$inspection->SrcOpenDTLT = $inspection->srcDTLT;
+					$inspection->SrcOpenDTLT = $inspection->SrcDTLT;
 					
 					if($inspection->save())
 					{
@@ -411,7 +411,7 @@ class AssetAddressController extends Controller
 								$newInspection->CreatedUserUID = $userUID;
 								$newInspection->ModifiedUserUID = $userUID;
 								$newInspection->ActivityUID = $ActivityUID;
-								$newInspection->SrcOpenDTLT = $newInspection->srcDTLT;
+								$newInspection->SrcOpenDTLT = $newInspection->SrcDTLT;
 								$newInspection->Revision = $inspectionRevision;
 								
 								if($newInspection->save())

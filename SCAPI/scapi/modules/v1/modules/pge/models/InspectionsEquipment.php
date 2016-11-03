@@ -25,9 +25,9 @@ use Yii;
  * @property integer $LastEquipmentDayFlag
  * @property string $EquipmentType
  * @property string $SerialNumber
- * @property double $CalibrationLevel
+ * @property double $ReadPPM
  * @property integer $CalibrationVerificationFlag
- * @property double $AlarmLevel
+ * @property double $AlarmPPM
  * @property integer $MPRFlag
  * @property string $PrNtfNo
  * @property string $SAPEqID
@@ -35,8 +35,16 @@ use Yii;
  * @property string $CalbDate
  * @property integer $IsUsedToday
  * @property string $MPRStatus
- * @property string $SafteyIssue
+ * @property string $SafetyIssue
  * @property string $InstrumentAge
+ * @property string $MasterLeakLogUID
+ * @property string $StatusType
+ * @property double $OMDExmQty
+ * @property integer $LaserCalb
+ * @property double $PLELRead
+ * @property double $PGASRead
+ * @property string $SCOPMethod
+ * @property integer $StationPass
  */
 class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -47,18 +55,17 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
     {
         return 'tInspectionsEquipment';
     }
-	
+
     /**
      * @inheritdoc
      */
     public function rules()
     {
         return [
-            [['InspecitonEquipmentUID', 'InspectorOQLogUID', 'EquipmentLogUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'EquipmentType',
-				'SerialNumber', 'PrNtfNo', 'SAPEqID', 'MWC', 'MPRStatus', 'SafteyIssue', 'InstrumentAge'], 'string'],
-            [['ProjectID', 'Revision', 'ActiveFlag', 'LastEquipmentDayFlag', 'CalibrationVerificationFlag', 'MPRFlag', 'IsUsedToday'], 'integer'],
+            [['InspecitonEquipmentUID', 'InspectorOQLogUID', 'EquipmentLogUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'EquipmentType', 'SerialNumber', 'PrNtfNo', 'SAPEqID', 'MWC', 'MPRStatus', 'SafetyIssue', 'InstrumentAge', 'MasterLeakLogUID', 'StatusType', 'SCOPMethod'], 'string'],
+            [['ProjectID', 'Revision', 'ActiveFlag', 'LastEquipmentDayFlag', 'CalibrationVerificationFlag', 'MPRFlag', 'IsUsedToday', 'LaserCalb', 'StationPass'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'CalbDate'], 'safe'],
-            [['CalibrationLevel', 'AlarmLevel'], 'number']
+            [['ReadPPM', 'AlarmPPM', 'OMDExmQty', 'PLELRead', 'PGASRead'], 'number']
         ];
     }
 
@@ -86,9 +93,9 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
             'LastEquipmentDayFlag' => 'Last Equipment Day Flag',
             'EquipmentType' => 'Equipment Type',
             'SerialNumber' => 'Serial Number',
-            'CalibrationLevel' => 'Calibration Level',
+            'ReadPPM' => 'Read Ppm',
             'CalibrationVerificationFlag' => 'Calibration Verification Flag',
-            'AlarmLevel' => 'Alarm Level',
+            'AlarmPPM' => 'Alarm Ppm',
             'MPRFlag' => 'Mprflag',
             'PrNtfNo' => 'Pr Ntf No',
             'SAPEqID' => 'Sapeq ID',
@@ -96,8 +103,16 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
             'CalbDate' => 'Calb Date',
             'IsUsedToday' => 'Is Used Today',
             'MPRStatus' => 'Mprstatus',
-            'SafteyIssue' => 'Saftey Issue',
+            'SafetyIssue' => 'Safety Issue',
             'InstrumentAge' => 'Instrument Age',
+            'MasterLeakLogUID' => 'Master Leak Log Uid',
+            'StatusType' => 'Status Type',
+            'OMDExmQty' => 'Omdexm Qty',
+            'LaserCalb' => 'Laser Calb',
+            'PLELRead' => 'Plelread',
+            'PGASRead' => 'Pgasread',
+            'SCOPMethod' => 'Scopmethod',
+            'StationPass' => 'Station Pass',
         ];
     }
 }

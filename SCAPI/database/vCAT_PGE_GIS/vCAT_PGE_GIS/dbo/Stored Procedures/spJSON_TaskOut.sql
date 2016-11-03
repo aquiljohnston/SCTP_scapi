@@ -5,6 +5,7 @@
 
 
 
+
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -107,8 +108,13 @@ AS
 			,@PICCount int
 			,@InsertedPIC int = 0
 			,@PICUID varchar(100)
+			--,@MapPlat varchar(20)
+			,@INFTaskOutUID varchar(200) = 'TASKOUT_'
+			,@INFTaskOutDateTime varchar(20) = Format(getdate(), 'yyyyMMddhhmmss', 'en-US')
 			--,@NextID int
-
+			,@EquipmentSerNo varchar(20)
+			,@EquipmentType varchar(20)
+			--,@SurveyFreq varchar(20)
 
 
 
@@ -197,7 +203,12 @@ AS
 				Select @TaskOutUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'TaskOutTabletUID' and Parent_ID = @ProcessingObjectID), '')
 				Select @AreaNumber = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AreaNumber' and Parent_ID = @ProcessingObjectID), '')
 				Select @InspectionRequestUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AssignedInspectionRequestUID' and Parent_ID = @ProcessingObjectID), '') 
-				
+				Select @EquipmentSerNo = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SerialNumber' and Parent_ID = @ProcessingObjectID), '')
+				Select @EquipmentType = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Instrument' and Parent_ID = @ProcessingObjectID), '')
+
+
+
+
 				Select @PreFootHours  = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFoot' and Parent_ID = @ProcessingObjectID),'0')
 				Select @PreMobileHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursMobile' and Parent_ID = @ProcessingObjectID), '0')
 
@@ -489,7 +500,7 @@ AS
 								
 				END
 
---Marked Any Indications that are still In Progress as Not Accepted
+--Marked Any Indications that are still In Progress as Pending
 
 				IF @IndicationPassNo = 1 
 				BEGIN
@@ -756,11 +767,19 @@ AS
 								
 				END
 
+--Set the Base INF TaskoutUID
 
+				--Select @EquipmentSerNo = SerialNumber, @EquipmentType = EquipmentType from [dbo].[tInspectionsEquipment] where InspecitonEquipmentUID = @EquipmentUID
+
+				Set @INFTaskOutUID = @INFTaskOutUID + @SourceID + '_' + @EquipmentSerNo + '_' 
+				
 
 				If @IsTraditional = 1 AND @IsFoot = 1
 				BEGIN
 				
+					
+					Set @INFTaskOutUID = @INFTaskOutUID + 'TR_F' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixTR_Foot
 
 					Update [dbo].[tInspectionService] set ActiveFlag = 0 Where InspectionServicesUID = @TaskOutUID  + @UIDSufixTR_Foot
@@ -786,7 +805,11 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
+						
 					)
 					Values
 					(
@@ -810,6 +833,9 @@ AS
 						,@TRNumberOfServices
 						,@FootHours
 						,'F' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 
 				END
@@ -818,6 +844,9 @@ AS
 				IF @IsTraditional = 1 AND @IsMobile = 1
 				BEGIN
 
+					
+					Set @INFTaskOutUID = @INFTaskOutUID + 'TR_M' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixTR_Mobile
 
 					Update [dbo].[tInspectionService] set ActiveFlag = 0 Where InspectionServicesUID = @TaskOutUID  + @UIDSufixTR_Mobile
@@ -843,7 +872,10 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
 					)
 					Values
 					(
@@ -867,6 +899,9 @@ AS
 						,0 --EstimatedService
 						,@MobileHours
 						,'M' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 
 
@@ -875,6 +910,9 @@ AS
 				IF @IsPicarro = 1 AND @IsFOV = 1 
 				BEGIN
 
+					
+					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_FOV' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_FOV_Foot
 
 					Update [dbo].[tInspectionService] set ActiveFlag = 0 Where InspectionServicesUID = @TaskOutUID  + @UIDSufixPIC_FOV_Foot
@@ -900,7 +938,10 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
 					)
 					Values
 					(
@@ -924,6 +965,9 @@ AS
 						,@FOVNumberOfServices
 						,@FOVHours
 						,'F' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 					
 				END
@@ -931,6 +975,8 @@ AS
 				IF @IsPicarro = 1 AND @IsLisa = 1 and @IsLisaFoot = 1
 				BEGIN
 
+					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_LISA_F' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_LISA_Foot
 
 					Update [dbo].[tInspectionService] set ActiveFlag = 0 Where InspectionServicesUID = @TaskOutUID  + @UIDSufixPIC_LISA_Foot
@@ -956,7 +1002,10 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
 					)
 					Values
 					(
@@ -980,6 +1029,9 @@ AS
 						,@LisaNumberOfServices
 						,@LisaHours
 						,'F' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 					
 				END
@@ -988,6 +1040,9 @@ AS
 				IF @IsPicarro = 1 AND @IsLisa = 1 and @IsLisaMobile = 1
 				BEGIN
 
+					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_LISA_M' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
+					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_LISA_Mobile
 
 					Update [dbo].[tInspectionService] set ActiveFlag = 0 Where InspectionServicesUID = @TaskOutUID  + @UIDSufixPIC_LISA_Mobile
@@ -1013,7 +1068,10 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
 					)
 					Values
 					(
@@ -1037,12 +1095,18 @@ AS
 						,0
 						,@LisaHours
 						,'M' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 					
 				END
 
 				IF @IsPicarro = 1 AND @IsGap = 1 and @IsGapFoot = 1
 				BEGIN
+
+					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_GAP_F' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
 
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_GAP_Foot
 
@@ -1069,7 +1133,10 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
 					)
 					Values
 					(
@@ -1093,6 +1160,9 @@ AS
 						,@GapNumberOfServices
 						,@GapHours
 						,'F' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 					
 				END
@@ -1100,6 +1170,9 @@ AS
 				IF @IsPicarro = 1 AND @IsGap = 1 and @IsGapMobile = 1
 				BEGIN
 
+					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_GAP_M' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					
+					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_GAP_Mobile
 
 					Update [dbo].[tInspectionService] set ActiveFlag = 0 Where InspectionServicesUID = @TaskOutUID  + @UIDSufixPIC_GAP_Mobile
@@ -1125,7 +1198,10 @@ AS
 						EstimatedFeet,
 						EstimatedServices,
 						EstimatedHours,
-						SurveyMode
+						SurveyMode,
+						EquipmentType,
+						SerialNumber,
+						TaskOutUID
 					)
 					Values
 					(
@@ -1149,6 +1225,9 @@ AS
 						,0
 						,@GapHours
 						,'M' --SurveyMode
+						,@EquipmentType
+						,@EquipmentSerNo
+						,@INFTaskOutUID
 					)
 
 
