@@ -54,6 +54,8 @@ use Yii;
  * @property string $ResponseDTLT
  * @property integer $CompletedFlag
  * @property string $CompletedDTLT
+ * @property integer $AdhocFlag
+ * @property string $InspectionFreq
  */
 class AssetInspection extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -63,7 +65,7 @@ class AssetInspection extends \app\modules\v1\models\BaseActiveRecord
     public static function tableName()
     {
         return 'tgAssetInspection';
-    }
+    } 
 
     /**
      * @inheritdoc
@@ -71,8 +73,8 @@ class AssetInspection extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetInspectionUID', 'AssetUID', 'MasterLeakLogsUID', 'MapGridUID', 'InspectionRequestUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'Photo1', 'Photo2', 'Photo3', 'OptionalData1', 'OptionalData2', 'OptionalData3', 'OptionalData4', 'OptionalData5', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'ResponseComments', 'ResponceErrorComments'], 'string'],
-            [['ProjectID', 'Revision', 'ActiveFlag', 'InspectionFlag', 'ApprovedFlag', 'SubmittedFlag', 'SubmittedUserID', 'CompletedFlag'], 'integer'],
+            [['AssetInspectionUID', 'AssetUID', 'MasterLeakLogsUID', 'MapGridUID', 'InspectionRequestUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'Photo1', 'Photo2', 'Photo3', 'OptionalData1', 'OptionalData2', 'OptionalData3', 'OptionalData4', 'OptionalData5', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'ResponseComments', 'ResponceErrorComments', 'InspectionFreq'], 'string'],
+            [['ProjectID', 'Revision', 'ActiveFlag', 'InspectionFlag', 'ApprovedFlag', 'SubmittedFlag', 'SubmittedUserID', 'CompletedFlag', 'AdhocFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'SrcOpenDTLT', 'SrcClosedDTLT', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT'], 'safe'],
             [['Latitude', 'Longitude'], 'number']
         ];
@@ -131,6 +133,8 @@ class AssetInspection extends \app\modules\v1\models\BaseActiveRecord
             'ResponseDTLT' => 'Response Dtlt',
             'CompletedFlag' => 'Completed Flag',
             'CompletedDTLT' => 'Completed Dtlt',
+            'AdhocFlag' => 'Adhoc Flag',
+            'InspectionFreq' => 'Inspection Freq',
         ];
     }
 }
