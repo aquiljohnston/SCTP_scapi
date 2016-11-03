@@ -6,7 +6,7 @@
     [InspectionRequestUID]            VARCHAR (100)      NULL,
     [MapGridUID]                      VARCHAR (100)      NULL,
     [ProjectID]                       INT                NULL,
-    [SourceID]                        VARCHAR (10)       NULL,
+    [SourceID]                        VARCHAR (50)       NULL,
     [CreatedUserUID]                  VARCHAR (100)      NULL,
     [ModifiedUserUID]                 VARCHAR (100)      NULL,
     [SrcDTLT]                         DATETIME           NULL,
@@ -67,6 +67,8 @@
     [ActivityUID]                     VARCHAR (100)      NULL,
     CONSTRAINT [PK_g_AssetAOCs] PRIMARY KEY CLUSTERED ([AssetAddressAOCID] ASC)
 );
+
+
 
 
 

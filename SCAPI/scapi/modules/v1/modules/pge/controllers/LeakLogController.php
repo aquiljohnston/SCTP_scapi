@@ -150,7 +150,8 @@ class LeakLogController extends BaseActiveController {
             $masterLeakLogRecords = WebManagementMasterLeakLog::find()
                 ->where(['MasterLeakLogUID' => $masterLeakLogUID])
                 ->all();
-            return $this::actionGetDetails($masterLeakLogRecords[0]['Division'], $masterLeakLogRecords[0]['WorkCenter'], $masterLeakLogRecords[0]['Map/Plat'], $masterLeakLogRecords[0]['Surveyor'], $masterLeakLogRecords[0]['Date']);
+            $lastIndex = count($masterLeakLogRecords) - 1;
+            return $this::actionGetDetails($masterLeakLogRecords[$lastIndex]['Division'], $masterLeakLogRecords[$lastIndex]['WorkCenter'], $masterLeakLogRecords[$lastIndex]['Map/Plat'], $masterLeakLogRecords[$lastIndex]['Surveyor'], $masterLeakLogRecords[$lastIndex]['Date']);
         }
 
         catch(ForbiddenHttpException $e)
