@@ -228,6 +228,24 @@ class LeakLogController extends BaseActiveController {
         }
     }
 
+    public function GetDatabaseStatusFromUiStatus($status)
+    {
+        if($status == 'Exceptions')
+        {
+            return 'Rejected';
+        }
+
+        if($status == 'Not Approved')
+        {
+            return 'NotApproved';
+        }
+
+        if($status == 'Approved / Not Submitted')
+        {
+            return 'ApprovedNotSubmitted';
+        }
+        return $status;
+    }
 
     public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
 	{
@@ -275,10 +293,7 @@ class LeakLogController extends BaseActiveController {
                 }
 
                 $countersQuery = clone $query;
-                if($status == 'Exceptions')
-                {
-                    $status = 'Rejected';
-                }
+                $status = $this::GetDatabaseStatusFromUiStatus($status);
 
                 $status = trim($status);
                 if ($status) {
@@ -312,10 +327,10 @@ class LeakLogController extends BaseActiveController {
                     $countQueryC = clone $countersQuery;
                     //TODO rewrite to improve performance
                     $counts['notApproved'] = $countQueryNA
-                        ->andWhere(['Status'=>'Not Approved'])
+                        ->andWhere(['Status'=>'NotApproved'])
                         ->count();
                     $counts['approvedOrNotSubmitted'] = $countQueryA
-                        ->andWhere(['Status'=>'Approved / Not Submitted'])
+                        ->andWhere(['Status'=>'ApprovedNotSubmitted'])
                         ->count();
                     $counts['submittedOrPending'] = $countQuerySP
                         ->andWhere(['Status'=>'Submitted / Pending'])
