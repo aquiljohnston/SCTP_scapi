@@ -1,4 +1,5 @@
 ﻿
+
 CREATE View [dbo].[vWebManagementMapStampDetail]
 AS
 select 
@@ -18,6 +19,7 @@ MapStampPicaroUID [SourceUID]
 , msp.Services
 , 0 [SortOrder]
 , msp.Seq
+, msp.LockedFlag
 from (select * From [dbo].[tMapStampPicaro] where ActiveFlag = 1) msp
 Left Join (Select * from UserTb where UserActiveFlag = 1) u on msp.SurveyorUID = u.UserUID
 
@@ -46,6 +48,7 @@ select
 --, 'tInspectionService' [Source Table]
 , 1 [SortOrder]
 , 0 Seq
+, [is].LockedFlag
 from 
 (Select * from [dbo].[tInspectionService] where ActiveFlag = 1 and CHARINDEX('Forms/', MasterLeaklogUID) = 0 and SurveyMode <> 'G') [is]
 left Join (Select * from UserTb where UserActiveFlag = 1) u on [is].CreatedUserUID = u.UserUID

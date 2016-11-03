@@ -9,8 +9,8 @@
     [UserInactiveDTLT]       DATETIME           NULL,
     [UserComments]           VARCHAR (2000)     NULL,
     [UserRevision]           INT                NULL,
-    [UserActiveFlag]         BIT                NULL,
-    [UserInActiveFlag]       BIT                NULL,
+    [UserActiveFlag]         BIT                CONSTRAINT [DF_UserTb_UserActiveFlag] DEFAULT ((1)) NULL,
+    [UserInActiveFlag]       BIT                CONSTRAINT [DF_UserTb_UserInActiveFlag] DEFAULT ((0)) NULL,
     [UserLoginID]            VARCHAR (50)       NULL,
     [UserFirstName]          VARCHAR (50)       NULL,
     [UserLastName]           VARCHAR (50)       NULL,
@@ -30,4 +30,6 @@
     [HomeWorkCenterUID]      VARCHAR (100)      CONSTRAINT [DF_UserTb_HomeWorkCenterUID] DEFAULT ('') NULL,
     CONSTRAINT [PK_UserTb] PRIMARY KEY CLUSTERED ([UserID] ASC)
 );
+
+
 

@@ -4,6 +4,8 @@
 
 
 
+
+
 CREATE View [dbo].[vWebManagementDispatch] AS
 /*****************************************************************************************************************
 NAME:		[dbo].[vWebManagementDispatch]
@@ -74,7 +76,8 @@ INNER JOIN [dbo].[tInspectionRequest] ir ON ir.MapGridUID = mg.MapGridUID
 INNER JOIN [dbo].[rWorkCenter] wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC
 LEFT JOIN (
 			SELECT AssignedInspectionRequestUID, Count(*) AS AssignedCount 
-			FROM  [dbo].[tAssignedWorkQueue] 
+			FROM  [dbo].[tAssignedWorkQueue]
+			Where ActiveFlag = 1 
 			GROUP BY AssignedInspectionRequestUID
 		   ) awq ON awq.AssignedInspectionRequestUID = ir.InspectionRequestUID
 WHERE ir.StatusType <> 'Completed'

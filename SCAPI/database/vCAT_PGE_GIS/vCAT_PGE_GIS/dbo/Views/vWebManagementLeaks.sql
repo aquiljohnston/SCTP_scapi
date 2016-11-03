@@ -1,6 +1,7 @@
 ﻿
 
 
+
 CREATE View [dbo].[vWebManagementLeaks]
 AS
 select
@@ -9,6 +10,7 @@ CASE WHEN aai.StatusType not in ('In Progress', 'NotApproved', 'Rejected') THEN 
 CASE WHEN aai.PotentialHCAType = 'Y' THEN 'Yes' ELSE 'No' END HCA,
 aai.Map + '/' + aai.Plat [Map/Plat],
 ISNULL(aai.SAPNo, '') [SAPLeakNumber],
+ISNULL(aai.SAPComments, '') [SAPComments],
 aai.AboveBelowGroundType [AboveBelowGround],
 aai.FoundDateTime,
 aa.HouseNo + ' ' + aa.Street1 [Address],
