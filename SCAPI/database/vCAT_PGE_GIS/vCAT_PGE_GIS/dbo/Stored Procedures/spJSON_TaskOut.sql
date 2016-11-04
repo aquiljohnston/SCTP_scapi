@@ -1,13 +1,5 @@
 ﻿
 
-
-
-
-
-
-
-
-
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -25,6 +17,7 @@ AS
 		,@TransactionType VarChar(20)
 		,@SQLQuery varchar(max)
 		,@SingleQuote char(1) = CHAR(39)
+		
 
 	--Set @SingleQuote = CHAR(39)
 
@@ -117,6 +110,7 @@ AS
 			,@EquipmentSerNo varchar(20)
 			,@EquipmentType varchar(20)
 			--,@SurveyFreq varchar(20)
+			,@InspectionServicePendingStatusType varchar(20) = 'Pending'
 
 
 
@@ -199,8 +193,8 @@ AS
 				Select @Division = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Division' and Parent_ID = @ProcessingObjectID), '')
 				Select @Status = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Status' and Parent_ID = @ProcessingObjectID), '')
 				Select @TotalEnteredTime = CAST(ISNULL((Select StringValue From #JSON_Parse Where Name = 'TotalEnteredTime' and Parent_ID = @ProcessingObjectID), '00:00') as Time)
-				Select @WindSpeedStartUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'mWindSpeedStartUID' and Parent_ID = @ProcessingObjectID), '')
-				Select @WindSpeedMidUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'mWindSpeedMidUID' and Parent_ID = @ProcessingObjectID), '')
+				Select @WindSpeedStartUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'WindSpeedStartUID' and Parent_ID = @ProcessingObjectID), '')
+				Select @WindSpeedMidUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'WindSpeedMidUID' and Parent_ID = @ProcessingObjectID), '')
 				Select @EquipmentUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'InspectionEquipmentUID' and Parent_ID = @ProcessingObjectID), '')
 				Select @TaskOutUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'TaskOutTabletUID' and Parent_ID = @ProcessingObjectID), '')
 				Select @AreaNumber = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AreaNumber' and Parent_ID = @ProcessingObjectID), '')
@@ -502,7 +496,7 @@ AS
 								
 				END
 
---Marked Any Indications that are still In Progress as Pending
+--Marked Any Indications that are still In Progress as NotApproved
 
 				IF @IndicationPassNo = 1 
 				BEGIN
@@ -510,7 +504,7 @@ AS
 					Declare InProgress Cursor For
 					Select Distinct AssetAddressIndicationUID
 					from [dbo].[tgAssetAddressIndication]
-					where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1 and StatusType = 'In Progress'
+					where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1 and StatusType in ('InProgress', 'In Progress')
 
 					Open InProgress
 
@@ -640,7 +634,8 @@ AS
 							NumberOfGPSAttempts,
 							ActivityUID,
 							AssetInspectionUID,
-							MapPlatLeakNumber
+							MapPlatLeakNumber,
+							LockedFlag
 						)
 						Select
 							AssetAddressIndicationUID,
@@ -666,7 +661,7 @@ AS
 							RevisionComments,
 							@Revision,
 							1, --ActiveFlag,
-							'Pending', --StatusType,
+							'NotApproved', --StatusType,
 							ManualMapPlat,
 							PipelineType,
 							SurveyType,
@@ -758,7 +753,9 @@ AS
 							NumberOfGPSAttempts,
 							ActivityUID,
 							AssetInspectionUID,
-							MapPlatLeakNumber
+							MapPlatLeakNumber,
+							0 --LockedFlag
+							
 						From [dbo].[tgAssetAddressIndication] Where AssetAddressIndicationUID = @InProgressIndictionUID and Revision = @Revision - 1
 
 						Fetch Next From InProgress into @InProgressIndictionUID
@@ -828,7 +825,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'TR' --EquipmentModeType
@@ -896,7 +893,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'TR' --EquipmentModeType
@@ -964,7 +961,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_FOV' --EquipmentModeType
@@ -1030,7 +1027,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_LISA_Foot' --EquipmentModeType
@@ -1098,7 +1095,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_LISA_Mobile' --EquipmentModeType
@@ -1165,7 +1162,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_GAP_Foot' --EquipmentModeType
@@ -1232,7 +1229,7 @@ AS
 						,@SrcDTLT
 						,@Revision
 						,1 --ActiveFlag
-						,'Pending' --StatusType
+						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
 						,'PIC_GAP_Mobile' --EquipmentModeType

@@ -3,6 +3,7 @@
 
 
 
+
 CREATE Procedure [dbo].[spWebManagementLeakLogApproval]
 (
 @AddressIndicationUID varchar(100)
@@ -14,7 +15,7 @@ AS
 SET NOCOUNT ON
 
 Declare @ReviewdStatusType varchar(200) = 'Reviewed'
-	,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
+	,@ApprovedNotSubmitted varchar(200) = 'Approved/NotSubmitted'
 	,@Revision int
 	,@ReturnVal bit = 1
 	,@MasterLeakLogUID varchar(100)
