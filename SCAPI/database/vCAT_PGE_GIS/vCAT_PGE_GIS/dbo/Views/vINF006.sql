@@ -1,17 +1,18 @@
 ﻿
-CREATE VIEW vINF006 AS 
+
+CREATE VIEW [dbo].[vINF006] AS 
 
 SELECT 
 
--- Debub ------------------------------------------------------
+---- Debub ------------------------------------------------------
 
- mll.StatusType AS Debug_StatusType,											
- aadd.City AS Debug_City,
- '|---------------------| ' AS INF006_Break,
--- Debub ------------------------------------------------------
+-- mll.StatusType AS Debug_StatusType,											
+-- aadd.City AS Debug_City,
+-- '|---------------------| ' AS INF006_Break,
+---- Debub ------------------------------------------------------
  CAST(ind.AssetAddressIndicationUID AS VARCHAR(100))			AS [IND_UID] 
 ,CAST(ind.MapPlatLeakNumber AS VARCHAR(6))						AS [MAP_PLAT_LEAK_NO]	
-,CAST(ind.LeakNo AS VARCHAR(16))								AS [LEAK_NO]			-- Not in the correct formatThis is not being populated 
+,CAST(ind.LeakNo AS VARCHAR(16))								AS [LEAK_NO]			-- This cuts off LanIDs > 4 characters. This format may be an issue if 2016 (YYYY) is displayed vs 16 (YY)
 
 ,FORMAT(ind.FoundDateTime, 'MMddyyyy')							AS [RPT_DATE]
 ,FORMAT(ind.FoundDateTime, 'HHmmss')							AS [RPT_TIME]
@@ -77,46 +78,47 @@ SELECT
 
 -- SELECT TOP 100 * 
 -- SELECT * 
+-- [vCAT_PGE_GIS_DEV].
+-- [vCAT_PGE_GIS_STAGE].
 
-FROM	[tgAssetAddressIndication] ind
+FROM	[dbo].[tgAssetAddressIndication] ind
 
-LEFT  JOIN  [tgAssetAddress] aadd
+LEFT  JOIN  [dbo].[tgAssetAddress] aadd
 	ON	aadd.AssetAddressUID = ind.AssetAddressUID
 
-LEFT  JOIN	[rgMapGridLog] mg
+LEFT  JOIN	[dbo].[rgMapGridLog] mg
 	ON	mg.MapGridUID = ind.MapGridUID
 	AND mg.ActiveFlag = 1
 
-LEFT  JOIN	[tMasterLeakLog] mll				
+LEFT  JOIN	[dbo].[tMasterLeakLog] mll				
 	ON	mll.MasterLeakLogUID = ind.MasterLeakLogUID
 	AND mll.ActiveFlag = 1
 
-LEFT  JOIN [UserTb] svor 
+LEFT  JOIN [dbo].[UserTb] svor 
 	ON	svor.UserUID = ind.CreatedUserUID
 	AND svor.UserActiveFlag = 1
 
-LEFT  JOIN [rWorkCenter] wc
+LEFT  JOIN [dbo].[rWorkCenter] wc
 	ON wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC
 
-LEFT  JOIN [rCityCounty] cc
+LEFT  JOIN [dbo].[rCityCounty] cc
 	ON cc.City = aadd.City
 
-LEFT  JOIN [UserTb] sup 
+LEFT  JOIN [dbo].[UserTb] sup 
 	ON	sup.UserUID = ind.ApprovedByUserUID
 	AND sup.UserActiveFlag = 1
 
 LEFT  JOIN ( SELECT FieldDisplay, FieldDescription, OutValue
-			 FROM [rDropDown] dd
+			 FROM [dbo].[rDropDown] dd
 			 WHERE FilterName = 'ddInitialLeakSourceType' AND SortSeq <> 0
 			) ddils ON ddils.FieldDisplay = ind.InitialLeakSourceType
 
-LEFT  JOIN [tInspectionsEquipment] ie
+LEFT  JOIN [dbo].[tInspectionsEquipment] ie
 	ON ie.InspecitonEquipmentUID = ind.EquipmentGradeByUID
-	AND ie.InspecitonEquipmentUID <> ''
+	AND ie.InspecitonEquipmentUID <> '' -- Extra code to eleminate bad data
 	AND ie.ActiveFlag = 1
 
 WHERE 
 ind.ActiveFlag = 1
-AND ind.SrcDTLT > '2016-11-03 12:00' 
---AND mll.StatusType = 'In Progress'
---AND mll.StatusType = 'SubmitPending'
+AND ind.SrcDTLT > '2016-11-03 12:00' -- Extra Code to eleminate bad data
+AND mll.StatusType = 'Submit/Pending'

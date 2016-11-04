@@ -4,3 +4,10 @@
     [CountyCode] NVARCHAR (255) NULL
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-City]
+    ON [dbo].[rCityCounty]([City] ASC);
+

@@ -2,6 +2,8 @@
 
 
 
+
+
 CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
@@ -13,8 +15,8 @@ AS
 SET NOCOUNT ON
 
 Declare @ReviewdStatusType varchar(200) = 'Reviewd'
-	,@SubmitPending varchar(200) = 'SubmitPending'
-	,@ApprovedNotSubmitted varchar(200) = 'ApprovedNotSubmitted'
+	,@SubmitPending varchar(200) = 'Submit/Pending'
+	,@ApprovedNotSubmitted varchar(200) = 'Approved/NotSubmitted'
 	,@Revision int
 	,@ReturnVal bit = 0
 	,@AssetAddressIndicationUID varchar(100)
@@ -28,7 +30,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 				from [dbo].[tgAssetAddressIndication] 
 				where MasterLeakLogUID = @MasterLeakLogUID 
 					and ActiveFlag = 1 
-					and StatusType in ('In Progress','Pending')) = 0
+					and StatusType in ('In Progress','Pending', 'InProgress')) = 0
 		AND (Select Count(*)
 				from tMasterLeakLog
 				where MasterLeakLogUID = @MasterLeakLogUID 
@@ -46,7 +48,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 		
 			BEGIN
 
-				Declare curBadCity Cursor
+				Declare curBadCity Cursor Static
 				For
 				Select aai.AssetAddressIndicationUID, aai.City, aai.LeakNo
 				From 
@@ -291,6 +293,10 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 
 				END
 
+				Close curBadCity
+
+				Deallocate curBadCity
+
 				Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
 
 				Update tMasterLeakLog set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID
@@ -358,7 +364,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 			ELSE
 			BEGIN
 		
-				Declare curLeakLogs Cursor
+				Declare curLeakLogs Cursor Static
 				For
 				Select AssetAddressIndicationUID from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID
 		
@@ -598,6 +604,10 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 
 
 				END
+
+				close curLeakLogs
+
+				deallocate curLeakLogs
 
 				Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
 

@@ -5,6 +5,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMasterLeakLog]
 AS
 Select 
@@ -42,6 +43,7 @@ Join (Select * from rWorkCenter where ActiveFlag = 1)
 	wc on mg.FuncLocMWC = wc.WorkCenterAbbreviationFLOC
 Left Join	(select masterleaklogUID, Count(*) LeakCount, Max(case when PotentialHCAType = 'Y' THEN 1 ELSE 0 END) HCA
 		from [dbo].[tgAssetAddressIndication] aai
+		Where ActiveFlag = 1
 		Group By masterleaklogUID)
 	LeakInfo on mll.MasterLeakLogUID = LeakInfo.MasterLeakLogUID
 Left Join 
