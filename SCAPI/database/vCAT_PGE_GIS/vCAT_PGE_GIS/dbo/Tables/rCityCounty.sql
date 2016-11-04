@@ -1,8 +1,12 @@
 ﻿CREATE TABLE [dbo].[rCityCounty] (
-    [City]       NVARCHAR (255) NULL,
-    [County]     NVARCHAR (255) NULL,
-    [CountyCode] NVARCHAR (255) NULL
+    [CityCountyID] INT            IDENTITY (1, 1) NOT NULL,
+    [City]         NVARCHAR (255) NULL,
+    [County]       NVARCHAR (255) NULL,
+    [CountyCode]   NVARCHAR (255) NULL,
+    CONSTRAINT [PK_rCityCounty] PRIMARY KEY CLUSTERED ([CityCountyID] ASC)
 );
+
+
 
 
 
