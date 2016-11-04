@@ -4,6 +4,8 @@
 
 
 
+
+
 CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
@@ -42,18 +44,20 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 		
 			IF (Select Count(*)
 				From 
-				(Select City from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) aai
-				Left Join [dbo].[rCityCounty] cc on aai.City = cc.city
+				(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) aai
+				Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aa.AssetAddressUID = aai.AssetAddressUID
+				Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
 				Where cc.City is null) > 0
 		
 			BEGIN
 
 				Declare curBadCity Cursor Static
 				For
-				Select aai.AssetAddressIndicationUID, aai.City, aai.LeakNo
+				Select aai.AssetAddressIndicationUID, aa.City, aai.LeakNo
 				From 
 				(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) aai
-				Left Join [dbo].[rCityCounty] cc on aai.City = cc.city
+				Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aa.AssetAddressUID = aai.AssetAddressUID
+				Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
 				Where cc.City is null
 		
 				Open curBadCity

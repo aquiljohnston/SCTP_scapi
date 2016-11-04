@@ -226,6 +226,9 @@ class DropdownController extends Controller
             $values = WebManagementLeakLogDropDown::find()
                 ->select(['WorkCenter'])
                 ->where(['Division' => $division])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['not' ,['Date' => null]])
+                ->andWhere(['not' ,['Map/Plat' => null]])
                 ->distinct()
                 ->all();
 
@@ -361,13 +364,16 @@ class DropdownController extends Controller
             $headers = getallheaders();
             WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
-			if($division != null && $workCenter != null)
+
+            if($division != null && $workCenter != null && $date != null)
             {
-                // by division and workcenter
+                // by division and workcenter and date
                 $values = WebManagementLeakLogDropDown::find()
                         ->select(['Map/Plat'])
                         ->where(['Division' => $division])
                         ->andWhere(['WorkCenter' => $workCenter])
+                        ->andWhere(['Date' => $date])
+                        ->andWhere(['not' ,['Surveyor' => null]])
                         ->distinct()
                         ->all();
             }
@@ -379,17 +385,20 @@ class DropdownController extends Controller
                         ->where(['Division' => $division])
                         ->andWhere(['WorkCenter' => $workCenter])
                         ->andWhere(['Surveyor' => $surveyor])
+                        ->andWhere(['not' ,['Date' => null]])
                         ->distinct()
                         ->all();
             }
-            else if($division != null && $workCenter != null && $date != null)
+            else if($division != null && $workCenter != null)
             {
-                // by division and workcenter and date
+                // by division and workcenter
                 $values = WebManagementLeakLogDropDown::find()
                         ->select(['Map/Plat'])
                         ->where(['Division' => $division])
-                        ->where(['WorkCenter' => $workCenter])
-                        ->where(['Date' => $date])
+                        ->andWhere(['WorkCenter' => $workCenter])
+                        ->andWhere(['not' ,['Date' => null]])
+                        ->andWhere(['not' ,['Map/Plat' => null]])
+                        ->andWhere(['not' ,['Surveyor' => null]])
                         ->distinct()
                         ->all();
             }
@@ -434,6 +443,9 @@ class DropdownController extends Controller
                 $values = WebManagementLeakLogDropDown::find()
                     ->select(['Surveyor'])
                     ->where(['Division' => $division])
+                    ->andWhere(['not' ,['Date' => null]])
+                    ->andWhere(['not' ,['Surveyor' => null]])
+                    ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
                     ->all();
             }
@@ -444,6 +456,8 @@ class DropdownController extends Controller
                     ->select(['Surveyor'])
                     ->where(['Division' => $division])
                     ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['not' ,['Date' => null]])
+                    ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
                     ->all();
             }
@@ -455,6 +469,7 @@ class DropdownController extends Controller
                     ->where(['Division' => $division])
                     ->andWhere(['WorkCenter' => $workCenter])
                     ->andWhere(['Map/Plat' => $mapPlat])
+                    ->andWhere(['not' ,['Date' => null]])
                     ->distinct()
                     ->all();
             }
@@ -512,6 +527,8 @@ class DropdownController extends Controller
                     ->where(['Division' => $division])
                     ->andWhere(['WorkCenter' => $workCenter])
 					->andWhere(['not' ,['Date' => null]])
+                    ->andWhere(['not' ,['Surveyor' => null]])
+                    ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
                     ->all();
             }
