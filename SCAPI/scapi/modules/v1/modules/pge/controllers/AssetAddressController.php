@@ -254,7 +254,7 @@ class AssetAddressController extends Controller
 								->andWhere(['ActiveFlag' => 1])
 								->one();
 								
-							if ($previousMasterLeakLog->StatusType != 'Not Approved')
+							if ($previousMasterLeakLog->StatusType != 'NotApproved' && $previousMasterLeakLog->StatusType != 'InProgress')
 							{
 								//create new MasterLeakLog object
 								$newMasterLeakLog = new MasterLeakLog;
@@ -271,7 +271,7 @@ class AssetAddressController extends Controller
 								if($previousMasterLeakLog->update())
 								{
 									//set new record status type and revision
-									$newMasterLeakLog->StatusType = 'Not Approved';
+									$newMasterLeakLog->StatusType = 'NotApproved';
 									$newMasterLeakLog->Revision = $masterLeakLogRevision;
 									$newMasterLeakLog->ModifiedUserUID = $userUID;
 									$newMasterLeakLog->SourceID = 'API';
@@ -611,7 +611,7 @@ class AssetAddressController extends Controller
 												->andWhere(['ActiveFlag' => 1])
 												->one();
 											
-											if ($previousMasterLeakLog->StatusType != 'Not Approved')
+											if ($previousMasterLeakLog->StatusType != 'NotApproved' && $previousMasterLeakLog->StatusType != 'InProgress')
 											{
 												//create new MasterLeakLog object
 												$newMasterLeakLog = new MasterLeakLog;
@@ -628,7 +628,7 @@ class AssetAddressController extends Controller
 												if($previousMasterLeakLog->update())
 												{
 													//set new record status type and revision
-													$newMasterLeakLog->StatusType = 'Not Approved';
+													$newMasterLeakLog->StatusType = 'NotApproved';
 													$newMasterLeakLog->Revision = $masterLeakLogRevision;
 													$newMasterLeakLog->ModifiedUserUID = $userUID;
 													$newMasterLeakLog->SourceID = 'API';
