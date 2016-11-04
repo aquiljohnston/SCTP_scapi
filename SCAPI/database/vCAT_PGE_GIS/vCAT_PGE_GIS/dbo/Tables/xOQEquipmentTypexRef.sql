@@ -14,6 +14,10 @@
     [MobleFlag]             BIT           NULL,
     [FoundByFlag]           BIT           NULL,
     [GradeByFlag]           BIT           NULL,
-    [EZTechEquipmentType]   VARCHAR (200) NULL
+    [EZTechEquipmentType]   VARCHAR (200) NULL,
+    [WebDisplayType]        VARCHAR (25)  CONSTRAINT [DF_xOQEquipmentTypexRef_WebDisplayType] DEFAULT ('') NULL,
+    [INFDisplayType]        VARCHAR (25)  CONSTRAINT [DF_xOQEquipmentTypexRef_INFDisplayType] DEFAULT ('') NULL
 );
+
+
 

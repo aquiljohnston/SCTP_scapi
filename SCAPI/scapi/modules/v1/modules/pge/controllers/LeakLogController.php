@@ -237,12 +237,17 @@ class LeakLogController extends BaseActiveController {
 
         if($status == 'Not Approved')
         {
-            return 'NotApproved';
+            return 'Not Approved';
         }
 
         if($status == 'Approved / Not Submitted')
         {
-            return 'ApprovedNotSubmitted';
+            return 'Approved/NotSubmitted';
+        }
+
+        if($status == 'Submitted / Pending')
+        {
+            return 'Submit/Pending';
         }
         return $status;
     }
@@ -297,7 +302,14 @@ class LeakLogController extends BaseActiveController {
 
                 $status = trim($status);
                 if ($status) {
-                    $query->andWhere(["Status" => $status]);
+                    if($status == "Submitted/Pending")
+                    {
+                        $query->andFilterWhere(['or', ['=', "Status", $status], ['=', "Status", "Submitted"]]);
+                    }
+                    else
+                    {
+                        $query->andWhere(["Status" => $status]);
+                    }
                 }
                 $countQuery = clone $query;
 
@@ -327,13 +339,13 @@ class LeakLogController extends BaseActiveController {
                     $countQueryC = clone $countersQuery;
                     //TODO rewrite to improve performance
                     $counts['notApproved'] = $countQueryNA
-                        ->andWhere(['Status'=>'NotApproved'])
+                        ->andWhere(['Status'=>'Not Approved'])
                         ->count();
                     $counts['approvedOrNotSubmitted'] = $countQueryA
-                        ->andWhere(['Status'=>'ApprovedNotSubmitted'])
+                        ->andWhere(['Status'=>'Approved/NotSubmitted'])
                         ->count();
                     $counts['submittedOrPending'] = $countQuerySP
-                        ->andWhere(['Status'=>'Submitted / Pending'])
+                        ->andFilterWhere(['or', ['=', "Status", 'Submit/Pending'], ['=', "Status", "Submitted"]])
                         ->count();
                     $counts['exceptions'] = $countQueryE
                         ->andWhere(['Status'=>'Rejected'])
