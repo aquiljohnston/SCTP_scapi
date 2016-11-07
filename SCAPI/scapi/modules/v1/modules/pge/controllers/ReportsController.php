@@ -5,6 +5,7 @@ namespace app\modules\v1\modules\pge\controllers;
 use app\authentication\TokenAuth;
 use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\models\BaseActiveRecord;
+use app\modules\v1\modules\pge\models\Report;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
@@ -41,26 +42,53 @@ class ReportsController extends Controller {
         return $response;
     }
 
-    public function actionGetReports() {
-        BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-        $UID = BaseActiveController::getUserFromToken()->UserUID;
+    public function actionGetReportDropDown() {
 
         $headers = getallheaders();
-        BaseActiveRecord::setClient($headers['X-Client']);
+        Report::setClient($headers['X-Client']);
 
-        $connection = BaseActiveRecord::getDb();
-        //TODO: Set DB for query
-        //$sql = "SELECT [ActiveFlag], [ReportDisplayName], [ReportSPName],[ReportDescription] FROM [vCAT_PGE_GIS_DEV].[dbo].[rReport] Where [ActiveFlag] = 1";
-        $result = (new \yii\db\Query())
-            ->select(['ActiveFlag', 'ReportDisplayName', 'ReportSPName', 'ReportDescription'])
-            ->from('rReport')
+        $result = Report::find()
+            ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, Parm')
             ->where(['ActiveFlag' => 1])
+            ->asArray()
             ->all();
 
+        $result['reports'] = $result;
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
         $response->data = $result;
         return $response;
+    }
+    /*
+     * todo:　need to call SP or View to get report data
+     * @return Json format
+     * {
+            "data": [],
+            "columns": [{
+                "title": "Report Date"
+            }, {
+                "title": "Report Title"
+            }, {
+                "title": "COMPANY_NO"
+            }, {
+                "title": "INSP_TYPE"
+            }, {
+                "title": "Survey_Period"
+            }, {
+                "title": "Completed_Asset_Count"
+            }]
+        }
+     */
+    public function actionGetReport(){
+
+    }
+
+    /*
+     * todo: get Parm Drop Down list
+     * @return Json format
+     */
+    public function actionGetParmDropDown(){
+
     }
 
     public function actionGet($report) {
