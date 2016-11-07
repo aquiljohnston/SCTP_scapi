@@ -8,6 +8,7 @@
 
 namespace app\modules\v1\modules\pge\controllers;
 use app\modules\v1\modules\pge\models\AssetAddressIndication;
+use app\modules\v1\modules\pge\models\WebManagementLeakLogForm;
 use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use app\modules\v1\modules\pge\models\WebManagementLeaks;
 use app\modules\v1\modules\pge\models\WebManagementEquipmentServices;
@@ -528,10 +529,10 @@ class LeakLogController extends BaseActiveController {
             $data = [];
             $assetAddressIndicationUID = $id;
             $headers = getallheaders();
-            AssetAddressIndication::setClient($headers['X-Client']);
-            $llRecord = AssetAddressIndication::find()
+            WebManagementLeakLogForm::setClient($headers['X-Client']);
+            $llRecord = WebManagementLeakLogForm::find()
                 ->where(['AssetAddressIndicationUID' => $assetAddressIndicationUID])
-                ->andWhere(['ActiveFlag'=>'1'])
+//                ->andWhere(['ActiveFlag'=>'1'])
                 ->one();
 
             $data['result'] = $llRecord;
@@ -560,7 +561,7 @@ class LeakLogController extends BaseActiveController {
         try
         {
             $headers = getallheaders();
-            AssetAddressIndication::setClient($headers['X-Client']);
+            WebManagementLeakLogForm::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
             $putData = json_decode($put, true);
@@ -571,7 +572,7 @@ class LeakLogController extends BaseActiveController {
 //                            @putData=:putData";
             $sqlCommand = "Select '1' as Succeeded;";
 
-            $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
+            $command =  WebManagementLeakLogForm::getDb()->createCommand($sqlCommand);
 //            $command->bindParam(":AssetAddressIndicationUID", $id);
 //            $command->bindParam(":putData", $put);
 
