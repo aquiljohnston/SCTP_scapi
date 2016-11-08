@@ -156,6 +156,7 @@
     <Compile Include="modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementLeakLogDropDown.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementEquipmentServices.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementFlocsDropDown.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementLeaks.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementMapStampDetail.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementMasterLeakLog.php" />
