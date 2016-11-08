@@ -19,7 +19,7 @@ class WebManagementFlocsDropDown extends \app\modules\v1\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'vWebManagementDivisionWorkCenterFLOC';
+        return 'vWebManagementDropDownDispatchFLOC';
     }
     //
     //    /**
