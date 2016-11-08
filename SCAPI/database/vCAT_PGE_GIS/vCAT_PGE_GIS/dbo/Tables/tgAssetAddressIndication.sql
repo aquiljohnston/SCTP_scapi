@@ -118,8 +118,12 @@
     [MapPlatLeakNumber]                      INT                NULL,
     [LockedFlag]                             BIT                CONSTRAINT [DF_tgAssetAddressIndication_LockedFlag] DEFAULT ((1)) NULL,
     [SAPComments]                            VARCHAR (500)      NULL,
+    [StationBegin]                           NUMERIC (38, 8)    NULL,
+    [StationEnd]                             NUMERIC (38, 8)    NULL,
     CONSTRAINT [PK_g_AssetIndications] PRIMARY KEY CLUSTERED ([AssetAddressIndicationsID] ASC)
 );
+
+
 
 
 

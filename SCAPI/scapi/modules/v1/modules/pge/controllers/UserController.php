@@ -582,6 +582,7 @@ class UserController extends BaseActiveController
 				['like', 'UserEmployeeType', $filter],
 				['like', 'OQ', $filter],
 				['like', 'AppRoleType', $filter],
+				['like', 'WorkCenter', $filter],
 				]);
 			}
 			

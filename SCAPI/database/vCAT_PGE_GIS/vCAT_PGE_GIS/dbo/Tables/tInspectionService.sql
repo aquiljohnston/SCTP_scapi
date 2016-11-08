@@ -48,8 +48,11 @@
     [MapAreaNumber]               INT                CONSTRAINT [DF_tInspectionService_MapAreaNumber] DEFAULT ((0)) NULL,
     [LockedFlag]                  BIT                CONSTRAINT [DF_tInspectionService_LockedFlag] DEFAULT ((0)) NULL,
     [TaskOutUID]                  VARCHAR (200)      NULL,
+    [CreateDateTime]              DATETIME           NULL,
     CONSTRAINT [PK_t_InspecitonServices] PRIMARY KEY CLUSTERED ([tInspectionServicesID] ASC)
 );
+
+
 
 
 

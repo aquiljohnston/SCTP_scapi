@@ -5,6 +5,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementUsers] AS
 
 select Distinct
@@ -22,7 +23,7 @@ select Distinct
 , wc.WorkCenter
 , u.HomeWorkCenterUID
 , u.UserAppRoleType [AppRoleType]
-from usertb u
+from (Select * from usertb where UserActiveFlag = 1 and UserInActiveFlag = 0) u
 Left join [dbo].[xReportingGroupEmployeexRef] rgxrf on u.UserUID = rgxrf.UserUID
 Left join rReportingGroup rg on rg.ReportingGroupUID = rgxrf.ReportingGroupUID
 Left Join vUserCurrentOQStatusByUserUID OQ on oq.UserUID = u.UserUID
