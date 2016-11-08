@@ -254,7 +254,7 @@ class AssetAddressController extends Controller
 								->andWhere(['ActiveFlag' => 1])
 								->one();
 								
-							if ($previousMasterLeakLog->StatusType != 'Not Approved')
+							if ($previousMasterLeakLog->StatusType != 'Not Approved' && $previousMasterLeakLog->StatusType != 'InProgress')
 							{
 								//create new MasterLeakLog object
 								$newMasterLeakLog = new MasterLeakLog;
@@ -611,7 +611,7 @@ class AssetAddressController extends Controller
 												->andWhere(['ActiveFlag' => 1])
 												->one();
 											
-											if ($previousMasterLeakLog->StatusType != 'Not Approved')
+											if ($previousMasterLeakLog->StatusType != 'Not Approved' && $previousMasterLeakLog->StatusType != 'InProgress')
 											{
 												//create new MasterLeakLog object
 												$newMasterLeakLog = new MasterLeakLog;

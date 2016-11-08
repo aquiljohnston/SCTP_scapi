@@ -1,4 +1,5 @@
-﻿Create View [vMapGridDivisionWorkCenterSupervisor]
+﻿
+CREATE View [dbo].[vMapGridDivisionWorkCenterSupervisor]
 AS
 select 
 mg.MapGridUID, 
@@ -11,6 +12,8 @@ mg.FuncLocPlatSuffix,
 wc.WorkCenterUID,
 wc.Division,
 wc.WorkCenter,
+wc.WorkCenterAbbreviation,
+wc.WorkCenterAbbreviationFLOC,
 mg.FuncLocMWC,
 u.UserLANID,
 u.UserLastName,

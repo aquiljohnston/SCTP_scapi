@@ -4,6 +4,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMapStampManagement]
 AS
 select 
@@ -34,8 +35,8 @@ from
 (Select * from [dbo].[tInspectionRequest] where ActiveFlag = 1) IR
 Join (Select InspectionRequestUID, Sum(EstimatedFeet) [TotalFeetOfMain] 
 			, Sum(EstimatedServices) [TotalServices]
-			, Min(srcDTLT) [DetailStartDate]
-			, Max(srcDTLT) [DetailEndDate]
+			, Min(CreateDateTime) [DetailStartDate]
+			, Max(CreateDateTime) [DetailEndDate]
 			, SUM(CASE WHEN CHARINDEX('FOV', EquipmentModeType) > 0 THEN EstimatedFeet ELSE 0 END) FOVTotalFeetOfMain
 			, SUM(CASE WHEN CHARINDEX('FOV', EquipmentModeType) > 0 THEN EstimatedServices ELSE 0 END) FOVTotalServices
 			, SUM(CASE WHEN CHARINDEX('LISA', EquipmentModeType) > 0 THEN EstimatedFeet ELSE 0 END) LISATotalFeetOfMain

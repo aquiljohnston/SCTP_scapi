@@ -1,5 +1,6 @@
 ﻿
 
+
 CREATE Procedure [dbo].[spWebManagementMapStampSubmit]
 (
 @InspectionRequestUID varchar(100)
@@ -185,7 +186,8 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					WindSpeedMidUID,
 					MapAreaNumber,
 					LockedFlag,
-					TaskOutUID
+					TaskOutUID,
+					CreateDateTime
 				)
 				Select
 					[is].InspectionServicesUID,
@@ -201,7 +203,7 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					RevisionComments,
 					NextRev.NextRevision, -- Revision,
 					1, --ActiveFlag,
-					'Completed', --StatusType,
+					@SubmitPendingStatusType, --StatusType,
 					EquipmentType,
 					InstrumentType,
 					SerialNumber,
@@ -232,7 +234,8 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					WindSpeedMidUID,
 					MapAreaNumber,
 					1, --LockedFlag,
-					TaskOutUID
+					TaskOutUID,
+					CreateDateTime
 				From [dbo].[tInspectionService] [is]
 				Join (Select InspectionServicesUID, count(*) NextRevision from [dbo].[tInspectionService] 
 					Where InspectionRequestUID = @InspectionRequestUID
@@ -278,7 +281,7 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					Services,
 					WindSpeedStart,
 					WindSpeedMid,
-					StatusType,
+					@SubmitPendingStatusType,
 					SurveyorUID,
 					SurveyDate,
 					Seq,

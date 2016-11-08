@@ -8,6 +8,7 @@
 
 namespace app\modules\v1\modules\pge\controllers;
 use app\modules\v1\modules\pge\models\AssetAddressIndication;
+use app\modules\v1\modules\pge\models\WebManagementLeakLogForm;
 use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use app\modules\v1\modules\pge\models\WebManagementLeaks;
 use app\modules\v1\modules\pge\models\WebManagementEquipmentServices;
@@ -153,7 +154,8 @@ class LeakLogController extends BaseActiveController {
             $masterLeakLogRecords = WebManagementMasterLeakLog::find()
                 ->where(['MasterLeakLogUID' => $masterLeakLogUID])
                 ->all();
-            return $this::actionGetDetails($masterLeakLogRecords[0]['Division'], $masterLeakLogRecords[0]['WorkCenter'], $masterLeakLogRecords[0]['Map/Plat'], $masterLeakLogRecords[0]['Surveyor'], $masterLeakLogRecords[0]['Date']);
+            $lastIndex = count($masterLeakLogRecords) - 1;
+            return $this::actionGetDetails($masterLeakLogRecords[$lastIndex]['Division'], $masterLeakLogRecords[$lastIndex]['WorkCenter'], $masterLeakLogRecords[$lastIndex]['Map/Plat'], $masterLeakLogRecords[$lastIndex]['Surveyor'], $masterLeakLogRecords[$lastIndex]['Date']);
         }
 
         catch(ForbiddenHttpException $e)
@@ -227,6 +229,29 @@ class LeakLogController extends BaseActiveController {
         }
     }
 
+    public function GetDatabaseStatusFromUiStatus($status)
+    {
+        if($status == 'Exceptions')
+        {
+            return 'Rejected';
+        }
+
+        if($status == 'Not Approved')
+        {
+            return 'Not Approved';
+        }
+
+        if($status == 'Approved / Not Submitted')
+        {
+            return 'Approved/NotSubmitted';
+        }
+
+        if($status == 'Submitted / Pending')
+        {
+            return 'Submit/Pending';
+        }
+        return $status;
+    }
 
     public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
 	{
@@ -274,14 +299,18 @@ class LeakLogController extends BaseActiveController {
                 }
 
                 $countersQuery = clone $query;
-                if($status == 'Exceptions')
-                {
-                    $status = 'Rejected';
-                }
+                $status = $this::GetDatabaseStatusFromUiStatus($status);
 
                 $status = trim($status);
                 if ($status) {
-                    $query->andWhere(["Status" => $status]);
+                    if($status == "Submitted/Pending")
+                    {
+                        $query->andFilterWhere(['or', ['=', "Status", $status], ['=', "Status", "Submitted"]]);
+                    }
+                    else
+                    {
+                        $query->andWhere(["Status" => $status]);
+                    }
                 }
                 $countQuery = clone $query;
 
@@ -314,10 +343,10 @@ class LeakLogController extends BaseActiveController {
                         ->andWhere(['Status'=>'Not Approved'])
                         ->count();
                     $counts['approvedOrNotSubmitted'] = $countQueryA
-                        ->andWhere(['Status'=>'Approved / Not Submitted'])
+                        ->andWhere(['Status'=>'Approved/NotSubmitted'])
                         ->count();
                     $counts['submittedOrPending'] = $countQuerySP
-                        ->andWhere(['Status'=>'Submitted / Pending'])
+                        ->andFilterWhere(['or', ['=', "Status", 'Submit/Pending'], ['=', "Status", "Submitted"]])
                         ->count();
                     $counts['exceptions'] = $countQueryE
                         ->andWhere(['Status'=>'Rejected'])
@@ -500,10 +529,10 @@ class LeakLogController extends BaseActiveController {
             $data = [];
             $assetAddressIndicationUID = $id;
             $headers = getallheaders();
-            AssetAddressIndication::setClient($headers['X-Client']);
-            $llRecord = AssetAddressIndication::find()
+            WebManagementLeakLogForm::setClient($headers['X-Client']);
+            $llRecord = WebManagementLeakLogForm::find()
                 ->where(['AssetAddressIndicationUID' => $assetAddressIndicationUID])
-                ->andWhere(['ActiveFlag'=>'1'])
+//                ->andWhere(['ActiveFlag'=>'1'])
                 ->one();
 
             $data['result'] = $llRecord;
@@ -532,7 +561,7 @@ class LeakLogController extends BaseActiveController {
         try
         {
             $headers = getallheaders();
-            AssetAddressIndication::setClient($headers['X-Client']);
+            WebManagementLeakLogForm::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
             $putData = json_decode($put, true);
@@ -543,7 +572,7 @@ class LeakLogController extends BaseActiveController {
 //                            @putData=:putData";
             $sqlCommand = "Select '1' as Succeeded;";
 
-            $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
+            $command =  WebManagementLeakLogForm::getDb()->createCommand($sqlCommand);
 //            $command->bindParam(":AssetAddressIndicationUID", $id);
 //            $command->bindParam(":putData", $put);
 

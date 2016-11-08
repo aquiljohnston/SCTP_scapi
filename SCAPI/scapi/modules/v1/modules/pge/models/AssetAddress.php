@@ -17,7 +17,6 @@ use Yii;
  * @property string $CreatedUserUID
  * @property string $ModifiedUserUID
  * @property string $SrcDTLT
- * @property string $SrcOpenDTLT
  * @property string $SrvDTLT
  * @property string $SrvDTLTOffset
  * @property string $GPSType
@@ -100,7 +99,10 @@ use Yii;
  * @property string $InspectionRequestUID
  * @property string $MasterLeakLogUID
  * @property string $ActivityUID
+ * @property string $SrcOpenDTLT
  * @property string $ReverseGeoLocationString
+ * @property string $Grade1ReleaseReasonType
+ * @property string $Grade1ReleaseDateTime
  */
 class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -118,9 +120,9 @@ class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetAddressUID', 'AssetUID', 'AssetInspectionUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'RouteNo', 'AssetAccountNo', 'AssetAccountName', 'AssetName', 'AssetLocationID', 'AssetLocationCode', 'AssetIDStatus', 'AssetIDNo', 'AssetIDNoCorection', 'ReverseGeoHouseNo', 'ReverseGeoStreet1', 'ReverseGeoCity', 'ReverseGeoState', 'ReverseGeoZip', 'ReverseGeoQuality', 'HouseNo', 'Street1', 'Street2', 'AptSuite', 'AptDesc', 'Apt', 'City', 'State', 'ZIP', 'County', 'CountyCode', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'InspectionRequestUID', 'MasterLeakLogUID', 'ActivityUID', 'ReverseGeoLocationString'], 'string'],
+            [['AssetAddressUID', 'AssetUID', 'AssetInspectionUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'RouteNo', 'AssetAccountNo', 'AssetAccountName', 'AssetName', 'AssetLocationID', 'AssetLocationCode', 'AssetIDStatus', 'AssetIDNo', 'AssetIDNoCorection', 'ReverseGeoHouseNo', 'ReverseGeoStreet1', 'ReverseGeoCity', 'ReverseGeoState', 'ReverseGeoZip', 'ReverseGeoQuality', 'HouseNo', 'Street1', 'Street2', 'AptSuite', 'AptDesc', 'Apt', 'City', 'State', 'ZIP', 'County', 'CountyCode', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'InspectionRequestUID', 'MasterLeakLogUID', 'ActivityUID', 'ReverseGeoLocationString', 'Grade1ReleaseReasonType'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'NewAssetFlag', 'NonAssetLocationFlag', 'AssetAddessCorrectionFlag', 'AssetIDNumberCorrectionFlag', 'AssetConfirmFlag', 'RouteSeq', 'SortOrder', 'HouseNoNAFlag', 'ApprovedFlag', 'SubmittedFlag', 'SubmittedUserUID', 'CompletedFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'AOCFlag', 'CGIFlag'], 'integer'],
-            [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT', 'SrcOpenDTLT'], 'safe'],
+            [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT', 'SrcOpenDTLT', 'Grade1ReleaseDateTime'], 'safe'],
             [['Latitude', 'Longitude', 'ReverseGeoLat', 'ReverseGeoLong', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightofGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
         ];
     }
@@ -223,8 +225,10 @@ class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
             'InspectionRequestUID' => 'Inspection Request Uid',
             'MasterLeakLogUID' => 'Master Leak Log Uid',
             'ActivityUID' => 'Activity Uid',
-			'SrcOpenDTLT' => 'Src Open Dtlt',
-			'ReverseGeoLocationString' => 'Reverse Geo Location String',
+            'SrcOpenDTLT' => 'Src Open Dtlt',
+            'ReverseGeoLocationString' => 'Reverse Geo Location String',
+            'Grade1ReleaseReasonType' => 'Grade1 Release Reason Type',
+            'Grade1ReleaseDateTime' => 'Grade1 Release Date Time',
         ];
     }
 }
