@@ -1,5 +1,7 @@
 ﻿
 
+
+
 CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
@@ -18,6 +20,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 	,@TotalGrade1Count int
 	,@TotalNonGrade1Count int
 	,@TotalNonGrade1CountNeedingSent int
+	,@TotalLTNonGrade1Count int
 	,@MasterLeakLogToSendCount int
 	
 	,@Revision int
@@ -34,13 +37,16 @@ select
 , @TotalGrade1Count = SUM(Grade1Count)
 , @TotalNonGrade1Count = SUM(NonGrade1Count)
 , @TotalNonGrade1CountNeedingSent = SUM(NonGrade1CountNeedingSent)
+, @TotalLTNonGrade1Count = SUM(LTNonGrade1Count)
  from
 (Select
-Case WHEN StatusType <> 'Completed' THEN 1 else 0 END [LeakCount],
-CASE WHEN GradeType = '1' and StatusType <> 'Completed' THEN 1 ELSE 0 END [Grade1Count],
-CASE WHEN GradeType <> '1' and StatusType <> 'Completed' THEN 1 ELSE 0 END [NonGrade1Count],
-CASE WHEN GradeType <> '1' and StatusType in ('Reviewed') THEN 1 ELSE 0 END [NonGrade1CountNeedingSent]
-from tgAssetAddressIndication Where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) LeakCount
+Case WHEN aai.StatusType <> 'Completed' THEN 1 else 0 END [LeakCount],
+CASE WHEN GradeType = '1' and aai.StatusType <> 'Completed' THEN 1 ELSE 0 END [Grade1Count],
+CASE WHEN GradeType <> '1' and aai.StatusType <> 'Completed' THEN 1 ELSE 0 END [NonGrade1Count],
+CASE WHEN GradeType <> '1' and aai.StatusType in ('Reviewed') THEN 1 ELSE 0 END [NonGrade1CountNeedingSent],
+CASE WHEN mg.FLOC = 'GT.PHYS.TRNS.9999.0T99' and GradeType <> '1' THEN 1 else 0 END [LTNonGrade1Count]
+from (Select * From tgAssetAddressIndication Where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) aai
+Left Join (select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aai.MapGridUID = mg.MapGridUID) LeakCount
 
 Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1 and StatusType in (@ApprovedNotSubmitted)
 	
@@ -118,7 +124,7 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 
 --There are leaks and the Master Leak Log is to send	
 
-		IF @TotalLeakCount = @TotalGrade1Count --All leaks are Grade 1. Mark Grade 1 Leaks and Master Leak Log as Completed
+		IF @TotalLeakCount = @TotalGrade1Count + @TotalLTNonGrade1Count --All leaks are Grade 1 or LT. Mark Grade 1 and LT Leaks and Master Leak Log as Completed
 		BEGIN
 
 --There are only grade one leaks.  Mark Master Leak Log and all Grade 1 Leaks as completed.
@@ -343,8 +349,9 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 				StationEnd
 			From tgAssetAddressIndication aai
 			Join (select AssetAddressIndicationUID, Count(*) NextRevision 
-					from tgAssetAddressIndication 
-					Where MasterLeakLogUID = @MasterLeakLogUID and GradeType = '1'
+					from tgAssetAddressIndication aai 
+					Left Join (select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aai.MapGridUID = mg.MapGridUID
+					Where MasterLeakLogUID = @MasterLeakLogUID and (GradeType = '1' or mg.FLOC = 'GT.PHYS.TRNS.9999.0T99')
 					group by AssetAddressIndicationUID) NextRev on NextRev.AssetAddressIndicationUID = aai.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
 
 
@@ -422,20 +429,24 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 
 			IF (Select Count(*)
 				From 
-				(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1') aai
+				(Select * from [dbo].[tgAssetAddressIndication] aai
+				 where aai.ActiveFlag = 1 and aai.MasterLeakLogUID = @MasterLeakLogUID and aai.GradeType <> '1') aai
 				Join (select AssetAddressUID, City from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
 				Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
-				Where cc.City is null) > 0
+				Left Join (select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aai.MapGridUID = mg.MapGridUID
+				Where cc.City is null and mg.FLOC <> 'GT.PHYS.TRNS.9999.0T99') > 0
 			BEGIN 
 --City isn't correct on some of the leaks.  Mark Leaks with bad city and exit proc
 					Update aai set ActiveFlag = 0
 					From [dbo].[tgAssetAddressIndication] aai
 					Join (Select aai.AssetAddressIndicationUID
 							From 
-							(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1') aai
-							Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
+							(Select * from [dbo].[tgAssetAddressIndication] aai
+							 where aai.ActiveFlag = 1 and aai.MasterLeakLogUID = @MasterLeakLogUID and aai.GradeType <> '1') aai
+							Join (select AssetAddressUID, City from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
 							Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
-							Where cc.City is null) BadCity on badcity.AssetAddressIndicationUID = aai.AssetAddressIndicationUID
+							Left Join (select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aai.MapGridUID = mg.MapGridUID
+							Where cc.City is null and mg.FLOC <> 'GT.PHYS.TRNS.9999.0T99') BadCity on badcity.AssetAddressIndicationUID = aai.AssetAddressIndicationUID
 
 					Insert Into tgAssetAddressIndication
 					(
@@ -661,10 +672,12 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 							group by AssetAddressIndicationUID) NextRev on NextRev.AssetAddressIndicationUID = aai.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
 					join (Select aai.*, aa.City [BadCity]
 							From 
-							(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1') aai
-							Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
+							(Select * from [dbo].[tgAssetAddressIndication] aai
+							 where aai.ActiveFlag = 1 and aai.MasterLeakLogUID = @MasterLeakLogUID and aai.GradeType <> '1') aai
+							Join (select AssetAddressUID, City from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
 							Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
-							Where cc.City is null) BadCity on badcity.AssetAddressIndicationUID = aai.AssetAddressIndicationUID
+							Left Join (select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aai.MapGridUID = mg.MapGridUID
+							Where cc.City is null and mg.FLOC <> 'GT.PHYS.TRNS.9999.0T99') BadCity on badcity.AssetAddressIndicationUID = aai.AssetAddressIndicationUID
 				END
 				ELSE
 				BEGIN --All Cities are correct.  Move this Master Leak Log and all Leaks to Submitted/Pending
@@ -784,11 +797,11 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 						AAI.AssetAddressIndicationUID,
 						AssetAddressUID,
 						InspectionRequestUID,
-						MapGridUID,
+						AAI.MapGridUID,
 						MasterLeakLogUID,
-						ProjectID,
+						AAI.ProjectID,
 						'WEB', --SourceID,
-						CreatedUserUID,
+						AAI.CreatedUserUID,
 						@SubmittedUID, --ModifiedUserUID,
 						NULL, --SrcDTLT,
 						NULL, --SrcOpenDTLT,
@@ -797,12 +810,12 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 						GPSSentence,
 						Latitude,
 						Longitude,
-						SHAPE,
-						Comments,
-						RevisionComments,
+						AAI.SHAPE,
+						AAI.Comments,
+						AAI.RevisionComments,
 						NextRev.NextRevision, -- Revision,
 						1, --ActiveFlag,
-						CASE WHEN aai.GradeType = '1' THEN  @CompletedStatusType ELSE @SubmitPending END   , -- StatusType,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN  @CompletedStatusType ELSE @SubmitPending END   , -- StatusType,
 						ManualMapPlat,
 						PipelineType,
 						SurveyType,
@@ -855,16 +868,16 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 						ApprovedFlag,
 						ApprovedByUserUID,
 						ApprovedDTLT,
-						CASE WHEN aai.GradeType = '1' THEN 0 ELSE 1 END SubmittedFlag,
-						CASE WHEN aai.GradeType = '1' THEN @SubmitPending ELSE '' END, --  SubmittedStatusType,
-						CASE WHEN aai.GradeType = '1' THEN '' ELSE @SubmittedUID END, -- SubmittedUserUID,
-						CASE WHEN aai.GradeType = '1' THEN NULL ELSE getdate() END, --SubmittedDTLT,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN 0 ELSE 1 END SubmittedFlag,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN @SubmitPending ELSE '' END, --  SubmittedStatusType,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN '' ELSE @SubmittedUID END, -- SubmittedUserUID,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN NULL ELSE getdate() END, --SubmittedDTLT,
 						ResponseStatusType,
 						ResponseComments,
 						ResponceErrorComments,
 						ResponseDTLT,
-						CASE WHEN aai.GradeType = '1' THEN 1 ELSE 0 END, --CompletedFlag,
-						CASE WHEN aai.GradeType = '1' THEN Getdate() ELSE NULL END, --CompletedDTLT,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN 1 ELSE 0 END, --CompletedFlag,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN Getdate() ELSE NULL END, --CompletedDTLT,
 						AboveBelowGroundType,
 						FoundDateTime,
 						GPSSource,
@@ -883,16 +896,16 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 						ActivityUID,
 						AssetInspectionUID,
 						MapPlatLeakNumber,
-						CASE WHEN aai.GradeType = '1' THEN  1 ELSE 0 END, --LockedFlag,
+						CASE WHEN aai.GradeType = '1' OR mg.FLOC = 'GT.PHYS.TRNS.9999.0T99'  THEN  1 ELSE 0 END, --LockedFlag,
 						SAPComments,
 						StationBegin,
 						StationEnd
 					From tgAssetAddressIndication aai
 					Join (select AssetAddressIndicationUID, Count(*) NextRevision 
-							from tgAssetAddressIndication 
-							Where MasterLeakLogUID = @MasterLeakLogUID
+							from tgAssetAddressIndication aai 
+							Where MasterLeakLogUID = @MasterLeakLogUID 
 							group by AssetAddressIndicationUID) NextRev on NextRev.AssetAddressIndicationUID = aai.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
-
+					Left Join (select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aai.MapGridUID = mg.MapGridUID
 
 					Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
 
@@ -956,6 +969,7 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 						NULL --CompletedDTLT
 					From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and revision = @Revision - 1
 
+					Set @ReturnVal = 1
 
 				END
 
