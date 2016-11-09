@@ -4,6 +4,7 @@
 
 
 
+
 CREATE view [dbo].[vWebManagementEquipmentServices]
 AS
 Select 
@@ -35,7 +36,7 @@ Left Join (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on [is].M
 left Join (select * from [dbo].[rWorkCenter] where ActiveFlag = 1) wc on mg.FuncLocMWC = wc.WorkCenterAbbreviationFLOC
 left join (select * from UserTb where UserActiveFlag = 1) u on [is].CreatedUserUID = u.UserUID
 Left join (select * from tInspectionRequest where ActiveFlag = 1) ir on ir.InspectionRequestUID = [is].InspectionRequestUID
-Where [is].ActiveFlag = 1
+Where [is].ActiveFlag = 1 and [is].StatusType <> 'Deleted'
 
 
 	

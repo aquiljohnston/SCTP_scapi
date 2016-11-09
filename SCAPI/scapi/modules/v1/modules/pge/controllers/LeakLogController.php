@@ -295,6 +295,9 @@ class LeakLogController extends BaseActiveController {
                 ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
@@ -486,19 +489,18 @@ class LeakLogController extends BaseActiveController {
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
-            $putData = json_decode($put, true);
+//            $putData = json_decode($put, true);
 
 //            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
-//            $sqlCommand = "EXEC spWebManagementServiceMainUpdate
-//                            @InspectionServicesUID=:InspectionServicesUID,
-//                            @putData=:putData";
-            $sqlCommand = "Select '1' as Succeeded;";
+            $sqlCommand = "EXEC spWebManagementJSON_InspectionServiceUpdate @JSON_Str=:putData";
+//            $sqlCommand = "Select '1' as Succeeded;";
 
             $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
-//            $command->bindParam(":InspectionServicesUID", $id);
-//            $command->bindParam(":putData", $put);
+            $command->bindParam(":putData", $put);
 
             $result = $command->queryOne();
+
+            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' result = '.print_r($result,true));
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;

@@ -93,8 +93,12 @@
     [ActivityUID]                     VARCHAR (100)      NULL,
     [SrcOpenDTLT]                     DATETIME           NULL,
     [ReverseGeoLocationString]        VARCHAR (200)      NULL,
+    [Grade1ReleaseReasonType]         VARCHAR (200)      NULL,
+    [Grade1ReleaseDateTime]           DATETIME           NULL,
     CONSTRAINT [PK_g_AssetAddress] PRIMARY KEY CLUSTERED ([AssetAddressID] ASC)
 );
+
+
 
 
 

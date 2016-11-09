@@ -122,6 +122,9 @@ class MapStampController extends BaseActiveController {
                 // selects all entries for which the interval defined by MapStamp DetailStartDate and MapStamp DetailEndDate
                 // intersects the interval defined by the date filter
                 if ($startDate !== null && $endDate !== null) {
+                    // 'Between' take into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
                     $query->andWhere([
                         'or',
                         ['between', 'DetailStartDate', $startDate, $endDate],

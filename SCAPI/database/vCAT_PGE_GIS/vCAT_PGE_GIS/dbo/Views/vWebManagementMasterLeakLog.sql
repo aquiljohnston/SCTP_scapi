@@ -6,6 +6,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMasterLeakLog]
 AS
 Select 
@@ -24,7 +25,8 @@ ISNULL(Services.Hours, 0) [Hours],
 mll.MasterLeakLogUID [MasterLeakLogUID],
 wc.Division,
 mg.FLOC,
-mll.StatusType [Status]
+mll.StatusType [Status],
+ISNULL(Equip.EquipCount, 0) [EquipmentCount]
 From 
 	(Select MasterLeakLogUID, InspectionRequestLogUID, createduseruid, ServiceDate [CreateDate], StatusType, MapGridUID
 	 From [dbo].[tMasterLeakLog] where ActiveFlag = 1)
@@ -51,12 +53,12 @@ Left Join
 		from rDropDown
 		where FilterName = 'ddLHLeakMgmtCurrentStatus') 
 	StatusDesc on mll.StatusType = StatusDesc.FieldValue
-Left Join (Select MasterLeakLogUID, Count(*) [phcount] 
+Left Join (Select MasterLeakLogUID, Count(*) [EquipCount] 
 			From tInspectionService
 			Where ActiveFlag = 1
 				And StatusType <> 'Deleted'
-				And PlaceHolderFlag = 1
-			Group By MasterLeakLogUID) ph on ph.MasterLeakLogUID = mll.MasterLeakLogUID
+				And ISNULL(PlaceHolderFlag, 0) = 0
+			Group By MasterLeakLogUID) Equip on Equip.MasterLeakLogUID = mll.MasterLeakLogUID
 WHERE Services.MasterLeakLogUID is not null or LeakInfo.MasterLeakLogUID is not null
 
 

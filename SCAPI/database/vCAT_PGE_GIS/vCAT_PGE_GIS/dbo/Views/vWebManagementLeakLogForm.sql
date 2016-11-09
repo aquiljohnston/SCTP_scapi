@@ -1,54 +1,14 @@
-﻿/****** Object:  View [dbo].[vWebManagementLeakLogForm]    Script Date: 11/7/2016 7:30:32 AM ******/
-
--- This view is used to populate the Leak Log edit/view modals for WebManagement
-
--- UserLANID
--- Date
--- MapPlat
--- SurveyType
--- Approved
--- PipelineType
--- HouseNo
--- Street
--- AptSuite
--- City
--- MeterID
--- Comments
--- MapPLatLeakNo
--- LeakNo
--- RouteName
--- FacilityType
--- AboveOrBelow
--- InitialLeakSource
--- ReportedBy
--- DescriptionReadLoc
--- PavedWallToWall
--- SurfaceOverReadLoc
--- OtherLocationSurface
--- Within5FeetOfBuilding
--- SuspectCopper
--- InstFoundBy
--- GradeByInstType
--- InstGradeBy
--- ReadingInPercentGas
--- Grade
--- InfoCodes
--- PotentialHCA
--- ConstructionSupervisor
--- DistPlanningEngineer
--- PipelineEngineer
--- LocationRemarks
--- LockedFlag
+﻿
 
 CREATE VIEW [dbo].[vWebManagementLeakLogForm]
 AS
 
 SELECT
 [aai].[AssetAddressIndicationUID] AS [AssetAddressIndicationUID],
-[u].[UserLANID] AS [UserLANID],
+u.UserLANID AS [UserLANID],  -- TODO
 [aai].[FoundDateTime] AS [Date],
-[mg].[FuncLocMap] + '/' + [mg].[FuncLocPlat] AS [MapPlat],
-[ir].[SurveyType],
+[mg].FuncLocMap + '/' + [mg].FuncLocPlat AS [MapPlat],
+ir.surveytype [SurveyType],
 --[aai].[SurveyType],
 CASE WHEN [aai].[StatusType] NOT IN ('In Progress', 'NotApproved', 'Rejected', 'Pending') THEN 1 ELSE 0 END [Approved],
 [aai].[PipelineType],
@@ -92,10 +52,9 @@ END AS [PotentialHCA],
 [aai].[HCAPipelineEngineerUserUID] AS [PipelineEngineer],
 ISNULL([aai].[Comments], '') AS [LocationRemarks],
 [aai].[LockedFlag] AS [LockFlag]
-FROM (SELECT * FROM [tgAssetAddressIndication] WHERE [ActiveFlag] = 1) AS [aai]
-LEFT JOIN (SELECT * FROM [tgAssetAddress] WHERE [ActiveFlag] = 1) AS [aa] ON [aai].[AssetAddressUID] = [aa].[AssetAddressUID]
-LEFT JOIN (SELECT * FROM [dbo].[rgMapGridLog] WHERE [ActiveFlag] = 1) AS [mg] ON [mg].[MapGridUID] = [aai].[MapGridUID]
-LEFT JOIN (SELECT * FROM [dbo].[UserTb] WHERE [UserActiveFlag] = 1) AS [u] ON [aai].[CreatedUserUID] = [u].[UserUID]
-LEFT JOIN (SELECT * FROM [dbo].[tgAssetInspection] WHERE [ActiveFlag] = 1) AS [ai] ON [ai].[AssetInspectionUID] = [aa].[AssetInspectionUID]
-LEFT JOIN (SELECT * FROM [dbo].[tInspectionRequest] WHERE [ActiveFlag] = 1) AS [ir] ON [ir].[InspectionRequestUID] = [ai].[InspectionRequestUID]
-GO
+FROM (SELECT * FROM [tgAssetAddressIndication] WHERE [ActiveFlag] = 1) aai
+Left JOIN (SELECT * FROM [tgAssetAddress] WHERE [ActiveFlag] = 1) aa ON [aai].[AssetAddressUID] = [aa].[AssetAddressUID]
+Left JOIN (SELECT * FROM [dbo].[rgMapGridLog] WHERE [ActiveFlag] = 1) mg ON [mg].[MapGridUID] = [aai].[MapGridUID]
+Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) u on aai.CreatedUserUID = u.UserUID
+left join (select * from [dbo].[tgAssetInspection] where ActiveFlag = 1) [ai] on [ai].AssetInspectionUID = aa.AssetInspectionUID
+Left Join (Select * From [dbo].[tInspectionRequest] where ActiveFlag = 1) ir on ir.InspectionRequestUID = [ai].InspectionRequestUID

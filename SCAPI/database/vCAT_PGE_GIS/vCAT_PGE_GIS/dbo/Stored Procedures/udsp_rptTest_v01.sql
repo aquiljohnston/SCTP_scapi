@@ -1,4 +1,5 @@
 ﻿
+
 CREATE PROCEDURE [dbo].[udsp_rptTest_v01]
 (
 	 @ReportID			INT			= 1
@@ -42,7 +43,7 @@ Test Data
 	-- EXECUTE  dbo.udsp_rptTest_v01 1, NULL, '10/05/2016', NULL
 	-- EXECUTE  dbo.udsp_rptTest_v01 1, NULL, '10/05/2016'
 
-	-- EXECUTE  dbo.udsp_rptTest_v01 1, 'mdavis - DAVIS, MICHAEL', '10/05/2016', '10/30/2016'
+	-- EXECUTE  dbo.udsp_rptTest_v01 1, '< All >', '10/05/2016', '11/30/2016'
 	-- EXECUTE  dbo.udsp_rptTest_v01 1, 'mdavis - DAVIS, MICHAEL', NULL, '10/30/2016'
 	-- EXECUTE  dbo.udsp_rptTest_v01 1, 'mdavis - DAVIS, MICHAEL', '10/05/2016', NULL
 	-- EXECUTE  dbo.udsp_rptTest_v01 1, 'mdavis - DAVIS, MICHAEL', NULL, NULL

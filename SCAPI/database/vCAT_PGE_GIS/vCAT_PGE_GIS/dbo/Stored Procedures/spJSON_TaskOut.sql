@@ -1,5 +1,6 @@
 ﻿
 
+
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -496,7 +497,7 @@ AS
 								
 				END
 
---Marked Any Indications that are still In Progress as NotApproved
+--Marked Any Indications that are still In Progress as Pending
 
 				IF @IndicationPassNo = 1 
 				BEGIN
@@ -661,7 +662,7 @@ AS
 							RevisionComments,
 							@Revision,
 							1, --ActiveFlag,
-							'NotApproved', --StatusType,
+							'Pending', --StatusType,
 							ManualMapPlat,
 							PipelineType,
 							SurveyType,
