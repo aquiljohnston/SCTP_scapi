@@ -3,6 +3,7 @@
 namespace app\modules\v1\controllers;
 
 use app\modules\v1\modules\pge\models\WebManagementLeakLogDropDown;
+use app\modules\v1\modules\pge\models\WebManagementFlocsDropDown;
 use Yii;
 use app\authentication\TokenAuth;
 use yii\filters\VerbFilter;
@@ -32,6 +33,7 @@ class DropdownController extends Controller
                 'actions' => [
                     'get-week-dropdown' => ['get'],
                     'get-work-center-dropdown' => ['get'],
+                    'get-floc-dropdown' => ['get'],
                     'get-work-center-dependent-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
                     'get-pge-employee-type-dropdown' => ['get'],
@@ -215,6 +217,50 @@ class DropdownController extends Controller
         }
     }
 
+    
+    public function actionGetLeakLogFlocDropdown($workcenter)
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            WebManagementFlocsDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementFlocsDropDown::find()
+                ->select(['FLOC', 'SurveyFreq'])
+                ->where(['WorkCenter' => $workcenter])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $surveyType = 'Unknown';
+                if($value['SurveyFreq'] != '')
+                {
+                    $surveyType = $value['SurveyFreq'];
+                }
+                $results[] = [
+
+                    "id" => $surveyType,
+                    "name" => $value["FLOC"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
     public function actionGetLeakLogWorkCenterDropdown($division)
     {
         //TODO RBAC permission check

@@ -1,11 +1,5 @@
 ﻿
 
-
-
-
-
-
-
 CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
@@ -19,6 +13,13 @@ SET NOCOUNT ON
 Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 	,@SubmitPending varchar(200) = 'Submit/Pending'
 	,@ApprovedNotSubmitted varchar(200) = 'Approved/NotSubmitted'
+	,@CompletedStatusType varchar(200) = 'Completed'
+	,@TotalLeakCount int
+	,@TotalGrade1Count int
+	,@TotalNonGrade1Count int
+	,@TotalNonGrade1CountNeedingSent int
+	,@MasterLeakLogToSendCount int
+	
 	,@Revision int
 	,@ReturnVal bit = 0
 	,@AssetAddressIndicationUID varchar(100)
@@ -26,50 +27,415 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 	,@LeakNum varchar(20)
 	
 	--Set @ReturnVal = 0
+
+
+select
+@TotalLeakCount = SUM(LeakCount)
+, @TotalGrade1Count = SUM(Grade1Count)
+, @TotalNonGrade1Count = SUM(NonGrade1Count)
+, @TotalNonGrade1CountNeedingSent = SUM(NonGrade1CountNeedingSent)
+ from
+(Select
+Case WHEN StatusType <> 'Completed' THEN 1 else 0 END [LeakCount],
+CASE WHEN GradeType = '1' and StatusType <> 'Completed' THEN 1 ELSE 0 END [Grade1Count],
+CASE WHEN GradeType <> '1' and StatusType <> 'Completed' THEN 1 ELSE 0 END [NonGrade1Count],
+CASE WHEN GradeType <> '1' and StatusType in ('Reviewed') THEN 1 ELSE 0 END [NonGrade1CountNeedingSent]
+from tgAssetAddressIndication Where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) LeakCount
+
+Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1 and StatusType in (@ApprovedNotSubmitted)
 	
+--if there are no leaks mark the MasterLeakLog as completed	
 	
-	IF (Select Count(*)
-				from [dbo].[tgAssetAddressIndication] 
-				where MasterLeakLogUID = @MasterLeakLogUID 
-					and ActiveFlag = 1 
-					and StatusType in ('In Progress','Pending', 'InProgress')) = 0
-		AND (Select Count(*)
-				from tMasterLeakLog
-				where MasterLeakLogUID = @MasterLeakLogUID 
-					and ActiveFlag = 1 
-					and StatusType in (@ApprovedNotSubmitted)) = 1
+	IF @TotalLeakCount = 0 --and @MasterLeakLogToSendCount = 1 
+	BEGIN
 	
+		Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
+
+		Update tMasterLeakLog set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID
+				
+		Insert Into tMasterLeakLog
+		(
+			MasterLeakLogUID,
+			InspectionRequestLogUID,
+			MapGridUID,
+			ServiceDate,
+			ProjectID,
+			SourceID,
+			CreatedUserUID,
+			ModifiedUserUID,
+			Comments,
+			RevisionComments,
+			Revision,
+			ActiveFlag,
+			StatusType,
+			ApprovedFlag,
+			ApprovedByUserUID,
+			ApprovedDTLT,
+			SubmittedFlag,
+			SubmittedStatusType,
+			SubmittedUserUID,
+			SubmittedDTLT,
+			ResponseStatusType,
+			Response,
+			ResponceErrorDescription,
+			ResponseDTLT,
+			CompletedFlag,
+			CompletedDTLT
+		)
+		Select 
+			MasterLeakLogUID,
+			InspectionRequestLogUID,
+			MapGridUID,
+			ServiceDate,
+			ProjectID,
+			'WEB', --SourceID,
+			CreatedUserUID,
+			@SubmittedUID,
+			Comments,
+			RevisionComments,
+			@Revision, -- Revision,
+			1, --ActiveFlag,
+			@CompletedStatusType, --StatusType,
+			1, --ApprovedFlag,
+			@SubmittedUID, --ApprovedByUserUID,
+			getdate(), --ApprovedDTLT,
+			0, --SubmittedFlag,
+			'', --SubmittedStatusType,
+			'', --SubmittedUserUID,
+			NULL, --SubmittedDTLT,
+			ResponseStatusType,
+			Response,
+			ResponceErrorDescription,
+			ResponseDTLT,
+			1, --CompletedFlag,
+			getdate() --CompletedDTLT
+		From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and revision = @Revision - 1
+
+		Set @ReturnVal = 1
+	
+	END
+	ELSE IF @MasterLeakLogToSendCount = 1  
+
+--There are leaks and the Master Leak Log is to send	
+
+		IF @TotalLeakCount = @TotalGrade1Count --All leaks are Grade 1. Mark Grade 1 Leaks and Master Leak Log as Completed
 		BEGIN
-	
+
+--There are only grade one leaks.  Mark Master Leak Log and all Grade 1 Leaks as completed.
 		
+			Update tgAssetAddressIndication set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID and GradeType = '1'
+
+			Insert Into tgAssetAddressIndication
+			(
+				AssetAddressIndicationUID,
+				AssetAddressUID,
+				InspectionRequestUID,
+				MapGridUID,
+				MasterLeakLogUID,
+				ProjectID,
+				SourceID,
+				CreatedUserUID,
+				ModifiedUserUID,
+				SrcDTLT,
+				SrcOpenDTLT,
+				SrcClosedDTLT,
+				GPSType,
+				GPSSentence,
+				Latitude,
+				Longitude,
+				SHAPE,
+				Comments,
+				RevisionComments,
+				Revision,
+				ActiveFlag,
+				StatusType,
+				ManualMapPlat,
+				PipelineType,
+				SurveyType,
+				Map,
+				Plat,
+				RecordedMap,
+				RecordedPlat,
+				RecordedBlock,
+				LandmarkType,
+				Route,
+				Line,
+				HouseNoNAFlag,
+				HouseNo,
+				Street1,
+				City,
+				DescriptionReadingLocation,
+				County,
+				CountyCode,
+				FacilityType,
+				LocationType,
+				InitialLeakSourceType,
+				ReportedByType,
+				LeakNo,
+				SAPNo,
+				PavedType,
+				SORLType,
+				SORLOther,
+				Within5FeetOfBuildingType,
+				SuspectedCopperType,
+				EquipmentFoundByUID,
+				FoundBy,
+				FoundBySerialNumber,
+				InstrumentTypeGradeByType,
+				EquipmentGradeByUID,
+				GradeBy,
+				GradeBySerialNumber,
+				ReadingGrade,
+				GradeType,
+				InfoCodesType,
+				PotentialHCAType,
+				Grade2PlusRequested,
+				TwoPercentOrLessSuspectCopperFlag,
+				LeakDownGradedFlag,
+				HCAConstructionSupervisorUserUID,
+				HCADistributionPlanningEngineerUserUID,
+				HCAPipelineEngineerUserUID,
+				Photo1,
+				Photo2,
+				Photo3,
+				ApprovedFlag,
+				ApprovedByUserUID,
+				ApprovedDTLT,
+				SubmittedFlag,
+				SubmittedStatusType,
+				SubmittedUserUID,
+				SubmittedDTLT,
+				ResponseStatusType,
+				ResponseComments,
+				ResponceErrorComments,
+				ResponseDTLT,
+				CompletedFlag,
+				CompletedDTLT,
+				AboveBelowGroundType,
+				FoundDateTime,
+				GPSSource,
+				GPSTime,
+				FixQuality,
+				NumberOfSatellites,
+				HDOP,
+				AltitudemetersAboveMeanSeaLevel,
+				HeightOfGeoid,
+				TimeSecondsSinceLastDGPS,
+				ChecksumData,
+				Bearing,
+				Speed,
+				GPSStatus,
+				NumberOfGPSAttempts,
+				ActivityUID,
+				AssetInspectionUID,
+				MapPlatLeakNumber,
+				LockedFlag,
+				SAPComments,
+				StationBegin,
+				StationEnd
+			)
+			Select
+				AAI.AssetAddressIndicationUID,
+				AssetAddressUID,
+				InspectionRequestUID,
+				MapGridUID,
+				MasterLeakLogUID,
+				ProjectID,
+				'WEB', --SourceID,
+				CreatedUserUID,
+				@SubmittedUID, --ModifiedUserUID,
+				NULL, --SrcDTLT,
+				NULL, --SrcOpenDTLT,
+				NULL, --SrcClosedDTLT,
+				GPSType,
+				GPSSentence,
+				Latitude,
+				Longitude,
+				SHAPE,
+				Comments,
+				RevisionComments,
+				NextRev.NextRevision, -- Revision,
+				1, --ActiveFlag,
+				@CompletedStatusType, -- StatusType,
+				ManualMapPlat,
+				PipelineType,
+				SurveyType,
+				Map,
+				Plat,
+				RecordedMap,
+				RecordedPlat,
+				RecordedBlock,
+				LandmarkType,
+				Route,
+				Line,
+				HouseNoNAFlag,
+				HouseNo,
+				Street1,
+				City,
+				DescriptionReadingLocation,
+				County,
+				CountyCode,
+				FacilityType,
+				LocationType,
+				InitialLeakSourceType,
+				ReportedByType,
+				LeakNo,
+				SAPNo,
+				PavedType,
+				SORLType,
+				SORLOther,
+				Within5FeetOfBuildingType,
+				SuspectedCopperType,
+				EquipmentFoundByUID,
+				FoundBy,
+				FoundBySerialNumber,
+				InstrumentTypeGradeByType,
+				EquipmentGradeByUID,
+				GradeBy,
+				GradeBySerialNumber,
+				ReadingGrade,
+				GradeType,
+				InfoCodesType,
+				PotentialHCAType,
+				Grade2PlusRequested,
+				TwoPercentOrLessSuspectCopperFlag,
+				LeakDownGradedFlag,
+				HCAConstructionSupervisorUserUID,
+				HCADistributionPlanningEngineerUserUID,
+				HCAPipelineEngineerUserUID,
+				Photo1,
+				Photo2,
+				Photo3,
+				ApprovedFlag,
+				ApprovedByUserUID,
+				ApprovedDTLT,
+				1, --SubmittedFlag,
+				'', --SubmittedStatusType,
+				@SubmittedUID, --SubmittedUserUID,
+				getdate(), --SubmittedDTLT,
+				ResponseStatusType,
+				ResponseComments,
+				ResponceErrorComments,
+				ResponseDTLT,
+				1, --CompletedFlag,
+				Getdate(), --CompletedDTLT,
+				AboveBelowGroundType,
+				FoundDateTime,
+				GPSSource,
+				GPSTime,
+				FixQuality,
+				NumberOfSatellites,
+				HDOP,
+				AltitudemetersAboveMeanSeaLevel,
+				HeightOfGeoid,
+				TimeSecondsSinceLastDGPS,
+				ChecksumData,
+				Bearing,
+				Speed,
+				GPSStatus,
+				NumberOfGPSAttempts,
+				ActivityUID,
+				AssetInspectionUID,
+				MapPlatLeakNumber,
+				1, --LockedFlag,
+				SAPComments,
+				StationBegin,
+				StationEnd
+			From tgAssetAddressIndication aai
+			Join (select AssetAddressIndicationUID, Count(*) NextRevision 
+					from tgAssetAddressIndication 
+					Where MasterLeakLogUID = @MasterLeakLogUID and GradeType = '1'
+					group by AssetAddressIndicationUID) NextRev on NextRev.AssetAddressIndicationUID = aai.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
+
+
+			Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
+
+			Update tMasterLeakLog set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID
+				
+			Insert Into tMasterLeakLog
+			(
+				MasterLeakLogUID,
+				InspectionRequestLogUID,
+				MapGridUID,
+				ServiceDate,
+				ProjectID,
+				SourceID,
+				CreatedUserUID,
+				ModifiedUserUID,
+				Comments,
+				RevisionComments,
+				Revision,
+				ActiveFlag,
+				StatusType,
+				ApprovedFlag,
+				ApprovedByUserUID,
+				ApprovedDTLT,
+				SubmittedFlag,
+				SubmittedStatusType,
+				SubmittedUserUID,
+				SubmittedDTLT,
+				ResponseStatusType,
+				Response,
+				ResponceErrorDescription,
+				ResponseDTLT,
+				CompletedFlag,
+				CompletedDTLT
+			)
+			Select 
+				MasterLeakLogUID,
+				InspectionRequestLogUID,
+				MapGridUID,
+				ServiceDate,
+				ProjectID,
+				'WEB', --SourceID,
+				CreatedUserUID,
+				@SubmittedUID,
+				Comments,
+				RevisionComments,
+				@Revision, -- Revision,
+				1, --ActiveFlag,
+				@CompletedStatusType, --StatusType,
+				ApprovedFlag,
+				ApprovedByUserUID,
+				ApprovedDTLT,
+				SubmittedFlag,
+				SubmittedStatusType,
+				'', --SubmittedUserUID,
+				NULL, --SubmittedDTLT,
+				ResponseStatusType,
+				Response,
+				ResponceErrorDescription,
+				ResponseDTLT,
+				1, --CompletedFlag,
+				getdate() --CompletedDTLT
+			From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and revision = @Revision - 1
+
+			Set @ReturnVal = 1
+
+		END
+		ELSE IF @TotalLeakCount = (@TotalGrade1Count + @TotalNonGrade1CountNeedingSent) 
+		BEGIN
+
+-- There appears to be a mix of leak Grades
+
+-- Check to see if city is correct on non grade 1 leaks
+
 			IF (Select Count(*)
 				From 
-				(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) aai
-				Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aa.AssetAddressUID = aai.AssetAddressUID
+				(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1') aai
+				Join (select AssetAddressUID, City from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
 				Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
 				Where cc.City is null) > 0
-		
-			BEGIN
-
-				Declare curBadCity Cursor Static
-				For
-				Select aai.AssetAddressIndicationUID, aa.City, aai.LeakNo
-				From 
-				(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID) aai
-				Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aa.AssetAddressUID = aai.AssetAddressUID
-				Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
-				Where cc.City is null
-		
-				Open curBadCity
-
-				Fetch Next From curBadCity into @AssetAddressIndicationUID, @City, @LeakNum
-
-				While @@FETCH_STATUS = 0
-				BEGIN
-
-					Update tgAssetAddressIndication set ActiveFlag = 0 where AssetAddressIndicationUID = @AssetAddressIndicationUID
-
-					Select @Revision = Count(*) From tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID
+			BEGIN 
+--City isn't correct on some of the leaks.  Mark Leaks with bad city and exit proc
+					Update aai set ActiveFlag = 0
+					From [dbo].[tgAssetAddressIndication] aai
+					Join (Select aai.AssetAddressIndicationUID
+							From 
+							(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1') aai
+							Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
+							Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
+							Where cc.City is null) BadCity on badcity.AssetAddressIndicationUID = aai.AssetAddressIndicationUID
 
 					Insert Into tgAssetAddressIndication
 					(
@@ -181,207 +547,129 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 						StationEnd
 
 					)
-
 					Select
-						AssetAddressIndicationUID,
-						AssetAddressUID,
-						InspectionRequestUID,
-						MapGridUID,
-						MasterLeakLogUID,
-						ProjectID,
-						SourceID,
-						CreatedUserUID,
+						aai.AssetAddressIndicationUID,
+						aai.AssetAddressUID,
+						aai.InspectionRequestUID,
+						aai.MapGridUID,
+						aai.MasterLeakLogUID,
+						aai.ProjectID,
+						'WEB', --aai.SourceID,
+						aai.CreatedUserUID,
 						@SubmittedUID,
-						SrcDTLT,
-						SrcOpenDTLT,
-						SrcClosedDTLT,
-						GPSType,
-						GPSSentence,
-						Latitude,
-						Longitude,
-						SHAPE,
-						Comments,
-						'Rejected - Leak Number ' + @LeakNum + ' - Unknown City (' + @City + ')', -- RevisionComments,
-						@Revision,
+						aai.SrcDTLT,
+						aai.SrcOpenDTLT,
+						aai.SrcClosedDTLT,
+						aai.GPSType,
+						aai.GPSSentence,
+						aai.Latitude,
+						aai.Longitude,
+						aai.SHAPE,
+						aai.Comments,
+						'Rejected - Leak Number ' + ISNULL(aai.LeakNo, '') + ' - Unknown City (' + ISNULL(BadCity.BadCity, '') + ')', -- RevisionComments,
+						NextRev.NextRevision,
 						1, --ActiveFlag,
 						'Pending', --StatusType,
-						ManualMapPlat,
-						PipelineType,
-						SurveyType,
-						Map,
-						Plat,
-						RecordedMap,
-						RecordedPlat,
-						RecordedBlock,
-						LandmarkType,
-						Route,
-						Line,
-						HouseNoNAFlag,
-						HouseNo,
-						Street1,
-						City,
-						DescriptionReadingLocation,
-						County,
-						CountyCode,
-						FacilityType,
-						LocationType,
-						InitialLeakSourceType,
-						ReportedByType,
-						LeakNo,
-						SAPNo,
-						PavedType,
-						SORLType,
-						SORLOther,
-						Within5FeetOfBuildingType,
-						SuspectedCopperType,
-						EquipmentFoundByUID,
-						FoundBy,
-						FoundBySerialNumber,
-						InstrumentTypeGradeByType,
-						EquipmentGradeByUID,
-						GradeBy,
-						GradeBySerialNumber,
-						ReadingGrade,
-						GradeType,
-						InfoCodesType,
-						PotentialHCAType,
-						Grade2PlusRequested,
-						TwoPercentOrLessSuspectCopperFlag,
-						LeakDownGradedFlag,
-						HCAConstructionSupervisorUserUID,
-						HCADistributionPlanningEngineerUserUID,
-						HCAPipelineEngineerUserUID,
-						Photo1,
-						Photo2,
-						Photo3,
+						aai.ManualMapPlat,
+						aai.PipelineType,
+						aai.SurveyType,
+						aai.Map,
+						aai.Plat,
+						aai.RecordedMap,
+						aai.RecordedPlat,
+						aai.RecordedBlock,
+						aai.LandmarkType,
+						aai.Route,
+						aai.Line,
+						aai.HouseNoNAFlag,
+						aai.HouseNo,
+						aai.Street1,
+						aai.City,
+						aai.DescriptionReadingLocation,
+						aai.County,
+						aai.CountyCode,
+						aai.FacilityType,
+						aai.LocationType,
+						aai.InitialLeakSourceType,
+						aai.ReportedByType,
+						aai.LeakNo,
+						aai.SAPNo,
+						aai.PavedType,
+						aai.SORLType,
+						aai.SORLOther,
+						aai.Within5FeetOfBuildingType,
+						aai.SuspectedCopperType,
+						aai.EquipmentFoundByUID,
+						aai.FoundBy,
+						aai.FoundBySerialNumber,
+						aai.InstrumentTypeGradeByType,
+						aai.EquipmentGradeByUID,
+						aai.GradeBy,
+						aai.GradeBySerialNumber,
+						aai.ReadingGrade,
+						aai.GradeType,
+						aai.InfoCodesType,
+						aai.PotentialHCAType,
+						aai.Grade2PlusRequested,
+						aai.TwoPercentOrLessSuspectCopperFlag,
+						aai.LeakDownGradedFlag,
+						aai.HCAConstructionSupervisorUserUID,
+						aai.HCADistributionPlanningEngineerUserUID,
+						aai.HCAPipelineEngineerUserUID,
+						aai.Photo1,
+						aai.Photo2,
+						aai.Photo3,
 						0, --ApprovedFlag,
 						'', --ApprovedByUserUID,
 						NULL, --ApprovedDTLT,
-						SubmittedFlag,
-						SubmittedStatusType,
-						SubmittedUserUID,
-						SubmittedDTLT,
-						ResponseStatusType,
-						ResponseComments,
-						ResponceErrorComments,
-						ResponseDTLT,
-						CompletedFlag,
-						CompletedDTLT,
-						AboveBelowGroundType,
-						FoundDateTime,
-						GPSSource,
-						GPSTime,
-						FixQuality,
-						NumberOfSatellites,
-						HDOP,
-						AltitudemetersAboveMeanSeaLevel,
-						HeightOfGeoid,
-						TimeSecondsSinceLastDGPS,
-						ChecksumData,
-						Bearing,
-						Speed,
-						GPSStatus,
-						NumberOfGPSAttempts,
-						ActivityUID,
-						AssetInspectionUID,
-						MapPlatLeakNumber,
+						aai.SubmittedFlag,
+						aai.SubmittedStatusType,
+						aai.SubmittedUserUID,
+						aai.SubmittedDTLT,
+						aai.ResponseStatusType,
+						aai.ResponseComments,
+						aai.ResponceErrorComments,
+						aai.ResponseDTLT,
+						aai.CompletedFlag,
+						aai.CompletedDTLT,
+						aai.AboveBelowGroundType,
+						aai.FoundDateTime,
+						aai.GPSSource,
+						aai.GPSTime,
+						aai.FixQuality,
+						aai.NumberOfSatellites,
+						aai.HDOP,
+						aai.AltitudemetersAboveMeanSeaLevel,
+						aai.HeightOfGeoid,
+						aai.TimeSecondsSinceLastDGPS,
+						aai.ChecksumData,
+						aai.Bearing,
+						aai.Speed,
+						aai.GPSStatus,
+						aai.NumberOfGPSAttempts,
+						aai.ActivityUID,
+						aai.AssetInspectionUID,
+						aai.MapPlatLeakNumber,
 						0, --LockedFlag,
-						SAPComments,
-						StationBegin,
-						StationEnd
-					From tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID and Revision = @Revision - 1
-
-
-					Fetch Next From curBadCity into @AssetAddressIndicationUID, @City, @LeakNum
-
-
+						aai.SAPComments,
+						aai.StationBegin,
+						aai.StationEnd
+					From tgAssetAddressIndication aai
+					Join (select AssetAddressIndicationUID, Count(*) NextRevision 
+							from tgAssetAddressIndication 
+							Where MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1'
+							group by AssetAddressIndicationUID) NextRev on NextRev.AssetAddressIndicationUID = aai.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
+					join (Select aai.*, aa.City [BadCity]
+							From 
+							(Select * from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID and GradeType <> '1') aai
+							Join (select * from tgAssetAddress where ActiveFlag = 1) aa on aai.AssetAddressUID = aa.AssetAddressUID
+							Left Join [dbo].[rCityCounty] cc on aa.City = cc.city
+							Where cc.City is null) BadCity on badcity.AssetAddressIndicationUID = aai.AssetAddressIndicationUID
 				END
+				ELSE
+				BEGIN --All Cities are correct.  Move this Master Leak Log and all Leaks to Submitted/Pending
 
-				Close curBadCity
-
-				Deallocate curBadCity
-
-				Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
-
-				Update tMasterLeakLog set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID
-				
-				Insert Into tMasterLeakLog
-				(
-					MasterLeakLogUID,
-					InspectionRequestLogUID,
-					MapGridUID,
-					ServiceDate,
-					ProjectID,
-					SourceID,
-					CreatedUserUID,
-					ModifiedUserUID,
-					Comments,
-					RevisionComments,
-					Revision,
-					ActiveFlag,
-					StatusType,
-					ApprovedFlag,
-					ApprovedByUserUID,
-					ApprovedDTLT,
-					SubmittedFlag,
-					SubmittedStatusType,
-					SubmittedUserUID,
-					SubmittedDTLT,
-					ResponseStatusType,
-					Response,
-					ResponceErrorDescription,
-					ResponseDTLT,
-					CompletedFlag,
-					CompletedDTLT
-				)
-				Select 
-					MasterLeakLogUID,
-					InspectionRequestLogUID,
-					MapGridUID,
-					ServiceDate,
-					ProjectID,
-					SourceID,
-					CreatedUserUID,
-					@SubmittedUID,
-					Comments,
-					RevisionComments,
-					@Revision, -- Revision,
-					1, --ActiveFlag,
-					'NotApproved', --StatusType,
-					0, --ApprovedFlag,
-					'', --ApprovedByUserUID,
-					NULL, --ApprovedDTLT,
-					0, --SubmittedFlag,
-					SubmittedStatusType,
-					'', --SubmittedUserUID,
-					NULL, --SubmittedDTLT,
-					ResponseStatusType,
-					Response,
-					ResponceErrorDescription,
-					ResponseDTLT,
-					0, --CompletedFlag,
-					NULL --CompletedDTLT
-				From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and revision = @Revision - 1
-				
-		
-			END
-			ELSE
-			BEGIN
-		
-				Declare curLeakLogs Cursor Static
-				For
-				Select AssetAddressIndicationUID from [dbo].[tgAssetAddressIndication] where ActiveFlag = 1 and MasterLeakLogUID = @MasterLeakLogUID
-		
-				Open curLeakLogs
-
-				Fetch Next From curLeakLogs into @AssetAddressIndicationUID
-
-				While @@FETCH_STATUS = 0
-				BEGIN
-
-					Update tgAssetAddressIndication set ActiveFlag = 0 where AssetAddressIndicationUID = @AssetAddressIndicationUID
-
-					Select @Revision = Count(*) From tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID
+					Update tgAssetAddressIndication set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID 
 
 					Insert Into tgAssetAddressIndication
 					(
@@ -491,32 +779,30 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 						SAPComments,
 						StationBegin,
 						StationEnd
-
 					)
-
 					Select
-						AssetAddressIndicationUID,
+						AAI.AssetAddressIndicationUID,
 						AssetAddressUID,
 						InspectionRequestUID,
 						MapGridUID,
 						MasterLeakLogUID,
 						ProjectID,
-						SourceID,
+						'WEB', --SourceID,
 						CreatedUserUID,
-						@SubmittedUID,
-						SrcDTLT,
-						SrcOpenDTLT,
-						SrcClosedDTLT,
+						@SubmittedUID, --ModifiedUserUID,
+						NULL, --SrcDTLT,
+						NULL, --SrcOpenDTLT,
+						NULL, --SrcClosedDTLT,
 						GPSType,
 						GPSSentence,
 						Latitude,
 						Longitude,
 						SHAPE,
 						Comments,
-						'', -- RevisionComments,
-						@Revision,
+						RevisionComments,
+						NextRev.NextRevision, -- Revision,
 						1, --ActiveFlag,
-						'Submitted', --StatusType,
+						CASE WHEN aai.GradeType = '1' THEN  @CompletedStatusType ELSE @SubmitPending END   , -- StatusType,
 						ManualMapPlat,
 						PipelineType,
 						SurveyType,
@@ -569,16 +855,16 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 						ApprovedFlag,
 						ApprovedByUserUID,
 						ApprovedDTLT,
-						1, --SubmittedFlag,
-						SubmittedStatusType,
-						@SubmittedUID, --SubmittedUserUID,
-						getdate(), --SubmittedDTLT,
+						CASE WHEN aai.GradeType = '1' THEN 0 ELSE 1 END SubmittedFlag,
+						CASE WHEN aai.GradeType = '1' THEN @SubmitPending ELSE '' END, --  SubmittedStatusType,
+						CASE WHEN aai.GradeType = '1' THEN '' ELSE @SubmittedUID END, -- SubmittedUserUID,
+						CASE WHEN aai.GradeType = '1' THEN NULL ELSE getdate() END, --SubmittedDTLT,
 						ResponseStatusType,
 						ResponseComments,
 						ResponceErrorComments,
 						ResponseDTLT,
-						CompletedFlag,
-						CompletedDTLT,
+						CASE WHEN aai.GradeType = '1' THEN 1 ELSE 0 END, --CompletedFlag,
+						CASE WHEN aai.GradeType = '1' THEN Getdate() ELSE NULL END, --CompletedDTLT,
 						AboveBelowGroundType,
 						FoundDateTime,
 						GPSSource,
@@ -597,90 +883,84 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 						ActivityUID,
 						AssetInspectionUID,
 						MapPlatLeakNumber,
-						1, --LockedFlag,
+						CASE WHEN aai.GradeType = '1' THEN  1 ELSE 0 END, --LockedFlag,
 						SAPComments,
 						StationBegin,
 						StationEnd
-					From tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID and Revision = @Revision - 1
+					From tgAssetAddressIndication aai
+					Join (select AssetAddressIndicationUID, Count(*) NextRevision 
+							from tgAssetAddressIndication 
+							Where MasterLeakLogUID = @MasterLeakLogUID
+							group by AssetAddressIndicationUID) NextRev on NextRev.AssetAddressIndicationUID = aai.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
 
 
-					Fetch Next From curLeakLogs into @AssetAddressIndicationUID
+					Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
+
+					Update tMasterLeakLog set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID
+				
+					Insert Into tMasterLeakLog
+					(
+						MasterLeakLogUID,
+						InspectionRequestLogUID,
+						MapGridUID,
+						ServiceDate,
+						ProjectID,
+						SourceID,
+						CreatedUserUID,
+						ModifiedUserUID,
+						Comments,
+						RevisionComments,
+						Revision,
+						ActiveFlag,
+						StatusType,
+						ApprovedFlag,
+						ApprovedByUserUID,
+						ApprovedDTLT,
+						SubmittedFlag,
+						SubmittedStatusType,
+						SubmittedUserUID,
+						SubmittedDTLT,
+						ResponseStatusType,
+						Response,
+						ResponceErrorDescription,
+						ResponseDTLT,
+						CompletedFlag,
+						CompletedDTLT
+					)
+					Select 
+						MasterLeakLogUID,
+						InspectionRequestLogUID,
+						MapGridUID,
+						ServiceDate,
+						ProjectID,
+						'WEB', --SourceID,
+						CreatedUserUID,
+						@SubmittedUID,
+						Comments,
+						RevisionComments,
+						@Revision, -- Revision,
+						1, --ActiveFlag,
+						@SubmitPending, --StatusType,
+						1, --ApprovedFlag,
+						ApprovedByUserUID,
+						ApprovedDTLT,
+						1, --SubmittedFlag,
+						@SubmitPending, -- SubmittedStatusType,
+						@SubmittedUID, --SubmittedUserUID,
+						getdate(), --SubmittedDTLT,
+						ResponseStatusType,
+						Response,
+						ResponceErrorDescription,
+						ResponseDTLT,
+						0, --CompletedFlag,
+						NULL --CompletedDTLT
+					From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and revision = @Revision - 1
 
 
 				END
 
-				close curLeakLogs
-
-				deallocate curLeakLogs
-
-				Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID
-
-				Update tMasterLeakLog set ActiveFlag = 0 where MasterLeakLogUID = @MasterLeakLogUID
-
-				
-				Insert Into tMasterLeakLog
-				(
-					MasterLeakLogUID,
-					InspectionRequestLogUID,
-					MapGridUID,
-					ServiceDate,
-					ProjectID,
-					SourceID,
-					CreatedUserUID,
-					ModifiedUserUID,
-					Comments,
-					RevisionComments,
-					Revision,
-					ActiveFlag,
-					StatusType,
-					ApprovedFlag,
-					ApprovedByUserUID,
-					ApprovedDTLT,
-					SubmittedFlag,
-					SubmittedStatusType,
-					SubmittedUserUID,
-					SubmittedDTLT,
-					ResponseStatusType,
-					Response,
-					ResponceErrorDescription,
-					ResponseDTLT,
-					CompletedFlag,
-					CompletedDTLT
-				)
-				Select 
-					MasterLeakLogUID,
-					InspectionRequestLogUID,
-					MapGridUID,
-					ServiceDate,
-					ProjectID,
-					SourceID,
-					CreatedUserUID,
-					@SubmittedUID,
-					Comments,
-					RevisionComments,
-					@Revision, -- Revision,
-					1, --ActiveFlag,
-					@SubmitPending, --StatusType,
-					ApprovedFlag,
-					ApprovedByUserUID,
-					ApprovedDTLT,
-					1, --SubmittedFlag,
-					SubmittedStatusType,
-					@SubmittedUID, --SubmittedUserUID,
-					getdate(), --SubmittedDTLT,
-					ResponseStatusType,
-					Response,
-					ResponceErrorDescription,
-					ResponseDTLT,
-					CompletedFlag,
-					CompletedDTLT
-				From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID and revision = @Revision - 1
-
-				Set @ReturnVal = 1
-
 			END
-
-		END
+	
 
 SET NOCOUNT OFF
 

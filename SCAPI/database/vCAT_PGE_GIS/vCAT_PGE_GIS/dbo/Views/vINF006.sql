@@ -1,5 +1,7 @@
 ﻿
 
+
+
 CREATE VIEW [dbo].[vINF006] AS 
 
 SELECT 
@@ -120,5 +122,6 @@ LEFT  JOIN [dbo].[tInspectionsEquipment] ie
 
 WHERE 
 ind.ActiveFlag = 1
-AND ind.SrcDTLT > '2016-11-03 12:00' -- Extra Code to eleminate bad data
+AND ind.FoundDateTime > '2016-11-03 12:00' -- Extra Code to eleminate bad data
+and IND.StatusType <> 'Completed'
 AND mll.StatusType = 'Submit/Pending'

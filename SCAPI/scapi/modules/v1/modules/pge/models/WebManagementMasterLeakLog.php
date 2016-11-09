@@ -50,6 +50,7 @@ class WebManagementMasterLeakLog extends \app\modules\v1\models\BaseActiveRecord
             "FeetOfMain" => "Feet of Main",
             "NumofServices" => "# of Services",
             "Hours" => "Hours",
+            "EquipmentCount" => "EquipmentCount"
         ];
     }
 }
