@@ -5,12 +5,12 @@ namespace app\modules\v1\modules\pge\models;
 use Yii;
 
 /**
- * This is the model class for table "vWebManagementDropDownDispatchFLOC".
+ * This is the model class for table "vWebManagementDivisionWorkCenterFLOCWithIR".
  *
  * @property string $FLOC
  * @property string $Division
  * @property string $WorkCenter
- * @property string $SurveyType
+ * @property string $SurveyFreq
  */
 class WebManagementFlocsDropDown extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -19,7 +19,7 @@ class WebManagementFlocsDropDown extends \app\modules\v1\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'vWebManagementDropDownDispatchFLOC';
+        return 'vWebManagementDivisionWorkCenterFLOCWithIR';
     }
     //
     //    /**
@@ -41,7 +41,7 @@ class WebManagementFlocsDropDown extends \app\modules\v1\models\BaseActiveRecord
             "FLOC" => "FLOC",
             "Division" => "Division",
             "WorkCenter" => "WorkCenter",
-            "SurveyType" => "SurveyType"
+            "SurveyFreq" => "SurveyFreq"
         ];
     }
 }

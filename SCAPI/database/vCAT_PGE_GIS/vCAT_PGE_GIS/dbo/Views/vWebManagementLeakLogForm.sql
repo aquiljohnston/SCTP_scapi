@@ -1,4 +1,5 @@
 ﻿
+
 CREATE VIEW [dbo].[vWebManagementLeakLogForm]
 AS
 
@@ -7,7 +8,7 @@ SELECT
 u.UserLANID AS [UserLANID],  -- TODO
 [aai].[FoundDateTime] AS [Date],
 [mg].FuncLocMap + '/' + [mg].FuncLocPlat AS [MapPlat],
-ir.surveytype,
+ir.surveytype [SurveyType],
 --[aai].[SurveyType],
 CASE WHEN [aai].[StatusType] NOT IN ('In Progress', 'NotApproved', 'Rejected', 'Pending') THEN 1 ELSE 0 END [Approved],
 [aai].[PipelineType],

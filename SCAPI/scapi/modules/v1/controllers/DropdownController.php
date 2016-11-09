@@ -34,7 +34,6 @@ class DropdownController extends Controller
                     'get-week-dropdown' => ['get'],
                     'get-work-center-dropdown' => ['get'],
                     'get-floc-dropdown' => ['get'],
-                    'get-survey-dropdown' => ['get'],
                     'get-work-center-dependent-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
                     'get-pge-employee-type-dropdown' => ['get'],
@@ -218,45 +217,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetLeakLogSurveyDropdown($workcenter)
-    {
-        //TODO RBAC permission check
-        try{
-
-            $headers = getallheaders();
-            WebManagementFlocsDropDown::setClient($headers['X-Client']);
-
-            $values = WebManagementFlocsDropDown::find()
-                ->select(['SurveyType', 'SurveyType'])
-                ->where(['FLOC' => $workcenter])
-                ->distinct()
-                ->all();
-
-            $results = [];
-            foreach ($values as $value) {
-                $results[] = [
-                    "id" => $value["SurveyType"],
-                    "name" => $value["SurveyType"],
-                    "surveyFreq" => $value['SurveyType']
-                ];
-            }
-
-            $response = Yii::$app ->response;
-            $response -> format = Response::FORMAT_JSON;
-            $response -> data = $results;
-
-            return $response;
-        }
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
+    
     public function actionGetLeakLogFlocDropdown($workcenter)
     {
         //TODO RBAC permission check
@@ -266,7 +227,7 @@ class DropdownController extends Controller
             WebManagementFlocsDropDown::setClient($headers['X-Client']);
 
             $values = WebManagementFlocsDropDown::find()
-                ->select(['FLOC', 'SurveyType'])
+                ->select(['FLOC', 'SurveyFreq'])
                 ->where(['WorkCenter' => $workcenter])
                 ->distinct()
                 ->all();
@@ -274,9 +235,9 @@ class DropdownController extends Controller
             $results = [];
             foreach ($values as $value) {
                 $surveyType = 'Unknown';
-                if($value['SurveyType'] != '')
+                if($value['SurveyFreq'] != '')
                 {
-                    $surveyType = $value['SurveyType'];
+                    $surveyType = $value['SurveyFreq'];
                 }
                 $results[] = [
 
