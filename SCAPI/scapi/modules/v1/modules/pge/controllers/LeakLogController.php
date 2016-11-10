@@ -493,7 +493,6 @@ class LeakLogController extends BaseActiveController {
 
 //            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
             $sqlCommand = "EXEC spWebManagementJSON_InspectionServiceUpdate @JSON_Str=:putData";
-//            $sqlCommand = "Select '1' as Succeeded;";
 
             $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
             $command->bindParam(":putData", $put);
@@ -566,17 +565,13 @@ class LeakLogController extends BaseActiveController {
             WebManagementLeakLogForm::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
-            $putData = json_decode($put, true);
+//            $putData = json_decode($put, true);
 
 //            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
-//            $sqlCommand = "EXEC spWebManagementLeakLogUpdate
-//                            @AssetAddressIndicationUID=:AssetAddressIndicationUID,
-//                            @putData=:putData";
-            $sqlCommand = "Select '1' as Succeeded;";
+            $sqlCommand = "EXEC spWebManagementJSON_AssetAddressIndicationUpdate @JSON_Str=:putData";
 
-            $command =  WebManagementLeakLogForm::getDb()->createCommand($sqlCommand);
-//            $command->bindParam(":AssetAddressIndicationUID", $id);
-//            $command->bindParam(":putData", $put);
+            $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
+            $command->bindParam(":putData", $put);
 
             $result = $command->queryOne();
 
