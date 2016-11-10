@@ -6,6 +6,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementDispatch] AS
 /*****************************************************************************************************************
 NAME:		[dbo].[vWebManagementDispatch]
@@ -80,7 +81,7 @@ LEFT JOIN (
 			Where ActiveFlag = 1 
 			GROUP BY AssignedInspectionRequestUID
 		   ) awq ON awq.AssignedInspectionRequestUID = ir.InspectionRequestUID
-WHERE ir.StatusType <> 'Completed'
+WHERE ir.StatusType <> 'Completed' and ir.ActiveFlag = 1
 
 
 

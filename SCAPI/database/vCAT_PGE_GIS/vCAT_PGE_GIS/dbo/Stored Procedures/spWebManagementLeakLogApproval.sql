@@ -5,6 +5,7 @@
 
 
 
+
 CREATE Procedure [dbo].[spWebManagementLeakLogApproval]
 (
 @AddressIndicationUID varchar(100)
@@ -22,7 +23,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 	,@MasterLeakLogUID varchar(100)
 	,@CurrentStatusType varchar(200)
 	
-
+	Select @MasterLeakLogUID = MasterLeakLogUID From [dbo].[tgAssetAddressIndication] where AssetAddressIndicationUID =  @AddressIndicationUID and ActiveFlag = 1
 	--Set @ReturnVal = 1
 
 	IF (select StatusType from [dbo].[tgAssetAddressIndication] where AssetAddressIndicationUID =  @AddressIndicationUID and ActiveFlag = 1) <> 'In Progress'
@@ -30,7 +31,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewed'
 
 		Select @Revision = Count(*) From [dbo].[tgAssetAddressIndication] where AssetAddressIndicationUID =  @AddressIndicationUID
 
-		Select @MasterLeakLogUID = MasterLeakLogUID From [dbo].[tgAssetAddressIndication] where AssetAddressIndicationUID =  @AddressIndicationUID and ActiveFlag = 1
+		
 
 
 		BEGIN TRY
