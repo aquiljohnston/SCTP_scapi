@@ -3,6 +3,7 @@
 namespace app\modules\v1\modules\pge\controllers;
 
 use Yii;
+use app\rbac\PgeDbManager;
 use app\modules\v1\modules\pge\models\PGEUser;
 use app\modules\v1\modules\pge\models\Role;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
@@ -133,6 +134,8 @@ class UserController extends BaseActiveController
 			$pgeUser = new PGEUser;
 			$pgeUser->attributes = $data;
 			$pgeUser->UserPassword = $hashedPass;
+			//get db for rbac
+			$pgeDb = PGEUser::getDb();
 			
 			//handle app role type for sc
 			$roleName = $pgeUser->UserAppRoleType;
@@ -236,10 +239,19 @@ class UserController extends BaseActiveController
 					
 					//assign rbac role
 					$auth = Yii::$app->authManager;
-					if($userRole = $auth->getRole($scUser["UserAppRoleType"]))
+					if($userRole = $auth->getRole($scUser['UserAppRoleType']))
 					{
-						$auth->assign($userRole, $scUser["UserID"]);
+						$auth->assign($userRole, $scUser['UserID']);
 					}
+					
+					//assign pge rbac role
+					$pgeAuth = new PgeDbManager($pgeDb);
+					if($pgeRole = $pgeAuth->getRole($pgeUser['UserAppRoleType']))
+					{
+						$pgeAuth->assign($pgeRole, $pgeUser['UserUID']);
+					}
+					
+					
 					$response->setStatusCode(201);
 					$pgeUser->UserPassword = '';
 					$response->data = $pgeUser;
@@ -299,6 +311,8 @@ class UserController extends BaseActiveController
 			$pgeUser = PGEUser::find()
 				->where(['UserUID'=>$UID])
 				->one();
+			//get pge db for rbac
+			$pgeDb = PGEUser::getDb();
 
 			$currentRole = $scUser["UserAppRoleType"];
 	
@@ -398,15 +412,23 @@ class UserController extends BaseActiveController
 					}
 				}
 				
+				//assign pge rbac role
+				$pgeAuth = new PgeDbManager($pgeDb);
+				if($pgeRole = $pgeAuth->getRole($pgeUser['UserAppRoleType']))
+				{
+					$pgeAuth->revokeAll($pgeUser['UserUID']);
+					$pgeAuth->assign($pgeRole, $pgeUser['UserUID']);
+				}
+				
 				SCUser::setClient(BaseActiveController::urlPrefix());
 				if($scUser-> update())
 				{
 					//handle potential role change
 					$auth = Yii::$app->authManager;
-					if($userRole = $auth->getRole($scUser["UserAppRoleType"]))
+					if($userRole = $auth->getRole($scUser['UserAppRoleType']))
 					{
-						$auth->revokeAll($scUser["UserID"]);
-						$auth->assign($userRole, $scUser["UserID"]);
+						$auth->revokeAll($scUser['UserID']);
+						$auth->assign($userRole, $scUser['UserID']);
 					}
 					$response->setStatusCode(200);
 					$pgeUser->UserPassword = '';
