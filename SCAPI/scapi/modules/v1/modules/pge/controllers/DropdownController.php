@@ -2,6 +2,7 @@
 
 namespace app\modules\v1\modules\pge\controllers;
 
+use app\modules\v1\modules\pge\models\CityCounty;
 use Yii;
 use app\authentication\TokenAuth;
 use yii\filters\VerbFilter;
@@ -1355,8 +1356,10 @@ class DropdownController extends Controller
             //﻿﻿ddSORLType
             $responseData['dropdowns']['ddSORLType']= DropdownController::webDropdownQuery('ddSORLType');
 
+            CityCounty::setClient($headers['X-Client']);
             // cityList﻿
-            $responseData['dropdowns']['cityList']= [];
+            // TODO find a better way that selecting all the cities if there are a lot of cities
+            $responseData['dropdowns']['cityList']= CityCounty::find()->select(['City'])->all();
 
             //﻿routeNames
             $responseData['dropdowns']['routeNames']= [];
