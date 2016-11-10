@@ -7,6 +7,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMasterLeakLog]
 AS
 Select 
@@ -26,7 +27,8 @@ mll.MasterLeakLogUID [MasterLeakLogUID],
 wc.Division,
 mg.FLOC,
 mll.StatusType [Status],
-ISNULL(Equip.EquipCount, 0) [EquipmentCount]
+ISNULL(Equip.EquipCount, 0) [EquipmentCount],
+ u.UserLANID [CreatedLANID]
 From 
 	(Select MasterLeakLogUID, InspectionRequestLogUID, createduseruid, ServiceDate [CreateDate], StatusType, MapGridUID
 	 From [dbo].[tMasterLeakLog] where ActiveFlag = 1)
@@ -59,6 +61,7 @@ Left Join (Select MasterLeakLogUID, Count(*) [EquipCount]
 				And StatusType <> 'Deleted'
 				And ISNULL(PlaceHolderFlag, 0) = 0
 			Group By MasterLeakLogUID) Equip on Equip.MasterLeakLogUID = mll.MasterLeakLogUID
+--Join (Select UserLANID from UserTb where UserActiveFlag = 1) u on mll.CreatedUserUID = u.UserUID
 WHERE Services.MasterLeakLogUID is not null or LeakInfo.MasterLeakLogUID is not null
 
 
