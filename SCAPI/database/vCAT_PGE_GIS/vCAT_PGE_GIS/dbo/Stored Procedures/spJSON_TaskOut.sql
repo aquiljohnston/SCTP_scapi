@@ -1,6 +1,7 @@
 ﻿
 
 
+
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -112,7 +113,7 @@ AS
 			,@EquipmentType varchar(20)
 			--,@SurveyFreq varchar(20)
 			,@InspectionServicePendingStatusType varchar(20) = 'Pending'
-
+			--,@AreaNumber varchar(10)
 
 
 			,@IsTraditional bit
@@ -809,7 +810,8 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
 						
 					)
 					Values
@@ -838,6 +840,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 
 				END
@@ -878,7 +881,8 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
 					)
 					Values
 					(
@@ -906,6 +910,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 
 
@@ -946,7 +951,8 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
 					)
 					Values
 					(
@@ -974,6 +980,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 					
 				END
@@ -1012,7 +1019,9 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
+						
 					)
 					Values
 					(
@@ -1040,6 +1049,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 					
 				END
@@ -1080,7 +1090,8 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
 					)
 					Values
 					(
@@ -1108,6 +1119,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 					
 				END
@@ -1147,7 +1159,9 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
+
 					)
 					Values
 					(
@@ -1175,6 +1189,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 					
 				END
@@ -1214,7 +1229,8 @@ AS
 						EquipmentType,
 						SerialNumber,
 						TaskOutUID,
-						CreateDateTime
+						CreateDateTime,
+						MapAreaNumber
 					)
 					Values
 					(
@@ -1242,6 +1258,7 @@ AS
 						,@EquipmentSerNo
 						,@INFTaskOutUID
 						,@SrcDTLT
+						,@AreaNumber
 					)
 
 
