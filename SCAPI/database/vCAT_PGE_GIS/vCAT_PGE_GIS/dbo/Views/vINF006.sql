@@ -2,6 +2,8 @@
 
 
 
+
+
 CREATE VIEW [dbo].[vINF006] AS 
 
 SELECT 
@@ -77,6 +79,8 @@ SELECT
 ,CAST(ind.Photo1 AS VARCHAR(150))								AS [IND_PHOTO1]
 ,CAST(ind.Photo2 AS VARCHAR(150))								AS [IND_PHOTO2]
 ,CAST(ind.Photo3 AS VARCHAR(150))								AS [IND_PHOTO3]
+
+,ind.MasterLeakLogUID
 
 -- SELECT TOP 100 * 
 -- SELECT * 

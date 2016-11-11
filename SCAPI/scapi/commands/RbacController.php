@@ -3,7 +3,7 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use app\models\SCUser;
+use app\modules\v1\models\SCUser;
 
 /**
 * This Class establishes the rules of the RBAC system for the API
