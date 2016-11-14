@@ -2,6 +2,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMapStampDetail]
 AS
 select 
@@ -62,7 +63,7 @@ from
 left Join (Select * from UserTb where UserActiveFlag = 1) u on [is].CreatedUserUID = u.UserUID
 Join (Select InspectionServicesUID, SrcDTLT [SurveyDate] from [dbo].[tInspectionService] where Revision= 0) [is2] on [is].InspectionServicesUID = [is2].InspectionServicesUID 
 Left Join (Select * from tgWindSpeed where ActiveFlag = 1) wsbegin on [is].WindSpeedStartUID = wsbegin.WindSpeedUID
-Left Join (Select * from tgWindSpeed where ActiveFlag = 1) wsmid on [is].WindSpeedStartUID = wsmid.WindSpeedUID
+Left Join (Select * from tgWindSpeed where ActiveFlag = 1) wsmid on [is].WindSpeedMidUID = wsmid.WindSpeedUID
 Left Join (Select * from [dbo].[tInspectionsEquipment] where ActiveFlag = 1) ie on [is].InspectionEquipmentUID = ie.InspecitonEquipmentUID
 --Join (Select InspectionRequestUID
 	--	, Sum(EstimatedFeet) [TotalFeetOfMain] 
