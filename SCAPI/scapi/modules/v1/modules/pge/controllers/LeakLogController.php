@@ -488,9 +488,6 @@ class LeakLogController extends BaseActiveController {
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
-            //            $putData = json_decode($put, true);
-
-            //            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
             $sqlCommand = "EXEC z_spWebManagementJSON_TransferFloc @JSON_Str=:putData";
 
             $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
