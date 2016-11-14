@@ -2,6 +2,7 @@
 
 
 
+
 CREATE Procedure [dbo].[spWebManagementMasterLeakLogSubmit]
 (
 @MasterLeakLogUID varchar(100)
@@ -33,7 +34,7 @@ Declare @ReviewdStatusType varchar(200) = 'Reviewd'
 
 
 select
-@TotalLeakCount = SUM(LeakCount)
+@TotalLeakCount = SUM(ISNULL(LeakCount, 0))
 , @TotalGrade1Count = SUM(Grade1Count)
 , @TotalNonGrade1Count = SUM(NonGrade1Count)
 , @TotalNonGrade1CountNeedingSent = SUM(NonGrade1CountNeedingSent)
@@ -52,7 +53,7 @@ Select @MasterLeakLogToSendCount = Count(*)	from tMasterLeakLog	where MasterLeak
 	
 --if there are no leaks mark the MasterLeakLog as completed	
 	
-	IF @TotalLeakCount = 0 --and @MasterLeakLogToSendCount = 1 
+	IF ISNULL(@TotalLeakCount, 0) = 0 --and @MasterLeakLogToSendCount = 1 
 	BEGIN
 	
 		Select @Revision = Count(*) From tMasterLeakLog where MasterLeakLogUID = @MasterLeakLogUID

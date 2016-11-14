@@ -46,8 +46,11 @@
     [CompletedDTLT]             DATETIME       NULL,
     [InspectionType]            VARCHAR (20)   CONSTRAINT [DF_tInspectionRequest_InspectionType] DEFAULT ('TR') NULL,
     [ActualStartDate]           DATE           NULL,
+    [AdhocFlag]                 BIT            CONSTRAINT [DF_tInspectionRequest_AdhocFlag] DEFAULT ((0)) NULL,
     CONSTRAINT [PK_tInspectionRequest] PRIMARY KEY CLUSTERED ([tInspectionRequestID] ASC)
 );
+
+
 
 
 GO
