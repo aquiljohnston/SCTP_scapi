@@ -112,15 +112,6 @@ class PgeRbacController extends Controller
 		//add "editMapStamp" permission
 		$editMapStamp = $auth->createPermission('editMapStamp');
 		$editMapStamp->description = 'Edit a Map Stamp Record';
-		$auth->add($editMapStamp);
-		//add "approveMapStamp" permission
-		$approveMapStamp = $auth->createPermission('approveMapStamp');
-		$approveMapStamp->description = 'Approve a Map Stamp Record';
-		$auth->add($approveMapStamp);
-		//add "viewMapStampDetailModal" permission
-		$viewMapStampDetailModal = $auth->createPermission('viewMapStampDetailModal');
-		$viewMapStampDetailModal->description = 'View the detail modal for a Map Stamp';
-		$auth->add($viewMapStampDetailModal);
 		
 		//AOC Permissions//
 		//add "viewAOC" permission
@@ -170,8 +161,6 @@ class PgeRbacController extends Controller
 		$auth->addChild($supervisor, $submitLeak);
 		$auth->addChild($supervisor, $editLeak);
 		$auth->addChild($supervisor, $transferFLOC);
-		$auth->addChild($supervisor, $editMapStamp);
-		$auth->addChild($supervisor, $approveMapStamp);
 		
 		//add "Administrator" role
 		$administrator = $auth->createRole('Administrator');
