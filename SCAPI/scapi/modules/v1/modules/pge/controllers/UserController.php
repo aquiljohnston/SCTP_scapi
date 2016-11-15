@@ -64,6 +64,7 @@ class UserController extends BaseActiveController
 					'view' => ['get'],
 					'deactivate' => ['put'],
 					'get-me'  => ['get'],
+					'get-home-work-center'  => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -643,5 +644,25 @@ class UserController extends BaseActiveController
 		}
 	}
 
-
+	public function actionGetHomeWorkCenter()
+	{
+		//get UID of user making request
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		$userUID = BaseActiveController::getUserFromToken()->UserUID;
+		
+		//TODO check headers
+		$headers = getallheaders();
+		WebManagementUsers::setClient($headers['X-Client']);
+		
+		$homeWorkCenter = WebManagementUsers::find()
+			->select('WorkCenter')
+			->where(['UserUID' => $userUID])
+			->one();
+			
+		//send response
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		$response->data = $homeWorkCenter;
+		return $response;
+	}
 }
