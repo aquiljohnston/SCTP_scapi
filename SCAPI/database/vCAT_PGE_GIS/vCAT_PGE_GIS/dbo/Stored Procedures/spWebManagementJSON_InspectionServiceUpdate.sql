@@ -2,6 +2,8 @@
 
 
 
+
+
 CREATE PROCEDURE [dbo].[spWebManagementJSON_InspectionServiceUpdate]
 (
       @JSON_Str VarChar(Max)
@@ -30,25 +32,25 @@ AS
 		Update #JSON_Parse Set StringValue = 1 where ValueType = 'boolean' and StringValue = 'true'
 		Update #JSON_Parse Set StringValue = '' where StringValue = 'null' or StringValue = 'Please Make A Selection'
 		Update #JSON_Parse Set StringValue = '19000101000000' Where Name In ('SrcDTLT', 'SrcDTGMT', 'SrcOpenDTLT', 'SrcClosedDTLT') and StringValue = ''
-/*	
+
 	
-		Select @ClientID = 1
+		--Select @ClientID = 1
 		--Select @ClientID = StringValue From #JSON_Parse Where Name = 'ClientID'
-		Select Top 1 @UserUID = StringValue From #JSON_Parse Where Name = 'ActivityCreatedUserUID'
+		--Select Top 1 @UserUID = StringValue From #JSON_Parse Where Name = 'ActivityCreatedUserUID'
 
 
-		Insert Into [dbo].[tTabletDataInsertArchive] (
+		Insert Into [dbo].[tWEBDataInsertArchive] (
 			CreatedUserUID
 			,TransactionType
 			,InsertedData
 			)
 		Values (
-			@UserUID
-			,'InspectionServices'
+			0
+			,'InspectionServicesUpdate'
 			,@JSON_Str
 			)
 
-*/
+
 
 /***************************************************************************
 
@@ -76,6 +78,8 @@ AS
 			,@InspectionRequestUID varchar(100)
 			,@MapGridUID varchar(100)
 			,@Revision int
+			,@CurrentWindSpeedStart float
+			,@CurrentWindSpeedMid float
 
 
 		Select @InspectionServiceUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'InspectionServicesUID'), '')
@@ -92,6 +96,22 @@ AS
 --Get the current wind speed UIDs
 
 		Select @InspectionRequestUID = InspectionRequestUID, @MapGridUID = MapGridUID, @WindSpeedStartUID = WindSpeedStartUID, @WindSpeedMidUID = WindSpeedMidUID from [dbo].[tInspectionService] where InspectionEquipmentUID = @InspectionServiceUID
+		/*
+		If ISNULL(@WindSpeedStartUID, '') <> ''
+		BEGIN
+			Select @CurrentWindSpeedStart WindSpeed from tgWindSpeed where WindSpeedUID = @WindSpeedStartUID and ActiveFlag = 1
+		END
+
+		If ISNULL(@WindSpeedMidUID, '') <> ''
+		BEGIN
+			Select @CurrentWindSpeedStart WindSpeed from tgWindSpeed where WindSpeedUID = @WindSpeedMidUID and ActiveFlag = 1
+		END
+		*/
+
+
+		Select @NewWindSpeedStartUID = @WindSpeedStartUID, @NewWindSpeedMidUID = @WindSpeedMidUID
+
+
 
 		If ISNULL(@WindSpeedStartUID, '') <> '' and @WindSpeedStart <> '' 
 		BEGIN
@@ -174,8 +194,11 @@ AS
 		END
 
 
-
-		If ISNULL(@WindSpeedMidUID, '') <> '' and @WindSpeedMid <> '' 
+		IF @WindSpeedMidUID = 'NA'
+		BEGIN
+			Set @NewWindSpeedMidUID = ''
+		END
+		ELSE If ISNULL(@WindSpeedMidUID, '') <> '' and @WindSpeedMid <> '' 
 		BEGIN
 
 			IF (select WindSpeed from [dbo].[tgWindSpeed] where WindSpeedUID = @WindSpeedMidUID) <> Cast(@WindSpeedMid as Float)

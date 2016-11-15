@@ -46,11 +46,13 @@
     [WindSpeedStartUID]           VARCHAR (100)      CONSTRAINT [DF_tInspectionService_WindSpeedStartUID] DEFAULT ('') NULL,
     [WindSpeedMidUID]             VARCHAR (100)      CONSTRAINT [DF_tInspectionService_WindSpeedMidUID] DEFAULT ('') NULL,
     [MapAreaNumber]               INT                CONSTRAINT [DF_tInspectionService_MapAreaNumber] DEFAULT ((0)) NULL,
-    [LockedFlag]                  BIT                CONSTRAINT [DF_tInspectionService_LockedFlag] DEFAULT ((0)) NULL,
+    [LockedFlag]                  BIT                CONSTRAINT [DF_tInspectionService_LockedFlag] DEFAULT ((1)) NULL,
     [TaskOutUID]                  VARCHAR (200)      NULL,
     [CreateDateTime]              DATETIME           NULL,
     CONSTRAINT [PK_t_InspecitonServices] PRIMARY KEY CLUSTERED ([tInspectionServicesID] ASC)
 );
+
+
 
 
 

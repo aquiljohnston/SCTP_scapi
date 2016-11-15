@@ -5,6 +5,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMapStampManagement]
 AS
 select 
@@ -31,6 +32,7 @@ IR.StatusType [MapStampStatus]
 , ir.PrevFtOfMain
 , [is].[DetailStartDate]
 , [is].[DetailEndDate]
+, CASE WHEN Active.InspectionRequestLogUID is NULL THEN 1 ELSE 0 END [SubmitReadyFlag]
 from 
 (Select * from [dbo].[tInspectionRequest] where ActiveFlag = 1) IR
 Join (Select InspectionRequestUID, Sum(EstimatedFeet) [TotalFeetOfMain] 
@@ -55,6 +57,8 @@ Left Join (Select InspectionRequestUID, Count(*) [TotalLeaks]
 	From [dbo].[tInspectionService] 
 	where ActiveFlag = 1
 	Group By InspectionRequestUID) ind on ind.InspectionRequestUID = ir.InspectionRequestUID
+Left Join (select Distinct  InspectionRequestLogUID from tMasterLeakLog 
+where statustype not in ('Submit/Pending', 'Completed') and ActiveFlag = 1) Active on ir.InspectionRequestUID = Active.InspectionRequestLogUID
 
 
 
