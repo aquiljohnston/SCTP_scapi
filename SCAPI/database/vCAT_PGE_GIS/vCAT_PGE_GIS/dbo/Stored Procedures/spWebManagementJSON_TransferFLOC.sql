@@ -7,6 +7,7 @@
 
 
 
+
 CREATE PROCEDURE [dbo].[spWebManagementJSON_TransferFLOC]
 (
       @JSON_Str VarChar(Max)
@@ -200,13 +201,13 @@ BEGIN TRY
 			)
 
 			
-			select @NextID = IDENT_CURRENT('[vCAT_PGE_GIS_STAGE].[dbo].[tgAssetInspection]') + 1
+			select @NextID = IDENT_CURRENT('[dbo].[tgAssetInspection]') + 1
 
 			Select @AssetInspectionUID = [dbo].[CreateUID]('AssetInspection', @NextID, @UserName, getdate())
 
-			select @AssetUID = AssetUID From [vCAT_PGE_GIS_STAGE].[dbo].[tgAsset] where MapGridUID = @NewMapGridUID and ActiveFlag = 1
+			select @AssetUID = AssetUID From [dbo].[tgAsset] where MapGridUID = @NewMapGridUID and ActiveFlag = 1
 						
-			Insert Into [vCAT_PGE_GIS_STAGE].[dbo].[tgAssetInspection]
+			Insert Into [dbo].[tgAssetInspection]
 			(
 				AssetInspectionUID, 
 				AssetUID, 
