@@ -217,8 +217,8 @@ class DropdownController extends Controller
         }
     }
 
-    
-    public function actionGetLeakLogFlocDropdown($workcenter)
+
+    public function actionGetLeakLogFlocDropdown($workcenter, $isAdhoc)
     {
         //TODO RBAC permission check
         try{
@@ -226,12 +226,23 @@ class DropdownController extends Controller
             $headers = getallheaders();
             WebManagementFlocsDropDown::setClient($headers['X-Client']);
 
-            $values = WebManagementFlocsDropDown::find()
-                ->select(['FLOC', 'SurveyFreq'])
-                ->where(['WorkCenter' => $workcenter])
-                ->distinct()
-                ->all();
-
+            if($isAdhoc == 0)
+            {
+                $values = WebManagementFlocsDropDown::find()
+                    ->select(['FLOC', 'SurveyFreq'])
+                    ->where(['WorkCenter' => $workcenter])
+                    ->andWhere(['not' ,['SurveyFreq' => '']])
+                    ->distinct()
+                    ->all();
+            }
+            else
+            {
+                $values = WebManagementFlocsDropDown::find()
+                   ->select(['FLOC', 'SurveyFreq'])
+                   ->where(['WorkCenter' => $workcenter])
+                   ->distinct()
+                   ->all();
+            }
             $results = [];
             foreach ($values as $value) {
                 $surveyType = 'Unknown';
@@ -240,7 +251,6 @@ class DropdownController extends Controller
                     $surveyType = $value['SurveyFreq'];
                 }
                 $results[] = [
-
                     "id" => $surveyType,
                     "name" => $value["FLOC"]
                 ];

@@ -52,7 +52,7 @@ class DropdownController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-week-dropdown' => ['get'],
-                    'get-work-center-dropdown' => ['get'], 
+                    'get-work-center-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
                     'get-map-plat-dropdown' => ['get'],
                     'get-surveyor-dropdown' => ['get'],
@@ -79,7 +79,8 @@ class DropdownController extends Controller
                     'get-assigned-division-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
 					'survey-route-name-dropdown' => ['post'],
-                    'get-web-mgmt-leak-log-form-dropdowns' =>['get']
+                    'get-web-mgmt-leak-log-form-dropdowns' =>['get'],
+                    'get-adhoc-frequency-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -127,17 +128,17 @@ class DropdownController extends Controller
 
     /*
      * Belongs to LeakLogDetail
-	 * This is using the wrong View*
+     * This is using the wrong View*
      */
     public function actionGetMapPlatDependentDropdown($workCenter = null, $division = null, $surveyor = null, $date = null) {
-		
+
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownDispatchMapPlat::setClient($headers['X-Client']);
-			
+
 			//todo permission check
-			
+
 			$data = WebManagementDropDownDispatchMapPlat::find()
 				->where(['WorkCenter'=>$workCenter])
                 ->all();
@@ -147,7 +148,7 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[]=[
-				'id'=>$data[$i]->MapPlat, 
+				'id'=>$data[$i]->MapPlat,
 				'name'=>$data[$i]->MapPlat];
             }
             //send response
@@ -169,7 +170,7 @@ class DropdownController extends Controller
     public function actionGetReportDropdown() {
 		try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["Report 1"] = "Report 1";
 			$data["Report 2"] = "Report 2";
@@ -191,11 +192,11 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetDeviceIdDropdown() {
 		try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["12345678"] = "12345678";
 			$data["87654321"] = "87654321";
@@ -216,11 +217,11 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetSupervisorDropdown() {
 		try{
 			$data = [];
-			
+
 			$data = [null => "Select..."];
 			$data["S1V1"] = "Visor, Super";
 			$data["D0B0"] = "Boss, Da";
@@ -241,28 +242,28 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
-	//dispatch, assigned
-	public function actionGetUserWorkCenterDropdown() {
+
+    public function actionGetAdhocFrequencyDropdown() {
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementUsers::setClient($headers['X-Client']);
-			
+
 			//todo permission check
-			$data = WebManagementUsers::find()
-				->select('WorkCenter')
-				->distinct()
-				->where(['not', ['WorkCenter'=> null]])
-                ->all();
-			$namePairs = [null => "Select..."];
+            DropDowns::setClient($headers['X-Client']);
+
+            $data =  DropdownController::webDropdownQuery('ddSurveyFrequencyTR');
+
+			$namePairs = [];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
             {
-                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
+                if($data[$i]->SortSeq != 0)
+                {
+                    $namePairs[$data[$i]->FieldDisplay]= $data[$i]->FieldDisplay;
+                }
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -277,9 +278,45 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
+	//dispatch, assigned
+	public function actionGetUserWorkCenterDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementUsers::setClient($headers['X-Client']);
+
+			//todo permission check
+			$data = WebManagementUsers::find()
+				->select('WorkCenter')
+				->distinct()
+				->where(['not', ['WorkCenter'=> null]])
+                ->all();
+			$namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
+            }
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
 	//////////////////////USER DROPDOWNS BEGIN/////////////////////
-	
+
 	//return a json containing pairs of EmployeeTypes
     public function actionGetEmployeeTypeDropdown()
     {
@@ -288,7 +325,7 @@ class DropdownController extends Controller
             //set db target
 			$headers = getallheaders();
 			WebManagementDropDownEmployeeType::setClient($headers['X-Client']);
-			
+
 			// RBAC permission check
 
             $types = WebManagementDropDownEmployeeType::find()
@@ -313,13 +350,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetReportingGroupUIDDropdown() {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownReportingGroups::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$data = WebManagementDropDownReportingGroups::find()
                 ->all();
@@ -330,7 +367,7 @@ class DropdownController extends Controller
             {
                 $namePairs[$data[$i]->ReportingGroupUID]= $data[$i]->GroupName;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -345,13 +382,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetReportingGroupDropdown() {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownReportingGroups::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$data = WebManagementDropDownReportingGroups::find()
                 ->all();
@@ -362,7 +399,7 @@ class DropdownController extends Controller
             {
                 $namePairs[$data[$i]->GroupName]= $data[$i]->GroupName;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -383,7 +420,7 @@ class DropdownController extends Controller
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownRoles::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$data = WebManagementDropDownRoles::find()
                 ->all();
@@ -394,7 +431,7 @@ class DropdownController extends Controller
             {
                 $namePairs[$data[$i]->RoleName]= $data[$i]->RoleName;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -409,13 +446,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetUserHomeWorkCenterDropdown() {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownUserWorkCenter::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$data = WebManagementDropDownUserWorkCenter::find()
                 ->all();
@@ -426,7 +463,7 @@ class DropdownController extends Controller
             {
                 $namePairs[$data[$i]->WorkCenterUID]= $data[$i]->WorkCenter;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -441,20 +478,20 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	//////////////////////USER DROPDOWNS END/////////////////////
-	
+
 	//////////////////////DISPATCH DROPDOWNS BEGIN/////////////////////
-	
+
 	public function actionGetDispatchDivisionDropdown()
     {
         try{
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownDispatch::find()
 				->select('Division')
 				->distinct()
@@ -481,7 +518,7 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	//required format for the dynaic dropdowns
     //['id'=>'<sub-cat_id_2>', 'name'=>'<sub-cat-name2>']
     public function actionGetDispatchWorkCenterDropdown($division = null)
@@ -490,9 +527,9 @@ class DropdownController extends Controller
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownDispatch::find()
 				->select('WorkCenter')
 				->distinct()
@@ -504,7 +541,7 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[]=[
-				'id'=>$data[$i]->WorkCenter, 
+				'id'=>$data[$i]->WorkCenter,
 				'name'=>$data[$i]->WorkCenter];
             }
             //send response
@@ -522,30 +559,30 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetDispatchSurveyFreqDropdown($division, $workCenter) {
         try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
-			
+
 			//todo permission check
-			
+
 			$data = WebManagementDropDownDispatch::find()
 				->select('SurveyType')
 				->distinct()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
                 ->all();
-				
+
 			$namePairs = ['All' => 'All'];
 			$dataSize = count($data);
-			
+
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->SurveyType]= $data[$i]->SurveyType;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -560,13 +597,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetDispatchFlocDropdown($division, $workCenter, $surveyType) {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$dataQuery = WebManagementDropDownDispatch::find()
 				->select('FLOC')
@@ -577,17 +614,17 @@ class DropdownController extends Controller
 			{
 				$dataQuery->andWhere(['SurveyType'=>$surveyType]);
 			}
-            
+
 			$data = $dataQuery->all();
-			
+
 			$namePairs = ['All' => 'All'];
 			$dataSize = count($data);
-			
+
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->FLOC]= $data[$i]->FLOC;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -602,13 +639,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetDispatchComplianceMonthDropdown($division, $workCenter, $surveyType, $floc) {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownDispatch::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$dataQuery = WebManagementDropDownDispatch::find()
 				->select('ComplianceYearMonth, ComplianceSort')
@@ -622,18 +659,18 @@ class DropdownController extends Controller
 			if($floc != 'All')
 			{
 				$dataQuery->andWhere(['FLOC'=>$floc]);
-			}	
+			}
 			$data = $dataQuery->orderBy('ComplianceSort')
 				->all();
-				
+
 			$namePairs = ['All' => 'All'];
 			$dataSize = count($data);
-			
+
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -648,20 +685,20 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	//////////////////////DISPATCH DROPDOWNS END/////////////////////
-	
+
 	//////////////////////ASSIGNED DROPDOWNS BEGIN/////////////////////
-	
+
 	public function actionGetAssignedDivisionDropdown()
     {
         try{
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownAssigned::find()
 				->select('Division')
 				->distinct()
@@ -688,16 +725,16 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetAssignedWorkCenterDropdown($division)
     {
         try{
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownAssigned::find()
 				->select('WorkCenter')
 				->distinct()
@@ -709,7 +746,7 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[]=[
-				'id'=>$data[$i]->WorkCenter, 
+				'id'=>$data[$i]->WorkCenter,
 				'name'=>$data[$i]->WorkCenter];
             }
             //send response
@@ -727,15 +764,15 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
-	 public function actionGetAssignedSurveyFreqDropdown($division, $workCenter) {
+
+    public function actionGetAssignedSurveyFreqDropdown($division, $workCenter) {
         try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
 			//todo permission check
-			
+
 			$data = WebManagementDropDownAssigned::find()
 				->select('SurveyFreq')
 				->distinct()
@@ -747,11 +784,11 @@ class DropdownController extends Controller
             $dataSize = count($data);
 
 			for($i=0; $i < $dataSize; $i++)
-            {		
+            {
 				$namePairs[$data[$i]->SurveyFreq]= $data[$i]->SurveyFreq;
             }
-			
-			
+
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -766,13 +803,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetAssignedFlocDropdown($division, $workCenter, $surveyType) {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$dataQuery = WebManagementDropDownAssigned::find()
 				->select('FLOC')
@@ -788,10 +825,10 @@ class DropdownController extends Controller
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
-            {		
+            {
 				$namePairs[$data[$i]->FLOC]= $data[$i]->FLOC;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -806,13 +843,13 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetAssignedComplianceMonthDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null) {
 		try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$dataQuery = WebManagementDropDownAssigned::find()
 				->select('ComplianceYearMonth, ComplianceSort')
@@ -832,7 +869,7 @@ class DropdownController extends Controller
 			if(!($floc == null || $floc == 'All'))
 			{
 				$dataQuery->andWhere(['FLOC'=>$floc]);
-			}			
+			}
 			$data = $dataQuery->orderBy('ComplianceSort')
                 ->all();
             $namePairs = [null => 'All'];
@@ -842,7 +879,7 @@ class DropdownController extends Controller
             {
                 $namePairs[$data[$i]->ComplianceYearMonth]= $data[$i]->ComplianceYearMonth;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -857,14 +894,14 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
-	public function actionGetAssignedStatusDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null) 
+
+	public function actionGetAssignedStatusDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null)
 	{
         try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$dataQuery = WebManagementDropDownAssigned::find()
 				->select('StatusType')
@@ -912,14 +949,14 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
-	public function actionGetAssignedDispatchMethodDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null, $surveyStatus = null) 
+
+	public function actionGetAssignedDispatchMethodDropdown($division = null, $workCenter = null, $surveyFreq = null, $floc = null, $complianceYearMonth = null, $surveyStatus = null)
 	{
         try{
 			//db target
 			$headers = getallheaders();
 			WebManagementDropDownAssigned::setClient($headers['X-Client']);
-			
+
 			//todo permission check
 			$dataQuery = WebManagementDropDownAssigned::find()
                 ->select('DispatchMethod')
@@ -956,7 +993,7 @@ class DropdownController extends Controller
             {
                 $namePairs[$data[$i]->DispatchMethod]= $data[$i]->DispatchMethod;
             }
-			
+
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $namePairs;
@@ -972,7 +1009,7 @@ class DropdownController extends Controller
         }
     }
 	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
-	
+
 	/////////////////////AOC DROPDOWNS BEGIN////////////////////////
 	public function actionGetAocDivisionDropdown()
     {
@@ -980,9 +1017,9 @@ class DropdownController extends Controller
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownAOCDivision::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownAOCDivision::find()
                 ->all();
             $namePairs = [null => "Select..."];
@@ -1007,16 +1044,16 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetAocWorkCenterDropdown($division)
     {
         try{
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownAOCWorkCenter::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownAOCWorkCenter::find()
 				->where(['Division'=>$division])
                 ->all();
@@ -1026,7 +1063,7 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[]=[
-				'id'=>$data[$i]->WorkCenter, 
+				'id'=>$data[$i]->WorkCenter,
 				'name'=>$data[$i]->WorkCenter];
             }
             //send response
@@ -1044,16 +1081,16 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetAocSurveyorDropdown($division, $workCenter)
     {
         try{
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownAOCSurveyor::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$data = WebManagementDropDownAOCSurveyor::find()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
@@ -1080,16 +1117,16 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
 	public function actionGetAocTypeDropdown($division, $workCenter, $surveyor)
     {
         try{
 			//set db target
 			$headers = getallheaders();
 			WebManagementDropDownAOCType::setClient($headers['X-Client']);
-			
+
             //todo permission check
-			
+
 			$dataQuery = WebManagementDropDownAOCType::find()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
@@ -1120,9 +1157,9 @@ class DropdownController extends Controller
         {
             throw new \yii\web\HttpException(400);
         }
-    }	
+    }
 	/////////////////////AOC DROPDOWNS END////////////////////////
-	
+
 	/////////////////////TABLET DROPDOWNS BEGIN////////////////////////
 	//route to provide data for all survey dropdowns on the tablet
 	public function actionGetTabletSurveyDropdowns()
@@ -1132,63 +1169,63 @@ class DropdownController extends Controller
 			//set db target
 			$headers = getallheaders();
 			DropDowns::setClient($headers['X-Client']);
-			
+
 			$responseData['SurveyDropdowns'] = [];
-			
+
 			//pipeline types
 			$responseData['SurveyDropdowns']['PipelineTypes']= DropdownController::tabletSurveyQuery('ddPipelineType');
-			
+
 			//standby release reasons
 			$responseData['SurveyDropdowns']['StandbyReleaseReasons']= DropdownController::tabletSurveyQuery('ddVoyStandbyReason');
-			
+
 			//AOC types
 			$responseData['SurveyDropdowns']['AOCTypes']= DropdownController::tabletSurveyQuery('ddVoyAOCType');
-			
+
 			//CGI reasons
 			$responseData['SurveyDropdowns']['CGIReasons']= DropdownController::tabletSurveyQuery('ddVoyCGIReasonType');
-			
+
 			//DIMP Riser types
 			$responseData['SurveyDropdowns']['DimpRiserTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPRiserType');
-			
+
 			//Service Head Adapter Types
 			$responseData['SurveyDropdowns']['ServiceHeadAdapterTypes']= DropdownController::tabletSurveyQuery('ddVoyDIMPServiceHeadAdapterType');
-			
+
 			//Facility Type GD Types
 			$responseData['SurveyDropdowns']['FacilityTypes']= DropdownController::tabletSurveyQuery('ddFacilityType');
-			
+
 			// Above or Below Types
 			$responseData['SurveyDropdowns']['AboveOrBelow']= DropdownController::tabletSurveyQuery('ddAboveBelowType');
-			
+
 			//Initial Leak Source Types
 			$responseData['SurveyDropdowns']['InitialLeakSourceTypes']= DropdownController::tabletSurveyQuery('ddInitialLeakSourceType');
-			
+
 			//Reported By Types
 			$responseData['SurveyDropdowns']['ReportedBy']= DropdownController::tabletSurveyQuery('ddReportedByType');
-			
+
 			//Surface Over Reading Locations Types
 			$responseData['SurveyDropdowns']['SurfaceOverReadingLocation']= DropdownController::tabletSurveyQuery('ddSORLType');
-			
+
 			//Grade By Instrument Types
 			$responseData['SurveyDropdowns']['GradeByInstTypes']= DropdownController::tabletSurveyQuery('ddGradeByInstType');
-			
+
 			//Grade types
 			$responseData['SurveyDropdowns']['Grade']= DropdownController::tabletSurveyQuery('ddGradeType');
-			
+
 			//Info Code Types
 			$responseData['SurveyDropdowns']['InfoCodes']= DropdownController::tabletSurveyQuery('ddInfoCodeType');
-			
+
 			//yes no
 			$responseData['SurveyDropdowns']['YesNo']= DropdownController::tabletSurveyQuery('ddYesNo');
-			
+
 			//meter
 			$responseData['SurveyDropdowns']['Meter'] = TabletMeter::find()->all();
-			
+
 			//filter
 			$responseData['SurveyDropdowns']['Filter'] = TabletFilter::find()->all();
-			
+
 			//regulator
 			$responseData['SurveyDropdowns']['Regulator'] = TabletRegulator::find()->all();
-			
+
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -1204,7 +1241,7 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
-	
+
 	//helper method for standard tablet survey query
 	public static function tabletSurveyQuery($filter)
 	{
@@ -1215,7 +1252,7 @@ class DropdownController extends Controller
 				->orderBy('SortSeq')
 				->all();
 	}
-	
+
 	//get all pipeline route names based on a map grid uid
 	public function actionSurveyRouteNameDropdown()
 	{
@@ -1223,36 +1260,36 @@ class DropdownController extends Controller
 		{
 			$post = file_get_contents("php://input");
 			$mapGrids = json_decode($post, true);
-			
+
 			$responseData['SurveyRouteNames'] = [];
-			
+
 			//set db target
 			$headers = getallheaders();
 			TabletRouteName::setClient($headers['X-Client']);
-			
+
 			$mapGridCount = count($mapGrids['MapGridUIDs']);
-			
+
 			for($i = 0; $i < $mapGridCount; $i++)
 			{
 				$routeNames = TabletRouteName::find()
 					->select('RouteName')
 					->where(['MapGridUID' => $mapGrids['MapGridUIDs'][$i]])
 					->all();
-				
+
 				$routeNameArray = [];
 				$routeNameCount = count($routeNames);
-				
+
 				for($j = 0; $j < $routeNameCount; $j++)
 				{
 					$routeNameArray[] = $routeNames[$j]->RouteName;
 				}
-				
+
 				$responseData['SurveyRouteNames'][]=[
 				'MapGridUID' => $mapGrids['MapGridUIDs'][$i],
 				'RouteNames' => $routeNameArray
-				]; 
+				];
 			}
-				
+
 			//send response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -1266,7 +1303,7 @@ class DropdownController extends Controller
 		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
-		}		
+		}
 	}
 	/////////////////////TABLET DROPDOWNS END////////////////////////
 

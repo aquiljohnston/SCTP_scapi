@@ -3,6 +3,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMapStampDetail]
 AS
 select 
@@ -16,7 +17,7 @@ MapStampPicaroUID [SourceUID]
 , msp.PicaroEquipmentID [InstSerialNum]
 , 'G_COGIPICA' [InspType]
 , msp.WindSpeedStart
-, msp.WindSpeedMid
+, ISNULL(Cast(msp.WindSpeedMid as varchar(20)), 'NA') [WindSpeedMid]
 , 0 [SurveyModeFoot]
 , 1 [SurveyModeMoble]
 , msp.FeetOfMain
@@ -49,7 +50,7 @@ select
 , ie.SerialNumber [InstSerialNum]
 , ie.EquipmentType [InspType]
 , wsbegin.WindSpeed [WindSpeedStart]
-, wsmid.WindSpeed [WindSpeedMid]
+, ISNULL(Cast(wsmid.WindSpeed as varchar(20)), 'NA') [WindSpeedMid]
 , CASE WHEN [is].SurveyMode = 'F' THEN 1 ELSE 0 END [SurveyModeFoot]
 , CASE WHEN [is].SurveyMode = 'M' THEN 1 ELSE 0 END [SurveyModeMoble]
 , [is].EstimatedFeet [FeetOfMain]

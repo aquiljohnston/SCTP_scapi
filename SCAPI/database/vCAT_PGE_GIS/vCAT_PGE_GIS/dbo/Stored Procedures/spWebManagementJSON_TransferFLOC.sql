@@ -5,7 +5,10 @@
 
 
 
-Create PROCEDURE [dbo].[spWebManagementJSON_TransferFLOC]
+
+
+
+CREATE PROCEDURE [dbo].[spWebManagementJSON_TransferFLOC]
 (
       @JSON_Str VarChar(Max)
     
@@ -85,6 +88,7 @@ AS
 			,@InspectionType varchar(20)
 			,@AssetInspectionUID varchar(100)
 			,@AssetUID varchar(100)
+			,@ReturnVal bit = 1
 			
 
 
@@ -95,6 +99,13 @@ AS
 		Select @NewSurveyFreq = ISNULL((Select StringValue From #JSON_Parse Where Name = 'NewSurveyFreq'), '')
 		Select @AdHocMode = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AdHocMode'), '')
 		Select @Date = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
+		Select @UserUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserCreatedUID'), '')
+
+
+		
+BEGIN TRY
+
+	BEGIN Transaction
 		
 		IF @AdHocMode = '1'
 		BEGIN
@@ -178,13 +189,13 @@ AS
 			)
 
 			
-			select @NextID = IDENT_CURRENT('[vCAT_PGE_GIS_STAGE].[dbo].[tgAssetInspection]') + 1
+			select @NextID = IDENT_CURRENT('[dbo].[tgAssetInspection]') + 1
 
 			Select @AssetInspectionUID = [dbo].[CreateUID]('AssetInspection', @NextID, @UserName, getdate())
 
-			select @AssetUID = AssetUID From [vCAT_PGE_GIS_STAGE].[dbo].[tgAsset] where MapGridUID = @NewMapGridUID and ActiveFlag = 1
+			select @AssetUID = AssetUID From [dbo].[tgAsset] where MapGridUID = @NewMapGridUID and ActiveFlag = 1
 						
-			Insert Into [vCAT_PGE_GIS_STAGE].[dbo].[tgAssetInspection]
+			Insert Into [dbo].[tgAssetInspection]
 			(
 				AssetInspectionUID, 
 				AssetUID, 
@@ -1352,6 +1363,14 @@ AS
 
 
 			END
+
+		COMMIT TRANSACTION
+
+	END TRY
+	BEGIN CATCH
+		ROLLBACK TRANSACTION
+		set @ReturnVal = 0
+	END CATCH
 /*
 tgAssetAddress
 tgAssetAddressAOC
@@ -1375,3 +1394,7 @@ tMapStampPicaro In
 Drop Table #JSON_Parse
 
 SET NOCOUNT OFF
+
+--Return @ReturnVal
+
+Select @ReturnVal As Succeeded

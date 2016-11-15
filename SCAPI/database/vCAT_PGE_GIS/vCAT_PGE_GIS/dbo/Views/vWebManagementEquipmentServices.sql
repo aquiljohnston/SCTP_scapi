@@ -7,6 +7,7 @@
 
 
 
+
 CREATE view [dbo].[vWebManagementEquipmentServices]
 AS
 Select 
@@ -14,7 +15,7 @@ cast([is].srcdtlt as date) [Date],
 SubString(ie.EquipmentType, 7, 10) [EquipmentType],
 ie.SerialNumber,
 ws_start.WindSpeed [WindSpeedStart],
-ws_mid.WindSpeed [WindSpeedMid],
+ISNULL(Cast(ws_mid.WindSpeed as varchar(20)) , 'NA') [WindSpeedMid],
 [is].EstimatedFeet [FeetOfMain],
 [is].EstimatedServices [NumOfServices],
 [is].EstimatedHours [Hours],

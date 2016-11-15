@@ -488,7 +488,7 @@ class LeakLogController extends BaseActiveController {
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
-            $sqlCommand = "EXEC z_spWebManagementJSON_TransferFloc @JSON_Str=:putData";
+            $sqlCommand = "EXEC spWebManagementJSON_TransferFLOC @JSON_Str=:putData";
 
             $command =  WebManagementMasterLeakLog::getDb()->createCommand($sqlCommand);
             $command->bindParam(":putData", $put);
