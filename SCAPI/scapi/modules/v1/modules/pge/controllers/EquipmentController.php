@@ -8,7 +8,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
 use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\modules\pge\models\TabletEquipment;
+use app\modules\v1\modules\pge\models\TabletDropDownEquipment;
 use app\modules\v1\modules\pge\models\InspectionsEquipment;
 use app\modules\v1\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
@@ -39,11 +39,16 @@ class EquipmentController extends Controller
 	{
 		try
 		{
-			$headers = getallheaders();
-			TabletEquipment::setClient($headers['X-Client']);
+			//get UID of user making request
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$UserUID = BaseActiveController::getUserFromToken()->UserUID;
 			
-			$data = TabletEquipment::find()
-				->orderBy('MWC')
+			$headers = getallheaders();
+			TabletDropDownEquipment::setClient($headers['X-Client']);
+			
+			$data = TabletDropDownEquipment::find()
+				->where(['UserUID' => $UserUID])
+				->orderBy('WCAbbrev')
 				->all();
 			
 			//send response
