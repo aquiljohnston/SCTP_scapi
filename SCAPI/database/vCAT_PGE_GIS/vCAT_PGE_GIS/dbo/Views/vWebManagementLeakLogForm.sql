@@ -1,12 +1,14 @@
 ﻿
 
+
+
 CREATE VIEW [dbo].[vWebManagementLeakLogForm]
 AS
 
 SELECT
 [aai].[AssetAddressIndicationUID] AS [AssetAddressIndicationUID],
-u.UserLANID AS [UserLANID],  -- TODO
-[aai].[FoundDateTime] AS [Date],
+CreatedUser.UserLANID AS [CreatorLANID],  -- TODO
+[aai].[FoundDateTime] AS [CreatedDate],
 [mg].FuncLocMap + '/' + [mg].FuncLocPlat AS [MapPlat],
 ir.surveytype [SurveyType],
 --[aai].[SurveyType],
@@ -36,9 +38,9 @@ AS [LeakNo],
 [aai].[SORLOther] AS [OtherLocationSurface],
 [aai].[Within5FeetOfBuildingType] AS [Within5FeetOfBuilding],
 [aai].[SuspectedCopperType] AS [SuspectCopper],
-[aai].[FoundBy] AS [InstFoundBy],
-[aai].[InstrumentTypeGradeByType] AS [GradeByInstType],
-[aai].[GradeBy] AS [InstGradeBy],
+LTRIM(RTRIM(ISNULL(Foundby.EquipmentType, 'V - Visual'))) AS [InstFoundBy],
+Left(LTRIM(RTRIM(ISNULL(Gradeby.EquipmentType, 'V - Visual'))), 1) AS [GradeByInstType],
+LTRIM(RTRIM(ISNULL(Gradeby.EquipmentType, 'V - Visual')))  AS [InstGradeBy],
 [aai].[ReadingGrade] AS [ReadingInPercentGas],
 [aai].[GradeType] AS [Grade],
 [aai].[InfoCodesType] AS [InfoCodes],
@@ -51,10 +53,20 @@ END AS [PotentialHCA],
 [aai].[HCADistributionPlanningEngineerUserUID] AS [DistPlanningEngineer],
 [aai].[HCAPipelineEngineerUserUID] AS [PipelineEngineer],
 ISNULL([aai].[Comments], '') AS [LocationRemarks],
+ISNULL(ApprovedUser.UserLANID, '') AS [ApproverLANID],
+aai.ApprovedDTLT [ApprovedDate],
+aai.Photo1,
+aai.Photo2,
+aai.Photo3,
+CASE WHEN aai.Latitude <> 0 THEN 1 ELSE 0 END [leakGPSIcon],
+CASE WHEN aa.Latitude <> 0 THEN 1 ELSE 0 END [addressGPSIcon],
 [aai].[LockedFlag] AS [LockFlag]
 FROM (SELECT * FROM [tgAssetAddressIndication] WHERE [ActiveFlag] = 1) aai
 Left JOIN (SELECT * FROM [tgAssetAddress] WHERE [ActiveFlag] = 1) aa ON [aai].[AssetAddressUID] = [aa].[AssetAddressUID]
 Left JOIN (SELECT * FROM [dbo].[rgMapGridLog] WHERE [ActiveFlag] = 1) mg ON [mg].[MapGridUID] = [aai].[MapGridUID]
-Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) u on aai.CreatedUserUID = u.UserUID
+Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) CreatedUser on aai.CreatedUserUID = CreatedUser.UserUID
+Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) ApprovedUser on aai.ApprovedByUserUID = ApprovedUser.UserUID
 left join (select * from [dbo].[tgAssetInspection] where ActiveFlag = 1) [ai] on [ai].AssetInspectionUID = aa.AssetInspectionUID
 Left Join (Select * From [dbo].[tInspectionRequest] where ActiveFlag = 1) ir on ir.InspectionRequestUID = [ai].InspectionRequestUID
+Left Join (Select * from [dbo].[tInspectionsEquipment] where ActiveFlag = 1) FoundBy on FoundBy.InspecitonEquipmentUID = aai.EquipmentFoundByUID
+Left Join (Select * from [dbo].[tInspectionsEquipment] where ActiveFlag = 1) GradeBy on GradeBy.InspecitonEquipmentUID = aai.EquipmentGradeByUID

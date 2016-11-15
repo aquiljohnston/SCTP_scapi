@@ -3,6 +3,8 @@
 
 
 
+
+
 CREATE PROCEDURE [dbo].[spWebManagementJSON_AssetAddressIndicationUpdate]
 (
       @JSON_Str VarChar(Max)
@@ -259,7 +261,7 @@ AS
 		RevisionComments,
 		@Revision, -- Revision,
 		1, --ActiveFlag,
-		StatusType,
+		'Reviewed' , --StatusType,
 		ManualMapPlat,
 		PipelineType,
 		SurveyType,
@@ -322,8 +324,8 @@ AS
 		OptionalData11,
 		OptionalData12,
 		ApprovedFlag,
-		ApprovedByUserUID,
-		ApprovedDTLT,
+		@UserUID, --ApprovedByUserUID,
+		@Datetime, --ApprovedDTLT,
 		SubmittedFlag,
 		SubmittedStatusType,
 		SubmittedUserUID,

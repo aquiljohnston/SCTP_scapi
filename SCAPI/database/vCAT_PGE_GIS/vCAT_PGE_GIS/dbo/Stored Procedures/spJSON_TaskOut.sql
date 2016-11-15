@@ -2,6 +2,7 @@
 
 
 
+
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -811,7 +812,9 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
+
 						
 					)
 					Values
@@ -841,6 +844,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 
 				END
@@ -882,7 +886,8 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
 					)
 					Values
 					(
@@ -911,6 +916,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 
 
@@ -952,7 +958,8 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
 					)
 					Values
 					(
@@ -981,6 +988,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 					
 				END
@@ -1020,7 +1028,8 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
 						
 					)
 					Values
@@ -1050,6 +1059,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 					
 				END
@@ -1091,7 +1101,8 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
 					)
 					Values
 					(
@@ -1120,6 +1131,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 					
 				END
@@ -1160,7 +1172,8 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
 
 					)
 					Values
@@ -1190,6 +1203,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 					
 				END
@@ -1230,7 +1244,8 @@ AS
 						SerialNumber,
 						TaskOutUID,
 						CreateDateTime,
-						MapAreaNumber
+						MapAreaNumber,
+						LockedFlag
 					)
 					Values
 					(
@@ -1259,6 +1274,7 @@ AS
 						,@INFTaskOutUID
 						,@SrcDTLT
 						,@AreaNumber
+						, 0
 					)
 
 
