@@ -48,7 +48,7 @@ class EquipmentController extends Controller
 			
 			$data = TabletDropDownEquipment::find()
 				->where(['UserUID' => $UserUID])
-				->orderBy('WCAbbrev')
+				->orderBy('MWC')
 				->all();
 			
 			//send response
