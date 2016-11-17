@@ -5,6 +5,7 @@
 
 
 
+
 CREATE PROCEDURE [dbo].[spWebManagementJSON_AssetAddressIndicationUpdate]
 (
       @JSON_Str VarChar(Max)
@@ -87,6 +88,7 @@ AS
 			, @Datetime datetime
 			, @Revision int
 			, @AssetAddressUID varchar(200)
+			, @ReturnVal Bit = 1
 
 		Select @Approved = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Approved'), '')
 		Select @HouseNo = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HouseNo'), '')
@@ -113,6 +115,9 @@ AS
 		Select @Datetime = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
 		Select @UserUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserUID'), '')
 
+Begin Try
+
+	Begin Transaction
 
 --Update Indication
 
@@ -565,6 +570,14 @@ AS
 		Grade1ReleaseDateTime
 	from tgAssetAddress where AssetAddressUID = @AssetAddressUID and Revision = @Revision - 1
 
+	Commit Transaction
+
+End Try
+Begin Catch
+	Rollback Transaction
+	Set @ReturnVal = 0
+End Catch
+
 /*******************************************************
 
    Last thing we do
@@ -575,3 +588,5 @@ AS
 Drop Table #JSON_Parse
 
 SET NOCOUNT OFF
+
+Select @ReturnVal as Succeeded
