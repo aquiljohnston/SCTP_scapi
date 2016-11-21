@@ -1330,34 +1330,7 @@ class DropdownController extends Controller
 
             //﻿ ddLHSurveyTypeSM
             $responseData['dropdowns']['ddLHSurveyTypeSM']= DropdownController::webDropdownQuery('ddLHSurveyTypeSM');
-
-            // TODO remove this once the sql view vDropDowns has data
-            if (empty($responseData['dropdowns']['ddLHSurveyTypeSM'])) {
-                $responseData['dropdowns']['ddLHSurveyTypeSM'] = [
-                    0 =>[
-                        'FieldDisplay'=>'Please Make Selection',
-                        'OutValue'=>''
-                    ],
-                    1 => [
-                        'FieldDisplay'=>'TR',
-                        'OutValue'=>'TR'
-                    ],
-                    2 => [
-                        'FieldDisplay'=>'LISA',
-                        'OutValue'=>'LISA'
-                    ],
-                    3 => [
-                        'FieldDisplay'=>'GAP',
-                        'OutValue'=>'GAP'
-                    ],
-                    4 => [
-                        'FieldDisplay'=>'FOV',
-                        'OutValue'=>'FOV'
-                    ]
-                ];
-
-            }
-
+            
             //﻿ ddLHSurveyMode
             $responseData['dropdowns']['ddLHSurveyMode']= DropdownController::webDropdownQuery('ddLHSurveyMode');
 
