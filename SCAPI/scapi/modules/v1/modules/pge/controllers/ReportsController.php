@@ -93,17 +93,16 @@ class ReportsController extends Controller {
 		//handle view based report
 		elseif ($reportType == 'View')
 		{
-			//TODO::  Update StartDate to SurveyDate when new views are implemented. ******************************
 			if ($startDate == null && $endDate != null)
 			{
-				$queryString ="SELECT * FROM " . $reportName . " WHERE StartDate = " . "'" . $endDate ."'";
+				$queryString ="SELECT * FROM " . $reportName . " WHERE SurveyDate = " . "'" . $endDate ."'";
 				
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();
 			}
 			elseif($startDate != null && $endDate != null)
 			{
-				$queryString ="SELECT * FROM " . $reportName . " WHERE StartDate BETWEEN " . "'" . $startDate ."'" . "AND" . "'" . $endDate . "'";
+				$queryString ="SELECT * FROM " . $reportName . " WHERE SurveyDate BETWEEN " . "'" . $startDate ."'" . "AND" . "'" . $endDate . "'";
 				
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();

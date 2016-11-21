@@ -1384,7 +1384,7 @@ class DropdownController extends Controller
             //$responseData['dropdowns']['ddInstrumentType']= DropdownController::webDropdownQuery('ddInstrumentType');
 
             //﻿﻿ddPipelineType
-            //$responseData['dropdowns']['ddPipelineType']= DropdownController::webDropdownQuery('ddPipelineType');
+            $responseData['dropdowns']['ddPipelineType']= DropdownController::webDropdownQuery('ddPipelineType');
 
             //﻿﻿ddSORLType
             $responseData['dropdowns']['ddSORLType']= DropdownController::webDropdownQuery('ddSORLType');
@@ -1432,7 +1432,7 @@ class DropdownController extends Controller
             $responseData['dropdowns']['routeNames']= [];
 
 
-
+Yii::trace(print_r($responseData['dropdowns']['ddPipelineType'],true));
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
