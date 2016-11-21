@@ -108,6 +108,13 @@ class ReportsController extends Controller {
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();
 			}
+			elseif($startDate == null && $endDate == null)
+			{
+				$queryString ="SELECT * FROM " . $reportName;
+				
+				$queryResults = $connection->createCommand($queryString)
+				->queryAll();
+			}
 		}
 		
 		//format response data
