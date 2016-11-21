@@ -8,6 +8,7 @@
 
 
 
+
 CREATE view [dbo].[vWebManagementEquipmentServices]
 AS
 Select 
@@ -28,7 +29,10 @@ wc.WorkCenter,
 mg.FuncLocMap + '/' + mg.FuncLocPlat [Map/Plat],
 [is].MapAreaNumber,
 [is].LockedFlag,
-u.UserLANID,
+u.UserLANID as CreatorLANID,
+[is].SrcDTLT as CreatedDate,
+[ua].[UserLANID] as ApproverLANID,
+[is].[ApprovedDTLT] as ApprovedDate,
 ir.SurveyType [SurveyFreq],
 CASE WHEN CHARINDEX('PIC', EquipmentModeType) > 0 
 	THEN 
@@ -38,7 +42,8 @@ CASE WHEN CHARINDEX('PIC', EquipmentModeType) > 0
 		END
 	ELSE ISNULL(EquipmentModeType, 'PlaceHolder')
 	END [SurveyType],
-[is].SurveyMode
+[is].SurveyMode,
+[is].ApprovedFlag as Approved
 
 from tInspectionService [is]
 Left Join (Select * from [dbo].[tInspectionsEquipment] where ActiveFlag = 1) [ie] on [is].InspectionEquipmentUID = [ie].InspecitonEquipmentUID
@@ -47,6 +52,7 @@ Left Join (select * from [dbo].[tgWindSpeed] where ActiveFlag = 1) ws_mid  on ws
 Left Join (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on [is].MapGridUID = mg.MapGridUID
 left Join (select * from [dbo].[rWorkCenter] where ActiveFlag = 1) wc on mg.FuncLocMWC = wc.WorkCenterAbbreviationFLOC
 left join (select * from UserTb where UserActiveFlag = 1) u on [is].CreatedUserUID = u.UserUID
+left join (select * from UserTb where UserActiveFlag = 1) ua on [is].[ApprovedByUserUID] = ua.UserUID
 Left join (select * from tInspectionRequest where ActiveFlag = 1) ir on ir.InspectionRequestUID = [is].InspectionRequestUID
 Where [is].ActiveFlag = 1 and [is].StatusType <> 'Deleted'
 

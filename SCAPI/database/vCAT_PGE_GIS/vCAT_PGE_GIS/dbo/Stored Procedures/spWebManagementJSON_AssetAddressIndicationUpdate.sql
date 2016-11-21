@@ -1,12 +1,4 @@
-﻿
-
-
-
-
-
-
-
-CREATE PROCEDURE [dbo].[spWebManagementJSON_AssetAddressIndicationUpdate]
+﻿CREATE PROCEDURE [dbo].[spWebManagementJSON_AssetAddressIndicationUpdate]
 (
       @JSON_Str VarChar(Max)
     
@@ -74,7 +66,7 @@ AS
 			, @FacilityType varchar(200)
 			, @InitialLeakSource varchar(200)
 			, @ReportedBy varchar(100)
-			, @DiscriptionReadLoc varchar(200)
+			, @DescriptionReadLoc varchar(200)
 			, @PavedWallToWall varchar(200)
 			, @SurfaceOverReadLoc varchar(200)
 			, @OtherLocationSurface varchar(200)
@@ -89,6 +81,7 @@ AS
 			, @Revision int
 			, @AssetAddressUID varchar(200)
 			, @ReturnVal Bit = 1
+			, @MasterLeakLogUID varchar(100)
 
 		Select @Approved = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Approved'), '')
 		Select @HouseNo = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HouseNo'), '')
@@ -100,7 +93,7 @@ AS
 		Select @FacilityType = ISNULL((Select StringValue From #JSON_Parse Where Name = 'FacilityType'), '')
 		Select @InitialLeakSource = ISNULL((Select StringValue From #JSON_Parse Where Name = 'InitialLeakSource'), '')
 		Select @ReportedBy = ISNULL((Select StringValue From #JSON_Parse Where Name = 'ReportedBy'), '')
-		Select @DiscriptionReadLoc = ISNULL((Select StringValue From #JSON_Parse Where Name = 'DiscriptionReadLoc'), '')
+		Select @DescriptionReadLoc = ISNULL((Select StringValue From #JSON_Parse Where Name = 'DescriptionReadLoc'), '')
 		Select @PavedWallToWall = ISNULL((Select StringValue From #JSON_Parse Where Name = 'PavedWallToWall'), '')
 		Select @SurfaceOverReadLoc = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SurfaceOverReadLoc'), '')
 		Select @OtherLocationSurface = ISNULL((Select StringValue From #JSON_Parse Where Name = 'OtherLocationSurface'), '')
@@ -124,7 +117,7 @@ Begin Try
 	Update tgAssetAddressIndication set ActiveFlag = 0 where AssetAddressIndicationUID = @AssetAddressIndicationUID and ActiveFlag = 1
 
 	Select @Revision = count(*) from tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID
-
+	SELECT @MasterLeakLogUID = MasterLeakLogUID FROM tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID
 	Insert Into tgAssetAddressIndication
 	(
 		AssetAddressIndicationUID,
@@ -266,7 +259,7 @@ Begin Try
 		RevisionComments,
 		@Revision, -- Revision,
 		1, --ActiveFlag,
-		'Reviewed' , --StatusType,
+		StatusType , --StatusType,
 		ManualMapPlat,
 		PipelineType,
 		SurveyType,
@@ -282,7 +275,7 @@ Begin Try
 		HouseNo,
 		Street1,
 		City,
-		@DiscriptionReadLoc, --DescriptionReadingLocation,
+		@DescriptionReadLoc, --DescriptionReadingLocation,
 		County,
 		CountyCode,
 		@FacilityType, --FacilityType,
@@ -366,7 +359,7 @@ Begin Try
 	from tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID and Revision = @Revision - 1
 
 
---Update AssestAddress
+--Update AssetAddress
 
 	Select @AssetAddressUID = AssetAddressUID from tgAssetAddressIndication where AssetAddressIndicationUID = @AssetAddressIndicationUID and ActiveFlag = 1
 
@@ -570,8 +563,13 @@ Begin Try
 		Grade1ReleaseDateTime
 	from tgAssetAddress where AssetAddressUID = @AssetAddressUID and Revision = @Revision - 1
 
+	
 	Commit Transaction
 
+	if(@ReturnVal = 1)
+	BEGIN
+		EXEC [spWebManagementLeakLogApproval] @AssetAddressIndicationUID, @UserUID
+	END
 End Try
 Begin Catch
 	Rollback Transaction

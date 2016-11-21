@@ -1,9 +1,6 @@
 ﻿
 
 
-
-
-
 CREATE VIEW [dbo].[vINF006] AS 
 
 SELECT 
@@ -32,8 +29,9 @@ SELECT
 
 ,CAST(mg.FLOC AS VARCHAR(30))									AS [FLOC]				
 ,CAST(wc.WorkCenterAbbreviation AS VARCHAR(8))					AS [MWC]				
-,CAST(wc.Division AS VARCHAR(10))								AS [DIV]	
-			
+--,CAST(wc.Division AS VARCHAR(10))								AS [DIV]				-- Convert this to the Division Code 2016-11-10
+,CAST(wc.DivisionCode AS VARCHAR(10))							AS [DIV]				-- New Added 2016-11-10
+
 ,CASE 
 	WHEN SUBSTRING(mg.FLOC,2,1) = 'T' THEN 'T' 
 	ELSE 'D'
@@ -65,7 +63,8 @@ SELECT
 ,CAST(ie.SerialNumber AS VARCHAR(25))							AS [GRD_SERAL_NO]		
 ,CAST(ind.ReadingGrade AS DECIMAL(8,3))							AS [PCT_GAS]
 ,CAST(ind.GradeType AS VARCHAR(2))								AS [GRADE]
-,CAST(ind.InfocodesType AS CHAR(1))								AS [INFO_CODE]
+,CAST(NULLIF(ind.InfocodesType,'Please Make Selection') AS CHAR(1))	AS [INFO_CODE] -- no FieldDisplay Please Make Selection
+
 ,CAST(ind.PotentialHCAType AS CHAR(1))							AS [HCA]				-- Y/N/NULL
 ,CAST(ind.Comments AS VARCHAR(100))								AS LOC_REMRK
 
