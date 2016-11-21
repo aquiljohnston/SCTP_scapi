@@ -1,10 +1,5 @@
 ﻿
 
-
-
-
-
-
 CREATE PROCEDURE [dbo].[spWebManagementJSON_InspectionServiceUpdate]
 (
       @JSON_Str VarChar(Max)
@@ -82,6 +77,12 @@ AS
 			,@CurrentWindSpeedStart float
 			,@CurrentWindSpeedMid float
 			,@ReturnVal bit = 1
+			,@MapAreaNumber varchar(10)
+			,@SurveyType varchar(25)
+			,@ApproverUID varchar(100)
+			,@ApprovedDatetime varchar(25)
+
+
 
 
 		Select @InspectionServiceUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'InspectionServicesUID'), '')
@@ -92,8 +93,13 @@ AS
 		Select @NumberOfServices = ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServices'), '')
 		Select @Hours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Hours'), '')
 		Select @Date = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
-		Select @SurveyorLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
-		Select @SupervisorUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
+		--Select @SurveyorLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
+		--Select @SupervisorUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
+		Select @MapAreaNumber = ISNULL((Select StringValue From #JSON_Parse Where Name = 'MapAreaNumber'), '')
+		Select @SurveyType = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SurveyType'), '')
+		Select @ApprovedDatetime = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
+		Select @ApproverUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserUID'), '')
+
 
 Begin Try
 
@@ -302,6 +308,7 @@ Begin Try
 		SourceID,
 		CreatedUserUID,
 		ModifiedUserUID,
+		SrcDTLT,
 		Revision,
 		ActiveFlag,
 		StatusType,
@@ -345,8 +352,9 @@ Begin Try
 		InspectionRequestUID,
 		InspectionEquipmentUID,
 		'WEB', --SourceID,
-		@SupervisorUID, --CreatedUserUID,
-		@SupervisorUID, --ModifiedUserUID,
+		CreatedUserUID, --CreatedUserUID,
+		@ApproverUID, --ModifiedUserUID,
+		getdate(),
 		@Revision, -- Revision,
 		1, --ActiveFlag,
 		'In Progress', --StatusType,
@@ -357,13 +365,13 @@ Begin Try
 		CalibrationVerificationFlag,
 		WindSpeedStart,
 		WindSpeedEnd,
-		EquipmentModeType,
+		@SurveyType, -- EquipmentModeType
 		@FeetOfMain, -- EstimatedFeet,
 		@NumberOfServices, -- EstimatedServices,
 		@Hours, -- EstimatedHours,
-		ApprovedFlag,
-		ApprovedByUserUID,
-		ApprovedDTLT,
+		1, --ApprovedFlag,
+		@ApproverUID, --ApprovedByUserUID,
+		@ApprovedDatetime, --ApprovedDTLT,
 		SubmittedFlag,
 		SubmittedStatusType,
 		SubmittedUserUID,
@@ -374,11 +382,11 @@ Begin Try
 		ResponseDTLT,
 		CompletedFlag,
 		CompletedDTLT,
-		SurveyMode,
+		@SurveyMode, --SurveyMode,
 		0, --PlaceHolderFlag,
 		@NewWindSpeedStartUID, -- WindSpeedStartUID,
 		@NewWindSpeedMidUID, -- WindSpeedMidUID,
-		MapAreaNumber,
+		@MapAreaNumber,
 		0, --LockedFlag,
 		TaskOutUID,
 		CreateDateTime
