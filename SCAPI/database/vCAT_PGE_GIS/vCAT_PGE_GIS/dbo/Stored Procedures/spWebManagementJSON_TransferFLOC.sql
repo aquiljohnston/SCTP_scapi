@@ -65,7 +65,8 @@ AS
 		Declare 
 			@MasterLeakLogUID varchar(100) 
 			,@CurrentFLOC varchar(100)
-			,@NewFLOC varchar(100)
+			,@NewFLOC  varchar(100)
+			,@NewFLOCWtihFreq varchar(150)
 			,@CurrentSurveyFreq varchar(20)
 			,@NewSurveyFreq varchar(20)
 			,@AdHocMode varchar(1)
@@ -94,20 +95,31 @@ AS
 
 		Select @MasterLeakLogUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'MasterLeakLogUID'), '')
 		Select @CurrentFLOC = ISNULL((Select StringValue From #JSON_Parse Where Name = 'CurrentFLOC'), '')
-		Select @NewFLOC = ISNULL((Select StringValue From #JSON_Parse Where Name = 'NewFLOC'), '')
+		Select @NewFLOCWtihFreq = ISNULL((Select StringValue From #JSON_Parse Where Name = 'NewFLOC'), '')
 		Select @CurrentSurveyFreq = ISNULL((Select StringValue From #JSON_Parse Where Name = 'CurrentSurveyFreq'), '')
 		Select @NewSurveyFreq = ISNULL((Select StringValue From #JSON_Parse Where Name = 'NewSurveyFreq'), '')
 		Select @AdHocMode = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AdHocMode'), '')
 		Select @Date = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
 		Select @UserUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserCreatedUID'), '')
 
+		IF CHARINDEX('-', @NewFLOCWtihFreq) > 0
+		BEGIN
 
+			Set @NewFLOC = Left(@NewFLOCWtihFreq, CHARINDEX('-', @NewFLOCWtihFreq) - 2)
+
+		END
+		ELSE
+		BEGIN
+
+			Set @NewFLOC = @NewFLOCWtihFreq
+
+		END
 		
 BEGIN TRY
 
 	BEGIN Transaction
 		
-		IF @AdHocMode = '1'
+		IF @AdHocMode = '1' and CHARINDEX('-', @NewFLOCWtihFreq) = 0
 		BEGIN
 
 			Select @UserName = UserName from UserTb where UserUID = @UserUID

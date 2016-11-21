@@ -4,6 +4,7 @@
 
 
 
+
 CREATE FUNCTION [dbo].[fnTabletIR](	@UserUID varchar(100) )
 
 
@@ -25,6 +26,7 @@ RETURNS @TempIR TABLE
 	,AssignedWorkQueueUID varchar(100)
 	,AssignedDate datetime
 	,SortOrder int
+	,Within3Days bit
 )
 
 AS
@@ -57,6 +59,7 @@ Select * From fnTabletIR('User_57590026_20160822135947_Postman') Order by SortOr
 	, ISNULL(awq.AssignedWorkQueueUID, '') [AssignedWorkQueueUID]
 	, awq.AssignedDate
 	,CASE WHEN u.UserName is NULL THEN 99 else 0 END SortOrder
+	,CASE WHEN DATEDIFF(dd, Cast(getdate() as date), ir.ComplianceDueDate) < 4 THEN 1 ELSE 0 END [Within3Days]
 	FROM [dbo].[rgMapGridLog] mg
 	INNER JOIN [dbo].[tInspectionRequest] ir ON ir.MapGridUID = mg.MapGridUID
 	INNER JOIN [dbo].[rWorkCenter] wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC

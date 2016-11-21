@@ -1319,6 +1319,36 @@ class DropdownController extends Controller
             ->orderBy('SortSeq','FieldDisplay')
             ->all();
     }
+    public function actionGetServiceMainFormDropdowns() {
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            DropDowns::setClient($headers['X-Client']);
+
+            $responseData['dropdowns'] = [];
+
+            //﻿ ddLHSurveyTypeSM
+            $responseData['dropdowns']['ddLHSurveyTypeSM']= DropdownController::webDropdownQuery('ddLHSurveyTypeSM');
+            
+            //﻿ ddLHSurveyMode
+            $responseData['dropdowns']['ddLHSurveyMode']= DropdownController::webDropdownQuery('ddLHSurveyMode');
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $responseData;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
 
     public function actionGetWebMgmtLeakLogFormDropdowns() {
         try
