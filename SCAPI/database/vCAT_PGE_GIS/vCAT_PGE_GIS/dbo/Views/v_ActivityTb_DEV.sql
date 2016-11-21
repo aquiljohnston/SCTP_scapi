@@ -1,4 +1,5 @@
-﻿CREATE VIEW [dbo].[v_ActivityTb_DEV] AS 
+﻿
+CREATE VIEW [dbo].[v_ActivityTb_DEV] AS 
 SELECT 
       [ActivityUID]
      ,[ActivityCreatedUserUID]
@@ -10,4 +11,4 @@ SELECT
      ,[ActivityCreateDate]
      ,[ActivityLatitude]
      ,[ActivityLongitude]
-FROM [ActivityTb]
+FROM [dbo].[ActivityTb]

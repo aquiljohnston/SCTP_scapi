@@ -91,6 +91,10 @@ class PgeRbacController extends Controller
 		$submitLeak = $auth->createPermission('submitLeak');
 		$submitLeak->description = 'Submit a Leak to SAP';
 		$auth->add($submitLeak);
+		//add "approveLeak" permission
+		$approveLeak = $auth->createPermission('approveLeak');
+		$approveLeak->description = 'Approve a Leak';
+		$auth->add($approveLeak);
 		//add "editLeak" permission
 		$editLeak = $auth->createPermission('editLeak');
 		$editLeak->description = 'Edit a Leak';
@@ -109,9 +113,18 @@ class PgeRbacController extends Controller
 		$viewMapStampDetail = $auth->createPermission('viewMapStampDetail');
 		$viewMapStampDetail->description = 'View Map Stamp Detail Screen';
 		$auth->add($viewMapStampDetail);
-		//add "editMapStamp" permission
-		$editMapStamp = $auth->createPermission('editMapStamp');
-		$editMapStamp->description = 'Edit a Map Stamp Record';
+		//add "editMapStampDetail" permission
+		$editMapStampDetail = $auth->createPermission('editMapStampDetail');
+		$editMapStampDetail->description = 'Edit a Map Stamp Detail Record';
+		$auth->add($editMapStampDetail);
+		//add "viewMapStampDetailModal"
+		$viewMapStampDetailModal = $auth->createPermission('viewMapStampDetailModal');
+		$viewMapStampDetailModal->description = 'View the Modal on the Map Stamp Detail Screen';
+		$auth->add($viewMapStampDetailModal);
+		//add "submitMapStamp"
+		$submitMapStamp = $auth->createPermission('submitMapStamp');
+		$submitMapStamp->description = 'Submit a Map Stamp';
+		$auth->add($submitMapStamp);
 		
 		//AOC Permissions//
 		//add "viewAOC" permission
@@ -159,8 +172,11 @@ class PgeRbacController extends Controller
 		$auth->addChild($supervisor, $unassign);
 		$auth->addChild($supervisor, $addSurveyor);
 		$auth->addChild($supervisor, $submitLeak);
+		$auth->addChild($supervisor, $approveLeak);
 		$auth->addChild($supervisor, $editLeak);
 		$auth->addChild($supervisor, $transferFLOC);
+		$auth->addChild($supervisor, $editMapStampDetail);
+		$auth->addChild($supervisor, $submitMapStamp);
 		
 		//add "Administrator" role
 		$administrator = $auth->createRole('Administrator');
@@ -172,6 +188,7 @@ class PgeRbacController extends Controller
 		$auth->addChild($administrator, $unassign);
 		$auth->addChild($administrator, $addSurveyor);
 		$auth->addChild($administrator, $submitLeak);
+		$auth->addChild($administrator, $approveLeak);
 		$auth->addChild($administrator, $transferFLOC);
 		
 		

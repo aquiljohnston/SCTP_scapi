@@ -8,6 +8,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementMasterLeakLog]
 AS
 Select 
@@ -40,7 +41,7 @@ Left Join (Select MasterLeakLogUID, Sum(EstimatedHours) [Hours], Sum(EstimatedFe
 		[Services] on mll.MasterLeakLogUID = Services.MasterLeakLogUID
 Join (select * from UserTb where UserActiveFlag = 1) U
 	on MLL.CreatedUserUID = u.UserUID
-Join (select * from tInspectionRequest where ActiveFlag = 1) IR on IR.InspectionRequestUID = MLL.InspectionRequestLogUID
+Left Join (select * from tInspectionRequest where ActiveFlag = 1) IR on IR.InspectionRequestUID = MLL.InspectionRequestLogUID
 Join (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1 and StatusType = 'Active') mg
 	on MLL.MapGridUID = mg.MapGridUID
 Join (Select * from rWorkCenter where ActiveFlag = 1)

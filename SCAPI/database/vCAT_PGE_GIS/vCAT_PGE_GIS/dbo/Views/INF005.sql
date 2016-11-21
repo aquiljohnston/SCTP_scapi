@@ -1,4 +1,5 @@
 ﻿
+
 CREATE VIEW [dbo].[INF005] AS 
 
 SELECT
@@ -50,13 +51,13 @@ SELECT
 -- SELECT *
 -- SELECT Count(*) 
 
-FROM [tEquipmentLog] el 
+FROM [dbo].[tEquipmentLog] el 
 LEFT JOIN (
 			SELECT CLB1.* 
-			FROM [tInspectionsEquipment] CLB1 -- WHERE CAST(SrcDTLT AS DATE) = '2016-11-07' ORDER BY SerialNumber, SrvDTLT  -- 36
+			FROM [dbo].[tInspectionsEquipment] CLB1 -- WHERE CAST(SrcDTLT AS DATE) = '2016-11-07' ORDER BY SerialNumber, SrvDTLT  -- 36
 				INNER JOIN (
 								SELECT EquipmentLogUID, MIN(SrcDTLT) AS FirstDateTime 
-								FROM [tInspectionsEquipment] 
+								FROM [dbo].[tInspectionsEquipment] 
 								WHERE Revision = 0
 								GROUP BY EquipmentLogUID
 							) CLB2 
@@ -65,14 +66,14 @@ LEFT JOIN (
 			WHERE CLB1.ActiveFlag = 1
 		) CLB ON el.EquipmentLogUID = CLB.EquipmentLogUID
 
-LEFT  JOIN [UserTb] svor 
+LEFT  JOIN [dbo].[UserTb] svor 
 	ON	svor.UserUID = clb.CreatedUserUID
 	AND svor.UserActiveFlag = 1
 
-LEFT  JOIN [rWorkCenter] wc
+LEFT  JOIN [dbo].[rWorkCenter] wc
 	ON wc.WorkCenterAbbreviation = clb.MWC
 
-LEFT  JOIN [UserTb] sup 
+LEFT  JOIN [dbo].[UserTb] sup 
 	ON	sup.UserUID = wc.SupervisorUID
 	AND sup.UserActiveFlag = 1
 	

@@ -32,6 +32,7 @@ class MasterLeakLogController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'create' => ['post'],
+					'delete' => ['put'],
                 ],
             ];
 		return $behaviors;	
@@ -158,5 +159,121 @@ class MasterLeakLogController extends Controller
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
+	}
+	
+	public function actionDelete()
+	{
+		//TODO add try catch
+		
+		//get UID of user making request
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		$UserUID = BaseActiveController::getUserFromToken()->UserUID;
+		
+		$headers = getallheaders();
+		MasterLeakLog::setClient($headers['X-Client']);
+		
+		$put = file_get_contents("php://input");
+		$data = json_decode($put, true);
+		
+		//save json to archive
+		BaseActiveController::archiveJson($put, 'MasterLeakLogDelete', $UserUID, $headers['X-Client']);
+		
+		$leakLogCount = count($data['LeakLogs']);
+		
+		$responseData = [];
+		
+		for($i = 0 ; $i < $leakLogCount; $i++)
+		{
+			$services = [];
+			//handle associated inspection services
+			$inspectionServices = InspectionService::find()
+				->where(['MasterLeakLogUID' => $data['LeakLogs'][$i]])
+				->andWhere(['ActiveFlag' => 1])
+				->andWhere(['<>','StatusType', 'Deleted'])
+				->all();
+				
+			$inspectionServiceCount = count($inspectionServices);
+			$inspectionServiceProcessedCount = 0;
+			
+			for ($j = 0; $j < $inspectionServiceCount; $j++)
+			{
+				//$previousInspectionService = new InspectionService();
+				$previousInspectionService = $inspectionServices[$j];
+				$newInspectionService = new InspectionService();
+				//$previousInspectionService->attributes = $inspectionServices[s$j];
+				//$newInspectionService->attributes = $inspectionServices[$j];
+				$newInspectionService->attributes = $inspectionServices[$j]->attributes;
+				//deactivate previous
+				$previousInspectionService->ActiveFlag = 0;
+				//increment revision
+				$newInspectionService->Revision = $previousInspectionService->Revision + 1;
+				//set satus to deleted
+				$newInspectionService->StatusType = "Deleted";
+				if($previousInspectionService->update())
+				{
+					if($newInspectionService->save())
+					{
+						$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
+							'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
+							'Success' => 1];
+					}
+					else
+					{
+						$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
+							'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
+							'Success' => 0];
+					}
+				}
+				else
+				{
+					$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
+							'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
+							'Success' => 0];
+				}
+			}
+			
+			//handle mll
+			$previousMLL = MasterLeakLog::find()
+				->where(['MasterLeakLogUID' => $data['LeakLogs'][$i]])
+				->andWhere(['ActiveFlag' => 1])
+				->andWhere(['<>','StatusType', 'Deleted'])
+				->one();
+				
+			if ($previousMLL != null)
+			{
+				$newMLL = new MasterLeakLog();
+				$newMLL->attributes = $previousMLL->attributes;
+				//deactivate previous record
+				$previousMLL->ActiveFlag = 0;
+				//increment revision
+				$newMLL->Revision = $previousMLL->Revision + 1;
+				//set satus to deleted
+				$newMLL->StatusType = 'Deleted';
+				if($previousMLL->update())
+				{
+					if($newMLL->save())
+					{
+						$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'Success'=>1, 'Services' => $services];
+					}
+					else
+					{
+						$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'Success'=>0, 'Services' => $services];
+					}
+				}
+				else
+				{
+					$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'Success'=>0, 'Services' => $services];
+				}
+			}
+			else
+			{
+				$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'Success'=>1, 'Services' => $services];
+			}
+		}
+		//send response
+		$response = Yii::$app->response;
+		$response->format = Response::FORMAT_JSON;
+		$response->data = $responseData;
+		return $response;
 	}
 }

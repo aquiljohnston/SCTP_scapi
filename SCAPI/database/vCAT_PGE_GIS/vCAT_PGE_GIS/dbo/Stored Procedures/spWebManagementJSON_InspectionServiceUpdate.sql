@@ -4,6 +4,7 @@
 
 
 
+
 CREATE PROCEDURE [dbo].[spWebManagementJSON_InspectionServiceUpdate]
 (
       @JSON_Str VarChar(Max)
@@ -80,6 +81,7 @@ AS
 			,@Revision int
 			,@CurrentWindSpeedStart float
 			,@CurrentWindSpeedMid float
+			,@ReturnVal bit = 1
 
 
 		Select @InspectionServiceUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'InspectionServicesUID'), '')
@@ -92,6 +94,10 @@ AS
 		Select @Date = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
 		Select @SurveyorLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
 		Select @SupervisorUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
+
+Begin Try
+
+	Begin Transaction
 
 --Get the current wind speed UIDs
 
@@ -194,7 +200,7 @@ AS
 		END
 
 
-		IF @WindSpeedMidUID = 'NA'
+		IF @WindSpeedMid = 'NA'
 		BEGIN
 			Set @NewWindSpeedMidUID = ''
 		END
@@ -378,6 +384,17 @@ AS
 		CreateDateTime
 	from tInspectionService where InspectionServicesUID = @InspectionServiceUID and Revision = @Revision - 1
 
+
+	Commit Transaction
+
+End Try
+Begin Catch
+	
+	Rollback Transaction
+	set @ReturnVal = 0
+
+End Catch
+
 /*******************************************************
 
    Last thing we do
@@ -388,3 +405,5 @@ AS
 Drop Table #JSON_Parse
 
 SET NOCOUNT OFF
+	
+Select @ReturnVal as Succeeded
