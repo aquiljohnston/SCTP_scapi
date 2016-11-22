@@ -84,11 +84,28 @@ class ReportsController extends Controller {
 		
 		//handle stored procedure based report
 		if ($reportType == 'SP')
-		{			
-			$queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
-			
-			$queryResults = $connection->createCommand($queryString)
-			->queryAll();
+		{	
+			if($startDate == null && $endDate != null)
+			{
+				$queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
+				
+				$queryResults = $connection->createCommand($queryString)
+				->queryAll();
+			}
+			elseif ($startDate != null && $endDate != null)
+			{
+				$queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
+				
+				$queryResults = $connection->createCommand($queryString)
+				->queryAll();
+			}
+			elseif($startDate == null && $endDate == null)
+			{
+				$queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'";
+				
+				$queryResults = $connection->createCommand($queryString)
+				->queryAll();
+			}
 		}
 		//handle view based report
 		elseif ($reportType == 'View')
