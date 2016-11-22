@@ -47,10 +47,14 @@ use Yii;
  * @property string $SubmittedStatusType
  * @property string $SubmittedUserUID
  * @property string $SubmittedDTLT
+ * @property integer $ReturnedFlag
  * @property string $ReturnedFromPGEStatusType
  * @property string $RetrunedFromPGEDTLT
  * @property integer $CompletedFlag
  * @property string $CompletedDTLT
+ * @property string $InspectionType
+ * @property string $ActualStartDate
+ * @property integer $AdhocFlag
  */
 class InspectionRequest extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -69,9 +73,9 @@ class InspectionRequest extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             [['InspectionRequestUID', 'CreatedUserUID', 'ModifiedUserUID'], 'required'],
-            [['InspectionRequestUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'StatusType', 'PipelineType', 'SurveyType', 'LsNtfNo', 'OrderNo', 'MapID', 'Wall', 'Plat', 'MWC', 'FLOC', 'InspectionFrequencyType', 'ReturnComments', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ReturnedFromPGEStatusType'], 'string'],
-            [['ProjectID', 'Revision', 'ActiveFlag', 'PrevServ', 'PrevFtOfMain', 'ReturnFlag', 'FileCount', 'ApprovedFlag', 'SubmittedFlag', 'CompletedFlag'], 'integer'],
-            [['CreateDTLT', 'ModifiedDTLT', 'ComplianceDueDate', 'ScheduledStartDate', 'ScheduledCompleteDate', 'ReleaseDate', 'ApprovedDTLT', 'SubmittedDTLT', 'RetrunedFromPGEDTLT', 'CompletedDTLT'], 'safe']
+            [['InspectionRequestUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'StatusType', 'PipelineType', 'SurveyType', 'LsNtfNo', 'OrderNo', 'MapID', 'Wall', 'Plat', 'MWC', 'FLOC', 'InspectionFrequencyType', 'ReturnComments', 'ApprovedByUserUID', 'SubmittedStatusType', 'SubmittedUserUID', 'ReturnedFromPGEStatusType', 'InspectionType'], 'string'],
+            [['ProjectID', 'Revision', 'ActiveFlag', 'PrevServ', 'PrevFtOfMain', 'ReturnFlag', 'FileCount', 'ApprovedFlag', 'SubmittedFlag', 'ReturnedFlag', 'CompletedFlag', 'AdhocFlag'], 'integer'],
+            [['CreateDTLT', 'ModifiedDTLT', 'ComplianceDueDate', 'ScheduledStartDate', 'ScheduledCompleteDate', 'ReleaseDate', 'ApprovedDTLT', 'SubmittedDTLT', 'RetrunedFromPGEDTLT', 'CompletedDTLT', 'ActualStartDate'], 'safe']
         ];
     }
 
@@ -121,10 +125,14 @@ class InspectionRequest extends \app\modules\v1\models\BaseActiveRecord
             'SubmittedStatusType' => 'Submitted Status Type',
             'SubmittedUserUID' => 'Submitted User Uid',
             'SubmittedDTLT' => 'Submitted Dtlt',
+            'ReturnedFlag' => 'Returned Flag',
             'ReturnedFromPGEStatusType' => 'Returned From Pgestatus Type',
             'RetrunedFromPGEDTLT' => 'Retruned From Pgedtlt',
             'CompletedFlag' => 'Completed Flag',
             'CompletedDTLT' => 'Completed Dtlt',
+            'InspectionType' => 'Inspection Type',
+            'ActualStartDate' => 'Actual Start Date',
+            'AdhocFlag' => 'Adhoc Flag',
         ];
     }
 }

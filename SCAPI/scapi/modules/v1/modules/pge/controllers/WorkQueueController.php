@@ -221,7 +221,7 @@ class WorkQueueController extends Controller
 			$mapGrid  = TabletMapGrids::find()
 				->where(['MapGridsUID'=> $workQueue['MapGridUID']])
 				->one();
-				
+			
 			//create new sudo inspection request
 			$sudoIR = new InspectionRequest();
 			
@@ -233,13 +233,15 @@ class WorkQueueController extends Controller
 			$sudoIR->ModifiedUserUID = $userUID;
 			$sudoIR->CreateDTLT = BaseActiveController::getDate();
 			$sudoIR->ModifiedDTLT = BaseActiveController::getDate();
-			$sudoIR->Comments = "Sudo Inspection Request For An Ad Hoc Record";
-			//$sudoIR->SurveyType = $workQueue->SurveyType; //not sure if this is sent from tablet
+			$sudoIR->Comments = "Sudo Inspection Request For An Ad Hoc Record"; 
 			$sudoIR->MapID = $mapGrid['FuncLocMap'] . "-" . $mapGrid['FuncLocPlat'];
 			$sudoIR->Wall = $mapGrid['FuncLocMap'];
 			$sudoIR->Plat = $mapGrid['FuncLocPlat'];
 			$sudoIR->MWC = $mapGrid['FuncLocMWC'];
 			$sudoIR->FLOC = $mapGrid['FLOC'];
+			$sudoIR->StatusType = 'In Progress';
+			$sudoIR->AdhocFlag = 1;
+			$sudoIR->SurveyType = $workQueue['SurveyType'];
 			
 			//save sudo IR
 			if($sudoIR->save())
