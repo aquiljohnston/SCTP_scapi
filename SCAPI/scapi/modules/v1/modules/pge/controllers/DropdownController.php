@@ -1430,9 +1430,7 @@ class DropdownController extends Controller
 
             //﻿routeNames
             $responseData['dropdowns']['routeNames']= [];
-
-
-Yii::trace(print_r($responseData['dropdowns']['ddPipelineType'],true));
+            
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
