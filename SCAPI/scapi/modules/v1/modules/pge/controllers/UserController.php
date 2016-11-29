@@ -621,6 +621,7 @@ class UserController extends BaseActiveController
 			//execute query with paging
 			$users = $userQuery->offset($offset)
                 ->limit($listPerPage)
+                ->orderBy('WorkCenter','LastName')
 				->all();
 			
 			//pass paging and user data into response array
