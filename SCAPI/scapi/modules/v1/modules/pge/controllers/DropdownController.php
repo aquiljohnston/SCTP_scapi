@@ -1350,7 +1350,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetWebMgmtLeakLogFormDropdowns() {
+    public function actionGetWebMgmtLeakLogFormDropdowns($mapGridUid) {
         try
         {
             //set db target
@@ -1428,9 +1428,17 @@ class DropdownController extends Controller
             // TODO find a better way that selecting all the cities if there are a lot of cities
             $responseData['dropdowns']['cityList']= CityCounty::find()->select(['City'])->all();
 
+//            $mapGridUid = 'MapGrid_852695586_20160824220014_System';
             //﻿routeNames
             $responseData['dropdowns']['routeNames']= [];
-            
+            if (!empty($mapGridUid)) {
+                $responseData['dropdowns']['routeNames']= TabletRouteName::find()
+                    ->select(['RouteName'])
+                    ->where(['MapGridUID'=>$mapGridUid])
+                    ->orderBy('RouteName')
+                    ->all();
+            }
+//            Yii::trace(PHP_EOL.PHP_EOL.PHP_EOL.'------------'.$mapGridUid.PHP_EOL.PHP_EOL);
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
