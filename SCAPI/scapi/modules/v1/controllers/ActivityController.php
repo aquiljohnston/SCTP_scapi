@@ -173,20 +173,6 @@ class ActivityController extends BaseActiveController
 						//update response json with new activity data
 						$data["activity"][$i] = $savedActivity;
 						
-						//handle pge inspection
-						if (array_key_exists("AssetAddress", $activityArray[$i]))
-						{
-							$savedAssetAddress = AssetAddressController::assetAddressParse($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
-							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
-						}
-
-						//handle pge wind speed entries
-						if (array_key_exists("WindSpeed", $activityArray[$i]))
-						{
-							$savedWindSpeed = WindSpeedController::create($activityArray[$i]["WindSpeed"], $headers['X-Client'], $createdBy);
-							$data["activity"][$i]["WindSpeed"] = $savedWindSpeed;
-						}
-						
 						//handle pge equipment calibration
 						if (array_key_exists("EquipmentCalibration", $activityArray[$i]))
 						{
@@ -200,7 +186,20 @@ class ActivityController extends BaseActiveController
 							$lockedWorkQueue = WorkQueueController::lockRecords($activityArray[$i]["WorkQueue"], $headers['X-Client'], $createdBy);
 							$data["activity"][$i]["WorkQueue"] = $lockedWorkQueue;
 						}
-
+						
+						//handle pge wind speed entries
+						if (array_key_exists("WindSpeed", $activityArray[$i]))
+						{
+							$savedWindSpeed = WindSpeedController::create($activityArray[$i]["WindSpeed"], $headers['X-Client'], $createdBy);
+							$data["activity"][$i]["WindSpeed"] = $savedWindSpeed;
+						}
+						
+						//handle pge inspection
+						if (array_key_exists("AssetAddress", $activityArray[$i]))
+						{
+							$savedAssetAddress = AssetAddressController::assetAddressParse($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
+							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
+						}
 
 						if (array_key_exists('TaskOutMaps', $activityArray[$i])) {
 						    Yii::trace("Array key TaskOutMaps Exists!");
@@ -208,7 +207,6 @@ class ActivityController extends BaseActiveController
                         } else {
 						    Yii::trace("Array key TaskOutMaps does not exist!");
                         }
-
 
 						//change path back to ct db
 						Activity::setClient(BaseActiveController::urlPrefix());
