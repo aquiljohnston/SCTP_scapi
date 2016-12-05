@@ -18,6 +18,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
+use app\modules\v1\modules\pge\models\WebManagementDropDownTracker;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
 //assigned
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssigned;
@@ -81,6 +82,9 @@ class DropdownController extends Controller
 					'survey-route-name-dropdown' => ['post'],
                     'get-web-mgmt-leak-log-form-dropdowns' =>['get'],
                     'get-adhoc-frequency-dropdown' => ['get'],
+                    'get-tracker-division-dropdown' => ['get'],
+                    'get-tracker-workcenter-dropdown' => ['get'],
+                    'get-tracker-surveyor-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -1455,4 +1459,116 @@ class DropdownController extends Controller
         }
     }
     /////////// WebManagement LeakLog form modal dropdowns end //////////
+
+    /////////// Start WebManagement Tracker dropdowns //////////////
+    public function actionGetTrackerDivisionDropdown() {
+        try{
+
+            $headers = getallheaders();
+            WebManagementDropDownTracker::setClient($headers['X-Client']);
+
+            $values = WebManagementDropDownTracker::find()
+                ->select(['Division'])
+                ->where(['not', ['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['SurveyorInspector' => null]])
+                ->distinct()
+                ->all();
+
+            $namePairs = [
+                null => "Select...",
+            ];
+            foreach ($values as $value) {
+                $namePairs[$value["Division"]] = $value["Division"];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+
+        } catch(ForbiddenHttpException $e)  {
+
+            throw new ForbiddenHttpException;
+
+        } catch(\Exception $e) {
+
+            throw new \yii\web\HttpException(400);
+
+        }
+    }
+
+    public function actionGetTrackerWorkCenterDropdown($division) {
+        try{
+
+            $headers = getallheaders();
+            WebManagementDropDownTracker::setClient($headers['X-Client']);
+
+            $values = WebManagementDropDownTracker::find()
+                ->select(['WorkCenter'])
+                ->where(['Division' => $division])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['SurveyorInspector' => null]])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["WorkCenter"],
+                    "name" => $value["WorkCenter"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetTrackerSurveyorDropdown($division, $workCenter) {
+        try{
+
+            $headers = getallheaders();
+            WebManagementDropDownTracker::setClient($headers['X-Client']);
+
+            $values = WebManagementDropDownTracker::find()
+                ->select(['SurveyorInspector'])
+                ->where(['Division' => $division])
+                ->andWhere(['WorkCenter' => $workCenter])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['SurveyorInspector' => null]])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["SurveyorInspector"],
+                    "name" => $value["SurveyorInspector"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $results;
+
+            return $response;
+        }  catch(ForbiddenHttpException $e)  {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+    /////////// End WebManagement Tracker dropdowns //////////////
+
 }
