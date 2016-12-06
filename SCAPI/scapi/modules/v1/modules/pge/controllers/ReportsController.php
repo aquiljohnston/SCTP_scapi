@@ -40,15 +40,15 @@ class ReportsController extends Controller {
         Report::setClient($headers['X-Client']);
 
         $result = Report::find()
-            ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, Parm, ReportType')
+            ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, Parm, ReportType, ActiveFlag')
             ->where(['ActiveFlag' => 1])
             ->asArray()
             ->all();
 
-        $result['reports'] = $result;
+        $data['reports'] = $result;
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
-        $response->data = $result;
+        $response->data = $data;
         return $response;
     }
     /*
