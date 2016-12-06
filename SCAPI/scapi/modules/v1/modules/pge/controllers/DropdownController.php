@@ -18,9 +18,10 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
-use app\modules\v1\modules\pge\models\WebManagementDropDownTracker;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
 use app\modules\v1\modules\pge\models\WebManagementMapStampDropDown;
+use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocationDropDown;
+use app\modules\v1\modules\pge\models\WebManagementTrackerHistoryDropDown;
 //assigned
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssigned;
 //AOC todo combine views
@@ -85,9 +86,12 @@ class DropdownController extends Controller
                     'get-adhoc-frequency-dropdown' => ['get'],
                     'get-map-stamp-division-dropdown' => ['get'],
                     'get-map-stamp-workcenter-dropdown' => ['get'],
-                    'get-tracker-division-dropdown' => ['get'],
-                    'get-tracker-workcenter-dropdown' => ['get'],
-                    'get-tracker-surveyor-dropdown' => ['get'],
+                    'get-tracker-ra-division-dropdown' => ['get'],
+                    'get-tracker-ra-workcenter-dropdown' => ['get'],
+                    'get-tracker-ra-surveyor-dropdown' => ['get'],
+                    'get-tracker-h-division-dropdown' => ['get'],
+                    'get-tracker-h-workcenter-dropdown' => ['get'],
+                    'get-tracker-h-surveyor-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -1536,18 +1540,18 @@ class DropdownController extends Controller
     }
     /////////// End WebManagement MapStamp dropdowns //////////////
 
-    /////////// Start WebManagement Tracker dropdowns //////////////
-    public function actionGetTrackerDivisionDropdown() {
+    /////////// Start WebManagement Tracker Recent Activity dropdowns //////////////
+    public function actionGetTrackerRaDivisionDropdown() {
         try{
 
             $headers = getallheaders();
-            WebManagementDropDownTracker::setClient($headers['X-Client']);
+            WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
 
-            $values = WebManagementDropDownTracker::find()
+            $values = WebManagementTrackerCurrentLocationDropDown::find()
                 ->select(['Division'])
                 ->where(['not', ['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['SurveyorInspector' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
                 ->distinct()
                 ->all();
 
@@ -1575,18 +1579,18 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerWorkCenterDropdown($division) {
+    public function actionGetTrackerRaWorkCenterDropdown($division) {
         try{
 
             $headers = getallheaders();
-            WebManagementDropDownTracker::setClient($headers['X-Client']);
+            WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
 
-            $values = WebManagementDropDownTracker::find()
+            $values = WebManagementTrackerCurrentLocationDropDown::find()
                 ->select(['WorkCenter'])
                 ->where(['Division' => $division])
                 ->andWhere(['not' ,['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['SurveyorInspector' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
                 ->distinct()
                 ->all();
 
@@ -1610,27 +1614,27 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerSurveyorDropdown($division, $workCenter) {
+    public function actionGetTrackerRaSurveyorDropdown($division, $workCenter) {
         try{
 
             $headers = getallheaders();
-            WebManagementDropDownTracker::setClient($headers['X-Client']);
+            WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
 
-            $values = WebManagementDropDownTracker::find()
-                ->select(['SurveyorInspector'])
+            $values = WebManagementTrackerCurrentLocationDropDown::find()
+                ->select(['Surveyor'])
                 ->where(['Division' => $division])
                 ->andWhere(['WorkCenter' => $workCenter])
                 ->andWhere(['not' ,['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['SurveyorInspector' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
                 ->distinct()
                 ->all();
 
             $results = [];
             foreach ($values as $value) {
                 $results[] = [
-                    "id" => $value["SurveyorInspector"],
-                    "name" => $value["SurveyorInspector"]
+                    "id" => $value["Surveyor"],
+                    "name" => $value["Surveyor"]
                 ];
             }
 
@@ -1645,6 +1649,116 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-    /////////// End WebManagement Tracker dropdowns //////////////
+    /////////// End WebManagement Tracker Recent Activity dropdowns //////////////
 
+    /////////// Start WebManagement Tracker History dropdowns //////////////
+    public function actionGetTrackerHDivisionDropdown() {
+        try{
+
+            $headers = getallheaders();
+            WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementTrackerHistoryDropDown::find()
+                ->select(['Division'])
+                ->where(['not', ['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->distinct()
+                ->all();
+
+            $namePairs = [
+                null => "Select...",
+            ];
+            foreach ($values as $value) {
+                $namePairs[$value["Division"]] = $value["Division"];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+
+        } catch(ForbiddenHttpException $e)  {
+
+            throw new ForbiddenHttpException;
+
+        } catch(\Exception $e) {
+
+            throw new \yii\web\HttpException(400);
+
+        }
+    }
+
+    public function actionGetTrackerHWorkCenterDropdown($division) {
+        try{
+
+            $headers = getallheaders();
+            WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementTrackerHistoryDropDown::find()
+                ->select(['WorkCenter'])
+                ->where(['Division' => $division])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["WorkCenter"],
+                    "name" => $value["WorkCenter"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetTrackerHSurveyorDropdown($division, $workCenter) {
+        try{
+
+            $headers = getallheaders();
+            WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementTrackerHistoryDropDown::find()
+                ->select(['Surveyor'])
+                ->where(['Division' => $division])
+                ->andWhere(['WorkCenter' => $workCenter])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["Surveyor"],
+                    "name" => $value["Surveyor"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $results;
+
+            return $response;
+        }  catch(ForbiddenHttpException $e)  {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+    /////////// End WebManagement Tracker History dropdowns //////////////
 }
