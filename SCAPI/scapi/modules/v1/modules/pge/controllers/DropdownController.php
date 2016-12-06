@@ -12,6 +12,7 @@ use yii\web\Response;
 use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use app\modules\v1\controllers\PermissionsController;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
@@ -422,12 +423,22 @@ class DropdownController extends Controller
 		try{
 			//db target
 			$headers = getallheaders();
-			WebManagementDropDownRoles::setClient($headers['X-Client']);
 
-			//todo permission check
-			$data = WebManagementDropDownRoles::find()
-                ->all();
-            $namePairs = [null => "Select..."];
+			if(PermissionsController::can('userCreateAdmin'))
+			{
+				WebManagementDropDownRoles::setClient($headers['X-Client']);
+				$data = WebManagementDropDownRoles::find()
+					->all();
+			}
+			else
+			{	
+				WebManagementDropDownRoles::setClient($headers['X-Client']);		
+				$data = WebManagementDropDownRoles::find()
+					->where(['not', ['RoleName' => 'Administrator']])
+					->all();
+			}
+            
+			$namePairs = [null => "Select..."];
             $dataSize = count($data);
 
             for($i=0; $i < $dataSize; $i++)
