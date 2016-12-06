@@ -19,6 +19,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
+use app\modules\v1\modules\pge\models\WebManagementMapStampDropDown;
 //assigned
 use app\modules\v1\modules\pge\models\WebManagementDropDownAssigned;
 //AOC todo combine views
@@ -81,6 +82,8 @@ class DropdownController extends Controller
 					'survey-route-name-dropdown' => ['post'],
                     'get-web-mgmt-leak-log-form-dropdowns' =>['get'],
                     'get-adhoc-frequency-dropdown' => ['get'],
+                    'get-map-stamp-division-dropdown' => ['get'],
+                    'get-map-stamp-workcenter-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -1455,4 +1458,77 @@ class DropdownController extends Controller
         }
     }
     /////////// WebManagement LeakLog form modal dropdowns end //////////
+
+    /////////// Start WebManagement MapStamp dropdowns //////////////
+    public function actionGetMapStampDivisionDropdown() {
+        try{
+
+            $headers = getallheaders();
+            WebManagementMapStampDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementMapStampDropDown::find()
+                ->select(['Division'])
+                ->where(['not', ['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->distinct()
+                ->all();
+
+            $namePairs = [
+                null => "Select...",
+            ];
+            foreach ($values as $value) {
+                $namePairs[$value["Division"]] = $value["Division"];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+
+        } catch(ForbiddenHttpException $e)  {
+
+            throw new ForbiddenHttpException;
+
+        } catch(\Exception $e) {
+
+            throw new \yii\web\HttpException(400);
+
+        }
+    }
+
+    public function actionGetMapStampWorkCenterDropdown($division) {
+        try{
+
+            $headers = getallheaders();
+            WebManagementMapStampDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementMapStampDropDown::find()
+                ->select(['WorkCenter'])
+                ->where(['Division' => $division])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->distinct()
+                ->all();
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    "id" => $value["WorkCenter"],
+                    "name" => $value["WorkCenter"]
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+    /////////// End WebManagement MapStamp dropdowns //////////////
 }
