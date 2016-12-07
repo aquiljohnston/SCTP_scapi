@@ -176,27 +176,43 @@ class WorkQueueController extends Controller
 	//helper method for actionLock to handle a record of DispatchMethod: Self Dispatched
 	public static function lockSelfDispatched($workQueue, $client, $userUID)
 	{
+		//NOTE: any existing self dispatch work queue should have come up from the tablet and the lock flag should always be 1.
+		//So I'm not checking this flag on my find. If something changes and this flag is not 1 this could cause an issue, and we would need
+		//to implement a check on the flag and an update if a record exist with a 0 flag.
 		try
 		{
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
-			//new AssignedWorkQueue model
-			$newRecord = new AssignedWorkQueue;
-			$newRecord->attributes = $workQueue;
-			//additionalFields
-			$newRecord->CreatedUserUID = $userUID;
-			$newRecord->ModifiedUserUID = $userUID;
-			$newRecord->LockedFlag = 1;
-			$newRecord->AssignedUserUID = $userUID;
+			//check if AssignedWorkQueue exist
+			$previousWorkQueue = AssignedWorkQueue::find()
+				->where(['AssignedWorkQueueUID' => $workQueue['AssignedWorkQueueUID']])
+				->andWhere(['ActiveFlag' => 1])
+				->one();
 			
-			if($newRecord->save())
+			if ($previousWorkQueue != null)
 			{
-				return $newRecord;
+				return $previousWorkQueue;
 			}
 			else
 			{
-				return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+				//new AssignedWorkQueue model
+				$newRecord = new AssignedWorkQueue;
+				$newRecord->attributes = $workQueue;
+				//additionalFields
+				$newRecord->CreatedUserUID = $userUID;
+				$newRecord->ModifiedUserUID = $userUID;
+				$newRecord->LockedFlag = 1;
+				$newRecord->AssignedUserUID = $userUID;
+				
+				if($newRecord->save())
+				{
+					return $newRecord;
+				}
+				else
+				{
+					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+				}
 			}
 		}
         catch(ForbiddenHttpException $e)
@@ -217,71 +233,136 @@ class WorkQueueController extends Controller
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
-			//get map data based on map gridUID
-			$mapGrid  = TabletMapGrids::find()
-				->where(['MapGridsUID'=> $workQueue['MapGridUID']])
+			//check if SudoIR exist
+			$previousSudoIR = InspectionRequest::find()
+				->where(['InspectionRequestUID' => $workQueue['AssignedInspectionRequestUID']])
+				->andWhere(['ActiveFlag' => 1])
 				->one();
 			
-			//create new sudo inspection request
-			$sudoIR = new InspectionRequest();
+			//flags for checks
+			$sudoIRSaved = false;
 			
-			//pass data to sudo IR
-			$sudoIR->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
-			$sudoIR->SourceID = $workQueue['SourceID'];
-			$sudoIR->MapGridUID = $workQueue['MapGridUID'];
-			$sudoIR->CreatedUserUID = $userUID;
-			$sudoIR->ModifiedUserUID = $userUID;
-			$sudoIR->CreateDTLT = BaseActiveController::getDate();
-			$sudoIR->ModifiedDTLT = BaseActiveController::getDate();
-			$sudoIR->Comments = "Sudo Inspection Request For An Ad Hoc Record"; 
-			$sudoIR->MapID = $mapGrid['FuncLocMap'] . "-" . $mapGrid['FuncLocPlat'];
-			$sudoIR->Wall = $mapGrid['FuncLocMap'];
-			$sudoIR->Plat = $mapGrid['FuncLocPlat'];
-			$sudoIR->MWC = $mapGrid['FuncLocMWC'];
-			$sudoIR->FLOC = $mapGrid['FLOC'];
-			$sudoIR->StatusType = 'In Progress';
-			$sudoIR->AdhocFlag = 1;
-			$sudoIR->SurveyType = $workQueue['SurveyType'];
-			
-			//save sudo IR
-			if($sudoIR->save())
+			if($previousSudoIR == null)
+			{			
+				//get map data based on map gridUID
+				$mapGrid  = TabletMapGrids::find()
+					->where(['MapGridsUID'=> $workQueue['MapGridUID']])
+					->one();
+				
+				//create new sudo inspection request
+				$sudoIR = new InspectionRequest();
+				
+				//pass data to sudo IR
+				$sudoIR->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
+				$sudoIR->SourceID = $workQueue['SourceID'];
+				$sudoIR->MapGridUID = $workQueue['MapGridUID'];
+				$sudoIR->CreatedUserUID = $userUID;
+				$sudoIR->ModifiedUserUID = $userUID;
+				$sudoIR->CreateDTLT = BaseActiveController::getDate();
+				$sudoIR->ModifiedDTLT = BaseActiveController::getDate();
+				$sudoIR->Comments = "Sudo Inspection Request For An Ad Hoc Record"; 
+				$sudoIR->MapID = $mapGrid['FuncLocMap'] . "-" . $mapGrid['FuncLocPlat'];
+				$sudoIR->Wall = $mapGrid['FuncLocMap'];
+				$sudoIR->Plat = $mapGrid['FuncLocPlat'];
+				$sudoIR->MWC = $mapGrid['FuncLocMWC'];
+				$sudoIR->FLOC = $mapGrid['FLOC'];
+				$sudoIR->StatusType = 'In Progress';
+				$sudoIR->AdhocFlag = 1;
+				$sudoIR->SurveyType = $workQueue['SurveyType'];
+				//save sudo IR
+				if($sudoIR->save())
+				{
+					$sudoIRSaved = true;
+				}
+			}
+			else
 			{
-				//get asset UID based on map grid
-				$asset = Asset::find()
-					->select('AssetUID')
-					->where(['MapGridUID' => $workQueue['MapGridUID']])
+				$sudoIRSaved = true;
+			}
+			
+			//check IR
+			if($sudoIRSaved)
+			{
+				//check if AssetInspection exist
+				$previousAssetInspection = AssetInspection::find()
+					->where(['AssetInspectionUID' => $workQueue['AssetInspectionUID']])
 					->andWhere(['ActiveFlag' => 1])
 					->one();
-					
-				$assetInspection = new AssetInspection;
-				$assetInspection->AssetInspectionUID = $workQueue['AssetInspectionUID'];
-				$assetInspection->AssetUID = $asset->AssetUID;
-				$assetInspection->MapGridUID = $workQueue['MapGridUID'];
-				$assetInspection->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
-				$assetInspection->SourceID = $workQueue['SourceID'];
-				$assetInspection->CreatedUserUID = $userUID;
-				$assetInspection->ModifiedUserUID = $userUID;
 				
-				if($assetInspection->save())
+				$assetInspectionSaved = false;
+				
+				if($previousAssetInspection == null)
 				{
-					//update for missing fields
-					//new AssignedWorkQueue model
-					$newRecord = new AssignedWorkQueue;
-					$newRecord->attributes = $workQueue;
-					//additionalFields
-					$newRecord->CreatedUserUID = $userUID;
-					$newRecord->ModifiedUserUID = $userUID;
-					$newRecord->LockedFlag = 1;
-					$newRecord->AssignedUserUID = $userUID;
+					//get asset UID based on map grid
+					$asset = Asset::find()
+						->select('AssetUID')
+						->where(['MapGridUID' => $workQueue['MapGridUID']])
+						->andWhere(['ActiveFlag' => 1])
+						->one();
+						
+					$assetInspection = new AssetInspection;
+					$assetInspection->AssetInspectionUID = $workQueue['AssetInspectionUID'];
+					$assetInspection->AssetUID = $asset->AssetUID;
+					$assetInspection->MapGridUID = $workQueue['MapGridUID'];
+					$assetInspection->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
+					$assetInspection->SourceID = $workQueue['SourceID'];
+					$assetInspection->CreatedUserUID = $userUID;
+					$assetInspection->ModifiedUserUID = $userUID;
 					
-					if($newRecord->save())
+					if($assetInspection->save())
 					{
-						return $newRecord;
+						$assetInspectionSaved = true;
+					}
+				}
+				else{
+					$assetInspectionSaved = true;
+				}
+				
+				if($assetInspectionSaved)
+				{
+					//check if AssignedWorkQueue exist
+					$previousAssignedWorkQueue = AssignedWorkQueue::find()
+						->where(['AssignedWorkQueueUID' => $workQueue['AssignedWorkQueueUID']])
+						->andWhere(['ActiveFlag' => 1])
+						->one();
+						
+					$previousAssignedWorkQueueSaved = false;
+					$newAssignedWorkQueueSaved = false;
+						
+					if($previousAssignedWorkQueue == null)
+					{
+						//update for missing fields
+						//new AssignedWorkQueue model
+						$assignedWorkQueue = new AssignedWorkQueue;
+						$assignedWorkQueue->attributes = $workQueue;
+						//additionalFields
+						$assignedWorkQueue->CreatedUserUID = $userUID;
+						$assignedWorkQueue->ModifiedUserUID = $userUID;
+						$assignedWorkQueue->LockedFlag = 1;
+						$assignedWorkQueue->AssignedUserUID = $userUID;
+						
+						if($assignedWorkQueue->save())
+						{
+							$newAssignedWorkQueueSaved = true;
+						}
+					}
+					else{
+						$previousAssignedWorkQueueSaved = true;
+					}
+					
+					if($newAssignedWorkQueueSaved)
+					{
+						return $assignedWorkQueue;
+					}
+					elseif($previousAssignedWorkQueueSaved)
+					{
+						return $previousAssignedWorkQueue;
 					}
 					else
 					{
 						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'LockedFlag'=>0];
 					}
+					
 				}
 				else
 				{
