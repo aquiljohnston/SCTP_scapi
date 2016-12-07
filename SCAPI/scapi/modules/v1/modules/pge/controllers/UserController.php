@@ -458,7 +458,7 @@ class UserController extends BaseActiveController
 	* @returns json body of the user data
 	* @throws \yii\web\HttpException
 	*/	
-	public function actionView($LANID)
+	public function actionView($UID)
 	{
 		try
 		{
@@ -470,7 +470,7 @@ class UserController extends BaseActiveController
 			WebManagementUsers::setClient($headers['X-Client']);
 		
 			$user = WebManagementUsers::find()
-				->where(['UserLANID' => $LANID])
+				->where(['UserUID' => $UID])
 				->asArray()
 				->all();
 				
