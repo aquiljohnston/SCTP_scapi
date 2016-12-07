@@ -49,23 +49,34 @@ class WindSpeedController extends Controller
 				$windSpeedCount = (count($windSpeedArray));
 				for ($i = 0; $i < $windSpeedCount; $i++)
 				{
-					//new WindSpeed model
-					$windSpeed = new WindSpeed();
-					//pass data to model
-					$windSpeed->attributes = $windSpeedArray[$i];
-					//additional fields
-					$windSpeed->CreatedUserUID = $userUID;
-					$windSpeed->ModifiedUserUID = $userUID;
-					
-					//save model
-					if($windSpeed->save())
+					$previousWindSpeed = WindSpeed::find()
+						->where(['WindSpeedUID' => $windSpeedArray[$i]['WindSpeedUID']])
+						->andWhere(['ActiveFlag' => 1])
+						->one();
+					if($previousWindSpeed == null)	
 					{
-						//add to response array
-						$savedData[] = $windSpeed;
+						//new WindSpeed model
+						$windSpeed = new WindSpeed();
+						//pass data to model
+						$windSpeed->attributes = $windSpeedArray[$i];
+						//additional fields
+						$windSpeed->CreatedUserUID = $userUID;
+						$windSpeed->ModifiedUserUID = $userUID;
+						
+						//save model
+						if($windSpeed->save())
+						{
+							//add to response array
+							$savedData[] = $windSpeed;
+						}
+						else
+						{
+							$savedData[] = 'Failed to Save Wind Speed Record';
+						}
 					}
 					else
 					{
-						$savedData[] = 'Failed to Save Wind Speed Record';
+						$savedData[] = $previousWindSpeed;
 					}
 				}
 			}
