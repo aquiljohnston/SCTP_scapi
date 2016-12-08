@@ -84,6 +84,7 @@ class LoginController extends Controller
 			$authArray = ArrayHelper::toArray($auth);
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
+			$authArray['UserUID'] = $user->UserUID;
 			
 			//add auth token to response
 			$response->data = $authArray;
