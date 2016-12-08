@@ -94,26 +94,42 @@ class UserController extends BaseActiveController
 	{		
 		try
 		{
-			$headers = getallheaders();
-			
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			PermissionsController::requirePermission('userCreate');
 			
-			// UID of current user that is creating new user
-			$userCreatedUID = self::getUserFromToken()->UserUID;
-			
-			//create response
-			$response = Yii::$app->response;
-			
-			//options for bcrypt
-			$options = [
-				'cost' => 12,
-			];
+			//get headers
+			$headers = getallheaders();
 			
 			//read the post input (use this technique if you have no post variable name):
 			$post = file_get_contents("php://input");
 			//decode json post input as php array:
 			$data = json_decode($post, true);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//check if a user exist with the desired LANID
+			PGEUser::setClient($headers['X-Client']);
+			$existingUser = PGEUser::find()
+				->where(['UserLANID' =>  $data['UserLANID']])
+				->all();
+			
+			if($existingUser != null)
+			{
+				$response->setStatusCode(400);
+				$response->data = 'UserLANID already exist.';
+				return $response;
+			}
+
+			// UID of current user that is creating new user
+			SCUser::setClient(BaseActiveController::urlPrefix());
+			$userCreatedUID = self::getUserFromToken()->UserUID;
+			
+			//options for bcrypt
+			$options = [
+				'cost' => 12,
+			];
 			
 			$reportingGroups = $data['ReportingGroups'];
 			
@@ -288,18 +304,36 @@ class UserController extends BaseActiveController
 	{
 		try
 		{
-			$headers = getallheaders();
-			
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			PermissionsController::requirePermission('userUpdate');	
 			
-			$put = file_get_contents("php://input");
-			$data = json_decode($put, true);
+			$headers = getallheaders();
 			
-			$reportingGroups = $data['ReportingGroups'];
+			$put = file_get_contents("php://input");
+						
+			yii::trace('UUPB - User Update Put Body: ' . $put);
+			
+			$data = json_decode($put, true);
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
+			
+			//check if a different user exist with the desired LANID
+			PGEUser::setClient($headers['X-Client']);
+			$existingUser = PGEUser::find()
+				->where(['UserLANID' =>  $data['UserLANID']])
+				->andWhere(['not', ['UserUID' => $UID]])
+				->all();
+			
+			if($existingUser != null)
+			{
+				$response->setStatusCode(400);
+				$response->data = 'UserLANID already exist.';
+				return $response;
+			}
+			
+			//get reporting groups from put data
+			$reportingGroups = $data['ReportingGroups'];
 			
 			//get user model to be updated
 			SCUser::setClient(BaseActiveController::urlPrefix());
