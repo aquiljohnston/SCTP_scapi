@@ -14,6 +14,7 @@ use app\modules\v1\modules\pge\models\InspectionRequest;
 use app\modules\v1\modules\pge\models\TabletMapGrids;
 use app\modules\v1\modules\pge\models\AssetInspection;
 use app\modules\v1\modules\pge\models\Asset;
+use app\modules\v1\modules\pge\models\DropDowns;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
@@ -252,6 +253,13 @@ class WorkQueueController extends Controller
 				//create new sudo inspection request
 				$sudoIR = new InspectionRequest();
 				
+				//get inspection frequency type
+				$frequencyType = DropDowns::find()
+					->select('FieldValue')
+					->where(['FilterName' => 'ddSurveyFrequencyTR'])
+					->andWhere(['FieldDisplay' => $workQueue['SurveyType']])
+					->one();
+				
 				//pass data to sudo IR
 				$sudoIR->InspectionRequestUID = $workQueue['AssignedInspectionRequestUID'];
 				$sudoIR->SourceID = $workQueue['SourceID'];
@@ -269,6 +277,7 @@ class WorkQueueController extends Controller
 				$sudoIR->StatusType = 'In Progress';
 				$sudoIR->AdhocFlag = 1;
 				$sudoIR->SurveyType = $workQueue['SurveyType'];
+				$sudoIR->InspectionFrequencyType = $frequencyType->FieldValue;
 				//save sudo IR
 				if($sudoIR->save())
 				{
