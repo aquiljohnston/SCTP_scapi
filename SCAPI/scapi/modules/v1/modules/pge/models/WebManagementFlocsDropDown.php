@@ -19,7 +19,7 @@ class WebManagementFlocsDropDown extends \app\modules\v1\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'vWebManagementDivisionWorkCenterFLOCWithIR';
+        return 'vWebManagementDivisionWorkCenterFLOC';
     }
     //
     //    /**
@@ -40,8 +40,7 @@ class WebManagementFlocsDropDown extends \app\modules\v1\models\BaseActiveRecord
         return [
             "FLOC" => "FLOC",
             "Division" => "Division",
-            "WorkCenter" => "WorkCenter",
-            "SurveyFreq" => "SurveyFreq"
+            "WorkCenter" => "WorkCenter"
         ];
     }
 }
