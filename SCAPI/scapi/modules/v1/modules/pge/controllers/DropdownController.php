@@ -13,6 +13,7 @@ use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v1\controllers\PermissionsController;
+use app\modules\v1\modules\pge\models\WebManagementFlocsDropDown;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
@@ -20,6 +21,7 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
+use app\modules\v1\modules\pge\models\WebManagementFlocsWithIRDropDown;
 use app\modules\v1\modules\pge\models\WebManagementMapStampDropDown;
 use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocationDropDown;
 use app\modules\v1\modules\pge\models\WebManagementTrackerHistoryDropDown;
@@ -63,6 +65,7 @@ class DropdownController extends Controller
                     'get-device-id-dropdown' => ['get'],
                     'get-reporting-group-dropdown' => ['get'],
                     'get-role-dropdown' => ['get'],
+                    'get-floc-work-center-dropdown' => ['get'],
                     'get-user-work-center-dropdown' => ['get'],
                     'get-user-home-work-center-dropdown' => ['get'],
 					'get-dispatch-work-center-dropdown' => ['get'],
@@ -291,6 +294,51 @@ class DropdownController extends Controller
         }
     }
 
+    public function actionGetFlocWorkCenterDropdown($adHoc) {
+		try{
+			//db target
+			$headers = getallheaders();
+
+            if($adHoc == 1)
+            {
+                WebManagementFlocsDropDown::setClient($headers['X-Client']);
+                $data = WebManagementFlocsDropDown::find()
+                    ->select('WorkCenter')
+                    ->distinct()
+                    ->all();
+            }
+            else
+            {
+                WebManagementFlocsWithIRDropDown::setClient($headers['X-Client']);
+                //todo permission check
+                $data = WebManagementFlocsWithIRDropDown::find()
+                    ->select('WorkCenter')
+                    ->distinct()
+                    ->all();
+            }
+			$namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
+            }
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
 	//dispatch, assigned
 	public function actionGetUserWorkCenterDropdown() {
 		try{
@@ -439,13 +487,13 @@ class DropdownController extends Controller
 					->all();
 			}
 			else
-			{	
-				WebManagementDropDownRoles::setClient($headers['X-Client']);		
+			{
+				WebManagementDropDownRoles::setClient($headers['X-Client']);
 				$data = WebManagementDropDownRoles::find()
 					->where(['not', ['RoleName' => 'Administrator']])
 					->all();
 			}
-            
+
 			$namePairs = [null => "Select..."];
             $dataSize = count($data);
 
@@ -1352,7 +1400,7 @@ class DropdownController extends Controller
 
             //﻿ ddLHSurveyTypeSM
             $responseData['dropdowns']['ddLHSurveyTypeSM']= DropdownController::webDropdownQuery('ddLHSurveyTypeSM');
-            
+
             //﻿ ddLHSurveyMode
             $responseData['dropdowns']['ddLHSurveyMode']= DropdownController::webDropdownQuery('ddLHSurveyMode');
 

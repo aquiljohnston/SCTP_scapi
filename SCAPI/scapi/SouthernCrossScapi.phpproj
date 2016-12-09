@@ -156,12 +156,13 @@
     <Compile Include="modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementLeakLogDropDown.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementEquipmentServices.php" />
-    <Compile Include="modules\v1\modules\pge\models\WebManagementFlocsDropDown.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementFlocsWithIRDropDown.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementLeaks.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementMapStampDetail.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementMasterLeakLog.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementOQStatus.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementUsers.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementFlocsDropDown.php" />
     <Compile Include="modules\v1\modules\pge\models\WindSpeed.php" />
     <Compile Include="modules\v1\modules\pge\Module.php" />
     <Compile Include="modules\v1\modules\scana\Module.php" />

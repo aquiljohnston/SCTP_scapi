@@ -3,6 +3,7 @@
 namespace app\modules\v1\controllers;
 
 use app\modules\v1\modules\pge\models\WebManagementLeakLogDropDown;
+use app\modules\v1\modules\pge\models\WebManagementFlocsWithIRDropDown;
 use app\modules\v1\modules\pge\models\WebManagementFlocsDropDown;
 use Yii;
 use app\authentication\TokenAuth;
@@ -224,11 +225,11 @@ class DropdownController extends Controller
         try{
 
             $headers = getallheaders();
-            WebManagementFlocsDropDown::setClient($headers['X-Client']);
 
             if($isAdhoc == 0)
             {
-                $values = WebManagementFlocsDropDown::find()
+                WebManagementFlocsWithIRDropDown::setClient($headers['X-Client']);
+                $values = WebManagementFlocsWithIRDropDown::find()
                     ->select(['FLOC', 'SurveyFreq'])
                     ->where(['WorkCenter' => $workcenter])
                     ->andWhere(['not' ,['SurveyFreq' => '']])
@@ -237,8 +238,9 @@ class DropdownController extends Controller
             }
             else
             {
+                WebManagementFlocsDropDown::setClient($headers['X-Client']);
                 $values = WebManagementFlocsDropDown::find()
-                   ->select(['FLOC', 'SurveyFreq'])
+                   ->select(['FLOC'])
                    ->where(['WorkCenter' => $workcenter])
                    ->distinct()
                    ->all();
@@ -246,7 +248,7 @@ class DropdownController extends Controller
             $results = [];
             foreach ($values as $value) {
                 $surveyType = 'Unknown';
-                if($value['SurveyFreq'] != '')
+                if($isAdhoc == 0 && $value['SurveyFreq'] != '')
                 {
                     $surveyType = $value['SurveyFreq'];
                 }
