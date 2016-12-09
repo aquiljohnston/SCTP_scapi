@@ -25,7 +25,9 @@ class TrackerController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'get' => ['get']
+                    'get' => ['get'],
+                    'get-recent-activity' => ['get'],
+                    'get-history' => ['get']
                 ],  
             ];
 		return $behaviors;	
@@ -153,4 +155,161 @@ class TrackerController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+
+    public function actionGetRecentActivity($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $page=1, $perPage=25)
+    {
+        try{
+
+            $headers = getallheaders();
+
+// TODO change the condition when we know hwere to get the data from
+            if (false && $division && $workCenter) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $query = WebManagementTrackerCurrentLocation::find();
+                $query->where(['Division' => $division]);
+                $query->andWhere(["WorkCenter" => $workCenter]);
+
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor" => $surveyor]);
+                }
+
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', 'Date', $search],
+                        ['like', 'Surveyor', $search],
+                        ['like', 'WorkCenter', $search]
+                        // TODO add the rest
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $countQuery = clone $query;
+
+                /* page index is 0 based */
+                $page = max($page-1,0);
+                $totalCount = $countQuery->count();
+                $pages = new Pagination(['totalCount' => $totalCount]);
+                $pages->pageSizeLimit = [1, 100];
+                $pages->setPageSize($perPage);
+                $pages->setPage($page,true);
+                $offset = $pages->getOffset();//$perPage * ($page - 1);
+                $limit = $pages->getLimit();
+
+                $query->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC]);
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->all();
+
+            } else {
+                $pages = new Pagination(['totalCount' => 0]);
+                $pages->pageSizeLimit = [1, 100];
+                $pages->setPage(0);
+                $pages->setPageSize($perPage);
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+            $data['pages'] = $pages;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistory($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $page=1, $perPage=25)
+    {
+        try{
+
+            $headers = getallheaders();
+
+            // TODO change the condition when we know hwere to get the data from
+            if (false && $division && $workCenter) {
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $query = WebManagementTrackerHistory::find();
+                $query->where(['Division' => $division]);
+                $query->andWhere(["WorkCenter" => $workCenter]);
+
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor" => $surveyor]);
+                }
+
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', 'Date', $search],
+                        ['like', 'Surveyor', $search],
+                        ['like', 'WorkCenter', $search]
+                        // TODO add the rest
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $countQuery = clone $query;
+
+                /* page index is 0 based */
+                $page = max($page-1,0);
+                $totalCount = $countQuery->count();
+                $pages = new Pagination(['totalCount' => $totalCount]);
+                $pages->pageSizeLimit = [1, 100];
+                $pages->setPageSize($perPage);
+                $pages->setPage($page,true);
+                $offset = $pages->getOffset();//$perPage * ($page - 1);
+                $limit = $pages->getLimit();
+
+                $query->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC]);
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->all();
+
+            } else {
+                $pages = new Pagination(['totalCount' => 0]);
+                $pages->pageSizeLimit = [1, 100];
+                $pages->setPage(0);
+                $pages->setPageSize($perPage);
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+            $data['pages'] = $pages;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
 }
