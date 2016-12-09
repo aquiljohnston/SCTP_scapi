@@ -9,6 +9,7 @@
 namespace app\modules\v1\modules\pge\controllers;
 use app\modules\v1\modules\pge\models\AssetAddressIndication;
 use app\modules\v1\modules\pge\models\WebManagementLeakLogForm;
+use app\modules\v1\modules\pge\models\WebManagementLeakLogFormValidation;
 use app\modules\v1\modules\pge\models\WebManagementMasterLeakLog;
 use app\modules\v1\modules\pge\models\WebManagementLeaks;
 use app\modules\v1\modules\pge\models\WebManagementEquipmentServices;
@@ -102,33 +103,58 @@ class LeakLogController extends BaseActiveController {
         try
 		{
             $headers = getallheaders();
-            WebManagementMasterLeakLog::setClient($headers['X-Client']);
+            WebManagementLeakLogForm::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
 			$data = json_decode($put, true);
             $passed = 0;
             $failed = 0;
+            $invalidEntries = [];
+            $errors = [];
             $status = 'Unknown';
             foreach ($data['keylist'] as $indicationUID) {
-                $command =  WebManagementMasterLeakLog::getDb()->createCommand("EXEC spWebManagementLeakLogApproval @AddressIndicationUID=:AddressIndicationUID, @ApproverUID=:ApproverUID");
-                $command->bindParam(":AddressIndicationUID", $indicationUID);
-                $command->bindParam(":ApproverUID", $data['user']);
-                $value = $command->queryAll();
-                if($value[0]['Succeeded'] == 1)
-                {
-                    $passed++;
+                $llRecord = WebManagementLeakLogForm::find()
+                    ->where(['AssetAddressIndicationUID' => $indicationUID])
+                    ->one();
+
+                if ($llRecord) {
+                    $llModel = new WebManagementLeakLogFormValidation($llRecord->toArray());
+
+                    if ($llModel->validate()) {
+
+                        $command =  WebManagementLeakLogForm::getDb()->createCommand("EXEC spWebManagementLeakLogApproval @AddressIndicationUID=:AddressIndicationUID, @ApproverUID=:ApproverUID");
+                        $command->bindParam(":AddressIndicationUID", $indicationUID);
+                        $command->bindParam(":ApproverUID", $data['user']);
+                        $value = $command->queryOne();
+
+                        if($value['Succeeded'] == 1)
+                        {
+                            $passed++;
+                        }
+                        else
+                        {
+                            $failed++;
+                        }
+                        $status = $value['StatusType'];
+                        Yii::trace(print_r($value,true));
+                    } else {
+                        $invalidEntries[] = $indicationUID;
+                        $errors[$indicationUID] = $llModel->errors;
+                    }
+//                    Yii::trace(print_r($llModel->toArray(),true));
+
                 }
-                else
-                {
-                    $failed++;
-                }
-                $status = $value[0]['StatusType'];
             }
 
             $result = [];
             $result['Passed'] = $passed;
             $result['Failed'] = $failed;
             $result['StatusType'] = $status;
+            $result['InvalidEntries'] = $invalidEntries;
+            $result['Errors'] = $errors;
+//            Yii::trace(print_r($result,true));
+//            Yii::trace(print_r($errors,true));
+
             $response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $result;
