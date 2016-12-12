@@ -517,8 +517,8 @@ class UserController extends BaseActiveController
                     ->asArray()
                     ->all();
                 $processedReportingGroups = [];
-                foreach($reportingGroupsJoins as $rGJ) {
-                    $processedReportingGroups[] = $rGJ['ReportingGroupUID'];
+                foreach($reportingGroupsJoins as $reportingGroupJoin) {
+                    $processedReportingGroups[] = $reportingGroupJoin['ReportingGroupUID'];
                 }
                 // TODO: find way to assign reporting groups
                 $user['ReportingGroups'] = $processedReportingGroups;
@@ -531,8 +531,8 @@ class UserController extends BaseActiveController
 		}
 		catch(\Exception $e)  
 		{
-			//throw new \yii\web\HttpException(400);
-            throw $e;
+			throw new \yii\web\HttpException(400);
+            //throw $e;
 		}
 	}
 	
