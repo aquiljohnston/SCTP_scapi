@@ -4,7 +4,8 @@ namespace app\modules\v1\controllers;
 
 use app\modules\v1\modules\pge\models\WebManagementLeakLogDropDown;
 use app\modules\v1\modules\pge\models\WebManagementFlocsWithIRDropDown;
-use app\modules\v1\modules\pge\models\WebManagementFlocsDropDown;
+use app\modules\v1\modules\pge\models\WebManagementDivisionWorkCenterFLOCWithIR;
+use app\modules\v1\modules\pge\models\WebManagementDivisionWorkCenterFLOC;
 use Yii;
 use app\authentication\TokenAuth;
 use yii\filters\VerbFilter;
@@ -228,8 +229,8 @@ class DropdownController extends Controller
 
             if($isAdhoc == 0)
             {
-                WebManagementFlocsWithIRDropDown::setClient($headers['X-Client']);
-                $values = WebManagementFlocsWithIRDropDown::find()
+                WebManagementDivisionWorkCenterFLOCWithIR::setClient($headers['X-Client']);
+                $values = WebManagementDivisionWorkCenterFLOCWithIR::find()
                     ->select(['FLOC', 'SurveyFreq'])
                     ->where(['WorkCenter' => $workcenter])
                     ->andWhere(['not' ,['SurveyFreq' => '']])
@@ -238,8 +239,8 @@ class DropdownController extends Controller
             }
             else
             {
-                WebManagementFlocsDropDown::setClient($headers['X-Client']);
-                $values = WebManagementFlocsDropDown::find()
+                WebManagementDivisionWorkCenterFLOC::setClient($headers['X-Client']);
+                $values = WebManagementDivisionWorkCenterFLOC::find()
                    ->select(['FLOC'])
                    ->where(['WorkCenter' => $workcenter])
                    ->distinct()
