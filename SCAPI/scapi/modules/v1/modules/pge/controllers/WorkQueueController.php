@@ -277,7 +277,10 @@ class WorkQueueController extends Controller
 				$sudoIR->StatusType = 'In Progress';
 				$sudoIR->AdhocFlag = 1;
 				$sudoIR->SurveyType = $workQueue['SurveyType'];
-				$sudoIR->InspectionFrequencyType = $frequencyType->FieldValue;
+				if ($frequencyType != null)
+				{
+					$sudoIR->InspectionFrequencyType = $frequencyType->FieldValue;
+				}
 				//save sudo IR
 				if($sudoIR->save())
 				{
