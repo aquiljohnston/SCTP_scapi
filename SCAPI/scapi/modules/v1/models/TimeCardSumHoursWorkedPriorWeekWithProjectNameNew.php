@@ -32,7 +32,7 @@ class TimeCardSumHoursWorkedPriorWeekWithProjectNameNew extends BaseActiveRecord
     public static function tableName()
     {
         //return 'TimeCardSumHoursWorkedPrior_vw'; - old view. needs to be removed from the DB
-        return 'TimeCardSumHoursWorkedPriorWeekWithProjectNameNew_vw';
+        return 'TimeCardSumHoursWorkedPriorWeekWithProjectName_vw';
     }
 
     /**

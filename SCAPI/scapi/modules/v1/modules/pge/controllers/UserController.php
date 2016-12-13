@@ -2,6 +2,7 @@
 
 namespace app\modules\v1\modules\pge\controllers;
 
+use app\modules\v1\modules\pge\models\ReportingGroup;
 use Yii;
 use app\rbac\PgeDbManager;
 use app\modules\v1\modules\pge\models\PGEUser;
@@ -489,7 +490,7 @@ class UserController extends BaseActiveController
 	/**
 	* Gets the data for a user based on a user id
 	* @param $id the id of a user record
-	* @returns json body of the user data
+	* @returns Yii\web\Response json body of the user data
 	* @throws \yii\web\HttpException
 	*/	
 	public function actionView($UID)
@@ -505,29 +506,33 @@ class UserController extends BaseActiveController
 		
 			$user = WebManagementUsers::find()
 				->where(['UserUID' => $UID])
-				->asArray()
-				->all();
-				
-			$count = count($user);
-			
-			if($count > 1)
-			{
-				$user[0]['GroupName'] = [$user[0]['GroupName']];
-				for($i = 1; $i < $count; $i++)
-				{
-					$user[0]['GroupName'][] = $user[$i]['GroupName'];
-				}
-			}
-			
+                ->asArray()
+				->one();
+
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			$response->data = $user[0];
-			
+			if ($user !== null) {
+                $reportingGroupsJoins = ReportingGroupEmployeeRef::find()
+                    ->where(['UserUID' => $user['UserUID']])
+                    ->asArray()
+                    ->all();
+                $processedReportingGroups = [];
+                foreach($reportingGroupsJoins as $reportingGroupJoin) {
+                    $processedReportingGroups[] = $reportingGroupJoin['ReportingGroupUID'];
+                }
+                // TODO: find way to assign reporting groups
+                $user['ReportingGroups'] = $processedReportingGroups;
+			    $response->data = $user;
+            } else {
+                throw new NotFoundHttpException("The user you requested can not be found.");
+            }
+
 			return $response;
 		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
+            //throw $e;
 		}
 	}
 	

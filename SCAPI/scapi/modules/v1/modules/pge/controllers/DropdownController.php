@@ -13,7 +13,6 @@ use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v1\controllers\PermissionsController;
-use app\modules\v1\modules\pge\models\WebManagementFlocsDropDown;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
@@ -21,7 +20,8 @@ use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchAssignedDispatchMethod;
 use app\modules\v1\modules\pge\models\WebManagementDropDownUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
-use app\modules\v1\modules\pge\models\WebManagementFlocsWithIRDropDown;
+use app\modules\v1\modules\pge\models\WebManagementDivisionWorkCenterFLOCWithIR;
+use app\modules\v1\modules\pge\models\WebManagementDivisionWorkCenterFLOC;
 use app\modules\v1\modules\pge\models\WebManagementMapStampDropDown;
 use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocationDropDown;
 use app\modules\v1\modules\pge\models\WebManagementTrackerHistoryDropDown;
@@ -301,17 +301,16 @@ class DropdownController extends Controller
 
             if($adHoc == 1)
             {
-                WebManagementFlocsDropDown::setClient($headers['X-Client']);
-                $data = WebManagementFlocsDropDown::find()
+                WebManagementDivisionWorkCenterFLOC::setClient($headers['X-Client']);
+                $data = WebManagementDivisionWorkCenterFLOC::find()
                     ->select('WorkCenter')
                     ->distinct()
                     ->all();
             }
             else
             {
-                WebManagementFlocsWithIRDropDown::setClient($headers['X-Client']);
-                //todo permission check
-                $data = WebManagementFlocsWithIRDropDown::find()
+                WebManagementDivisionWorkCenterFLOCWithIR::setClient($headers['X-Client']);
+                $data = WebManagementDivisionWorkCenterFLOCWithIR::find()
                     ->select('WorkCenter')
                     ->distinct()
                     ->all();
