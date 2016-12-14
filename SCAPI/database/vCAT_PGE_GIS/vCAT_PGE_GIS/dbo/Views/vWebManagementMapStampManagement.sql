@@ -6,6 +6,8 @@
 
 
 
+
+
 CREATE View [dbo].[vWebManagementMapStampManagement]
 AS
 select 
@@ -37,8 +39,8 @@ from
 (Select * from [dbo].[tInspectionRequest] where ActiveFlag = 1) IR
 Join (Select InspectionRequestUID, Sum(EstimatedFeet) [TotalFeetOfMain] 
 			, Sum(EstimatedServices) [TotalServices]
-			, Min(CreateDateTime) [DetailStartDate]
-			, Max(CreateDateTime) [DetailEndDate]
+			, CAST(Min(CreateDateTime) AS DATE) [DetailStartDate]
+			, CAST(Max(CreateDateTime) AS DATE) [DetailEndDate]
 			, SUM(CASE WHEN CHARINDEX('FOV', EquipmentModeType) > 0 THEN EstimatedFeet ELSE 0 END) FOVTotalFeetOfMain
 			, SUM(CASE WHEN CHARINDEX('FOV', EquipmentModeType) > 0 THEN EstimatedServices ELSE 0 END) FOVTotalServices
 			, SUM(CASE WHEN CHARINDEX('LISA', EquipmentModeType) > 0 THEN EstimatedFeet ELSE 0 END) LISATotalFeetOfMain
@@ -54,7 +56,7 @@ Join (Select InspectionRequestUID, Sum(EstimatedFeet) [TotalFeetOfMain]
 Join (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on mg.MapGridUID = ir.MapGridUID
 Join (select * from [dbo].[rWorkCenter] where ActiveFlag = 1) wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC
 Left Join (Select InspectionRequestUID, Count(*) [TotalLeaks]
-	From [dbo].[tInspectionService] 
+	From [dbo].[tgAssetAddressIndication] 
 	where ActiveFlag = 1
 	Group By InspectionRequestUID) ind on ind.InspectionRequestUID = ir.InspectionRequestUID
 Left Join (select Distinct  InspectionRequestLogUID from tMasterLeakLog 

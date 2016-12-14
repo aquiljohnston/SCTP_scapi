@@ -8,6 +8,7 @@
 
 
 
+
 CREATE View [dbo].[vWebManagementDispatch] AS
 /*****************************************************************************************************************
 NAME:		[dbo].[vWebManagementDispatch]
@@ -73,7 +74,7 @@ SELECT
 ,ISNULL(awq.AssignedCount, 0) AS [Assigned]
 ,CAST(YEAR(ir.ComplianceDueDate) AS CHAR(4)) + ' - ' + DATENAME(mm, ir.ComplianceDueDate) AS ComplianceYearMonth
 ,mg.FLOC	
-,CASE WHEN DATEDIFF(dd, Cast(getdate() as date), ir.ComplianceDueDate) < 4 THEN 1 ELSE 0 END [Within3Days]
+,CASE WHEN DATEDIFF(ww, Cast(getdate() as date), ir.ComplianceDueDate) < 4 THEN 1 ELSE 0 END [Within3Days]
 
 FROM [dbo].[rgMapGridLog] mg
 INNER JOIN [dbo].[tInspectionRequest] ir ON ir.MapGridUID = mg.MapGridUID

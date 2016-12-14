@@ -2,6 +2,12 @@
 
 
 
+
+
+
+
+
+
 CREATE VIEW [dbo].[vWebManagementLeakLogForm]
 AS
 
@@ -18,9 +24,9 @@ CASE WHEN [aai].[StatusType] NOT IN ('In Progress', 'NotApproved', 'Rejected', '
 [aa].[Street1] AS [Street],
 [aa].[AptSuite],
 [aa].[City],
-[aa].[AssetIDNo] AS [MeterID],
+[aa].[AssetLocationID] AS [MeterID],
 [aa].[Comments],
-[aai].[MapPlatLeakNumber] AS [MapPLatLeakNo],
+[aai].[MapPlatLeakNumber] AS [MapPlatLeakNo],
 CASE 
 	WHEN [aai].[MapPlatLeakNumber] IS NOT NULL 
 		THEN CAST([aai].[MapPlatLeakNumber] AS varchar(10)) + '/' 
@@ -45,13 +51,16 @@ LTRIM(RTRIM(ISNULL(Gradeby.EquipmentType, 'V - Visual')))  AS [InstGradeBy],
 [aai].[GradeType] AS [Grade],
 [aai].[InfoCodesType] AS [InfoCodes],
 CASE 
-	WHEN [aai].[PotentialHCAType] = 'Y' 
+	WHEN [aai].[PotentialHCAType] = 'Yes' 
 		THEN 'Yes' 
 		ELSE 'No' 
 END AS [PotentialHCA],
-[aai].[HCAConstructionSupervisorUserUID] AS [ConstructionSupervisor],
-[aai].[HCADistributionPlanningEngineerUserUID] AS [DistPlanningEngineer],
-[aai].[HCAPipelineEngineerUserUID] AS [PipelineEngineer],
+--[aai].[HCAConstructionSupervisorUserUID] AS [ConstructionSupervisor],
+--[aai].[HCADistributionPlanningEngineerUserUID] AS [DistPlanningEngineer],
+--[aai].[HCAPipelineEngineerUserUID] AS [PipelineEngineer],
+ISNULL(HCAConstSupervisorUser.UserLANID,'') AS [ConstructionSupervisor],
+ISNULL(HCADistPlanUser.UserLANID,'') AS [DistPlanningEngineer],
+ISNULL(HCAPipelineEngineerUser.UserLANID,'') AS [PipelineEngineer],
 ISNULL([aai].[Comments], '') AS [LocationRemarks],
 ISNULL(ApprovedUser.UserLANID, '') AS [ApproverLANID],
 aai.ApprovedDTLT [ApprovedDate],
@@ -60,7 +69,9 @@ aai.Photo2,
 aai.Photo3,
 CASE WHEN aai.Latitude <> 0 THEN 1 ELSE 0 END [leakGPSIcon],
 CASE WHEN aa.Latitude <> 0 THEN 1 ELSE 0 END [addressGPSIcon],
-[aai].[LockedFlag] AS [LockFlag]
+[aai].[LockedFlag] AS [LockFlag],
+aa.NonAssetLocationFlag [NonPremise],
+mg.MapGridUID
 FROM (SELECT * FROM [tgAssetAddressIndication] WHERE [ActiveFlag] = 1) aai
 Left JOIN (SELECT * FROM [tgAssetAddress] WHERE [ActiveFlag] = 1) aa ON [aai].[AssetAddressUID] = [aa].[AssetAddressUID]
 Left JOIN (SELECT * FROM [dbo].[rgMapGridLog] WHERE [ActiveFlag] = 1) mg ON [mg].[MapGridUID] = [aai].[MapGridUID]
@@ -70,3 +81,6 @@ left join (select * from [dbo].[tgAssetInspection] where ActiveFlag = 1) [ai] on
 Left Join (Select * From [dbo].[tInspectionRequest] where ActiveFlag = 1) ir on ir.InspectionRequestUID = [ai].InspectionRequestUID
 Left Join (Select * from [dbo].[tInspectionsEquipment] where ActiveFlag = 1) FoundBy on FoundBy.InspecitonEquipmentUID = aai.EquipmentFoundByUID
 Left Join (Select * from [dbo].[tInspectionsEquipment] where ActiveFlag = 1) GradeBy on GradeBy.InspecitonEquipmentUID = aai.EquipmentGradeByUID
+Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) HCAConstSupervisorUser on aai.HCAConstructionSupervisorUserUID = HCAConstSupervisorUser.UserUID
+Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) HCADistPlanUser on aai.HCADistributionPlanningEngineerUserUID = HCADistPlanUser.UserUID
+Left Join (Select * from [dbo].[UserTb] where UserActiveFlag = 1) HCAPipelineEngineerUser on aai.HCAPipelineEngineerUserUID = HCAPipelineEngineerUser.UserUID

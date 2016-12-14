@@ -1,5 +1,9 @@
 ﻿
 
+
+
+
+
 CREATE PROCEDURE [dbo].[spWebManagementJSON_InspectionServiceUpdate]
 (
       @JSON_Str VarChar(Max)
@@ -81,7 +85,10 @@ AS
 			,@SurveyType varchar(25)
 			,@ApproverUID varchar(100)
 			,@ApprovedDatetime varchar(25)
-
+			,@PicaroEquipmentID varchar(100)
+			--,@SurveyorLANID varchar(20)
+			,@SurveyorUID varchar(200)
+			,@DateSurveyed date
 
 
 
@@ -93,13 +100,18 @@ AS
 		Select @NumberOfServices = ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServices'), '')
 		Select @Hours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Hours'), '')
 		Select @Date = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
-		--Select @SurveyorLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
-		--Select @SupervisorUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserLANID'), '')
+		Select @SurveyorLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SurveyorLANID'), '')
+		Select @DateSurveyed = ISNULL((Select StringValue From #JSON_Parse Where Name = 'DateSurveyed'), '')
 		Select @MapAreaNumber = ISNULL((Select StringValue From #JSON_Parse Where Name = 'MapAreaNumber'), '')
 		Select @SurveyType = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SurveyType'), '')
 		Select @ApprovedDatetime = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
 		Select @ApproverUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserUID'), '')
+		Select @PicaroEquipmentID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'PicaroEquipmentID'), '')
 
+		If EXISTS(select * from UserTb where UserLANID = @SurveyorLANID)
+		BEGIN
+			select @SurveyorUID = UserUID from UserTb where UserLANID = @SurveyorLANID
+		END
 
 Begin Try
 
@@ -294,104 +306,253 @@ Begin Try
 
 -- We have checked both Wind Speeds.  Now we can update the Inspection Service Record
 
-	Update tInspectionService set ActiveFlag = 0 where InspectionServicesUID = @InspectionServiceUID
+-- We have to check to see which table to update.  InspecionService or MapStampPicaro
 
-	Select @Revision = count(*) from tInspectionService where InspectionServicesUID = @InspectionServiceUID
+	IF CHARINDEX('PICMapStamp', @InspectionServiceUID) = 0
+	BEGIN
 
-	Insert Into tInspectionService
-	(
-		InspectionServicesUID,
-		MasterLeakLogUID,
-		MapGridUID,
-		InspectionRequestUID,
-		InspectionEquipmentUID,
-		SourceID,
-		CreatedUserUID,
-		ModifiedUserUID,
-		SrcDTLT,
-		Revision,
-		ActiveFlag,
-		StatusType,
-		EquipmentType,
-		InstrumentType,
-		SerialNumber,
-		CalibrationLevel,
-		CalibrationVerificationFlag,
-		WindSpeedStart,
-		WindSpeedEnd,
-		EquipmentModeType,
-		EstimatedFeet,
-		EstimatedServices,
-		EstimatedHours,
-		ApprovedFlag,
-		ApprovedByUserUID,
-		ApprovedDTLT,
-		SubmittedFlag,
-		SubmittedStatusType,
-		SubmittedUserUID,
-		SubmittedDTLT,
-		ResponseStatusType,
-		Response,
-		ResponceErrorDescription,
-		ResponseDTLT,
-		CompletedFlag,
-		CompletedDTLT,
-		SurveyMode,
-		PlaceHolderFlag,
-		WindSpeedStartUID,
-		WindSpeedMidUID,
-		MapAreaNumber,
-		LockedFlag,
-		TaskOutUID,
-		CreateDateTime
-	)
-	Select 
-		InspectionServicesUID,
-		MasterLeakLogUID,
-		MapGridUID,
-		InspectionRequestUID,
-		InspectionEquipmentUID,
-		'WEB', --SourceID,
-		CreatedUserUID, --CreatedUserUID,
-		@ApproverUID, --ModifiedUserUID,
-		getdate(),
-		@Revision, -- Revision,
-		1, --ActiveFlag,
-		'In Progress', --StatusType,
-		EquipmentType,
-		InstrumentType,
-		SerialNumber,
-		CalibrationLevel,
-		CalibrationVerificationFlag,
-		WindSpeedStart,
-		WindSpeedEnd,
-		@SurveyType, -- EquipmentModeType
-		@FeetOfMain, -- EstimatedFeet,
-		@NumberOfServices, -- EstimatedServices,
-		@Hours, -- EstimatedHours,
-		1, --ApprovedFlag,
-		@ApproverUID, --ApprovedByUserUID,
-		@ApprovedDatetime, --ApprovedDTLT,
-		SubmittedFlag,
-		SubmittedStatusType,
-		SubmittedUserUID,
-		SubmittedDTLT,
-		ResponseStatusType,
-		Response,
-		ResponceErrorDescription,
-		ResponseDTLT,
-		CompletedFlag,
-		CompletedDTLT,
-		@SurveyMode, --SurveyMode,
-		0, --PlaceHolderFlag,
-		@NewWindSpeedStartUID, -- WindSpeedStartUID,
-		@NewWindSpeedMidUID, -- WindSpeedMidUID,
-		@MapAreaNumber,
-		0, --LockedFlag,
-		TaskOutUID,
-		CreateDateTime
-	from tInspectionService where InspectionServicesUID = @InspectionServiceUID and Revision = @Revision - 1
+		Update tInspectionService set ActiveFlag = 0 where InspectionServicesUID = @InspectionServiceUID
 
+		Select @Revision = count(*) from tInspectionService where InspectionServicesUID = @InspectionServiceUID
+
+		Insert Into tInspectionService
+		(
+			InspectionServicesUID,
+			MasterLeakLogUID,
+			MapGridUID,
+			InspectionRequestUID,
+			InspectionEquipmentUID,
+			SourceID,
+			CreatedUserUID,
+			ModifiedUserUID,
+			SrcDTLT,
+			Revision,
+			ActiveFlag,
+			StatusType,
+			EquipmentType,
+			InstrumentType,
+			SerialNumber,
+			CalibrationLevel,
+			CalibrationVerificationFlag,
+			WindSpeedStart,
+			WindSpeedEnd,
+			EquipmentModeType,
+			EstimatedFeet,
+			EstimatedServices,
+			EstimatedHours,
+			ApprovedFlag,
+			ApprovedByUserUID,
+			ApprovedDTLT,
+			SubmittedFlag,
+			SubmittedStatusType,
+			SubmittedUserUID,
+			SubmittedDTLT,
+			ResponseStatusType,
+			Response,
+			ResponceErrorDescription,
+			ResponseDTLT,
+			CompletedFlag,
+			CompletedDTLT,
+			SurveyMode,
+			PlaceHolderFlag,
+			WindSpeedStartUID,
+			WindSpeedMidUID,
+			MapAreaNumber,
+			LockedFlag,
+			TaskOutUID,
+			CreateDateTime
+		)
+		Select 
+			InspectionServicesUID,
+			MasterLeakLogUID,
+			MapGridUID,
+			InspectionRequestUID,
+			InspectionEquipmentUID,
+			'WEB', --SourceID,
+			CreatedUserUID, --CreatedUserUID,
+			@ApproverUID, --ModifiedUserUID,
+			getdate(),
+			@Revision, -- Revision,
+			1, --ActiveFlag,
+			StatusType,
+			EquipmentType,
+			InstrumentType,
+			SerialNumber,
+			CalibrationLevel,
+			CalibrationVerificationFlag,
+			WindSpeedStart,
+			WindSpeedEnd,
+			CASE 
+				WHEN @SurveyType = 'TR' THEN 'T'
+				WHEN @SurveyType = 'LISA' THEN 'L'
+				WHEN @SurveyType = 'FOV' THEN 'V'
+				WHEN @SurveyType = 'GAP' THEN 'G'
+				ELSE @SurveyType
+			END, -- EquipmentModeType
+			@FeetOfMain, -- EstimatedFeet,
+			@NumberOfServices, -- EstimatedServices,
+			@Hours, -- EstimatedHours,
+			1, --ApprovedFlag,
+			@ApproverUID, --ApprovedByUserUID,
+			@ApprovedDatetime, --ApprovedDTLT,
+			SubmittedFlag,
+			SubmittedStatusType,
+			SubmittedUserUID,
+			SubmittedDTLT,
+			ResponseStatusType,
+			Response,
+			ResponceErrorDescription,
+			ResponseDTLT,
+			CompletedFlag,
+			CompletedDTLT,
+			@SurveyMode, --SurveyMode,
+			0, --PlaceHolderFlag,
+			@NewWindSpeedStartUID, -- WindSpeedStartUID,
+			@NewWindSpeedMidUID, -- WindSpeedMidUID,
+			@MapAreaNumber,
+			0, --LockedFlag,
+			TaskOutUID,
+			CreateDateTime
+		from tInspectionService where InspectionServicesUID = @InspectionServiceUID and Revision = @Revision - 1
+
+	END
+	ELSE
+	IF CHARINDEX('PICMapStamp', @InspectionServiceUID) > 0
+	BEGIN
+
+		IF (Select Count(*) 
+			from tMapStampPicaro 
+			where InspectionRequestUID = @InspectionRequestUID and Seq < 3 and ActiveFlag = 1) > 0
+		BEGIN
+
+			Update tMapStampPicaro
+			Set ActiveFlag= 0
+			where InspectionRequestUID = @InspectionRequestUID and Seq < 3 and ActiveFlag = 1 
+		
+			Insert Into tMapStampPicaro
+			(
+				MapStampPicaroUID,
+				InspectionRequestUID,
+				MapStampUID,
+				ProjectID,
+				CreatedByUserUID,
+				ModifiedByUserUID,
+				CreatedDateTime,
+				ModifiedDateTime,
+				Revision,
+				ActiveFlag,
+				PicaroEquipmentID,
+				FeetOfMain,
+				Services,
+				WindSpeedStart,
+				WindSpeedMid,
+				StatusType,
+				SurveyorUID,
+				SurveyDate,
+				Seq,
+				LockedFlag,
+				Hours,
+				TaskOutUID,
+				WindSpeedStartUID,
+				WindSpeedMidUID
+			)
+			Select
+				msp.MapStampPicaroUID,
+				msp.InspectionRequestUID,
+				msp.MapStampUID,
+				msp.ProjectID,
+				msp.CreatedByUserUID,
+				@ApproverUID, --msp.ModifiedByUserUID,
+				msp.CreatedDateTime,
+				getdate(), --msp.ModifiedDateTime,
+				NextRev.NextRevision, -- msp.Revision,
+				1, --msp.ActiveFlag,
+				@PicaroEquipmentID, -- msp.PicaroEquipmentID,
+				0, -- msp.FeetOfMain,
+				0, -- msp.Services,
+				msp.WindSpeedStart,
+				msp.WindSpeedMid,
+				msp.StatusType,
+				@SurveyorUID, -- msp.SurveyorUID,
+				@DateSurveyed, -- msp.SurveyDate,
+				msp.Seq,
+				msp.LockedFlag,
+				0, --msp.Hours,
+				msp.TaskOutUID,
+				msp.WindSpeedStartUID,
+				msp.WindSpeedMidUID
+			From tMapStampPicaro msp
+			Join (select MapStampPicaroUID, Count(*) NextRevision from [dbo].[tMapStampPicaro] 
+					where InspectionRequestUID = @InspectionRequestUID --and Seq < 3
+					Group By MapStampPicaroUID) NextRev on msp.MapStampPicaroUID = NextRev.MapStampPicaroUID and msp.Revision = NextRev.NextRevision - 1
+		
+		
+		END
+		ELSE
+		BEGIN
+
+			Update tMapStampPicaro set ActiveFlag = 0 where MapStampPicaroUID = @InspectionServiceUID
+
+			Select @Revision = count(*) from tMapStampPicaro where MapStampPicaroUID = @InspectionServiceUID
+
+			Insert Into tMapStampPicaro
+			(
+				MapStampPicaroUID,
+				InspectionRequestUID,
+				MapStampUID,
+				ProjectID,
+				CreatedByUserUID,
+				ModifiedByUserUID,
+				CreatedDateTime,
+				ModifiedDateTime,
+				Revision,
+				ActiveFlag,
+				PicaroEquipmentID,
+				FeetOfMain,
+				Services,
+				WindSpeedStart,
+				WindSpeedMid,
+				StatusType,
+				SurveyorUID,
+				SurveyDate,
+				Seq,
+				LockedFlag,
+				Hours,
+				TaskOutUID,
+				WindSpeedStartUID,
+				WindSpeedMidUID
+			)
+			Select
+				msp.MapStampPicaroUID,
+				msp.InspectionRequestUID,
+				msp.MapStampUID,
+				msp.ProjectID,
+				msp.CreatedByUserUID,
+				@ApproverUID, --msp.ModifiedByUserUID,
+				msp.CreatedDateTime,
+				getdate(), --msp.ModifiedDateTime,
+				@Revision, -- msp.Revision,
+				1, --msp.ActiveFlag,
+				@PicaroEquipmentID, -- msp.PicaroEquipmentID,
+				@FeetOfMain, -- msp.FeetOfMain,
+				@NumberOfServices, -- msp.Services,
+				msp.WindSpeedStart,
+				msp.WindSpeedMid,
+				msp.StatusType,
+				@SurveyorUID, -- msp.SurveyorUID,
+				@DateSurveyed, -- msp.SurveyDate,
+				msp.Seq,
+				msp.LockedFlag,
+				@Hours, -- msp.Hours,
+				msp.TaskOutUID,
+				@WindSpeedStartUID,
+				@WindSpeedMidUID
+			From tMapStampPicaro msp
+			Where MapStampPicaroUID = @InspectionServiceUID and Revision = @Revision - 1
+
+		END
+
+	END
 
 	Commit Transaction
 

@@ -1,10 +1,6 @@
 ﻿
 
 
-
-
-
-
 CREATE FUNCTION [dbo].[fnTabletIR](	@UserUID varchar(100) )
 
 
@@ -42,31 +38,62 @@ Select * From fnTabletIR('User_57590026_20160822135947_Postman') Order by SortOr
 
 
 	Insert Into @TempIR
-	SELECT DISTINCT
-	 ir.InspectionRequestUID
-	,wc.Division
-	,wc.WorkCenter
-	,ir.SurveyType
-	,Replace(ir.MapID, '-', '/') as [MapPlat]
-	,ir.LsNtfNo AS [NotificationID]
-	,ir.ComplianceDueDate
-	,ir.ReleaseDate AS [SAPReleased]
-	,CAST(YEAR(ir.ComplianceDueDate) AS CHAR(4)) + ' - ' + DATENAME(mm, ir.ComplianceDueDate) AS ComplianceYearMonth
-	, CASE WHEN awq.AssignedUserUID = @UserUID THEN awq.AssignedUserUID ELSE '' END [AssignedUserUID]
-	, CASE WHEN awq.AssignedUserUID = @UserUID THEN awq.DispatchMethod ELSE '' END [DispatchMethod]
-	, IR.StatusType
-	, IR.MapGridUID
-	, ISNULL(awq.AssignedWorkQueueUID, '') [AssignedWorkQueueUID]
-	, awq.AssignedDate
-	,CASE WHEN u.UserName is NULL THEN 99 else 0 END SortOrder
-	,CASE WHEN DATEDIFF(dd, Cast(getdate() as date), ir.ComplianceDueDate) < 4 THEN 1 ELSE 0 END [Within3Days]
-	FROM [dbo].[rgMapGridLog] mg
-	INNER JOIN [dbo].[tInspectionRequest] ir ON ir.MapGridUID = mg.MapGridUID
-	INNER JOIN [dbo].[rWorkCenter] wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC
-	LEFT JOIN (SELECT * From  [dbo].[tAssignedWorkQueue] where ActiveFlag = 1) awq ON awq.AssignedInspectionRequestUID = ir.InspectionRequestUID
-	Left Join (Select * from UserTb where UserActiveFlag = 1 and ISNULL(UserInActiveFlag, 0) = 0 and UserUID = @UserUID) u on u.UserUID = awq.AssignedUserUID
+	SELECT
+		 ir.InspectionRequestUID
+		,wc.Division
+		,wc.WorkCenter
+		,ir.SurveyType
+		--,Replace(ir.MapID, '-', '/') as [MapPlat]
+		,COALESCE(FuncLocMapBoundary, '') + mg.FuncLocMap + '/' + Right('0000' + mg.funcLocPlat + COALESCE(mg.FuncLocPlatSuffix, ''), 4) as [MapPlat]
+		,ir.LsNtfNo AS [NotificationID]
+		,ir.ComplianceDueDate
+		,ir.ReleaseDate AS [SAPReleased]
+		,CAST(YEAR(ir.ComplianceDueDate) AS CHAR(4)) + ' - ' + DATENAME(mm, ir.ComplianceDueDate) AS ComplianceYearMonth
+		, CASE WHEN awq.AssignedUserUID = @UserUID THEN awq.AssignedUserUID ELSE '' END [AssignedUserUID]
+		, CASE WHEN awq.AssignedUserUID = @UserUID THEN awq.DispatchMethod ELSE '' END [DispatchMethod]
+		, IR.StatusType
+		, IR.MapGridUID
+		, ISNULL(awq.AssignedWorkQueueUID, '') [AssignedWorkQueueUID]
+		, awq.AssignedDate
+		,CASE WHEN u.UserName is NULL THEN 99 else 0 END SortOrder
+		,CASE WHEN DATEDIFF(ww, Cast(getdate() as date), ir.ComplianceDueDate) < 4 THEN 1 ELSE 0 END [Within3Days]
+	FROM (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg
+	INNER JOIN (Select * from [dbo].[tInspectionRequest] where ActiveFlag = 1) ir ON ir.MapGridUID = mg.MapGridUID
+	INNER JOIN (select * from  [dbo].[rWorkCenter] where ActiveFlag = 1) wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC
+	JOIN (SELECT * From  [dbo].[tAssignedWorkQueue] where ActiveFlag = 1 and AssignedUserUID = @UserUID) awq ON awq.AssignedInspectionRequestUID = ir.InspectionRequestUID
+	Join (Select * from UserTb where UserActiveFlag = 1 and ISNULL(UserInActiveFlag, 0) = 0 and UserUID = @UserUID) u on u.UserUID = awq.AssignedUserUID
 	WHERE ir.StatusType <> 'Completed' AND ISNULL(ir.LsNtfNo, '') <> ''
 
+Union 
+
+
+	SELECT Distinct
+		 ir.InspectionRequestUID
+		,wc.Division
+		,wc.WorkCenter
+		,ir.SurveyType
+		--,Replace(ir.MapID, '-', '/') as [MapPlat]
+		,COALESCE(FuncLocMapBoundary, '') + mg.FuncLocMap + '/' + Right('0000' + mg.funcLocPlat + COALESCE(mg.FuncLocPlatSuffix, ''), 4) as [MapPlat]
+		,ir.LsNtfNo AS [NotificationID]
+		,ir.ComplianceDueDate
+		,ir.ReleaseDate AS [SAPReleased]
+		,CAST(YEAR(ir.ComplianceDueDate) AS CHAR(4)) + ' - ' + DATENAME(mm, ir.ComplianceDueDate) AS ComplianceYearMonth
+		, CASE WHEN awq.AssignedUserUID = @UserUID THEN awq.AssignedUserUID ELSE '' END [AssignedUserUID]
+		, CASE WHEN awq.AssignedUserUID = @UserUID THEN awq.DispatchMethod ELSE '' END [DispatchMethod]
+		, IR.StatusType
+		, IR.MapGridUID
+		, ISNULL(awq.AssignedWorkQueueUID, '') [AssignedWorkQueueUID]
+		, awq.AssignedDate
+		,CASE WHEN u.UserName is NULL THEN 99 else 0 END SortOrder
+		,CASE WHEN DATEDIFF(ww, Cast(getdate() as date), ir.ComplianceDueDate) < 4 THEN 1 ELSE 0 END [Within3Days]
+	FROM (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg
+	INNER JOIN (Select * from [dbo].[tInspectionRequest] where ActiveFlag = 1) ir ON ir.MapGridUID = mg.MapGridUID
+	INNER JOIN (select * from  [dbo].[rWorkCenter] where ActiveFlag = 1) wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC
+	Left JOIN (SELECT * From  [dbo].[tAssignedWorkQueue] where ActiveFlag = 1 and AssignedUserUID = @UserUID) awq ON awq.AssignedInspectionRequestUID = ir.InspectionRequestUID
+	left Join (Select * from UserTb where UserActiveFlag = 1 and ISNULL(UserInActiveFlag, 0) = 0 and UserUID = @UserUID) u on u.UserUID = awq.AssignedUserUID
+	WHERE ir.StatusType <> 'Completed' AND ISNULL(ir.LsNtfNo, '') <> '' and awq.AssignedInspectionRequestUID is null
+	
+	
 	Update t set sortOrder = 50
 	From @TempIR t
 	Join 

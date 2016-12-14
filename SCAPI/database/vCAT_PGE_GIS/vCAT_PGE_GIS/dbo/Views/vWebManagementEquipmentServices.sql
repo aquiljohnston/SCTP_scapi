@@ -1,14 +1,5 @@
 ﻿
 
-
-
-
-
-
-
-
-
-
 CREATE view [dbo].[vWebManagementEquipmentServices]
 AS
 Select 
@@ -34,14 +25,12 @@ u.UserLANID as CreatorLANID,
 [ua].[UserLANID] as ApproverLANID,
 [is].[ApprovedDTLT] as ApprovedDate,
 ir.SurveyType [SurveyFreq],
-CASE WHEN CHARINDEX('PIC', EquipmentModeType) > 0 
-	THEN 
-		CASE WHEN CHARINDEX('LISA', EquipmentModeType) > 0 THEN 'LISA'
-			 WHEN CHARINDEX('FOV', EquipmentModeType) > 0 THEN 'FOV'
-			 WHEN CHARINDEX('GAP', EquipmentModeType) > 0 THEN 'GAP'
-		END
+CASE WHEN EquipmentModeType = 'L' THEN 'LISA'
+	 WHEN EquipmentModeType = 'V' THEN 'FOV'
+	 WHEN EquipmentModeType = 'G' THEN 'GAP'
+	 WHEN EquipmentModeType = 'T' THEN 'TR'
 	ELSE ISNULL(EquipmentModeType, 'PlaceHolder')
-	END [SurveyType],
+END [SurveyType],
 [is].SurveyMode,
 [is].ApprovedFlag as Approved
 

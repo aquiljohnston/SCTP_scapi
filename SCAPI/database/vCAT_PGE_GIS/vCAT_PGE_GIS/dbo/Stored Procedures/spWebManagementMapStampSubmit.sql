@@ -1,6 +1,8 @@
 ﻿
 
 
+
+
 CREATE Procedure [dbo].[spWebManagementMapStampSubmit]
 (
 @InspectionRequestUID varchar(100)
@@ -187,7 +189,9 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					MapAreaNumber,
 					LockedFlag,
 					TaskOutUID,
-					CreateDateTime
+					CreateDateTime,
+					SrcDTLT
+					
 				)
 				Select
 					[is].InspectionServicesUID,
@@ -235,7 +239,9 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					MapAreaNumber,
 					1, --LockedFlag,
 					TaskOutUID,
-					CreateDateTime
+					CreateDateTime,
+					SrcDTLT
+					
 				From [dbo].[tInspectionService] [is]
 				Join (Select InspectionServicesUID, count(*) NextRevision from [dbo].[tInspectionService] 
 					Where InspectionRequestUID = @InspectionRequestUID
@@ -263,7 +269,10 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					SurveyorUID,
 					SurveyDate,
 					Seq,
-					LockedFlag
+					LockedFlag,
+					WindSpeedStartUID,
+					WindSpeedMidUID, 
+					TaskOutUID
 				)
 				Select 
 					msp.MapStampPicaroUID,
@@ -285,7 +294,11 @@ Declare @InProgressStatusType varchar(200) = 'In Progress'
 					SurveyorUID,
 					SurveyDate,
 					Seq,
-					1 --LockedFlag
+					1, --LockedFlag
+					WindSpeedStartUID,
+					WindSpeedMidUID,
+					TaskOutUID
+
 				From [dbo].[tMapStampPicaro] msp
 				Join (Select MapStampPicaroUID, count(*) NextRevision from  [dbo].[tMapStampPicaro] 
 					Where InspectionRequestUID = @InspectionRequestUID
