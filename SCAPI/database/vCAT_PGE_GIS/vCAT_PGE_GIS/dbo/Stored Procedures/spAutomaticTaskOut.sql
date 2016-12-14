@@ -1,4 +1,8 @@
-﻿Create Procedure spAutomaticTaskOut
+﻿
+
+
+
+CREATE Procedure [dbo].[spAutomaticTaskOut]
 AS
 
 
@@ -250,11 +254,13 @@ Join (select AssetAddressIndicationUID, Count(*) NextRevision from [dbo].[tgAsse
 	Group By AssetAddressIndicationUID) NextRev on aai.AssetAddressIndicationUID = NextRev.AssetAddressIndicationUID and aai.Revision = NextRev.NextRevision - 1
 	Where aai.StatusType = 'In Progress'
 
+--Drop Table #InProgressMMLUID
 
+select distinct MasterLeakLogUID into #InProgressIS  from tInspectionService where StatusType = 'In Progress' and ActiveFlag = 1 and PlaceHolderFlag = 1
 
 Update [is] set ActiveFlag = 0
 From [dbo].[tInspectionService] [is]
-Join #InProgressMMLUID ip on [is].MasterLeakLogUID = ip.MasterLeakLogUID
+Join #InProgressIS ip on [is].MasterLeakLogUID = ip.MasterLeakLogUID
 Where [is].ActiveFlag = 1 and [is].StatusType <> 'Deleted' and PlaceHolderFlag = 1
 
 
@@ -304,43 +310,45 @@ Insert Into [dbo].[tInspectionService]
 	SurveyMode, 
 	PlaceHolderFlag,
 	LockedFlag
+	--,
+	--TaskOutUID
 )
 Select
 	[is].InspectionServicesUID, 
-	MasterLeakLogUID, 
+	[is].MasterLeakLogUID, 
 	MapGridUID, 
 	InspectionRequestUID, 
 	InspectionEquipmentUID, 
-	ProjectID, 
+	[is].ProjectID, 
 	'System', --SourceID, 
-	CreatedUserUID, 
+	[is].CreatedUserUID, 
 	'User_System_Automation', --ModifiedUserUID, 
 	getdate(), --SrcDTLT, 
 	--SrvDTLT, 
 	--SrvDTLTOffset, 
-	Comments, 
+	[is].Comments, 
 	'Changed To Active Record via Nightly Automated Task Out Process', --RevisionComments, 
 	NextRev.NextRevision, 
 	1, --ActiveFlag, 
 	'Pending', --StatusType, 
-	EquipmentType, 
+	ie.EquipmentType, --   [is].EquipmentType, 
 	InstrumentType, 
-	SerialNumber, 
+	ie.SerialNumber, --  [is].SerialNumber, 
 	CalibrationLevel, 
-	CalibrationVerificationFlag, 
+	[is].CalibrationVerificationFlag, 
 	WindSpeedStart, 
 	WindSpeedEnd, 
 	EquipmentModeType, 
-	EstimatedFeet, 
-	EstimatedServices, 
-	EstimatedHours, 
+	0, --EstimatedFeet, 
+	0, --EstimatedServices, 
+	0, --EstimatedHours, 
 	ApprovedFlag, 
 	ApprovedByUserUID, 
 	ApprovedDTLT, 
-	SubmittedFlag, 
-	SubmittedStatusType, 
-	SubmittedUserUID, 
-	SubmittedDTLT, 
+	[is].SubmittedFlag, 
+	[is].SubmittedStatusType, 
+	[is].SubmittedUserUID, 
+	[is].SubmittedDTLT, 
 	ResponseStatusType, 
 	Response, 
 	ResponceErrorDescription, 
@@ -349,10 +357,24 @@ Select
 	CompletedDTLT, 
 	SurveyMode, 
 	0, --PlaceHolderFlag
-	0 --LockedFlag
+	0--, --LockedFlag
+	--'TO_' + [is].SourceID + '_TF_' + Format(getdate(), 'yyyyMMddhhmmss', 'en-US') + Right(ie.InspecitonEquipmentUID, 4)
 From [dbo].[tInspectionService] [is]
 Join (select InspectionServicesUID, Count(*) NextRevision from [dbo].[tInspectionService] [is]
-		Join #InProgressMMLUID ip on [is].MasterLeakLogUID = ip.MasterLeakLogUID
+		Join #InProgressIS ip on [is].MasterLeakLogUID = ip.MasterLeakLogUID
 		Group By InspectionServicesUID) NextRev on [is].InspectionServicesUID = NextRev.InspectionServicesUID and [is].Revision = NextRev.NextRevision - 1
+Left Join tInspectionsEquipment ie on [is].InspectionEquipmentUID = ie.InspecitonEquipmentUID
 Where [is].StatusType <> 'Deleted' and PlaceHolderFlag = 1
+
+
+Update [is] set TaskOutUID = [dbo].[CreateTaskOutUID]([is].tInspectionServicesID, [is].SourceID, Right([is].InspectionServicesUID, 4), getdate())
+From [dbo].[tInspectionService] [is]
+Join #InProgressIS ip on [is].MasterLeakLogUID = ip.MasterLeakLogUID
+Where [is].ActiveFlag = 1 and [is].StatusType <> 'Deleted' and PlaceHolderFlag = 0 and [is].TaskOutUID is null
+
+
+
+
+
 Drop table #InProgressMMLUID
+Drop Table #InProgressIS

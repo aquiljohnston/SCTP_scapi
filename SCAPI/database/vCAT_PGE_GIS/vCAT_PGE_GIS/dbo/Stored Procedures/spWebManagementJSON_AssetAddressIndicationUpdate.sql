@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[spWebManagementJSON_AssetAddressIndicationUpdate]
+﻿
+
+
+
+
+CREATE PROCEDURE [dbo].[spWebManagementJSON_AssetAddressIndicationUpdate]
 (
       @JSON_Str VarChar(Max)
     
@@ -32,19 +37,18 @@ AS
 		--Select @ClientID = StringValue From #JSON_Parse Where Name = 'ClientID'
 		Select Top 1 @UserUID = StringValue From #JSON_Parse Where Name = 'ActivityCreatedUserUID'
 
-
-		Insert Into [dbo].[tTabletDataInsertArchive] (
-			CreatedUserUID
-			,TransactionType
+*/
+		Insert Into [dbo].[tWEBDataInsertArchive]
+		(
+			TransactionType
 			,InsertedData
 			)
 		Values (
-			@UserUID
-			,'InspectionServices'
+			'AssetAddressIndicationUpdate'
 			,@JSON_Str
 			)
 
-*/
+
 
 /***************************************************************************
 
@@ -55,7 +59,7 @@ AS
 		Declare 
 
 			@AssetAddressIndicationUID varchar(100)
-			, @UserUID varchar(20)
+			, @UserUID varchar(100)
 			, @Approved varchar(20)
 			, @HouseNo varchar(20)
 			, @Street varchar(50)
@@ -73,15 +77,19 @@ AS
 			, @SuspectCopper varchar(200)
 			, @InfoCodes varchar(200)
 			, @PotentialHCA varchar(200)
-			, @ConstructionSupervisor varchar(200)
-			, @DistPlanningEngineer varchar(200)
-			, @PipelineEngineer varchar(200)
+			, @ConstructionSupervisorLANID varchar(20)
+			, @DistPlanningEngineerLANID varchar(20)
+			, @PipelineEngineerLANID varchar(20)
+			, @ConstructionSupervisorUID varchar(100)
+			, @DistPlanningEngineerUID varchar(100)
+			, @PipelineEngineerUID varchar(100)
 			, @LocationRemarks varchar(200)
 			, @Datetime datetime
 			, @Revision int
 			, @AssetAddressUID varchar(200)
 			, @ReturnVal Bit = 1
 			, @MasterLeakLogUID varchar(100)
+			, @PipelineType varchar(25)
 
 		Select @Approved = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Approved'), '')
 		Select @HouseNo = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HouseNo'), '')
@@ -100,13 +108,21 @@ AS
 		Select @SuspectCopper = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SuspectCopper'), '')
 		Select @InfoCodes = ISNULL((Select StringValue From #JSON_Parse Where Name = 'InfoCodes'), '')
 		Select @PotentialHCA = ISNULL((Select StringValue From #JSON_Parse Where Name = 'PotentialHCA'), '')
-		Select @ConstructionSupervisor = ISNULL((Select StringValue From #JSON_Parse Where Name = 'ConstructionSupervisor'), '')
-		Select @DistPlanningEngineer = ISNULL((Select StringValue From #JSON_Parse Where Name = 'DistPlanningEngineer'), '')
-		Select @PipelineEngineer = ISNULL((Select StringValue From #JSON_Parse Where Name = 'PipelineEngineer'), '')
+		Select @ConstructionSupervisorLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'ConstructionSupervisor'), '')
+		Select @DistPlanningEngineerLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'DistPlanningEngineer'), '')
+		Select @PipelineEngineerLANID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'PipelineEngineer'), '')
 		Select @LocationRemarks = ISNULL((Select StringValue From #JSON_Parse Where Name = 'LocationRemarks'), '')
 		Select @AssetAddressIndicationUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AssetAddressIndicationUID'), '')
 		Select @Datetime = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Date'), '')
 		Select @UserUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'UserUID'), '')
+		Select @PipelineType = ISNULL((Select StringValue From #JSON_Parse Where Name = 'PipelineType'), '')
+
+
+		Select @ConstructionSupervisorUID = UserUID  from UserTb Where UserName = @ConstructionSupervisorLANID
+		Select @DistPlanningEngineerUID = UserUID from UserTb Where UserName = @DistPlanningEngineerLANID
+		Select @PipelineEngineerUID = UserUID from UserTb Where UserName = @PipelineEngineerLANID
+
+		Set @PotentialHCA = CASE WHEN @PotentialHCA = 'Y' THEN 'YES' ELSE 'NO' END
 
 Begin Try
 
@@ -261,7 +277,7 @@ Begin Try
 		1, --ActiveFlag,
 		StatusType , --StatusType,
 		ManualMapPlat,
-		PipelineType,
+		@PipelineType, --PipelineType,
 		SurveyType,
 		Map,
 		Plat,
@@ -303,9 +319,9 @@ Begin Try
 		Grade2PlusRequested,
 		TwoPercentOrLessSuspectCopperFlag,
 		LeakDownGradedFlag,
-		@ConstructionSupervisor, --HCAConstructionSupervisorUserUID,
-		@DistPlanningEngineer, --HCADistributionPlanningEngineerUserUID,
-		@PipelineEngineer, --HCAPipelineEngineerUserUID,
+		@ConstructionSupervisorUID, --HCAConstructionSupervisorUserUID,
+		@DistPlanningEngineerUID, --HCADistributionPlanningEngineerUserUID,
+		@PipelineEngineerUID, --HCAPipelineEngineerUserUID,
 		Photo1,
 		Photo2,
 		Photo3,
@@ -321,7 +337,7 @@ Begin Try
 		OptionalData10,
 		OptionalData11,
 		OptionalData12,
-		ApprovedFlag,
+		1, --ApprovedFlag,
 		@UserUID, --ApprovedByUserUID,
 		@Datetime, --ApprovedDTLT,
 		SubmittedFlag,

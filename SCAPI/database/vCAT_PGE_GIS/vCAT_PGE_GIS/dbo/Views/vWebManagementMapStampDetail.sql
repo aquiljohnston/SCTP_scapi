@@ -4,6 +4,11 @@
 
 
 
+
+
+
+
+
 CREATE View [dbo].[vWebManagementMapStampDetail]
 AS
 select 
@@ -12,12 +17,13 @@ MapStampPicaroUID [SourceUID]
 , msp.StatusType [Status]
 , 'All' [SurveyArea]
 , 'PIC' [SurveyType]
-, msp.SurveyDate [DateSurveyed]
+, CAST(msp.SurveyDate AS DATE) [DateSurveyed]
 , ISNULL(u.UserLANID, '') [SurveyorLANID]
 , msp.PicaroEquipmentID [InstSerialNum]
 , 'G_COGIPICA' [InspType]
-, msp.WindSpeedStart
-, ISNULL(Cast(msp.WindSpeedMid as varchar(20)), 'NA') [WindSpeedMid]
+, StartWindSpeed.WindSpeed [WindSpeedStart]
+, CASE WHEN StartWindSpeed.WindSpeed IS not NULL THEN ISNULL(Cast(MidWindSpeed.WindSpeed as varchar(20)), 'NA')
+		ELSE NULL END [WindSpeedMid]
 , 0 [SurveyModeFoot]
 , 1 [SurveyModeMoble]
 , msp.FeetOfMain
@@ -27,7 +33,8 @@ MapStampPicaroUID [SourceUID]
 , msp.LockedFlag
 from (select * From [dbo].[tMapStampPicaro] where ActiveFlag = 1) msp
 Left Join (Select * from UserTb where UserActiveFlag = 1) u on msp.SurveyorUID = u.UserUID
-
+Left Join (select * from tgWindSpeed where ActiveFlag = 1) StartWindSpeed on StartWindSpeed.WindSpeedUID = msp.WindSpeedStartUID
+Left Join (select * from tgWindSpeed where ActiveFlag = 1) MidWindSpeed on MidWindSpeed.WindSpeedUID = msp.WindSpeedMidUID
 	
 
 
@@ -45,7 +52,7 @@ select
 		END
 	ELSE EquipmentModeType
 	END [SurveyType]
-, [is2].SurveyDate [DateSurveyed]
+, CAST([is2].SurveyDate AS DATE) [DateSurveyed]
 , ISNULL(u.UserLANID, '') [SurveyorLANID]
 , ie.SerialNumber [InstSerialNum]
 , ie.EquipmentType [InspType]
