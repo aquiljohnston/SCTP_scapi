@@ -132,6 +132,24 @@ class PgeRbacController extends Controller
 		$viewAOC->description = 'View the AOC screen';
 		$auth->add($viewAOC);
 		
+		//User Mgmt Permissions//
+		//add "viewUserMgnt" permission
+		$viewUserMgnt = $auth->createPermission('viewUserMgnt');
+		$viewUserMgnt->description = 'View User Management Screen';
+		$auth->add($viewUserMgnt);
+		//add "addUser" permission
+		$addUser = $auth->createPermission('addUser');
+		$addUser->description = 'Add a New User';
+		$auth->add($addUser);
+		//add "editUser" permission
+		$editUser = $auth->createPermission('editUser');
+		$editUser->description = 'Edit an Existing User';
+		$auth->add($editUser);
+		//add "deactivateUser" permission
+		$deactivateUser = $auth->createPermission('deactivateUser');
+		$deactivateUser->description = 'Deactivate an Existing User';
+		$auth->add($deactivateUser);
+		
 		
 		/////////////////////////// add roles and children //////////////////////////////////////////////
 		
@@ -145,12 +163,14 @@ class PgeRbacController extends Controller
 		$auth->add($qm);
 		//add child roles to QM
 		//add permissions to QM
+		$auth->addChild($qm, $viewDispatch);
 		$auth->addChild($qm, $viewLeakLogMgnt);
 		$auth->addChild($qm, $viewLeakLogSearch);
 		$auth->addChild($qm, $viewLeakDetails);
 		$auth->addChild($qm, $viewMapStampMgnt);
 		$auth->addChild($qm, $viewMapStampDetail);
 		$auth->addChild($qm, $viewAOC);
+		$auth->addChild($qm, $viewUserMgnt);
 		
 		//add "BSS/Analyst" role
 		$bssAnalyst = $auth->createRole('BSS/Analyst');
@@ -158,25 +178,33 @@ class PgeRbacController extends Controller
 		//add child roles to BSS/Analyst
 		$auth->addChild($bssAnalyst, $qm);
 		//add permissions to BSS/Analyst
-		$auth->addChild($bssAnalyst, $viewDispatch);
 		$auth->addChild($bssAnalyst, $viewAssigned);
 		$auth->addChild($bssAnalyst, $viewMapStampDetailModal);
+		$auth->addChild($bssAnalyst, $addUser);
+		$auth->addChild($bssAnalyst, $editUser);
+		$auth->addChild($bssAnalyst, $deactivateUser);
+		
+		//add "SupervisorSupport" role
+		$supervisorSupport = $auth->createRole('SupervisorSupport');
+		$auth->add($supervisorSupport);
+		//add child roles to SupervisorSupport
+		$auth->addChild($supervisorSupport, $bssAnalyst);
+		//add permissions to SupervisorSupport
+		$auth->addChild($supervisorSupport, $dispatch);
+		$auth->addChild($supervisorSupport, $unassign);
+		$auth->addChild($supervisorSupport, $addSurveyor);
+		$auth->addChild($supervisorSupport, $submitLeak);
+		$auth->addChild($supervisorSupport, $approveLeak);
+		$auth->addChild($supervisorSupport, $editLeak);
+		$auth->addChild($supervisorSupport, $transferFLOC);
+		$auth->addChild($supervisorSupport, $editMapStampDetail);
+		$auth->addChild($supervisorSupport, $submitMapStamp);
 		
 		//add "Supervisor" role
 		$supervisor = $auth->createRole('Supervisor');
 		$auth->add($supervisor);
 		//add child roles to Supervisor
-		$auth->addChild($supervisor, $bssAnalyst);
-		//add permissions to Supervisor
-		$auth->addChild($supervisor, $dispatch);
-		$auth->addChild($supervisor, $unassign);
-		$auth->addChild($supervisor, $addSurveyor);
-		$auth->addChild($supervisor, $submitLeak);
-		$auth->addChild($supervisor, $approveLeak);
-		$auth->addChild($supervisor, $editLeak);
-		$auth->addChild($supervisor, $transferFLOC);
-		$auth->addChild($supervisor, $editMapStampDetail);
-		$auth->addChild($supervisor, $submitMapStamp);
+		$auth->addChild($supervisor, $supervisorSupport);
 		
 		//add "Administrator" role
 		$administrator = $auth->createRole('Administrator');

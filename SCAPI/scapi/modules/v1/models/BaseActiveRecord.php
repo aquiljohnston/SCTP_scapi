@@ -8,9 +8,13 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	
 	private static $CLIENT_ID = '';
+	
+	//base comet tracker databases
 	private static $CT_DEV_DB = 'apidev';	
 	private static $CT_STAGE_DB = 'apistage';
 	private static $CT_PROD_DB = 'api';
+	
+	//pg&e databases
 	private static $PGE_DEV_DB = 'pgedev';
 	private static $PGE_STAGE_DB = 'pgestage';
 	private static $PGE_PROD_DB = 'pge';

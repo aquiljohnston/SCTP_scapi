@@ -161,7 +161,7 @@ class UserController extends BaseActiveController
 			{
 				$scUser->UserAppRoleType = 'Admin';
 			}
-			elseif($roleName == 'Supervisor' || $roleName == 'QM' || $roleName == 'BSS/Analyst')
+			elseif($roleName == 'Supervisor' || $roleName == 'QM' || $roleName == 'BSS/Analyst' || $roleName == 'SupervisorSupport')
 			{
 				$scUser->UserAppRoleType = 'Supervisor';
 			}
@@ -405,7 +405,7 @@ class UserController extends BaseActiveController
 			{
 				$scUser->UserAppRoleType = 'Admin';
 			}
-			elseif($roleName == 'Supervisor' || $roleName == 'QM' || $roleName == 'BSS/Analyst')
+			elseif($roleName == 'Supervisor' || $roleName == 'QM' || $roleName == 'BSS/Analyst' || $roleName == 'SupervisorSupport')
 			{
 				$scUser->UserAppRoleType = 'Supervisor';
 			}
@@ -542,51 +542,79 @@ class UserController extends BaseActiveController
 	* @returns json body of user data
 	* @throws \yii\web\HttpException
 	*/
-	// public function actionDeactivate($userID)
-	// {
-		// PermissionsController::requirePermission('userDeactivate');
+	public function actionDeactivate($UID)
+	{
+		PermissionsController::requirePermission('userDeactivate');
 		
-		// try
-		// {
-			// //set db target
-			// $headers = getallheaders();
-			// PGEUser::setClient($headers['X-Client']);
+		try
+		{
+			//set db for permission check
+			SCUser::setClient(BaseActiveController::urlPrefix());
+			//get user to be deactivated
+			$ctUser = SCUser::find()
+				->where(['UserUID' => $UID])
+				->one();
 			
-			// //get user to be deactivated
-			// $user = PGEUser::findOne($userID);
+			$ctRole = $ctUser["UserAppRoleType"];
 			
-			// $currentRole = $user["UserAppRoleType"];
+			PermissionsController::requirePermission('userUpdate'.$ctRole);
 			
-			// PermissionsController::requirePermission('userUpdate'.$currentRole);
+			//get user making request
+			$modifiedUID = self::getUserFromToken()->UserUID;
 			
-			// //pass new data to user model
-			// //$user->UserActiveFlag = 0;  
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
 			
-			// $response = Yii::$app->response;
-			// $response ->format = Response::FORMAT_JSON;
+			//set db target
+			$headers = getallheaders();
+			PGEUser::setClient($headers['X-Client']);
 			
-			// //call stored procedure to for cascading deactivation of a user
-			// try
-			// {
-				// //deactivate PGEUser
-			// }
-			// catch(Exception $e)
-			// {
-				// $response->setStatusCode(400);
-				// $response->data = "Http:400 Bad Request";
-			// }
-			// return $response;
-		// }
-		// catch(ForbiddenHttpException $e)
-		// {
-			// throw new ForbiddenHttpException;
-		// }
-		// catch(\Exception $e)  
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+			//deactivate pge user record
+			$pgeUser = PGEUser::find()
+				->where(['UserUID' => $UID])
+				->one();
+				
+			$pgeUser->UserInActiveFlag = 1;
+			$pgeUser->UserModifiedUID = $modifiedUID;
+			$pgeUser->UserModifiedDate = Parent::getDate();
+			
+			if($pgeUser->update())
+			{
+				$ctUser->UserActiveFlag = 0;
+				$ctUser->UserModifiedUID = $modifiedUID;
+				$ctUser->UserModifiedDate = Parent::getDate();
+				SCUser::setClient(BaseActiveController::urlPrefix());
+				
+				if($ctUser->update())
+				{
+					$pgeUser->UserPassword = '';
+					$response->data = $pgeUser; 
+				}
+				else
+				{
+					$pgeUser->UserInActiveFlag = 0;
+					$pgeUser->update();
+					$response->setStatusCode(400);
+					$response->data = "Http:400 Bad Request - Failed to process CometTracker User";
+				}
+			}
+			else
+			{
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request - Failed to process" . $headers['X-Client'] . "User";
+			}
+			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)  
+		{
+			throw new \yii\web\HttpException(400);
+		}
 		
-	// }
+	}
 	
 	/**
 	* Gets a users data, the equipment assigned to them, and all projects that they are associated with
