@@ -49,8 +49,11 @@
     [LockedFlag]                  BIT                CONSTRAINT [DF_tInspectionService_LockedFlag] DEFAULT ((1)) NULL,
     [TaskOutUID]                  VARCHAR (200)      NULL,
     [CreateDateTime]              DATETIME           NULL,
+    [IsNotUsed]                   BIT                CONSTRAINT [DF_tInspectionService_IsNotUsed] DEFAULT ((0)) NULL,
     CONSTRAINT [PK_t_InspecitonServices] PRIMARY KEY CLUSTERED ([tInspectionServicesID] ASC)
 );
+
+
 
 
 

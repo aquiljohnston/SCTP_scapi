@@ -20,8 +20,13 @@
     [SurveyDate]           DATE          CONSTRAINT [DF_tMapStampPicaro_SurveyDate] DEFAULT (getdate()) NULL,
     [Seq]                  INT           NULL,
     [LockedFlag]           BIT           CONSTRAINT [DF_tMapStampPicaro_LockedFlag] DEFAULT ((0)) NULL,
-    [Hours]                FLOAT (53)    CONSTRAINT [DF_tMapStampPicaro_Hours] DEFAULT ((0)) NULL
+    [Hours]                FLOAT (53)    CONSTRAINT [DF_tMapStampPicaro_Hours] DEFAULT ((0)) NULL,
+    [TaskOutUID]           VARCHAR (200) NULL,
+    [WindSpeedStartUID]    VARCHAR (200) NULL,
+    [WindSpeedMidUID]      VARCHAR (200) NULL
 );
+
+
 
 
 

@@ -74,6 +74,39 @@ class WorkQueueController extends Controller
         }
 	}
 	
+	public function actionGetAssigned()
+	{
+		try
+		{
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$UID = BaseActiveController::getUserFromToken()->UserUID;
+			
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$connection = BaseActiveRecord::getDb();
+			
+			$workQueueCommand = $connection->createCommand("SELECT * From fnTabletIR(:UserUID) Where SortOrder=0 Order by SortOrder, WorkCenter")
+				->bindParam(':UserUID', $UID,  \PDO::PARAM_STR);
+			$resultSet = $workQueueCommand->queryAll();
+
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $resultSet;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	
 	public static function lockRecords($workQueueArray, $client, $userUID)
 	{
 		try

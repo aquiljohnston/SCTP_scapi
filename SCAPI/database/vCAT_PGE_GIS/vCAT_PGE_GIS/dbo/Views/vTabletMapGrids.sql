@@ -1,4 +1,4 @@
-﻿
+
 
 
 
@@ -73,5 +73,7 @@ AND mg.ActiveFlag = 1
 
 
 GO
-
+GRANT SELECT
+    ON OBJECT::[dbo].[vTabletMapGrids] TO [ApplicationCometTracker]
+    AS [dbo];
 

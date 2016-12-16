@@ -331,9 +331,8 @@ class LeakLogController extends BaseActiveController {
                 $countersQuery = clone $query;
                 $status = $this::GetDatabaseStatusFromUiStatus($status);
 
-                $status = trim($status);
                 if ($status) {
-                    if($status == "Submitted/Pending")
+                    if($status == "Submit/Pending")
                     {
                         $query->andFilterWhere(['or', ['=', "Status", $status], ['=', "Status", "Submitted"]]);
                     }

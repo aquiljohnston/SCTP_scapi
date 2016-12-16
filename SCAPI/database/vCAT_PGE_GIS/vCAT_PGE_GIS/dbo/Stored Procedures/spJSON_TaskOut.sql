@@ -2,7 +2,6 @@
 
 
 
-
 CREATE PROCEDURE [dbo].[spJSON_TaskOut]
 (
       @JSON_Str VarChar(Max)
@@ -17,14 +16,14 @@ AS
 	
 	Declare @ClientID varchar(10)
 		,@UserUID varchar(100)
-		,@TransactionType VarChar(20)
+		,@TransactionType VarChar(50)
 		,@SQLQuery varchar(max)
 		,@SingleQuote char(1) = CHAR(39)
 		
 
 	--Set @SingleQuote = CHAR(39)
 
-	Set @TransactionType = 'TaskOut'
+	Set @TransactionType = 'TaskOut-InspectionServices'
 
 	
 	
@@ -48,7 +47,7 @@ AS
 			)
 		Values (
 			@UserUID
-			,'InspectionServices'
+			,@TransactionType
 			,@JSON_Str
 			)
 
@@ -107,6 +106,7 @@ AS
 			,@InsertedPIC int = 0
 			,@PICUID varchar(100)
 			--,@MapPlat varchar(20)
+			,@INFTaskOutUIDPre varchar(20)
 			,@INFTaskOutUID varchar(200) = 'TASKOUT_'
 			,@INFTaskOutDateTime varchar(20) = Format(getdate(), 'yyyyMMddhhmmss', 'en-US')
 			--,@NextID int
@@ -115,7 +115,14 @@ AS
 			--,@SurveyFreq varchar(20)
 			,@InspectionServicePendingStatusType varchar(20) = 'Pending'
 			--,@AreaNumber varchar(10)
-
+			,@IsNotUsed bit
+			,@RandomNum Decimal(18,18)
+			,@NewUnipueID varchar(50)
+			,@maxRandomValue int = 10
+			,@minRandomValue int = 0
+			,@FirstMasterLeakLogUID varchar(200)
+			,@MoveIndictionUID varchar(200)
+			,@MoveServiceUID varchar(200)
 
 			,@IsTraditional bit
 			,@IsFoot bit
@@ -128,7 +135,7 @@ AS
 
 			,@IsFOV bit
 			,@FOVFeetOfMainFoot float
-			,@FOVFeetOfMainMoble float
+			,@FOVFeetOfMainMobile float
 			,@FOVNumberOfServices int
 			,@PreFOVHours varchar(20)
 			,@FOVHours Float
@@ -137,7 +144,7 @@ AS
 			,@IsLisaFoot bit
 			,@IsLisaMobile bit
 			,@LisaFeetOfMainFoot float
-			,@LisaFeetOfMainMoble float
+			,@LisaFeetOfMainMobile float
 			,@LisaNumberOfServices int
 			,@PreLisaHours varchar(20)
 			,@LisaHours Float
@@ -146,10 +153,12 @@ AS
 			,@IsGapFoot bit
 			,@IsGapMobile bit
 			,@GapFeetOfMainFoot float
-			,@GapFeetOfMainMoble float
+			,@GapFeetOfMainMobile float
 			,@GapNumberOfServices int
 			,@PreGapHours varchar(20)
 			,@GapHours Float
+			,@GapHoursFoot float
+			,@GapHoursMobile float
 			
 			,@IsDeleted bit
 
@@ -204,12 +213,12 @@ AS
 				Select @InspectionRequestUID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'AssignedInspectionRequestUID' and Parent_ID = @ProcessingObjectID), '') 
 				Select @EquipmentSerNo = ISNULL((Select StringValue From #JSON_Parse Where Name = 'SerialNumber' and Parent_ID = @ProcessingObjectID), '')
 				Select @EquipmentType = ISNULL((Select StringValue From #JSON_Parse Where Name = 'Instrument' and Parent_ID = @ProcessingObjectID), '')
+				Select @IsNotUsed = ISNULL((Select StringValue From #JSON_Parse Where Name = 'IsNotUsed' and Parent_ID = @ProcessingObjectID), 0)
 
 
 
-
-				Select @PreFootHours  = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFoot' and Parent_ID = @ProcessingObjectID),'0')
-				Select @PreMobileHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursMobile' and Parent_ID = @ProcessingObjectID), '0')
+				Select @FootHours  = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFoot' and Parent_ID = @ProcessingObjectID),'0')
+				Select @MobileHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursMobile' and Parent_ID = @ProcessingObjectID), '0')
 
 
 				--Select @srcDTLT = dbo.JSON_ParseDate_Str(CASE WHEN ISNULL((Select StringValue From #JSON_Parse Where Name = 'SrcDTLT'), '19000101000000') = 'null' THEN '19000101000000' ELSE ISNULL((Select StringValue From #JSON_Parse Where Name = 'SrcOpenDTLT'), '19000101000000') END)
@@ -231,25 +240,27 @@ AS
 				
 				Select @IsFOV = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isFOV' and Parent_ID = @ProcessingObjectID), 0)
 				Select @FOVFeetOfMainFoot = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainFootFOV' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @FOVFeetOfMainMoble = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainMobileFOV' and Parent_ID = @ProcessingObjectID), 0) as float)
+				Select @FOVFeetOfMainMobile = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainMobileFOV' and Parent_ID = @ProcessingObjectID), 0) as float)
 				Select @FOVNumberOfServices = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServicesFOV' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @PreFOVHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFOV' and Parent_ID = @ProcessingObjectID), '0') 
+				Select @FOVHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFOV' and Parent_ID = @ProcessingObjectID), '0') 
 				
 				Select @IsLisa = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isLISA' and Parent_ID = @ProcessingObjectID), 0)
 				Select @IsLisaFoot = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isLISAFoot' and Parent_ID = @ProcessingObjectID), 0)
 				Select @IsLisaMobile = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isLISAMobile' and Parent_ID = @ProcessingObjectID), 0)
 				Select @LisaFeetOfMainFoot = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainFootLisa' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @LisaFeetOfMainMoble = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainMobileLisa' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @LisaNumberOfServices = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServicesLisa' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @PreLisaHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursLisa' and Parent_ID = @ProcessingObjectID), '0')
+				Select @LisaFeetOfMainMobile = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainMobileLisa' and Parent_ID = @ProcessingObjectID), 0) as float)
+				Select @LisaNumberOfServices = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServicesFootLISA' and Parent_ID = @ProcessingObjectID), 0) as float)
+				Select @LisaHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFootLISA' and Parent_ID = @ProcessingObjectID), '0')
 				
 				Select @IsGap = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isGAP' and Parent_ID = @ProcessingObjectID), 0)
 				Select @IsGapFoot = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isGAPFoot' and Parent_ID = @ProcessingObjectID), 0)
 				Select @IsGapMobile = ISNULL((Select StringValue From #JSON_Parse Where Name = 'isGAPMobile' and Parent_ID = @ProcessingObjectID), 0)
 				Select @GapFeetOfMainFoot = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainFootGap' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @GapFeetOfMainMoble = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainMobileGap' and Parent_ID = @ProcessingObjectID), 0) as float)
-				Select @GapNumberOfServices = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServicesGap' and Parent_ID = @ProcessingObjectID), 0) as float)
+				Select @GapFeetOfMainMobile = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'FeetOfMainMobileGap' and Parent_ID = @ProcessingObjectID), 0) as float)
+				Select @GapNumberOfServices = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'NumberOfServicesFootGAP' and Parent_ID = @ProcessingObjectID), 0) as float)
 				Select @PreGapHours = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursGap' and Parent_ID = @ProcessingObjectID), '0')
+				Select @GapHoursFoot = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursFootGAP' and Parent_ID = @ProcessingObjectID), 0)
+				Select @GapHoursMobile = ISNULL((Select StringValue From #JSON_Parse Where Name = 'HoursMobileGAP' and Parent_ID = @ProcessingObjectID), 0)
 
 				Select @WorkQueueObjectID = ISNULL((Select StringValue From #JSON_Parse Where Name = 'WorkQueuee' and Parent_ID = @ProcessingObjectID), 0)
 				
@@ -258,7 +269,7 @@ AS
 				Select @NotificationID = Cast(ISNULL((Select StringValue From #JSON_Parse Where Name = 'NotificationID' and Parent_ID = @WorkQueueObjectID), '') as Float)
 
 				Select @LANID = UserLANID from UserTb where UserUID = @AssignedUserUID
-
+/*
 --PreFootHours
 				
 				If CHARINDEX(':', @PreFootHours) > 0 AND ISNUMERIC(Replace(@PreFootHours, ':', '')) = 1
@@ -375,7 +386,7 @@ AS
 					SELECT @GapHours =	0
 
 				END
-				
+*/				
 --Marked Deleted all Place Holder Service Records
 
 				IF @PlaceHolderPassNo = 1 
@@ -773,14 +784,17 @@ AS
 
 				--Select @EquipmentSerNo = SerialNumber, @EquipmentType = EquipmentType from [dbo].[tInspectionsEquipment] where InspecitonEquipmentUID = @EquipmentUID
 
-				Set @INFTaskOutUID = @INFTaskOutUID + @SourceID + '_' + @EquipmentSerNo + '_' 
+				Set @INFTaskOutUIDPre = 'TO_' + @SourceID + '_' + Replace(@EquipmentSerNo, 'GI_', '')  + '_' 
 				
 
 				If @IsTraditional = 1 AND @IsFoot = 1
 				BEGIN
 				
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 1 as varchar(20)), '.', '')
 					
-					Set @INFTaskOutUID = @INFTaskOutUID + 'TR_F' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixTR_Foot
 
@@ -813,7 +827,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 
 						
 					)
@@ -834,7 +849,7 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'TR' --EquipmentModeType
+						,'T' --EquipmentModeType
 						,@TRFeetOfMainFoot
 						,@TRNumberOfServices
 						,@FootHours
@@ -845,6 +860,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 
 				END
@@ -854,7 +870,13 @@ AS
 				BEGIN
 
 					
-					Set @INFTaskOutUID = @INFTaskOutUID + 'TR_M' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 2 as varchar(20)), '.', '')
+					
+					
+					
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixTR_Mobile
 
@@ -887,7 +909,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 					)
 					Values
 					(
@@ -906,7 +929,7 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'TR' --EquipmentModeType
+						,'T' --EquipmentModeType
 						,@TRFeetOfMainMobile
 						,0 --EstimatedService
 						,@MobileHours
@@ -917,6 +940,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 
 
@@ -925,8 +949,13 @@ AS
 				IF @IsPicarro = 1 AND @IsFOV = 1 
 				BEGIN
 
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 3 as varchar(20)), '.', '')
+
+
 					
-					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_FOV' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_FOV_Foot
 
@@ -959,7 +988,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 					)
 					Values
 					(
@@ -978,7 +1008,7 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'PIC_FOV' --EquipmentModeType
+						,'V' --EquipmentModeType
 						,@FOVFeetOfMainFoot
 						,@FOVNumberOfServices
 						,@FOVHours
@@ -989,6 +1019,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 					
 				END
@@ -996,7 +1027,11 @@ AS
 				IF @IsPicarro = 1 AND @IsLisa = 1 and @IsLisaFoot = 1
 				BEGIN
 
-					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_LISA_F' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 4 as varchar(20)), '.', '')
+
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_LISA_Foot
 
@@ -1029,7 +1064,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 						
 					)
 					Values
@@ -1049,7 +1085,7 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'PIC_LISA_Foot' --EquipmentModeType
+						,'L' --EquipmentModeType
 						,@LisaFeetOfMainFoot
 						,@LisaNumberOfServices
 						,@LisaHours
@@ -1060,6 +1096,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 					
 				END
@@ -1068,7 +1105,11 @@ AS
 				IF @IsPicarro = 1 AND @IsLisa = 1 and @IsLisaMobile = 1
 				BEGIN
 
-					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_LISA_M' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 5 as varchar(20)), '.', '')
+
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_LISA_Mobile
@@ -1102,7 +1143,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 					)
 					Values
 					(
@@ -1121,8 +1163,8 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'PIC_LISA_Mobile' --EquipmentModeType
-						,@LisaFeetOfMainMoble
+						,'L' --EquipmentModeType
+						,@LisaFeetOfMainMobile
 						,0
 						,@LisaHours
 						,'M' --SurveyMode
@@ -1132,6 +1174,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 					
 				END
@@ -1139,7 +1182,11 @@ AS
 				IF @IsPicarro = 1 AND @IsGap = 1 and @IsGapFoot = 1
 				BEGIN
 
-					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_GAP_F' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 6 as varchar(20)), '.', '')
+
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_GAP_Foot
@@ -1173,7 +1220,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 
 					)
 					Values
@@ -1193,10 +1241,10 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'PIC_GAP_Foot' --EquipmentModeType
+						,'G' --EquipmentModeType
 						,@GapFeetOfMainFoot
 						,@GapNumberOfServices
-						,@GapHours
+						,@GapHoursFoot
 						,'F' --SurveyMode
 						,@EquipmentType
 						,@EquipmentSerNo
@@ -1204,6 +1252,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 					
 				END
@@ -1211,7 +1260,11 @@ AS
 				IF @IsPicarro = 1 AND @IsGap = 1 and @IsGapMobile = 1
 				BEGIN
 
-					Set @INFTaskOutUID = @INFTaskOutUID + 'PIC_GAP_M' + @INFTaskOutDateTime + Right(@TaskOutUID, CHARINDEX('_', Reverse(@TaskOutUID)))
+					Select @RandomNum = Rand()
+					Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+					* @RandomNum + @minRandomValue As decimal(7,4)) * 7 as varchar(20)), '.', '')
+
+					Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
 					
 					
 					Select @Revision = Count(*) from  [dbo].[tInspectionService] Where InspectionServicesUID = @TaskOutUID + @UIDSufixPIC_GAP_Mobile
@@ -1245,7 +1298,8 @@ AS
 						TaskOutUID,
 						CreateDateTime,
 						MapAreaNumber,
-						LockedFlag
+						LockedFlag,
+						IsNotUsed
 					)
 					Values
 					(
@@ -1264,10 +1318,10 @@ AS
 						,@InspectionServicePendingStatusType --StatusType
 						,@WindSpeedStartUID
 						,@WindSpeedMidUID
-						,'PIC_GAP_Mobile' --EquipmentModeType
-						,@GapFeetOfMainMoble
+						,'G' --EquipmentModeType
+						,@GapFeetOfMainMobile
 						,0
-						,@GapHours
+						,@GapHoursMobile
 						,'M' --SurveyMode
 						,@EquipmentType
 						,@EquipmentSerNo
@@ -1275,6 +1329,7 @@ AS
 						,@SrcDTLT
 						,@AreaNumber
 						, 0
+						, @IsNotUsed
 					)
 
 
@@ -1401,14 +1456,20 @@ AS
 
 								select @NextID = IDENT_CURRENT('tMapStampPicaro') + 1
 
+								Select @RandomNum = Rand()
+								Select @NewUnipueID = REPLACE(Cast(Cast(((@maxRandomValue + 1) - @minRandomValue) 
+								* @RandomNum + @minRandomValue As decimal(7,4)) * @NextID as varchar(20)), '.', '')
+
+								Set @INFTaskOutUID = @INFTaskOutUIDPre + @NewUnipueID + '_' + @INFTaskOutDateTime + '_' + Right(@TaskOutUID, 4)
+
 								Insert Into [dbo].[tMapStampPicaro]
 								(
 									MapStampPicaroUID,
 									InspectionRequestUID,
 									ProjectID,
 									CreatedByUserUID,
-									Seq
-									
+									Seq,
+									TaskOutUID
 									
 								)
 								Values
@@ -1418,6 +1479,7 @@ AS
 									,1
 									,'User_System_Automation'
 									,@InsertedPIC + 1
+									,@INFTaskOutUID
 								)
 
 								Set @InsertedPIC = @InsertedPIC + 1
@@ -1447,6 +1509,10 @@ AS
 
 			END
 		
+Close InProgress
+Deallocate InProgress
+
+
 Close PlaceHolder
 Deallocate PlaceHolder
 
@@ -1454,16 +1520,495 @@ Close objProcessingObj
 Deallocate objProcessingObj
 
 		
-		
 
 /*******************************************************
 
-   Last thing we do
 	Drop the table created in this proceedure
 
 ******************************************************/
 
 Drop Table #JSON_Parse
+
+-- New code added on 12/9/2016 to combine master leak logs
+
+	Select @FirstMasterLeakLogUID = MasterLeakLogUID 
+	from tMasterLeakLog 
+	where InspectionRequestLogUID = @InspectionRequestUID 
+		and MasterLeakLogUID <> @MasterLeakLogUID
+		and ActiveFlag = 1
+		and CreatedUserUID = @UserUID
+		and Cast(ServiceDate as date) = Cast(@SrcDTLT as date)
+		and StatusType = 'Not Approved'
+
+	IF ISNULL(@FirstMasterLeakLogUID, '') <> ''
+	BEGIN
+
+		IF (Select Count(*) 
+			from tgAssetAddressIndication 
+			where MasterLeakLogUID = @FirstMasterLeakLogUID 
+			and StatusType in ('In Progress', 'Completed', 'Submit/Pending') and ActiveFlag = 1) = 0 
+
+		BEGIN
+
+			Declare MoveInd Cursor For
+			Select Distinct AssetAddressIndicationUID
+			from [dbo].[tgAssetAddressIndication]
+			where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1 and StatusType in ('Pending')
+
+			Open MoveInd
+			
+			Fetch Next From MoveInd into @MoveIndictionUID
+
+			While @@FETCH_STATUS = 0
+			BEGIN
+
+				Select @Revision = Count(*) from [dbo].[tgAssetAddressIndication] Where AssetAddressIndicationUID = @MoveIndictionUID
+
+				Update [dbo].[tgAssetAddressIndication] set ActiveFlag = 0 Where AssetAddressIndicationUID = @MoveIndictionUID
+
+				Insert Into [dbo].[tgAssetAddressIndication]
+				(
+					AssetAddressIndicationUID,
+					AssetAddressUID,
+					InspectionRequestUID,
+					MapGridUID,
+					MasterLeakLogUID,
+					ProjectID,
+					SourceID,
+					CreatedUserUID,
+					ModifiedUserUID,
+					SrcDTLT,
+					SrvDTLT,
+					SrvDTLTOffset,
+					SrcOpenDTLT,
+					SrcClosedDTLT,
+					GPSType,
+					GPSSentence,
+					Latitude,
+					Longitude,
+					SHAPE,
+					Comments,
+					RevisionComments,
+					Revision,
+					ActiveFlag,
+					StatusType,
+					ManualMapPlat,
+					PipelineType,
+					SurveyType,
+					Map,
+					Plat,
+					RecordedMap,
+					RecordedPlat,
+					RecordedBlock,
+					LandmarkType,
+					Route,
+					Line,
+					HouseNoNAFlag,
+					HouseNo,
+					Street1,
+					City,
+					DescriptionReadingLocation,
+					County,
+					CountyCode,
+					FacilityType,
+					LocationType,
+					InitialLeakSourceType,
+					ReportedByType,
+					LeakNo,
+					SAPNo,
+					PavedType,
+					SORLType,
+					SORLOther,
+					Within5FeetOfBuildingType,
+					SuspectedCopperType,
+					EquipmentFoundByUID,
+					FoundBy,
+					FoundBySerialNumber,
+					InstrumentTypeGradeByType,
+					EquipmentGradeByUID,
+					GradeBy,
+					GradeBySerialNumber,
+					ReadingGrade,
+					GradeType,
+					InfoCodesType,
+					PotentialHCAType,
+					Grade2PlusRequested,
+					TwoPercentOrLessSuspectCopperFlag,
+					LeakDownGradedFlag,
+					HCAConstructionSupervisorUserUID,
+					HCADistributionPlanningEngineerUserUID,
+					HCAPipelineEngineerUserUID,
+					Photo1,
+					Photo2,
+					Photo3,
+					OptionalData1,
+					OptionalData2,
+					OptionalData3,
+					OptionalData4,
+					OptionalData5,
+					OptionalData6,
+					OptionalData7,
+					OptionalData8,
+					OptionalData9,
+					OptionalData10,
+					OptionalData11,
+					OptionalData12,
+					ApprovedFlag,
+					ApprovedByUserUID,
+					ApprovedDTLT,
+					SubmittedFlag,
+					SubmittedStatusType,
+					SubmittedUserUID,
+					SubmittedDTLT,
+					ResponseStatusType,
+					ResponseComments,
+					ResponceErrorComments,
+					ResponseDTLT,
+					CompletedFlag,
+					CompletedDTLT,
+					AboveBelowGroundType,
+					FoundDateTime,
+					GPSSource,
+					GPSTime,
+					FixQuality,
+					NumberOfSatellites,
+					HDOP,
+					AltitudemetersAboveMeanSeaLevel,
+					HeightOfGeoid,
+					TimeSecondsSinceLastDGPS,
+					ChecksumData,
+					Bearing,
+					Speed,
+					GPSStatus,
+					NumberOfGPSAttempts,
+					ActivityUID,
+					AssetInspectionUID,
+					MapPlatLeakNumber,
+					LockedFlag
+				)
+				Select
+					AssetAddressIndicationUID,
+					AssetAddressUID,
+					InspectionRequestUID,
+					MapGridUID,
+					@FirstMasterLeakLogUID, --  MasterLeakLogUID,
+					ProjectID,
+					SourceID,
+					CreatedUserUID,
+					ModifiedUserUID,
+					SrcDTLT,
+					SrvDTLT,
+					SrvDTLTOffset,
+					SrcOpenDTLT,
+					SrcClosedDTLT,
+					GPSType,
+					GPSSentence,
+					Latitude,
+					Longitude,
+					SHAPE,
+					Comments,
+					'Moved From Master Leak Log UID ' + @MasterLeakLogUID, --  RevisionComments,
+					@Revision,
+					1, --ActiveFlag,
+					StatusType,
+					ManualMapPlat,
+					PipelineType,
+					SurveyType,
+					Map,
+					Plat,
+					RecordedMap,
+					RecordedPlat,
+					RecordedBlock,
+					LandmarkType,
+					Route,
+					Line,
+					HouseNoNAFlag,
+					HouseNo,
+					Street1,
+					City,
+					DescriptionReadingLocation,
+					County,
+					CountyCode,
+					FacilityType,
+					LocationType,
+					InitialLeakSourceType,
+					ReportedByType,
+					LeakNo,
+					SAPNo,
+					PavedType,
+					SORLType,
+					SORLOther,
+					Within5FeetOfBuildingType,
+					SuspectedCopperType,
+					EquipmentFoundByUID,
+					FoundBy,
+					FoundBySerialNumber,
+					InstrumentTypeGradeByType,
+					EquipmentGradeByUID,
+					GradeBy,
+					GradeBySerialNumber,
+					ReadingGrade,
+					GradeType,
+					InfoCodesType,
+					PotentialHCAType,
+					Grade2PlusRequested,
+					TwoPercentOrLessSuspectCopperFlag,
+					LeakDownGradedFlag,
+					HCAConstructionSupervisorUserUID,
+					HCADistributionPlanningEngineerUserUID,
+					HCAPipelineEngineerUserUID,
+					Photo1,
+					Photo2,
+					Photo3,
+					OptionalData1,
+					OptionalData2,
+					OptionalData3,
+					OptionalData4,
+					OptionalData5,
+					OptionalData6,
+					OptionalData7,
+					OptionalData8,
+					OptionalData9,
+					OptionalData10,
+					OptionalData11,
+					OptionalData12,
+					ApprovedFlag,
+					ApprovedByUserUID,
+					ApprovedDTLT,
+					SubmittedFlag,
+					SubmittedStatusType,
+					SubmittedUserUID,
+					SubmittedDTLT,
+					ResponseStatusType,
+					ResponseComments,
+					ResponceErrorComments,
+					ResponseDTLT,
+					CompletedFlag,
+					CompletedDTLT,
+					AboveBelowGroundType,
+					FoundDateTime,
+					GPSSource,
+					GPSTime,
+					FixQuality,
+					NumberOfSatellites,
+					HDOP,
+					AltitudemetersAboveMeanSeaLevel,
+					HeightOfGeoid,
+					TimeSecondsSinceLastDGPS,
+					ChecksumData,
+					Bearing,
+					Speed,
+					GPSStatus,
+					NumberOfGPSAttempts,
+					ActivityUID,
+					AssetInspectionUID,
+					MapPlatLeakNumber,
+					0 --LockedFlag
+							
+				From [dbo].[tgAssetAddressIndication] Where AssetAddressIndicationUID = @MoveIndictionUID and Revision = @Revision - 1
+
+				Fetch Next From MoveInd into @MoveIndictionUID
+
+			END
+
+			Close MoveInd
+			Deallocate MoveInd
+
+			Declare MoveServices Cursor For
+			Select Distinct InspectionServicesUID
+			from [dbo].[tInspectionService]
+			where MasterLeakLogUID = @MasterLeakLogUID and ActiveFlag = 1
+
+			Open MoveServices
+
+			Fetch Next From MoveServices into @MoveServiceUID
+
+			While @@FETCH_STATUS = 0
+			BEGIN
+
+				Select @Revision = Count(*) from tInspectionService Where InspectionServicesUID = @MoveServiceUID
+
+				Update tInspectionService set ActiveFlag = 0 Where InspectionServicesUID = @MoveServiceUID
+
+				Insert Into tInspectionService
+				(
+					InspectionServicesUID,
+					MasterLeakLogUID,
+					MapGridUID,
+					InspectionRequestUID,
+					InspectionEquipmentUID,
+					ProjectID,
+					SourceID,
+					CreatedUserUID,
+					ModifiedUserUID,
+					SrcDTLT,
+					Comments,
+					RevisionComments,
+					Revision,
+					ActiveFlag,
+					StatusType,
+					EquipmentType,
+					InstrumentType,
+					SerialNumber,
+					CalibrationLevel,
+					CalibrationVerificationFlag,
+					WindSpeedStart,
+					WindSpeedEnd,
+					EquipmentModeType,
+					EstimatedFeet,
+					EstimatedServices,
+					EstimatedHours,
+					ApprovedFlag,
+					ApprovedByUserUID,
+					ApprovedDTLT,
+					SubmittedFlag,
+					SubmittedStatusType,
+					SubmittedUserUID,
+					SubmittedDTLT,
+					ResponseStatusType,
+					Response,
+					ResponceErrorDescription,
+					ResponseDTLT,
+					CompletedFlag,
+					CompletedDTLT,
+					SurveyMode,
+					PlaceHolderFlag,
+					WindSpeedStartUID,
+					WindSpeedMidUID,
+					MapAreaNumber,
+					LockedFlag,
+					TaskOutUID,
+					CreateDateTime,
+					IsNotUsed
+				)
+				Select
+					InspectionServicesUID,
+					@FirstMasterLeakLogUID, --  MasterLeakLogUID,
+					MapGridUID,
+					InspectionRequestUID,
+					InspectionEquipmentUID,
+					ProjectID,
+					SourceID,
+					CreatedUserUID,
+					ModifiedUserUID,
+					SrcDTLT,
+					Comments,
+					'Moved From Master Leak Log UID ' + @MasterLeakLogUID, --  RevisionComments,
+					@Revision, -- Revision,
+					1, --ActiveFlag,
+					StatusType,
+					EquipmentType,
+					InstrumentType,
+					SerialNumber,
+					CalibrationLevel,
+					CalibrationVerificationFlag,
+					WindSpeedStart,
+					WindSpeedEnd,
+					EquipmentModeType,
+					EstimatedFeet,
+					EstimatedServices,
+					EstimatedHours,
+					ApprovedFlag,
+					ApprovedByUserUID,
+					ApprovedDTLT,
+					SubmittedFlag,
+					SubmittedStatusType,
+					SubmittedUserUID,
+					SubmittedDTLT,
+					ResponseStatusType,
+					Response,
+					ResponceErrorDescription,
+					ResponseDTLT,
+					CompletedFlag,
+					CompletedDTLT,
+					SurveyMode,
+					PlaceHolderFlag,
+					WindSpeedStartUID,
+					WindSpeedMidUID,
+					MapAreaNumber,
+					LockedFlag,
+					TaskOutUID,
+					CreateDateTime,
+					IsNotUsed
+				From tInspectionService Where InspectionServicesUID = @MoveServiceUID and Revision = @Revision - 1
+
+				Fetch Next From MoveServices into @MoveServiceUID
+
+			END
+
+			Close MoveServices
+			Deallocate MoveServices
+
+			Select @Revision = Count(*) from tMasterLeakLog Where MasterLeakLogUID = @MasterLeakLogUID
+
+			Update tMasterLeakLog set ActiveFlag = 0 Where MasterLeakLogUID = @MasterLeakLogUID
+
+			Insert Into tMasterLeakLog
+			(
+				MasterLeakLogUID,
+				InspectionRequestLogUID,
+				MapGridUID,
+				ServiceDate,
+				ProjectID,
+				SourceID,
+				CreatedUserUID,
+				ModifiedUserUID,
+				SrcDTLT,
+				Comments,
+				RevisionComments,
+				Revision,
+				ActiveFlag,
+				StatusType,
+				ApprovedFlag,
+				ApprovedByUserUID,
+				ApprovedDTLT,
+				SubmittedFlag,
+				SubmittedStatusType,
+				SubmittedUserUID,
+				SubmittedDTLT,
+				ResponseStatusType,
+				Response,
+				ResponceErrorDescription,
+				ResponseDTLT,
+				CompletedFlag,
+				CompletedDTLT
+			)
+			Select 
+				MasterLeakLogUID,
+				InspectionRequestLogUID,
+				MapGridUID,
+				ServiceDate,
+				ProjectID,
+				SourceID,
+				CreatedUserUID,
+				ModifiedUserUID,
+				SrcDTLT,
+				Comments,
+				'Leaks and Services moved to ' + @FirstMasterLeakLogUID, -- RevisionComments,
+				@Revision, -- Revision,
+				1, --ActiveFlag,
+				'Canceled', --StatusType,
+				ApprovedFlag,
+				ApprovedByUserUID,
+				ApprovedDTLT,
+				SubmittedFlag,
+				SubmittedStatusType,
+				SubmittedUserUID,
+				SubmittedDTLT,
+				ResponseStatusType,
+				Response,
+				ResponceErrorDescription,
+				ResponseDTLT,
+				CompletedFlag,
+				CompletedDTLT
+			From tMasterLeakLog Where MasterLeakLogUID = @MasterLeakLogUID and Revision = @Revision - 1
+
+
+		END
+
+
+
+	END
 
 SET NOCOUNT OFF
 	

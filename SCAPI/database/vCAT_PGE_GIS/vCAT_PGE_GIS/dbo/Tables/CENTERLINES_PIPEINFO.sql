@@ -1,0 +1,61 @@
+﻿CREATE TABLE [dbo].[CENTERLINES_PIPEINFO] (
+    [OBJECTID]           INT              IDENTITY (1, 1) NOT NULL,
+    [Shape]              [sys].[geometry] NULL,
+    [OPERATION_AREA]     NVARCHAR (254)   NULL,
+    [ROUTE_NAME]         NVARCHAR (254)   NULL,
+    [TRANS_DEF]          NVARCHAR (254)   NULL,
+    [FACILITY_TYPE_DESC] NVARCHAR (254)   NULL,
+    [FEATURE_TYPE]       NVARCHAR (561)   NULL,
+    [LONG_ROUTE_NAME]    NVARCHAR (254)   NULL,
+    [STATION_SERIES_ID]  NUMERIC (38, 8)  NULL,
+    [BEGIN_STATION]      NUMERIC (38, 8)  NULL,
+    [END_STATION]        NUMERIC (38, 8)  NULL,
+    [DOT_CLASS]          NVARCHAR (254)   NULL,
+    [FEATURE_MAOP]       NUMERIC (38, 8)  NULL,
+    [INSTALL_DATE]       DATETIME2 (7)    NULL,
+    [INSTALL_JOB]        NVARCHAR (50)    NULL,
+    [MATERIAL]           NVARCHAR (1525)  NULL,
+    [OUTSIDE_DIAMETER]   NVARCHAR (254)   NULL,
+    [WALL_THICKNESS]     NVARCHAR (254)   NULL,
+    [SMYS]               NVARCHAR (254)   NULL,
+    [PIPE_GRADE]         NVARCHAR (16)    NULL,
+    [LONG_SEAM]          NVARCHAR (254)   NULL,
+    [MANUFACTURER]       NVARCHAR (254)   NULL,
+    [PURCHASE_DATE]      DATETIME2 (7)    NULL,
+    [TEST_PRESSURE]      NUMERIC (38, 8)  NULL,
+    [TEST_DATE]          DATETIME2 (7)    NULL,
+    [TEST_TYPE]          NVARCHAR (254)   NULL,
+    [TEST_MEDIUM]        NVARCHAR (254)   NULL,
+    [TEST_DURATION]      NUMERIC (38, 8)  NULL,
+    [TEST_JOB]           NVARCHAR (50)    NULL,
+    [OPERATING_STATUS]   NVARCHAR (254)   NULL,
+    [ASSET_OWNER]        NVARCHAR (7)     NULL,
+    [MAINT_ORG]          NVARCHAR (254)   NULL,
+    [LEAK_SURVEY_GROUP]  NUMERIC (38, 8)  NULL,
+    [BEND_RADIUS]        NVARCHAR (66)    NULL,
+    [BEND_ORIENTATION]   NVARCHAR (508)   NULL,
+    [BEND_ANGLE]         NUMERIC (38, 8)  NULL,
+    [COATING_TYPE]       NVARCHAR (254)   NULL,
+    [PFL_COATING_TYPE]   NVARCHAR (50)    NULL,
+    [PFL_COATING_DATE]   DATETIME2 (7)    NULL,
+    [CP_SURVEY_GROUP]    NVARCHAR (50)    NULL,
+    [PFL_FILENAME]       NVARCHAR (45)    NULL,
+    [ROUTE_ID]           NUMERIC (38, 8)  NULL,
+    [LINE_ID]            NUMERIC (38, 8)  NULL,
+    [Lat_Begin]          NUMERIC (38, 8)  NULL,
+    [Long_Begin]         NUMERIC (38, 8)  NULL,
+    [Lat_End]            NUMERIC (38, 8)  NULL,
+    [Long_End]           NUMERIC (38, 8)  NULL,
+    PRIMARY KEY CLUSTERED ([OBJECTID] ASC)
+);
+
+
+GO
+CREATE SPATIAL INDEX [FDO_Shape]
+    ON [dbo].[CENTERLINES_PIPEINFO] ([Shape])
+    USING GEOMETRY_GRID
+    WITH  (
+            BOUNDING_BOX = (XMAX = 3.02603462562397E+15, XMIN = -16800800, YMAX = 3.02603460962277E+15, YMIN = -32802000),
+            GRIDS = (LEVEL_1 = MEDIUM, LEVEL_2 = MEDIUM, LEVEL_3 = MEDIUM, LEVEL_4 = MEDIUM)
+          );
+
