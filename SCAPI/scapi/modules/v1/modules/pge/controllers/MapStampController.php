@@ -9,6 +9,7 @@
 namespace app\modules\v1\modules\pge\controllers;
 
 use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v1\modules\pge\models\WebManagementEquipmentServicesPic;
 use Yii;
 use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
@@ -243,5 +244,80 @@ class MapStampController extends BaseActiveController {
         $response->data = $data;
         return $response;
 
+    }
+
+    /**
+     * @param string $id ﻿MapStampPicaroUID
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetEquipmentPicaroById($id) {
+        try
+        {
+            $data = [];
+            $MapStampPicaroUID = $id;
+            $headers = getallheaders();
+            WebManagementEquipmentServicesPic::setClient($headers['X-Client']);
+            $smRecord = WebManagementEquipmentServicesPic::find()
+                ->where(['MapStampPicaroUID' => $MapStampPicaroUID])
+                ->one();
+
+            $data['result'] = $smRecord;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     * @param string $id InspectionServicesUID
+     */
+    public function actionUpdateEquipmentPicaro($id = null) {
+        try
+        {
+            $headers = getallheaders();
+            WebManagementEquipmentServicesPic::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+//            $putData = json_decode($put, true);
+
+//            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' id = '.$id. ' putData = '.print_r($putData,true));
+            $sqlCommand = "EXEC spWebManagementJSON_InspectionServiceUpdate @JSON_Str=:putData";
+
+            $command =  WebManagementEquipmentServicesPic::getDb()->createCommand($sqlCommand);
+            $command->bindParam(":putData", $put);
+
+            $result = $command->queryOne();
+
+            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' result = '.print_r($result,true));
+
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $result;
+
+            return $response;
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 }
