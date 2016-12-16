@@ -1,5 +1,7 @@
 ﻿
 
+
+
 CREATE View [dbo].[vWebManagementAOC]
 AS
 select
@@ -10,9 +12,10 @@ wc.WorkCenter [WorkCenter],
 mg.FuncLocMap + '/' + mg.FuncLocPlat [Map/Plat],
 ir.SurveyType,
 aoc.AOCType,
-aoc.MeterNumber,
+--aoc.MeterNumber,
+ISNULL(aa.AssetLocationID, '') [MeterNumber],
 aa.HouseNo,
-aa.Street1 + ', ' + aa.Street2 [Street],
+ISNULL(aa.Street1, '') + ', ' + ISNULL(aa.Street2, '') [Street],
 aa.Apt,
 aa.City,
 aoc.Comments,
@@ -25,7 +28,7 @@ wc.Division,
 mg.FLOC,
 u.UserLANID [LANID]
 from 
-	[dbo].[tgAssetAddressAOC] AOC
+	(Select * From [dbo].[tgAssetAddressAOC] where ActiveFlag = 1) AOC
 Join (Select * from UserTb where UserActiveFlag = 1) u on aoc.CreatedUserUID = u.UserUID
 Join (Select * from [dbo].[rgMapGridLog] where ActiveFlag = 1) mg on aoc.MapGridUID = mg.MapGridUID
 Join (Select * from [dbo].[rWorkCenter] where ActiveFlag = 1) wc on wc.WorkCenterAbbreviationFLOC = mg.FuncLocMWC

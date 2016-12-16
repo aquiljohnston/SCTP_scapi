@@ -1,4 +1,6 @@
 ﻿
+
+
 CREATE View [dbo].[vTabletDropDownEquipment]
 AS
 select u.UserUID
@@ -33,8 +35,8 @@ Join
 	from UserTb u
 	Join (Select * from [dbo].[tInspectorOQLog] where ActiveFlag = 1) OQ on u.UserUID = OQ.UserUID
 	Join (Select * from [dbo].[xOQEquipmentTypexRef] where ActiveFlag = 1) x on x.OQProfile = OQ.OQProfile
-	Join (Select * from [dbo].[tEquipmentLog] where ActiveFlag = 1) e on e.EqObjType = x.SAPEquipmentType
-	left join (select Equipmenttype, SerialNumber, max(srcdtlt) [LastCalDate] from  [dbo].[tInspectionsEquipment] Group By Equipmenttype, SerialNumber) ie on ie.EquipmentType = e.EqObjType and ie.SerialNumber = e.EqSerNo 
+	Join (Select * from [dbo].[tEquipmentLog] where ActiveFlag = 1 and EqObjType <> 'G_COGIPICA') e on e.EqObjType = x.SAPEquipmentType
+	Left join (select CreatedUserUID, Equipmenttype, SerialNumber, max(srcdtlt) [LastCalDate] from  [dbo].[tInspectionsEquipment] Group By CreatedUserUID, Equipmenttype, SerialNumber) ie on ie.EquipmentType = e.EqObjType and ie.SerialNumber = e.EqSerNo and ie.CreatedUserUID = u.UserUID
 
 ) UserEquip on u.UserUID = UserEquip.UserUID
 Left Join

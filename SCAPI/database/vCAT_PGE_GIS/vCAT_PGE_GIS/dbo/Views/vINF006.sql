@@ -1,6 +1,10 @@
 ﻿
 
 
+
+
+
+
 CREATE VIEW [dbo].[vINF006] AS 
 
 SELECT 
@@ -21,11 +25,11 @@ SELECT
 ,FORMAT(ind.FoundDateTime, 'MMddyyyy')							AS [READ_DATE]
 ,FORMAT(ind.FoundDateTime, 'HHmmss')							AS [READ_TIME]
 --,ind.CreatedUserUID AS UserLanID								-- Debub ------------------------------------------------------
-,CAST(svor.UserLANID AS VARCHAR(4))								AS [READ_LANID]			
+,UPPER(CAST(svor.UserLANID AS VARCHAR(4)))						AS [READ_LANID]			
 ,FORMAT(ind.ApprovedDTLT, 'MMddyyyy')							AS [SPVR_APPROVAL_DATE]	
 
 --,ind.ApprovedByUserUID AS SupervisorLanID						-- Debub ------------------------------------------------------
-,CAST(sup.UserLANID AS VARCHAR(4))								AS [SPVR_LANID]			
+,UPPER(CAST(sup.UserLANID AS VARCHAR(4)))						AS [SPVR_LANID]			
 
 ,CAST(mg.FLOC AS VARCHAR(30))									AS [FLOC]				
 ,CAST(wc.WorkCenterAbbreviation AS VARCHAR(8))					AS [MWC]				
@@ -71,9 +75,9 @@ SELECT
 ,CAST(ind.StationBegin AS VARCHAR(18))							AS [STA_BEGIN]			-- If the Pipeline Line Time = 'GT/LT' only AND FLOC <> 'GT.PHYS.TRNS.9999.0T99' 
 ,CAST(ind.StationEnd AS VARCHAR(18))							AS [STA_END]			-- If the Pipeline Line Time = 'GT/LT' only AND FLOC <> 'GT.PHYS.TRNS.9999.0T99' 
 
-,CAST(ind.HCAConstructionSupervisorUserUID AS VARCHAR(4))		AS [HCA_CONST_ID]
-,CAST(ind.HCADistributionPlanningEngineerUserUID AS VARCHAR(4))	AS [HCA_DISTR_ID]
-,CAST(ind.HCAPipelineEngineerUserUID AS VARCHAR(4))				AS [HCA_PIPEL_ID]
+,UPPER(CAST(HCAConstructionSupervisor.UserLANID AS VARCHAR(4)))	AS [HCA_CONST_ID]
+,UPPER(CAST(HCADistributionPlanningEngineer.UserLANID AS VARCHAR(4)))	AS [HCA_DISTR_ID]
+,UPPER(CAST(HCAPipelineEngineer.UserLANID AS VARCHAR(4)))				AS [HCA_PIPEL_ID]
 
 ,CAST(ind.Photo1 AS VARCHAR(150))								AS [IND_PHOTO1]
 ,CAST(ind.Photo2 AS VARCHAR(150))								AS [IND_PHOTO2]
@@ -90,6 +94,7 @@ FROM	[dbo].[tgAssetAddressIndication] ind
 
 LEFT  JOIN  [dbo].[tgAssetAddress] aadd
 	ON	aadd.AssetAddressUID = ind.AssetAddressUID
+	and aadd.ActiveFlag = 1
 
 LEFT  JOIN	[dbo].[rgMapGridLog] mg
 	ON	mg.MapGridUID = ind.MapGridUID
@@ -113,8 +118,20 @@ LEFT  JOIN [dbo].[UserTb] sup
 	ON	sup.UserUID = ind.ApprovedByUserUID
 	AND sup.UserActiveFlag = 1
 
+LEFT  JOIN [dbo].[UserTb] HCAConstructionSupervisor 
+	ON	HCAConstructionSupervisor.UserUID = ind.HCAConstructionSupervisorUserUID
+	AND sup.UserActiveFlag = 1
+
+LEFT  JOIN [dbo].[UserTb] HCADistributionPlanningEngineer 
+	ON	HCADistributionPlanningEngineer.UserUID = ind.HCADistributionPlanningEngineerUserUID
+	AND sup.UserActiveFlag = 1
+
+LEFT  JOIN [dbo].[UserTb] HCAPipelineEngineer 
+	ON	HCAPipelineEngineer.UserUID = ind.HCAPipelineEngineerUserUID
+	AND sup.UserActiveFlag = 1
+
 LEFT  JOIN ( SELECT FieldDisplay, FieldDescription, OutValue
-			 FROM [dbo].[rDropDown] dd
+			 FROM [dbo].[vDropDowns] dd
 			 WHERE FilterName = 'ddInitialLeakSourceType' AND SortSeq <> 0
 			) ddils ON ddils.FieldDisplay = ind.InitialLeakSourceType
 
