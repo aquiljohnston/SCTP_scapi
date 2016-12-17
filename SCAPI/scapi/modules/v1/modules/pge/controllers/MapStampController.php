@@ -304,7 +304,7 @@ class MapStampController extends BaseActiveController {
 
             $result = $command->queryOne();
 
-            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' result = '.print_r($result,true));
+//            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' result = '.print_r($result,true));
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
