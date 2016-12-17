@@ -39,6 +39,8 @@ class MapStampController extends BaseActiveController {
                     'get-mgmt' => ['get'],
                     'get-detail' => ['get'],
                     'submit-stamp' => ['put'],
+                    'get-equipment-picaro-by-id' => ['get'],
+                    'update-equipment-picaro' => ['put']
                 ],
             ];
         return $behaviors;
