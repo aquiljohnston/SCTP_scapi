@@ -10,6 +10,7 @@ use app\authentication\TokenAuth;
 use app\modules\v1\controllers\BaseActiveController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use yii\data\Pagination;
 
 class TrackerController extends Controller 
 {
