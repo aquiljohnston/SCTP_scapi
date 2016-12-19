@@ -90,6 +90,7 @@ class DropdownController extends Controller
                     'get-adhoc-frequency-dropdown' => ['get'],
                     'get-map-stamp-division-dropdown' => ['get'],
                     'get-map-stamp-workcenter-dropdown' => ['get'],
+                    'get-map-stamp-equipment-services-pic-dropdowns' => ['get'],
                     'get-tracker-ra-division-dropdown' => ['get'],
                     'get-tracker-ra-workcenter-dropdown' => ['get'],
                     'get-tracker-ra-surveyor-dropdown' => ['get'],
@@ -1597,6 +1598,47 @@ class DropdownController extends Controller
         }
     }
     /////////// End WebManagement MapStamp dropdowns //////////////
+
+    /////////// Start WebManagement MapStamp Equipment Services PIC dropdowns //////////////
+    public function actionGetMapStampEquipmentServicesPicDropdowns() {
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            DropDowns::setClient($headers['X-Client']);
+
+            $responseData['dropdowns'] = [];
+
+            //﻿ddLHSurveyTypeSM - not needed for PICARO since it will always be PIC
+            // $responseData['dropdowns']['ddLHSurveyTypeSM']= DropdownController::webDropdownQuery('ddLHSurveyTypeSM');
+
+            //﻿ ddLHSurveyMode
+            $responseData['dropdowns']['ddLHSurveyMode']= DropdownController::webDropdownQuery('ddLHSurveyMode');
+
+            $sql = "SELECT '' as OutValue, 'Please Make Selection' as FieldDisplay
+                    UNION
+                    SELECT PicSerNo as OutValue, PicSerNo as FieldDisplay FROM vWebManagementAllPicaroSerNo;";
+            $command = DropDowns::getDb()->createCommand($sql);
+            $values = $command->queryAll();
+            $responseData['dropdowns']['EquipmentPicaroSerNumbers'] = $values;
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $responseData;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+    /////////// End WebManagement MapStamp Equipment Services PIC dropdowns //////////////
+
 
     /////////// Start WebManagement Tracker Recent Activity dropdowns //////////////
     public function actionGetTrackerRaDivisionDropdown() {

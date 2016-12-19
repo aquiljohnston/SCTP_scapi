@@ -66,6 +66,7 @@ class UserController extends BaseActiveController
 					'deactivate' => ['put'],
 					'get-me'  => ['get'],
 					'get-home-work-center'  => ['get'],
+                    'is-lanid-valid' => ['get']
                 ],  
             ];
 		return $behaviors;	
@@ -732,5 +733,42 @@ class UserController extends BaseActiveController
 		$response ->format = Response::FORMAT_JSON;
 		$response->data = $homeWorkCenter;
 		return $response;
+	}
+
+	public function actionIsLanidValid($lanid='-1') {
+		try {
+			$data = [];
+			$headers = getallheaders();
+			WebManagementUsers::setClient($headers['X-Client']);
+
+
+			$sql = "SELECT COUNT(*) as cnt FROM UserTb WHERE UserLANID = :lanId;";
+			$command = WebManagementUsers::getDb()->createCommand($sql);
+			$command->bindParam(":lanId", $lanid);
+			$count = $command->queryOne();
+
+			$result = 0;
+			if (isset($count['cnt'])&& $count['cnt']>0) {
+				$result = 1;
+			}
+
+			$data['result'] = $result;
+
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+
+			return $response;
+
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }
