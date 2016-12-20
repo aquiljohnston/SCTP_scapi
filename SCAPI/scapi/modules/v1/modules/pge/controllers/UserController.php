@@ -637,7 +637,7 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	public function actionGet($group = null, $type = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGet($workCenter = null, $type = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -651,9 +651,9 @@ class UserController extends BaseActiveController
 			
 			$userQuery = WebManagementUsers::find();
 			
-			if($group != null)
+			if($workCenter != null)
 			{
-				$userQuery->andWhere(['GroupName'=>$group]);
+				$userQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
 			if($type != null)
@@ -665,8 +665,7 @@ class UserController extends BaseActiveController
 			{
 				$userQuery->andFilterWhere([
 				'or',
-				['like', 'GroupName', $filter],
-				['like', 'Status', $filter],
+				['Status' => $filter],
 				['like', 'LastName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLANID', $filter],
