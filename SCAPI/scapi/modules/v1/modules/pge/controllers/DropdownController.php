@@ -14,6 +14,7 @@ use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v1\controllers\PermissionsController;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
+use app\modules\v1\modules\pge\models\WebManagementUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
@@ -443,6 +444,7 @@ class DropdownController extends Controller
         }
     }
 
+	//TODO: Remove
 	public function actionGetReportingGroupDropdown() {
 		try{
 			//db target
@@ -458,6 +460,38 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->GroupName]= $data[$i]->GroupName;
+            }
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetWorkCenterFilterDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementUserWorkCenter::setClient($headers['X-Client']);
+
+			//todo permission check
+			$data = WebManagementUserWorkCenter::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
             }
 
 			$response = Yii::$app->response;
