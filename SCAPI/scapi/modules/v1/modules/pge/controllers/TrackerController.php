@@ -11,6 +11,8 @@ use app\modules\v1\controllers\BaseActiveController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\data\Pagination;
+use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocation;
+use app\modules\v1\modules\pge\models\WebManagementTrackerHistory;
 
 class TrackerController extends Controller 
 {
@@ -163,25 +165,30 @@ class TrackerController extends Controller
 
             $headers = getallheaders();
 
-// TODO change the condition when we know hwere to get the data from
-            if (false && $division && $workCenter) {
+            if ($division && $workCenter) {
+                Yii::trace('in if');
                 WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
                 $query = WebManagementTrackerCurrentLocation::find();
+
                 $query->where(['Division' => $division]);
-                $query->andWhere(["WorkCenter" => $workCenter]);
+                $query->andWhere(["Work Center" => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(["Surveyor" => $surveyor]);
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
                 if (trim($search)) {
                     $query->andWhere([
                         'or',
                         ['like', 'Division', $search],
-                        ['like', 'Date', $search],
-                        ['like', 'Surveyor', $search],
-                        ['like', 'WorkCenter', $search]
-                        // TODO add the rest
+                        ['like', '[Date]', $search],
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', '[Work Center]', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Battery Level]', $search],
+                        ['like', '[GPS Type]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
@@ -203,12 +210,18 @@ class TrackerController extends Controller
                 $offset = $pages->getOffset();//$perPage * ($page - 1);
                 $limit = $pages->getLimit();
 
-                $query->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC]);
+//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
                 $items = $query->offset($offset)
                     ->limit($limit)
                     ->all();
-
+//                $items = WebManagementTrackerCurrentLocation::find()->all();
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $items = $items->queryAll();
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
@@ -241,15 +254,14 @@ class TrackerController extends Controller
 
             $headers = getallheaders();
 
-            // TODO change the condition when we know hwere to get the data from
-            if (false && $division && $workCenter) {
+            if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
                 $query->where(['Division' => $division]);
-                $query->andWhere(["WorkCenter" => $workCenter]);
+                $query->andWhere(["Work Center" => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(["Surveyor" => $surveyor]);
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
                 if (trim($search)) {
@@ -257,9 +269,19 @@ class TrackerController extends Controller
                         'or',
                         ['like', 'Division', $search],
                         ['like', 'Date', $search],
-                        ['like', 'Surveyor', $search],
-                        ['like', 'WorkCenter', $search]
-                        // TODO add the rest
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', 'Work Center', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Date Time]', $search],
+                        ['like', 'House No', $search],
+                        ['like', 'Street', $search],
+                        ['like', 'Apt', $search],
+                        ['like', 'City', $search],
+                        ['like', 'State', $search],
+                        ['like', 'Landmark', $search],
+                        ['like', '[Landmark Description]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
@@ -281,11 +303,17 @@ class TrackerController extends Controller
                 $offset = $pages->getOffset();//$perPage * ($page - 1);
                 $limit = $pages->getLimit();
 
-                $query->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC]);
+                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
                 $items = $query->offset($offset)
                     ->limit($limit)
                     ->all();
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $items = $items->queryAll();
 
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
