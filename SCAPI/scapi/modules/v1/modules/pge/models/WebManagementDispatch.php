@@ -11,13 +11,15 @@ use Yii;
  * @property string $Division
  * @property string $WorkCenter
  * @property string $SurveyType
- * @property string $Map/Plat
+ * @property string $MapPlat
  * @property string $Notification ID
  * @property string $ComplianceDueDate
  * @property string $SAP Released
  * @property integer $Assigned
  * @property string $ComplianceYearMonth
  * @property string $FLOC
+ * @property integer $Within3Days
+ * @property string $PreviousServices
  */
 class WebManagementDispatch extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -35,10 +37,10 @@ class WebManagementDispatch extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['Division', 'WorkCenter', 'SurveyType', 'Map/Plat', 'Notification ID', 'ComplianceYearMonth', 'InspectionRequestUID', 'FLOC'], 'string'],
+            [['InspectionRequestUID', 'Assigned', 'Within3Days'], 'required'],
+            [['InspectionRequestUID', 'Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'Notification ID', 'ComplianceYearMonth', 'FLOC'], 'string'],
             [['ComplianceDueDate', 'SAP Released'], 'safe'],
-            [['Assigned'], 'required'],
-            [['Assigned'], 'integer']
+            [['Assigned', 'Within3Days', 'PreviousServices'], 'integer']
         ];
     }
 
@@ -48,17 +50,19 @@ class WebManagementDispatch extends \app\modules\v1\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-			'InspectionRequestUID' => 'Inspection Request UID',
+            'InspectionRequestUID' => 'Inspection Request Uid',
             'Division' => 'Division',
             'WorkCenter' => 'Work Center',
             'SurveyType' => 'Survey Type',
-            'Map/Plat' => 'Map/ Plat',
+            'MapPlat' => 'Map Plat',
             'Notification ID' => 'Notification  ID',
             'ComplianceDueDate' => 'Compliance Due Date',
             'SAP Released' => 'Sap  Released',
             'Assigned' => 'Assigned',
             'ComplianceYearMonth' => 'Compliance Year Month',
             'FLOC' => 'Floc',
+            'Within3Days' => 'Within3 Days',
+            'PreviousServices' => 'Previous Services',
         ];
     }
 }

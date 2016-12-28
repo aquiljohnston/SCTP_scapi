@@ -21,9 +21,10 @@ use Yii;
  * @property string $AssignedWorkQueueUID
  * @property string $UserUID
  * @property string $MapGridUID
- * @property string $ComplianceYearMonth
  * @property string $FLOC
+ * @property string $ComplianceYearMonth
  * @property string $AssignedDate
+ * @property string $PreviousServices
  */
 class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -41,9 +42,10 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
     public function rules()
     {
         return [
-            [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'NotificationID', 'Surveyor', 'EmployeeType', 'Status', 'DispatchMethod', 'IRUID', 'AssignedWorkQueueUID', 'UserUID', 'MapGridUID', 'ComplianceYearMonth', 'FLOC'], 'string'],
+            [['Division', 'WorkCenter', 'SurveyType', 'MapPlat', 'NotificationID', 'Surveyor', 'EmployeeType', 'Status', 'DispatchMethod', 'IRUID', 'AssignedWorkQueueUID', 'UserUID', 'MapGridUID', 'FLOC', 'ComplianceYearMonth'], 'string'],
             [['ComplianceDate', 'AssignedDate'], 'safe'],
-            [['IRUID'], 'required']
+            [['Status', 'IRUID'], 'required'],
+            [['PreviousServices'], 'integer']
         ];
     }
 
@@ -67,9 +69,10 @@ class WebManagementAssignedWorkQueue extends \app\modules\v1\models\BaseActiveRe
             'AssignedWorkQueueUID' => 'Assigned Work Queue Uid',
             'UserUID' => 'User Uid',
             'MapGridUID' => 'Map Grid Uid',
-            'ComplianceYearMonth' => 'Compliance Year Month',
             'FLOC' => 'Floc',
-			'AssignedDate' => 'AssignedDate',
+            'ComplianceYearMonth' => 'Compliance Year Month',
+            'AssignedDate' => 'Assigned Date',
+            'PreviousServices' => 'Previous Services',
         ];
     }
 }
