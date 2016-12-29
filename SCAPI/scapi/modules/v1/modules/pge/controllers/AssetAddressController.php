@@ -385,7 +385,10 @@ class AssetAddressController extends Controller
 									$newIndication->SrcOpenDTLT = $newIndication->SrcDTLT;
 									$newIndication->FoundDateTime = $newIndication->SrcDTLT;
 									$newIndication->Revision = $indicationRevision;
-									$newIndication->StatusType = $previousStatus;
+									if ($newIndication->StatusType == null)
+									{
+										$newIndication->StatusType = $previousStatus;
+									}
 									$newIndication->LockedFlag = $previousIndication->LockedFlag;
 									//$newIndication->ActiveFlag = 1;
 
