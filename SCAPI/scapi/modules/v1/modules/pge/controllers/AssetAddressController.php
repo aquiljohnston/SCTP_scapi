@@ -467,6 +467,10 @@ class AssetAddressController extends Controller
 							$indication->ActivityUID = $ActivityUID;
 							$indication->SrcOpenDTLT = $indication->SrcDTLT;
 							$indication->FoundDateTime = $indication->SrcDTLT;
+							if ($indication->StatusType == null)
+							{
+								$indication->StatusType = 'In Progress';
+							}
 
 							//save model
 							if ($indication->save()) {
