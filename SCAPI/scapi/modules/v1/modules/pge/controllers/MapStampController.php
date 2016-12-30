@@ -38,6 +38,7 @@ class MapStampController extends BaseActiveController {
                 'actions' => [
                     'get-mgmt' => ['get'],
                     'get-detail' => ['get'],
+                    'associate-map' => ['put'],
                     'submit-stamp' => ['put'],
                     'get-equipment-picaro-by-id' => ['get'],
                     'update-equipment-picaro' => ['put']
@@ -53,6 +54,40 @@ class MapStampController extends BaseActiveController {
 		unset($actions['update']);
 		unset($actions['delete']);
 		return $actions;
+    }
+
+    public function actionAssociateMap()
+    {
+        try
+		{
+            $headers = getallheaders();
+            WebManagementMapStampDetail::setClient($headers['X-Client']);
+
+            $put = file_get_contents("php://input");
+            $sqlCommand = "EXEC spWebManagementJSON_AssociateToExistingFLOC @JSON_Str=:putData";
+
+            $command =  WebManagementMapStampDetail::getDb()->createCommand($sqlCommand);
+            $command->bindParam(":putData", $put);
+
+            $result = $command->queryOne();
+
+            Yii::trace(PHP_EOL.__CLASS__.' '.__METHOD__.' result = '.print_r($result,true));
+
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $result;
+
+            return $response;
+        }
+
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 
     public function actionSubmitStamp()

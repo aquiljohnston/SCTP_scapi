@@ -13,7 +13,10 @@ use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v1\controllers\PermissionsController;
+use app\modules\v1\models\BaseActiveRecord;
+use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\modules\pge\models\WebManagementDropDownReportingGroups;
+use app\modules\v1\modules\pge\models\WebManagementUserWorkCenter;
 use app\modules\v1\modules\pge\models\WebManagementDropDownEmployeeType;
 use app\modules\v1\modules\pge\models\WebManagementDropDownRoles;
 use app\modules\v1\modules\pge\models\WebManagementDropDownDispatchMapPlat;
@@ -57,6 +60,7 @@ class DropdownController extends Controller
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'get-default-filter' => ['get'],
                     'get-week-dropdown' => ['get'],
                     'get-work-center-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
@@ -101,6 +105,107 @@ class DropdownController extends Controller
             ];
         return $behaviors;
     }
+	
+	//helper methods//
+	//gets a users home workCenter based on uid
+	private static function getHomeWorkCenter($userUID)
+	{
+		$workCenter = WebManagementUsers::find()
+			->select('WorkCenter')
+			->where(['UserUID' => $userUID])
+			->one();
+			
+		return $workCenter;
+	}
+	
+	//get default for dispatch screen based on work center
+	private static function getDefaultDispatch($workCenter)
+	{
+		$filters = WebManagementDropDownDispatch::find()
+			->select('WorkCenter, Division')
+			->where(['WorkCenter' => $workCenter])
+			->asArray()
+			->one();
+			
+		return $filters;
+	}
+	
+	//get default for assigned screen based on work center
+	private static function getDefaultAssigned($workCenter)
+	{
+		$filters = WebManagementDropDownAssigned::find()
+			->select('WorkCenter, Division')
+			->where(['WorkCenter' => $workCenter])
+			->asArray()
+			->one();
+			
+		return $filters;
+	}
+	
+	//get default filters based on screen param
+	public function actionGetDefaultFilter($screen)
+	{
+		try
+		{
+			//get UID of user making request
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$userUID = BaseActiveController::getUserFromToken()->UserUID;
+			
+			//db target
+			$headers = getallheaders();
+			WebManagementUsers::setClient($headers['X-Client']);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//created filter array for response
+			$filterResponse = [];
+			
+			//call hleper method to get home work center
+			$homeWorkCenter = DropdownController::getHomeWorkCenter($userUID);
+			
+			//check if user has a home work center
+			if($homeWorkCenter != null)
+			{
+				$filters = '';
+				
+				//call helper method to get filters based on screen
+				if($screen == 'dispatch')
+				{
+					$filters = DropdownController::getDefaultDispatch($homeWorkCenter->WorkCenter);
+				}
+				if($screen == 'assigned')
+				{
+					$filters = DropdownController::getDefaultAssigned($homeWorkCenter->WorkCenter);
+				}
+				
+				if($filters != null)
+				{
+					$filterResponse[] = $filters;
+				}
+				else
+				{
+					$filterResponse['Error'] = 'Cannont Set Default Filter: Default Filter Not Currently Avaliable.';
+				}
+			}
+			else
+			{
+				$filterResponse['Error'] = 'Cannont Set Default Filter: User has no assigned Home Work Center.';
+			}
+			//pass data to response and send it
+			$response->data = $filterResponse;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 
     public function actionGetWeekDropdown()
     {
@@ -217,31 +322,6 @@ class DropdownController extends Controller
 			$data["12345678"] = "12345678";
 			$data["87654321"] = "87654321";
 			$data["13572468"] = "13572468";
-			$data["24681357"] = "24681357";
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-	public function actionGetSupervisorDropdown() {
-		try{
-			$data = [];
-
-			$data = [null => "Select..."];
-			$data["S1V1"] = "Visor, Super";
-			$data["D0B0"] = "Boss, Da";
-			$data["OS"] = "13572468";
 			$data["24681357"] = "24681357";
 
 			$response = Yii::$app->response;
@@ -443,6 +523,7 @@ class DropdownController extends Controller
         }
     }
 
+	//TODO: Remove
 	public function actionGetReportingGroupDropdown() {
 		try{
 			//db target
@@ -458,6 +539,38 @@ class DropdownController extends Controller
             for($i=0; $i < $dataSize; $i++)
             {
                 $namePairs[$data[$i]->GroupName]= $data[$i]->GroupName;
+            }
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetWorkCenterFilterDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementUserWorkCenter::setClient($headers['X-Client']);
+
+			//todo permission check
+			$data = WebManagementUserWorkCenter::find()
+                ->all();
+            $namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
             }
 
 			$response = Yii::$app->response;
@@ -550,7 +663,7 @@ class DropdownController extends Controller
     }
 
 	//////////////////////USER DROPDOWNS END/////////////////////
-
+	
 	//////////////////////DISPATCH DROPDOWNS BEGIN/////////////////////
 
 	public function actionGetDispatchDivisionDropdown()

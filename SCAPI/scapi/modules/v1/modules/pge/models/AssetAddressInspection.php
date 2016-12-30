@@ -75,6 +75,8 @@ use Yii;
  * @property string $Photo1
  * @property string $Photo2
  * @property string $Photo3
+ * @property integer $isInGridFlag
+ * @property double $GridDistance
  */
 class AssetAddressInspection extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -93,9 +95,9 @@ class AssetAddressInspection extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             [['AssetAddressInspectionUID', 'AssetAddressUID', 'AssetInspectionUID', 'MapGridUID', 'InspectionRequestUID', 'MasterLeakLogUID', 'CreatedUserUID', 'ModifiedUserUID', 'SourceID', 'StatusType', 'GPSSource', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'GPSStatus', 'ActivityUID', 'RiserPipeSoilMeas', 'DIMPRiserType', 'ServiceHeadAdapterType', 'FilterSize', 'FilterMfg', 'FilterModel', 'Regulator1Size', 'Regulator1Mfg', 'Regulator1Model', 'Regulator2Size', 'Regulator2Mfg', 'Regulator2Model', 'Regulator3Size', 'Regulator3Mfg', 'Regulator3Model', 'MeterType', 'MeterMfg', 'MeterModel', 'Photo1', 'Photo2', 'Photo3'], 'string'],
-            [['InGridFlag', 'Revision', 'ActiveFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'ElectrolysisSurveyFlag', 'DIMPSurveyFlag', 'ManifoldSetFlag', 'ServiceValueFlag', 'FilterFlag', 'Regulator1Flag', 'Regulator2Flag', 'Regulator3Flag', 'ECFlag', 'AMRFlag', 'DripTankFlag'], 'integer'],
+            [['InGridFlag', 'Revision', 'ActiveFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'ElectrolysisSurveyFlag', 'DIMPSurveyFlag', 'ManifoldSetFlag', 'ServiceValueFlag', 'FilterFlag', 'Regulator1Flag', 'Regulator2Flag', 'Regulator3Flag', 'ECFlag', 'AMRFlag', 'DripTankFlag', 'isInGridFlag'], 'integer'],
             [['SrvDTLT', 'SrvDTLTOffset', 'SrcDTLT', 'SrcOpenDTLT'], 'safe'],
-            [['Latitude', 'Longitude', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightofGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
+            [['Latitude', 'Longitude', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightofGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'GridDistance'], 'number']
         ];
     }
 
@@ -173,6 +175,8 @@ class AssetAddressInspection extends \app\modules\v1\models\BaseActiveRecord
             'Photo1' => 'Photo1',
             'Photo2' => 'Photo2',
             'Photo3' => 'Photo3',
+            'isInGridFlag' => 'Is In Grid Flag',
+            'GridDistance' => 'Grid Distance',
         ];
     }
 }
