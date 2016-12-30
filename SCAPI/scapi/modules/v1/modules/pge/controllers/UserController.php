@@ -5,6 +5,7 @@ namespace app\modules\v1\modules\pge\controllers;
 use app\modules\v1\modules\pge\models\ReportingGroup;
 use Yii;
 use app\rbac\PgeDbManager;
+use app\authentication\TokenAuth;
 use app\modules\v1\modules\pge\models\PGEUser;
 use app\modules\v1\modules\pge\models\Role;
 use app\modules\v1\modules\pge\models\WebManagementUsers;
@@ -55,6 +56,11 @@ class UserController extends BaseActiveController
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
+		$behaviors['authenticator'] =
+		[
+			'class' => TokenAuth::className(),
+			'except' => ['reset-password'],
+		];
 		$behaviors['verbs'] = 
 			[
                 'class' => VerbFilter::className(),
@@ -66,7 +72,8 @@ class UserController extends BaseActiveController
 					'deactivate' => ['put'],
 					'get-me'  => ['get'],
 					'get-home-work-center'  => ['get'],
-                    'is-lanid-valid' => ['get']
+                    'is-lanid-valid' => ['get'],
+					'reset-password' => ['put']
                 ],  
             ];
 		return $behaviors;	
@@ -637,7 +644,7 @@ class UserController extends BaseActiveController
 		}
 	}
 	
-	public function actionGet($group = null, $type = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGet($workCenter = null, $type = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -651,9 +658,9 @@ class UserController extends BaseActiveController
 			
 			$userQuery = WebManagementUsers::find();
 			
-			if($group != null)
+			if($workCenter != null)
 			{
-				$userQuery->andWhere(['GroupName'=>$group]);
+				$userQuery->andWhere(['WorkCenter'=>$workCenter]);
 			}
 			
 			if($type != null)
@@ -665,8 +672,7 @@ class UserController extends BaseActiveController
 			{
 				$userQuery->andFilterWhere([
 				'or',
-				['like', 'GroupName', $filter],
-				['like', 'Status', $filter],
+				['Status' => $filter],
 				['like', 'LastName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLANID', $filter],
@@ -769,6 +775,90 @@ class UserController extends BaseActiveController
 		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionResetPassword()
+	{
+		//options for bcrypt
+		$options = [
+			'cost' => 12,
+		];
+		
+		$headers = getallheaders();
+		
+		$put = file_get_contents('php://input');
+		$data = json_decode($put, true);
+		
+		$response = Yii::$app->response;
+		$response ->format = Response::FORMAT_JSON;
+		
+		//set db target
+		SCUser::setClient(BaseActiveController::urlPrefix());
+		
+		//find user
+		if($scUser = SCUser::findOne(['UserName'=>$data['UserName'], 'UserActiveFlag'=>1]))
+			{
+			$securedPass = $data['Password'];
+			
+			//decrypt password
+			$decryptedPass = BaseActiveController::decrypt($securedPass);
+
+			$hash = $scUser->UserPassword;
+			//Check the Hash
+			if (password_verify($decryptedPass, $hash)) 
+			{
+				//set new password
+				$securedPassNew = $data['NewPassword'];
+				$decryptedPassNew = BaseActiveController::decrypt($securedPassNew);
+				$hashNew = password_hash($decryptedPassNew, PASSWORD_BCRYPT,$options);
+				
+				$scUser->UserPassword = $hashNew;
+				
+				if ($scUser->update())
+				{
+					//set db target
+					PGEUser::setClient($headers['X-Client']);
+					
+					$pgeUser = PGEUser::findOne(['UserUID' => $scUser->UserUID]);
+					
+					$pgeUser->UserPassword = $hashNew;
+					
+					if($pgeUser->update())
+					{
+						$response->data = 'Password updated successfully';
+						$response->setStatusCode(200);
+						return $response;
+					}
+					else
+					{
+						$scUser->UserPassword = $hash;
+						$scUser->update();
+						
+						$response->data = 'Password failed to update';
+						$response->setStatusCode(400);
+						return $response;
+					}
+				}
+				else
+				{
+					$response->data = 'Password failed to update';
+					$response->setStatusCode(400);
+					return $response;
+				}
+			}
+			else
+			{
+				$response->data = 'Password is invalid.';
+				$response->setStatusCode(401);
+				return $response;
+			}
+		}
+		else
+		{
+			$response->data = 'User not found or inactive.';
+			$response->setStatusCode(401);
+			return $response;
 		}
 	}
 }

@@ -385,7 +385,10 @@ class AssetAddressController extends Controller
 									$newIndication->SrcOpenDTLT = $newIndication->SrcDTLT;
 									$newIndication->FoundDateTime = $newIndication->SrcDTLT;
 									$newIndication->Revision = $indicationRevision;
-									$newIndication->StatusType = $previousStatus;
+									if ($newIndication->StatusType == null)
+									{
+										$newIndication->StatusType = $previousStatus;
+									}
 									$newIndication->LockedFlag = $previousIndication->LockedFlag;
 									//$newIndication->ActiveFlag = 1;
 
@@ -464,6 +467,10 @@ class AssetAddressController extends Controller
 							$indication->ActivityUID = $ActivityUID;
 							$indication->SrcOpenDTLT = $indication->SrcDTLT;
 							$indication->FoundDateTime = $indication->SrcDTLT;
+							if ($indication->StatusType == null)
+							{
+								$indication->StatusType = 'In Progress';
+							}
 
 							//save model
 							if ($indication->save()) {

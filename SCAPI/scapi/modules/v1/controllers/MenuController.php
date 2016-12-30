@@ -126,6 +126,7 @@ class MenuController extends Controller {
 					$navID = $allNavMenus[$i]->ModuleMenuID;
 					$subNavs = MenusModuleSubMenu::find()
 						->where("ModuleSubMenusModuleMenuID_FK = $navID")
+						->orderBy('ModuleSubMenusSortSeq')
 						->all();
 					$subNavCount = count($subNavs);
 					
