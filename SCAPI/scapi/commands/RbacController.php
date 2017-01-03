@@ -4,6 +4,7 @@ namespace app\commands;
 use Yii;
 use yii\console\Controller;
 use app\modules\v1\models\SCUser;
+use app\rbac\ScDbManager;
 
 /**
 * This Class establishes the rules of the RBAC system for the API
@@ -18,15 +19,17 @@ class RbacController extends Controller
 	* Creates Child Heirarcy for Roles and Permissions
 	* Loops existing users to get previously assigned roles and reassign them
 	*/
-    public function actionInit()
+    public function actionInit($client)
     {
-        $auth = Yii::$app->authManager;
+		SCUser::setClient($client);
+		$db = SCUser::getDb();
+		$auth = new ScDbManager($db);
 		
 		try{
 			//reset all
 			//$auth->removeAll();
 			//create connection
-			$connection = Yii::$app->db;
+			$connection = $db;
 			//start transaction
 			$transaction = $connection-> beginTransaction();
 			//create commands

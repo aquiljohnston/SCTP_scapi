@@ -154,7 +154,7 @@ class PgeRbacController extends Controller
 		/////////////////////////// add roles and children //////////////////////////////////////////////
 		
 		//add "Surveyor/Inspector" role
-		$surveyorInspector = $auth->createRole('Survyeor/Inspector');
+		$surveyorInspector = $auth->createRole('Surveyor/Inspector');
 		$auth->add($surveyorInspector);
 		//add permissions to Surveyor/Inspector
 		

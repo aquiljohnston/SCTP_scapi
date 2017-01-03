@@ -27,9 +27,16 @@ class ScDbManager extends DbManager
      */
     public $ruleTable = '{{%rbac.auth_rule}}';
 	
-	public function __construct()
+	public function __construct($optionalDb = null)
 	{
-		$this->db = $this->getDb();
+		if ($optionalDb === null)
+		{
+			$this->db = $this->getDb();
+		}
+		else
+		{
+			$this->db = $optionalDb;
+		}
 	}
 	
 	public function getDb()
