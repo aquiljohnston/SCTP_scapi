@@ -45,6 +45,7 @@ class LeakLogController extends BaseActiveController {
                     'submit-leak' => ['put'],
                     'transfer-floc' => ['put'],
                     'approve-leak' => ['put'],
+                    'reject-leak' => ['put'],
 					'get-details' => ['get'],
                     'get-detailsbymasterleaklogid' => ['get'],
 					'get-mgnt' => ['get'],
@@ -170,6 +171,49 @@ class LeakLogController extends BaseActiveController {
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionRejectLeak()
+	{
+		$headers = getallheaders();
+		WebManagementLeakLogForm::setClient($headers['X-Client']);
+
+		$put = file_get_contents("php://input");
+		$data = json_decode($put, true);
+		$passed = 0;
+		$failed = 0;
+		$status = 'Unknown';
+		foreach ($data['keylist'] as $indicationUID) {
+			$llRecord = WebManagementLeakLogForm::find()
+				->where(['AssetAddressIndicationUID' => $indicationUID])
+				->one();
+
+			if ($llRecord) {
+				$command =  WebManagementLeakLogForm::getDb()->createCommand("EXEC spWebManagementLeakLogReject @AddressIndicationUID=:AddressIndicationUID, @ApproverUID=:ApproverUID");
+				$command->bindParam(":AddressIndicationUID", $indicationUID);
+				$command->bindParam(":ApproverUID", $data['user']);
+				$value = $command->queryOne();
+
+				if($value['Succeeded'] == 1)
+				{
+					$passed++;
+				}
+				else
+				{
+					$failed++;
+				}
+				$status = $value['StatusType'];
+			}
+		}
+		$result = [];
+		$result['Passed'] = $passed;
+		$result['Failed'] = $failed;
+		$result['StatusType'] = $status;
+
+		$response = Yii::$app->response;
+		$response->format = Response::FORMAT_JSON;
+		$response->data = $result;
+		return $response;
+	}
 
     public function actionGetDetailsbymasterleaklogid($masterLeakLogUID)
 	{
