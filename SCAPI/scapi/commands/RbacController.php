@@ -98,6 +98,11 @@ class RbacController extends Controller
         $clientUpdate = $auth->createPermission('clientUpdate');
         $clientUpdate->description = 'Update client';
         $auth->add($clientUpdate);
+
+        // add "clientDeactivate" permission
+        $clientDeactivate = $auth->createPermission('clientDeactivate');
+        $clientDeactivate->description = 'Deactivate client';
+        $auth->add($clientDeactivate);
 		
 		// add "clientGetDropdown" permission
         $clientGetDropdown = $auth->createPermission('clientGetDropdown');
@@ -570,6 +575,7 @@ class RbacController extends Controller
 		$auth->addChild($admin, $clientView);
 		$auth->addChild($admin, $clientCreate);
 		$auth->addChild($admin, $clientUpdate);
+		$auth->addChild($admin, $clientDeactivate);
 		$auth->addChild($admin, $clientGetAll);
 		$auth->addChild($admin, $projectGetAll);
 		$auth->addChild($admin, $projectCreate);
