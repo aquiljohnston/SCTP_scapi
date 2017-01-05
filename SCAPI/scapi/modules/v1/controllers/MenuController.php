@@ -47,20 +47,21 @@ class MenuController extends Controller {
 			//create data arrays
 			$menuArray = [];
 			$modules = [];
-			$moduleArray = [];
+			$moduleArray = []; //unused
 			$navigationArray = [];
 			$subNavigationArray = [];
-			$subNavigation = [];
+			$subNavigation = []; //unused
 			
 			//get project data
-			$project = Project::find()
+			$projectObj = Project::find()
 				->where("ProjectUrlPrefix = '$project'")
 				->one();
-			$projectID = $project->ProjectID;
+
+			$projectID = $projectObj->ProjectID;
 			//get client data
-			if($project != null)
+			if($projectObj != null)
 			{
-				$client = Client::findOne($project->ProjectClientID);
+				$client = Client::findOne($projectObj->ProjectClientID);
 			}
 			else{
 				$client = null;
@@ -103,7 +104,7 @@ class MenuController extends Controller {
 				}				
 				
 				//flag for module
-				$relationFlag  = false;
+				$relationFlag = false;
 				$userMgmtFlag = false;
 				
 				//check module relationships for flag
@@ -112,6 +113,7 @@ class MenuController extends Controller {
 					if($relatedModules[$r]->ProjectModulesName == $allNavMenus[$i]->ModuleMenuName)
 					{
 						$relationFlag = true;
+						break; // more efficient
 					}
 				}
 				

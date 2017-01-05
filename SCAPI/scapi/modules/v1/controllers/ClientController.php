@@ -2,9 +2,13 @@
 
 namespace app\modules\v1\controllers;
 
+use app\authentication\TokenAuth;
 use Yii;
 use app\modules\v1\models\Client;
 use app\modules\v1\models\SCUser;
+use yii\filters\VerbFilter;
+use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 use app\modules\v1\models\BaseActiveRecord;
 
@@ -24,6 +28,29 @@ class ClientController extends BaseActiveController
 		unset($actions['delete']);
 		return $actions;
 	}
+
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        //Implements Token Authentication to check for Auth Token in Json Header
+        $behaviors['authenticator'] =
+            [
+                'class' => TokenAuth::className(),
+            ];
+        $behaviors['verbs'] =
+            [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'get-all' => ['get'],
+                    'deactivate' => ['post'],
+                    'view' => ['get'],
+                    'create' => ['post'],
+                    'update' => ['post'],
+                    'get-client-dropdowns' => ['get']
+                ],
+            ];
+        return $behaviors;
+    }
 
 	/**
 	 * Gets all of the class's model's records
@@ -58,6 +85,27 @@ class ClientController extends BaseActiveController
 
 	use DeleteMethodNotAllowed;
 
+	public function actionDeactivate($id) {
+	    try {
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+            PermissionsController::requirePermission('clientDeactivate');
+            $client = Client::find()->where(['ClientID' => $id])->one();
+            if ($client !== null) {
+                $client->delete();
+            } else {
+                // This is actually a bad request exception
+                throw new BadRequestHttpException();
+            }
+            $this->redirect(['client/index']);
+        } catch(ForbiddenHttpException $forbiddenHttpException) {
+	        // We want the user to see the 403 error
+            throw $forbiddenHttpException;
+        } catch(\Exception $e) {
+	        // This should be a 500 - Internal Server Error but I'm outranked.
+	        throw new BadRequestHttpException();
+            //throw $e;
+        }
+    }
 	public function actionView($id)
 	{		
 		try
