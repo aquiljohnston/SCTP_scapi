@@ -399,65 +399,85 @@ class RbacController extends Controller
         $userGetMe->description = 'Get equipment and project data for a user';
         $auth->add($userGetMe);
 
-
-
+		////// Module Menu Premissions //////
+		
+		$viewAdministrationMenu = $auth->createPermission('viewAdministrationMenu');
+        $viewAdministrationMenu->description = 'View Administration Menu';
+        $auth->add($viewAdministrationMenu);
+		
+		$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
+        $viewDashboardMenu->description = 'View Dashboard Menu';
+        $auth->add($viewDashboardMenu);
+		
+		$viewDispatchMenu = $auth->createPermission('viewDispatchMenu');
+        $viewDispatchMenu->description = 'View Dispatch Menu';
+        $auth->add($viewDispatchMenu);
+		
+		$viewReportsMenu = $auth->createPermission('viewReportsMenu');
+        $viewReportsMenu->description = 'View Reports Menu';
+        $auth->add($viewReportsMenu);
+		
+		$viewHomeMenu = $auth->createPermission('viewHomeMenu');
+        $viewHomeMenu->description = 'View Home Menu';
+        $auth->add($viewHomeMenu);
+		
         ////// Module Sub Menu Permissions //////
 
 
         $viewClientMgmt = $auth->createPermission('viewClientMgmt');
-        $viewClientMgmt->description = 'View client management';
+        $viewClientMgmt->description = 'View client management menu item';
         $auth->add($viewClientMgmt);
 
         $viewProjectMgmt = $auth->createPermission('viewProjectMgmt');
-        $viewProjectMgmt->description = 'View project name';
+        $viewProjectMgmt->description = 'View project management  menu item';
         $auth->add($viewProjectMgmt);
 
         $viewUserMgmt = $auth->createPermission('viewUserMgmt');
-        $viewUserMgmt->description = 'View user management';
+        $viewUserMgmt->description = 'View user management menu item';
         $auth->add($viewUserMgmt);
 
         $viewEquipmentMgmt = $auth->createPermission('viewEquipmentMgmt');
-        $viewEquipmentMgmt->description = 'View equipment management';
+        $viewEquipmentMgmt->description = 'View equipment management menu item';
         $auth->add($viewEquipmentMgmt);
 
         $viewTimeCardMgmt = $auth->createPermission('viewTimeCardMgmt');
-        $viewTimeCardMgmt->description = 'View time card management';
+        $viewTimeCardMgmt->description = 'View time card management menu item';
         $auth->add($viewTimeCardMgmt);
 
         $viewMileageCardMgmt = $auth->createPermission('viewMileageCardMgmt');
-        $viewMileageCardMgmt->description = 'View mileage card management';
+        $viewMileageCardMgmt->description = 'View mileage card management menu item';
         $auth->add($viewMileageCardMgmt);
 
         $viewTracker = $auth->createPermission('viewTracker');
-        $viewTracker->description = 'View tracker';
+        $viewTracker->description = 'View tracker menu item';
         $auth->add($viewTracker);
         
         $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
-        $viewLeakLogMgmt->description = 'View leak log management';
+        $viewLeakLogMgmt->description = 'View leak log management menu item';
         $auth->add($viewLeakLogMgmt);
 
-        $viewLeakLogDetail = $auth->createPermission('viewLeakLogDetail');
-        $viewLeakLogDetail->description = 'View leak log detail';
-        $auth->add($viewLeakLogDetail);
+        $viewLeakLogSearch = $auth->createPermission('viewLeakLogSearch');
+        $viewLeakLogSearch->description = 'View leak log search menu item';
+        $auth->add($viewLeakLogSearch);
 
         $viewMapStampMgmt = $auth->createPermission('viewMapStampMgmt');
-        $viewMapStampMgmt->description = 'View map stamp management';
+        $viewMapStampMgmt->description = 'View map stamp management menu item';
         $auth->add($viewMapStampMgmt);
 
         $viewMapStampDetail = $auth->createPermission('viewMapStampDetail');
-        $viewMapStampDetail->description = 'View map stamp detail';
+        $viewMapStampDetail->description = 'View map stamp detail menu item';
         $auth->add($viewMapStampDetail);
 
         $viewAOC = $auth->createPermission('viewAOC');
-        $viewAOC->description = 'View AOC';
+        $viewAOC->description = 'View AOC menu item';
         $auth->add($viewAOC);
 
         $viewDispatch = $auth->createPermission('viewDispatch');
-        $viewDispatch->description = 'View dispatch';
+        $viewDispatch->description = 'View dispatch menu item';
         $auth->add($viewDispatch);
 
         $viewAssigned = $auth->createPermission('viewAssigned');
-        $viewAssigned->description = 'View assigned';
+        $viewAssigned->description = 'View assigned menu item';
         $auth->add($viewAssigned);
         
 
@@ -491,6 +511,9 @@ class RbacController extends Controller
 		$auth->addChild($engineer, $projectGetDropdown);
 		$auth->addChild($engineer, $userGetDropdown);
 		$auth->addChild($engineer, $userGetMe);
+		//menu permissions
+		$auth->addChild($engineer, $viewAdministrationMenu);
+		$auth->addChild($engineer, $viewHomeMenu);
 		// sub menu permissions
 		$auth->addChild($engineer, $viewEquipmentMgmt);
 
@@ -542,19 +565,23 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $userDeactivate);
 		$auth->addChild($supervisor, $userGetDropdown);
 		$auth->addChild($supervisor, $userGetActive);
+		// menu permissions
+		$auth->addChild($supervisor, $viewAdministrationMenu);
+		$auth->addChild($supervisor, $viewDashboardMenu);
+		$auth->addChild($supervisor, $viewHomeMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
 		$auth->addChild($supervisor, $viewTracker);
-		$auth->addChild($supervisor, $viewLeakLogMgmt);
-		$auth->addChild($supervisor, $viewLeakLogDetail);
-		$auth->addChild($supervisor, $viewMapStampMgmt);
-		$auth->addChild($supervisor, $viewMapStampDetail);
-		$auth->addChild($supervisor, $viewAOC);
-		$auth->addChild($supervisor, $viewDispatch);
-		$auth->addChild($supervisor, $viewAssigned);
+		//$auth->addChild($supervisor, $viewLeakLogMgmt);
+		//$auth->addChild($supervisor, $viewLeakLogDetail);
+		//$auth->addChild($supervisor, $viewMapStampMgmt);
+		//$auth->addChild($supervisor, $viewMapStampDetail);
+		//$auth->addChild($supervisor, $viewAOC);
+		//$auth->addChild($supervisor, $viewDispatch);
+		//$auth->addChild($supervisor, $viewAssigned);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
@@ -586,6 +613,9 @@ class RbacController extends Controller
 		$auth->addChild($admin, $timeCardGetAllCards);
 		$auth->addChild($admin, $userCreateAdmin);
 		$auth->addChild($admin, $userUpdateAdmin);
+		// menu permissions
+		//$auth->addChild($admin, $viewDispatchMenu);
+		//$auth->addChild($admin, $viewReportsMenu);
 		// sub menu permissions
 		$auth->addChild($admin, $viewClientMgmt);
 		$auth->addChild($admin, $viewProjectMgmt);
