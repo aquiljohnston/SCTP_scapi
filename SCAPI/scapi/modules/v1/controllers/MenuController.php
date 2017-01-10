@@ -18,6 +18,8 @@ use app\modules\v1\models\MenusModuleSubMenu;
 
 class MenuController extends Controller {
 	
+	const PERMISSION_CONTROLLER = 'app\modules\v1\controllers\PermissionsController';
+	
 	public function behaviors()
     {
 		$behaviors = parent::behaviors();
@@ -41,9 +43,9 @@ class MenuController extends Controller {
 	//$project string the current project of the user_error
 	//$permissionsController string path to class of desired permission controller to be used in call_user_func_array defaults to base permissionsController
 	//$parmArray array containing any additonal paramaters that an alternative permission controller may require
-	public function actionGet($project, $permissionsController = 'app\modules\v1\controllers\PermissionsController', $permissionCheckParmArray = [])
+	public function actionGet($project, $permissionsController = MenuController::PERMISSION_CONTROLLER, $permissionCheckParmArray = [])
 	{
-		// try{
+		try{
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
@@ -191,11 +193,11 @@ class MenuController extends Controller {
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $menuArray;
 			return $response;
-		// }
-		// catch(\Exception $e) 
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(\Exception $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 	
 }

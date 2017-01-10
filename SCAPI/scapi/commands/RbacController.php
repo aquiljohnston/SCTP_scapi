@@ -575,13 +575,6 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
 		$auth->addChild($supervisor, $viewTracker);
-		//$auth->addChild($supervisor, $viewLeakLogMgmt);
-		//$auth->addChild($supervisor, $viewLeakLogDetail);
-		//$auth->addChild($supervisor, $viewMapStampMgmt);
-		//$auth->addChild($supervisor, $viewMapStampDetail);
-		//$auth->addChild($supervisor, $viewAOC);
-		//$auth->addChild($supervisor, $viewDispatch);
-		//$auth->addChild($supervisor, $viewAssigned);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
@@ -619,6 +612,13 @@ class RbacController extends Controller
 		// sub menu permissions
 		$auth->addChild($admin, $viewClientMgmt);
 		$auth->addChild($admin, $viewProjectMgmt);
+		//$auth->addChild($supervisor, $viewLeakLogMgmt);
+		//$auth->addChild($supervisor, $viewLeakLogDetail);
+		//$auth->addChild($supervisor, $viewMapStampMgmt);
+		//$auth->addChild($supervisor, $viewMapStampDetail);
+		//$auth->addChild($supervisor, $viewAOC);
+		//$auth->addChild($supervisor, $viewDispatch);
+		//$auth->addChild($supervisor, $viewAssigned);
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
