@@ -37,20 +37,22 @@ class MenuController extends Controller {
 	}
 	
 	//public function actionGet()
-	public function actionGet($project)
+	//params
+	//$project string the current project of the user_error
+	//$permissionsController string path to class of desired permission controller to be used in call_user_func_array defaults to base permissionsController
+	//$parmArray array containing any additonal paramaters that an alternative permission controller may require
+	public function actionGet($project, $permissionsController = 'app\modules\v1\controllers\PermissionsController', $permissionCheckParmArray = [])
 	{
-		try{
+		// try{
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
-			
+
 			//build menu array for project Id
 			//create data arrays
 			$menuArray = [];
-			$modules = [];
-			$moduleArray = []; //unused
+			$modules = []; 
 			$navigationArray = [];
 			$subNavigationArray = [];
-			$subNavigation = []; //unused
 			
 			//get project data
 			$projectObj = Project::find()
@@ -77,7 +79,7 @@ class MenuController extends Controller {
 			}
 			$menuArray["ProjectID"] = $projectID;
 			
-			//get active modules for enaabled flags
+			//get active modules for enabled flags
 			$relatedModules = MenusProjectModule::find()
 					->where("ProjectModulesProjectID = $projectID")
 					->all();
@@ -96,30 +98,42 @@ class MenuController extends Controller {
 			//traverse nav menus to populate sub menus
 			for($i=0; $i < $allNavMenusCount; $i++)
 			{
+				//current module name
+				$moduleName = $allNavMenus[$i]->ModuleMenuName;
 				//get unique modules
-				if (!in_array($allNavMenus[$i]->ModuleMenuName, $uniqueModules))
+				if (!in_array($moduleName, $uniqueModules))
 				{
-					$uniqueModules[] = $allNavMenus[$i]->ModuleMenuName;
-					$moduleName = $allNavMenus[$i]->ModuleMenuName;
+					$uniqueModules[] = $moduleName;
+					$modules[$moduleName]["enabled"] = 0;
 				}				
-				
-				//flag for module
-				$relationFlag = false;
-				$userMgmtFlag = false;
 				
 				//check module relationships for flag
 				for ($r = 0; $r < $relatedModulesCount; $r++)
 				{
-					if($relatedModules[$r]->ProjectModulesName == $allNavMenus[$i]->ModuleMenuName)
+					if($relatedModules[$r]->ProjectModulesName == $moduleName)
 					{
-						$relationFlag = true;
-						break; // more efficient
+						$modules[$moduleName]["enabled"] = 1;
+						break;
 					}
 				}
 				
-				//get nav menu name and url
+				//get nav menu name, url, and enableFlag
 				$navigationArray["NavigationName"] = $allNavMenus[$i]->ModuleMenuNavMenuName;
 				$navigationArray["Url"] = $allNavMenus[$i]->ModuleMenuUrl;
+				
+				yii::trace("Modules Array: " . json_encode($modules));
+				
+				//if(PermissionsController::can($allNavMenus[$i]->ModuleMenuPermissionName) && $modules[$moduleName]["enabled"] == 1){
+				if(call_user_func_array($permissionsController.'::can', array_merge(array($allNavMenus[$i]->ModuleMenuPermissionName), $permissionCheckParmArray)) 
+					&& $modules[$moduleName]["enabled"] == 1)
+				{
+					$navigationArray["enabled"] = 1;
+				} else {
+					$navigationArray["enabled"] = 0;
+				}
+				
+				//set db back to ct after permission check
+				Project::setClient(BaseActiveController::urlPrefix());
 				
 				//if navUrl is null populate sub navs
 				if ($allNavMenus[$i]->ModuleMenuUrl == null)
@@ -138,13 +152,10 @@ class MenuController extends Controller {
 						$subNavData = [];
 						$subNavData["SubNavigationName"] = $subNavs[$s]->ModuleSubMenusNavMenuName;
 						$subNavData["Url"] = $subNavs[$s]->ModuleSubMenusURL;
-						$permissionName = $subNavs[$s]->ModuleSubMenusPermissionName;
-						if ($permissionName == "viewUserMgmt" && PermissionsController::can("Supervisor"))
-						{
-							$subNavData["enabled"] = 1;
-							$userMgmtFlag = true;
-						}
-						else if((PermissionsController::can($permissionName) && $relationFlag) || PermissionsController::can("Admin"))
+						//check if user can see sub nav option
+						//if(PermissionsController::can($subNavs[$s]->ModuleSubMenusPermissionName) && $navigationArray["enabled"] == 1)
+						if(call_user_func_array($permissionsController.'::can', array_merge(array($subNavs[$s]->ModuleSubMenusPermissionName), $permissionCheckParmArray)) 
+							&& $navigationArray["enabled"] == 1)
 						{
 							$subNavData["enabled"] = 1;
 						}
@@ -154,6 +165,8 @@ class MenuController extends Controller {
 						}
 						$subNavigationArray[] = $subNavData;
 					}
+					//set db back to ct after permission check
+					Project::setClient(BaseActiveController::urlPrefix());
 				}
 				//push sub nav array into nav array
 				if (!empty($subNavigationArray))
@@ -161,17 +174,8 @@ class MenuController extends Controller {
 					$navigationArray["SubNavigation"] = $subNavigationArray;
 					$subNavigationArray = [];
 				}
-				
-				//if enableFlag is true set module enabled to 1
-				if($relationFlag || $userMgmtFlag || PermissionsController::can("Admin"))
-				{
-					$modules[$allNavMenus[$i]->ModuleMenuName]["enabled"] = 1;
-				}
-				else{
-					$modules[$allNavMenus[$i]->ModuleMenuName]["enabled"] = 0;
-				}
 				//push navigation array into modules
-				$modules[$allNavMenus[$i]->ModuleMenuName]["NavigationMenu"][] = $navigationArray;
+				$modules[$moduleName]["NavigationMenu"][] = $navigationArray;
 				$navigationArray = [];
 			}
 			
@@ -187,11 +191,11 @@ class MenuController extends Controller {
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $menuArray;
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(\Exception $e) 
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 	
 }
