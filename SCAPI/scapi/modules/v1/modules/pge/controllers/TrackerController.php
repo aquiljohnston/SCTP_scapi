@@ -13,6 +13,9 @@ use yii\web\BadRequestHttpException;
 use yii\data\Pagination;
 use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocation;
 use app\modules\v1\modules\pge\models\WebManagementTrackerHistory;
+use app\modules\v1\modules\pge\models\WebManagementTrackerBreadcrumbs;
+use app\modules\v1\modules\pge\models\WebManagementTrackerAOC;
+use app\modules\v1\modules\pge\models\WebManagementTrackerIndications;
 
 class TrackerController extends Controller 
 {
@@ -30,7 +33,12 @@ class TrackerController extends Controller
                 'actions' => [
                     'get' => ['get'],
                     'get-recent-activity' => ['get'],
-                    'get-history' => ['get']
+                    'get-history' => ['get'],
+                    'get-history-map-breadcrumbs' => ['get'],
+                    'get-history-map-aocs' => ['get'],
+                    'get-history-map-indications' => ['get'],
+                    'get-history-map-controls' => ['get'],
+
                 ],  
             ];
 		return $behaviors;	
@@ -166,7 +174,6 @@ class TrackerController extends Controller
             $headers = getallheaders();
 
             if ($division && $workCenter) {
-                Yii::trace('in if');
                 WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
                 $query = WebManagementTrackerCurrentLocation::find();
 
@@ -341,4 +348,252 @@ class TrackerController extends Controller
         }
     }
 
+    public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
+                                     $startDate = null, $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+// TODO define and apply filters
+//            if ($division && $workCenter) {
+                WebManagementTrackerBreadcrumbs::setClient($headers['X-Client']);
+                $query = WebManagementTrackerBreadcrumbs::find();
+//                $query->where(['Division' => $division]);
+//                $query->andWhere(["Work Center" => $workCenter]);
+
+//                if ($surveyor) {
+//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+//                }
+
+//                if (trim($search)) {
+//                    $query->andWhere([
+//                        'or',
+//                        ['like', 'Division', $search],
+//                        ['like', 'Date', $search],
+//                        ['like', '[Surveyor / Inspector]', $search],
+//                        ['like', 'Work Center', $search],
+//                        ['like', 'Latitude', $search],
+//                        ['like', 'Longitude', $search],
+//                        ['like', '[Date Time]', $search],
+//                        ['like', 'House No', $search],
+//                        ['like', 'Street', $search],
+//                        ['like', 'Apt', $search],
+//                        ['like', 'City', $search],
+//                        ['like', 'State', $search],
+//                        ['like', 'Landmark', $search],
+//                        ['like', '[Landmark Description]', $search],
+//                        ['like', '[Accuracy (Meters)]', $search]
+//                    ]);
+//                }
+//                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+//
+//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+//                }
+
+                $countQuery = clone $query;
+
+                /* page index is 0 based */
+                $totalCount = $countQuery->count();
+
+//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
+                //TODO define a clearer limit
+                $limit = 300;
+                $offset = 0;
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->all();
+
+//            } else {
+//                $pages = new Pagination(['totalCount' => 0]);
+//                $pages->pageSizeLimit = [1, 100];
+//                $pages->setPage(0);
+//                $pages->setPageSize($perPage);
+//                $items =[];
+//            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+//            $data['pages'] = $pages;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
+                                                   $startDate = null, $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+// TODO define and apply filters
+//            if ($division && $workCenter) {
+            WebManagementTrackerAOC::setClient($headers['X-Client']);
+            $query = WebManagementTrackerAOC::find();
+//                $query->where(['Division' => $division]);
+//                $query->andWhere(["Work Center" => $workCenter]);
+
+//                if ($surveyor) {
+//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+//                }
+
+//                if (trim($search)) {
+//                    $query->andWhere([
+//                        'or',
+//                        ['like', 'Division', $search],
+//                        ['like', 'Date', $search],
+//                        ['like', '[Surveyor / Inspector]', $search],
+//                        ['like', 'Work Center', $search],
+//                        ['like', 'Latitude', $search],
+//                        ['like', 'Longitude', $search],
+//                        ['like', '[Date Time]', $search],
+//                        ['like', 'House No', $search],
+//                        ['like', 'Street', $search],
+//                        ['like', 'Apt', $search],
+//                        ['like', 'City', $search],
+//                        ['like', 'State', $search],
+//                        ['like', 'Landmark', $search],
+//                        ['like', '[Landmark Description]', $search],
+//                        ['like', '[Accuracy (Meters)]', $search]
+//                    ]);
+//                }
+//                if ($startDate !== null && $endDate !== null) {
+            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+//
+//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+//                }
+
+            $countQuery = clone $query;
+
+            /* page index is 0 based */
+            $totalCount = $countQuery->count();
+
+//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
+            //TODO define a clearer limit
+            $limit = 300;
+            $offset = 0;
+            $items = $query->offset($offset)
+                ->limit($limit)
+                ->all();
+
+//            } else {
+//                $pages = new Pagination(['totalCount' => 0]);
+//                $pages->pageSizeLimit = [1, 100];
+//                $pages->setPage(0);
+//                $pages->setPageSize($perPage);
+//                $items =[];
+//            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+//            $data['pages'] = $pages;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
+                                                   $startDate = null, $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+// TODO define and apply filters
+//            if ($division && $workCenter) {
+            WebManagementTrackerIndications::setClient($headers['X-Client']);
+            $query = WebManagementTrackerIndications::find();
+//                $query->where(['Division' => $division]);
+//                $query->andWhere(["Work Center" => $workCenter]);
+
+//                if ($surveyor) {
+//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+//                }
+
+//                if (trim($search)) {
+//                    $query->andWhere([
+//                        'or',
+//                        ['like', 'Division', $search],
+//                        ['like', 'Date', $search],
+//                        ['like', '[Surveyor / Inspector]', $search],
+//                        ['like', 'Work Center', $search],
+//                        ['like', 'Latitude', $search],
+//                        ['like', 'Longitude', $search],
+//                        ['like', '[Date Time]', $search],
+//                        ['like', 'House No', $search],
+//                        ['like', 'Street', $search],
+//                        ['like', 'Apt', $search],
+//                        ['like', 'City', $search],
+//                        ['like', 'State', $search],
+//                        ['like', 'Landmark', $search],
+//                        ['like', '[Landmark Description]', $search],
+//                        ['like', '[Accuracy (Meters)]', $search]
+//                    ]);
+//                }
+//                if ($startDate !== null && $endDate !== null) {
+            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+//
+//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+//                }
+
+            $countQuery = clone $query;
+
+            /* page index is 0 based */
+            $totalCount = $countQuery->count();
+
+//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
+            //TODO define a clearer limit
+            $limit = 300;
+            $offset = 0;
+            $items = $query->offset($offset)
+                ->limit($limit)
+                ->all();
+
+//            } else {
+//                $pages = new Pagination(['totalCount' => 0]);
+//                $pages->pageSizeLimit = [1, 100];
+//                $pages->setPage(0);
+//                $pages->setPageSize($perPage);
+//                $items =[];
+//            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+//            $data['pages'] = $pages;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
 }
