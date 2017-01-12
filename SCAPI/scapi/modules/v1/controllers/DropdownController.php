@@ -434,6 +434,7 @@ class DropdownController extends Controller
                         ->andWhere(['Date' => $date])
                         ->andWhere(['not' ,['Surveyor' => null]])
                         ->distinct()
+						->orderBy(['Map/Plat' => SORT_ASC])
                         ->all();
             }
             else if($division != null && $workCenter != null && $surveyor != null)
@@ -446,6 +447,7 @@ class DropdownController extends Controller
                         ->andWhere(['Surveyor' => $surveyor])
                         ->andWhere(['not' ,['Date' => null]])
                         ->distinct()
+						->orderBy(['Map/Plat' => SORT_ASC])
                         ->all();
             }
             else if($division != null && $workCenter != null)
@@ -459,6 +461,7 @@ class DropdownController extends Controller
                         ->andWhere(['not' ,['Map/Plat' => null]])
                         ->andWhere(['not' ,['Surveyor' => null]])
                         ->distinct()
+						->orderBy(['Map/Plat' => SORT_ASC])
                         ->all();
             }
 
@@ -506,6 +509,7 @@ class DropdownController extends Controller
                     ->andWhere(['not' ,['Surveyor' => null]])
                     ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
                     ->all();
             }
             else if ($mapPlat == null)
@@ -518,6 +522,7 @@ class DropdownController extends Controller
                     ->andWhere(['not' ,['Date' => null]])
                     ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
                     ->all();
             }
             else if($date == null)
@@ -530,6 +535,7 @@ class DropdownController extends Controller
                     ->andWhere(['Map/Plat' => $mapPlat])
                     ->andWhere(['not' ,['Date' => null]])
                     ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
                     ->all();
             }
             else
@@ -542,6 +548,7 @@ class DropdownController extends Controller
                     ->andWhere(['Map/Plat' => $mapPlat])
                     ->andWhere(['Date' => $date])
                     ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
                     ->all();
             }
 
@@ -578,6 +585,8 @@ class DropdownController extends Controller
             $headers = getallheaders();
             WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
+			//$dateCastingMagic = new \yii\db\Expression('(created_at::text)');
+			
             if($division != null && $workCenter != null && ($surveyor == null || $mapPlat == null))
             {
                 // just by division and workCenter
@@ -589,6 +598,7 @@ class DropdownController extends Controller
                     ->andWhere(['not' ,['Surveyor' => null]])
                     ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
+					//->orderBy(["Cast([Date] as date)" => SORT_DESC])
                     ->all();
             }
             else if ($division != null && $workCenter != null && $surveyor != null && $mapPlat != null)
@@ -602,6 +612,7 @@ class DropdownController extends Controller
                      ->andWhere(['Map/Plat' => $mapPlat])
 					 ->andWhere(['not' ,['Date' => null]])
                      ->distinct()
+					 //->orderBy(["Cast([Date] as date)" => SORT_DESC])
                      ->all();
             }
 
