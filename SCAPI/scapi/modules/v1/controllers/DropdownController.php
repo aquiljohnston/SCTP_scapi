@@ -591,28 +591,28 @@ class DropdownController extends Controller
             {
                 // just by division and workCenter
                 $values = WebManagementLeakLogDropDown::find()
-                    ->select(['Date'])
+                    ->select(['Date', 'OrderByDate'])
                     ->where(['Division' => $division])
                     ->andWhere(['WorkCenter' => $workCenter])
 					->andWhere(['not' ,['Date' => null]])
                     ->andWhere(['not' ,['Surveyor' => null]])
                     ->andWhere(['not' ,['Map/Plat' => null]])
                     ->distinct()
-					//->orderBy(["Cast([Date] as date)" => SORT_DESC])
+					->orderBy(['OrderByDate' => SORT_DESC])
                     ->all();
             }
             else if ($division != null && $workCenter != null && $surveyor != null && $mapPlat != null)
             {
                 // by division and workcenter and surveyor and mapplat
                 $values = WebManagementLeakLogDropDown::find()
-                     ->select(['Date'])
+                     ->select(['Date', 'OrderByDate'])
                      ->where(['Division' => $division])
                      ->andWhere(['WorkCenter' => $workCenter])
                      ->andWhere(['Surveyor' => $surveyor])
                      ->andWhere(['Map/Plat' => $mapPlat])
 					 ->andWhere(['not' ,['Date' => null]])
                      ->distinct()
-					 //->orderBy(["Cast([Date] as date)" => SORT_DESC])
+					 ->orderBy(['OrderByDate' => SORT_DESC])
                      ->all();
             }
 
