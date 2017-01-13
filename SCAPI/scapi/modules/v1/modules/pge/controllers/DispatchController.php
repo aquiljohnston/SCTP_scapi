@@ -250,8 +250,7 @@ class DispatchController extends Controller
 			//TODO need to add a new column to the view with lastname, firstname
 			$userQuery = UserLogin::find()
 				->select('UserUID, UserFullName, UserLANID, WorkCenter')
-				->where(['UserAppRoleType' => 'Surveyor/Inspector']);
-				
+				->where([ 'in', 'UserAppRoleType', ['Surveyor/Inspector', 'SupervisorSupport']]);
 			
 			if($workCenter != null)
 			{
