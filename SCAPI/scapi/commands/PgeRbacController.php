@@ -51,20 +51,12 @@ class PgeRbacController extends Controller
 		////////////////////////////create permissions////////////////////////////////////////////////////
 		
 		//Dispatch Permissions//
-		//add "viewDispatch" permission
-		$viewDispatch = $auth->createPermission('viewDispatch');
-		$viewDispatch->description = 'View the Dispatch Screen';
-		$auth->add($viewDispatch);
 		//add "dispatch" permission
 		$dispatch = $auth->createPermission('dispatch');
 		$dispatch->description = 'Dispatch IRs to Surveyors in the Field';
 		$auth->add($dispatch);
 		
 		//Assigned Permissions//
-		//add "viewAssigned" permission
-		$viewAssigned = $auth->createPermission('viewAssigned');
-		$viewAssigned->description = 'View the Assigned Screen';
-		$auth->add($viewAssigned);
 		//add "unassign" permission
 		$unassign = $auth->createPermission('unassign');
 		$unassign->description = 'Unassign a Surveyor from an IR';
@@ -75,14 +67,6 @@ class PgeRbacController extends Controller
 		$auth->add($addSurveyor);
 		
 		//Leak Log Permissions//
-		//add "viewLeakLogMgnt" permission
-		$viewLeakLogMgnt = $auth->createPermission('viewLeakLogMgnt');
-		$viewLeakLogMgnt->description = 'View the Leak Log Management screen';
-		$auth->add($viewLeakLogMgnt);
-		//add "viewLeakLogSearch" permission
-		$viewLeakLogSearch = $auth->createPermission('viewLeakLogSearch');
-		$viewLeakLogSearch->description = 'View the Leak Log Search screen';
-		$auth->add($viewLeakLogSearch);
 		//add "viewLeakDetails" permission
 		$viewLeakDetails = $auth->createPermission('viewLeakDetails');
 		$viewLeakDetails->description = 'View the Leak Log Detail screen';
@@ -105,14 +89,6 @@ class PgeRbacController extends Controller
 		$auth->add($transferFLOC);
 		
 		//Map Stamp Permissions//
-		//add "viewMapStampMgnt" permission
-		$viewMapStampMgnt = $auth->createPermission('viewMapStampMgnt');
-		$viewMapStampMgnt->description = 'View Map Stamp Management Screen';
-		$auth->add($viewMapStampMgnt);
-		//add "viewMapStampDetail" permission
-		$viewMapStampDetail = $auth->createPermission('viewMapStampDetail');
-		$viewMapStampDetail->description = 'View Map Stamp Detail Screen';
-		$auth->add($viewMapStampDetail);
 		//add "editMapStampDetail" permission
 		$editMapStampDetail = $auth->createPermission('editMapStampDetail');
 		$editMapStampDetail->description = 'Edit a Map Stamp Detail Record';
@@ -127,16 +103,8 @@ class PgeRbacController extends Controller
 		$auth->add($submitMapStamp);
 		
 		//AOC Permissions//
-		//add "viewAOC" permission
-		$viewAOC = $auth->createPermission('viewAOC');
-		$viewAOC->description = 'View the AOC screen';
-		$auth->add($viewAOC);
 		
 		//User Mgmt Permissions//
-		//add "viewUserMgnt" permission
-		$viewUserMgnt = $auth->createPermission('viewUserMgnt');
-		$viewUserMgnt->description = 'View User Management Screen';
-		$auth->add($viewUserMgnt);
 		//add "addUser" permission
 		$addUser = $auth->createPermission('addUser');
 		$addUser->description = 'Add a New User';
@@ -150,11 +118,92 @@ class PgeRbacController extends Controller
 		$deactivateUser->description = 'Deactivate an Existing User';
 		$auth->add($deactivateUser);
 		
+		////// Module Menu Premissions //////
+		
+		$viewAdministrationMenu = $auth->createPermission('viewAdministrationMenu');
+        $viewAdministrationMenu->description = 'View Administration Menu';
+        $auth->add($viewAdministrationMenu);
+		
+		$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
+        $viewDashboardMenu->description = 'View Dashboard Menu';
+        $auth->add($viewDashboardMenu);
+		
+		$viewDispatchMenu = $auth->createPermission('viewDispatchMenu');
+        $viewDispatchMenu->description = 'View Dispatch Menu';
+        $auth->add($viewDispatchMenu);
+		
+		$viewReportsMenu = $auth->createPermission('viewReportsMenu');
+        $viewReportsMenu->description = 'View Reports Menu';
+        $auth->add($viewReportsMenu);
+		
+		$viewHomeMenu = $auth->createPermission('viewHomeMenu');
+        $viewHomeMenu->description = 'View Home Menu';
+        $auth->add($viewHomeMenu);
+		
+		////// Module Sub Menu Permissions //////
+
+
+        $viewClientMgmt = $auth->createPermission('viewClientMgmt');
+        $viewClientMgmt->description = 'View client management menu item';
+        $auth->add($viewClientMgmt);
+
+        $viewProjectMgmt = $auth->createPermission('viewProjectMgmt');
+        $viewProjectMgmt->description = 'View project management  menu item';
+        $auth->add($viewProjectMgmt);
+
+        $viewUserMgmt = $auth->createPermission('viewUserMgmt');
+        $viewUserMgmt->description = 'View user management menu item';
+        $auth->add($viewUserMgmt);
+
+        $viewEquipmentMgmt = $auth->createPermission('viewEquipmentMgmt');
+        $viewEquipmentMgmt->description = 'View equipment management menu item';
+        $auth->add($viewEquipmentMgmt);
+
+        $viewTimeCardMgmt = $auth->createPermission('viewTimeCardMgmt');
+        $viewTimeCardMgmt->description = 'View time card management menu item';
+        $auth->add($viewTimeCardMgmt);
+
+        $viewMileageCardMgmt = $auth->createPermission('viewMileageCardMgmt');
+        $viewMileageCardMgmt->description = 'View mileage card management menu item';
+        $auth->add($viewMileageCardMgmt);
+
+        $viewTracker = $auth->createPermission('viewTracker');
+        $viewTracker->description = 'View tracker menu item';
+        $auth->add($viewTracker);
+        
+        $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
+        $viewLeakLogMgmt->description = 'View leak log management menu item';
+        $auth->add($viewLeakLogMgmt);
+
+        $viewLeakLogSearch = $auth->createPermission('viewLeakLogSearch');
+        $viewLeakLogSearch->description = 'View leak log search menu item';
+        $auth->add($viewLeakLogSearch);
+
+        $viewMapStampMgmt = $auth->createPermission('viewMapStampMgmt');
+        $viewMapStampMgmt->description = 'View map stamp management menu item';
+        $auth->add($viewMapStampMgmt);
+
+        $viewMapStampDetail = $auth->createPermission('viewMapStampDetail');
+        $viewMapStampDetail->description = 'View map stamp detail menu item';
+        $auth->add($viewMapStampDetail);
+
+        $viewAOC = $auth->createPermission('viewAOC');
+        $viewAOC->description = 'View AOC menu item';
+        $auth->add($viewAOC);
+
+        $viewDispatch = $auth->createPermission('viewDispatch');
+        $viewDispatch->description = 'View dispatch menu item';
+        $auth->add($viewDispatch);
+
+        $viewAssigned = $auth->createPermission('viewAssigned');
+        $viewAssigned->description = 'View assigned menu item';
+        $auth->add($viewAssigned);
+		
 		
 		/////////////////////////// add roles and children //////////////////////////////////////////////
 		
 		//add "Surveyor/Inspector" role
-		$surveyorInspector = $auth->createRole('Survyeor/Inspector');
+		$surveyorInspector = $auth->createRole('Surveyor/Inspector');
 		$auth->add($surveyorInspector);
 		//add permissions to Surveyor/Inspector
 		
@@ -164,13 +213,20 @@ class PgeRbacController extends Controller
 		//add child roles to QM
 		//add permissions to QM
 		$auth->addChild($qm, $viewDispatch);
-		$auth->addChild($qm, $viewLeakLogMgnt);
+		$auth->addChild($qm, $viewLeakLogMgmt);
 		$auth->addChild($qm, $viewLeakLogSearch);
 		$auth->addChild($qm, $viewLeakDetails);
-		$auth->addChild($qm, $viewMapStampMgnt);
+		$auth->addChild($qm, $viewMapStampMgmt);
 		$auth->addChild($qm, $viewMapStampDetail);
 		$auth->addChild($qm, $viewAOC);
-		$auth->addChild($qm, $viewUserMgnt);
+		$auth->addChild($qm, $viewUserMgmt);
+		//menu permissions
+		$auth->addChild($qm, $viewAdministrationMenu);
+		$auth->addChild($qm, $viewDashboardMenu);
+		$auth->addChild($qm, $viewDispatchMenu);
+		$auth->addChild($qm, $viewReportsMenu);
+		//sub menu permissions
+		$auth->addChild($qm, $viewTracker);
 		
 		//add "BSS/Analyst" role
 		$bssAnalyst = $auth->createRole('BSS/Analyst');
@@ -218,6 +274,14 @@ class PgeRbacController extends Controller
 		$auth->addChild($administrator, $submitLeak);
 		$auth->addChild($administrator, $approveLeak);
 		$auth->addChild($administrator, $transferFLOC);
+		//menu permissions
+		$auth->addChild($administrator, $viewHomeMenu);
+		// sub menu permissions
+		$auth->addChild($administrator, $viewClientMgmt);
+		$auth->addChild($administrator, $viewProjectMgmt);
+		$auth->addChild($administrator, $viewEquipmentMgmt);
+		$auth->addChild($administrator, $viewTimeCardMgmt);
+		$auth->addChild($administrator, $viewMileageCardMgmt);
 		
 		
 		///////////////////////////assign roles to existing users////////////////////////////////////////
