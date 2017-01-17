@@ -19,6 +19,9 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	private static $PGE_STAGE_DB = 'pgestage';
 	private static $PGE_PROD_DB = 'pge';
 	
+	//beta client database
+	private static $BETA_DB = 'beta';
+	
 	public static function getClient()
 	{
 		return self::$CLIENT_ID;
@@ -54,6 +57,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if (self::$CLIENT_ID == self::$PGE_PROD_DB)
 		{
 			return Yii::$app->pgeProdDb;
+		}
+		if (self::$CLIENT_ID == self::$BETA_DB)
+		{
+			return Yii::$app->betaDb;
 		}
 	}
 }
