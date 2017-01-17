@@ -103,6 +103,8 @@ use Yii;
  * @property string $ReverseGeoLocationString
  * @property string $Grade1ReleaseReasonType
  * @property string $Grade1ReleaseDateTime
+ * @property string $PipelineType
+ * @property string $InspectionType
  */
 class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -120,7 +122,7 @@ class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetAddressUID', 'AssetUID', 'AssetInspectionUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'RouteNo', 'AssetAccountNo', 'AssetAccountName', 'AssetName', 'AssetLocationID', 'AssetLocationCode', 'AssetIDStatus', 'AssetIDNo', 'AssetIDNoCorection', 'ReverseGeoHouseNo', 'ReverseGeoStreet1', 'ReverseGeoCity', 'ReverseGeoState', 'ReverseGeoZip', 'ReverseGeoQuality', 'HouseNo', 'Street1', 'Street2', 'AptSuite', 'AptDesc', 'Apt', 'City', 'State', 'ZIP', 'County', 'CountyCode', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'InspectionRequestUID', 'MasterLeakLogUID', 'ActivityUID', 'ReverseGeoLocationString', 'Grade1ReleaseReasonType'], 'string'],
+            [['AssetAddressUID', 'AssetUID', 'AssetInspectionUID', 'MapGridUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'GPSType', 'GPSSentence', 'SHAPE', 'Comments', 'RevisionComments', 'StatusType', 'RouteNo', 'AssetAccountNo', 'AssetAccountName', 'AssetName', 'AssetLocationID', 'AssetLocationCode', 'AssetIDStatus', 'AssetIDNo', 'AssetIDNoCorection', 'ReverseGeoHouseNo', 'ReverseGeoStreet1', 'ReverseGeoCity', 'ReverseGeoState', 'ReverseGeoZip', 'ReverseGeoQuality', 'HouseNo', 'Street1', 'Street2', 'AptSuite', 'AptDesc', 'Apt', 'City', 'State', 'ZIP', 'County', 'CountyCode', 'Photo1', 'Photo2', 'Photo3', 'ApprovedByUserUID', 'SubmittedStatusType', 'ResponseStatusType', 'Response', 'ResponceErrorDescription', 'GPSSource', 'GPSTime', 'ChecksumData', 'GPSStatus', 'InspectionRequestUID', 'MasterLeakLogUID', 'ActivityUID', 'ReverseGeoLocationString', 'Grade1ReleaseReasonType', 'PipelineType', 'InspectionType'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'NewAssetFlag', 'NonAssetLocationFlag', 'AssetAddessCorrectionFlag', 'AssetIDNumberCorrectionFlag', 'AssetConfirmFlag', 'RouteSeq', 'SortOrder', 'HouseNoNAFlag', 'ApprovedFlag', 'SubmittedFlag', 'SubmittedUserUID', 'CompletedFlag', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'AOCFlag', 'CGIFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'ApprovedDTLT', 'SubmittedDTLT', 'ResponseDTLT', 'CompletedDTLT', 'SrcOpenDTLT', 'Grade1ReleaseDateTime'], 'safe'],
             [['Latitude', 'Longitude', 'ReverseGeoLat', 'ReverseGeoLong', 'HDOP', 'AltitudemetersAboveMeanSeaLevel', 'HeightofGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number']
@@ -229,6 +231,8 @@ class AssetAddress extends \app\modules\v1\models\BaseActiveRecord
             'ReverseGeoLocationString' => 'Reverse Geo Location String',
             'Grade1ReleaseReasonType' => 'Grade1 Release Reason Type',
             'Grade1ReleaseDateTime' => 'Grade1 Release Date Time',
+            'PipelineType' => 'Pipeline Type',
+            'InspectionType' => 'Inspection Type',
         ];
     }
 }
