@@ -70,6 +70,13 @@ return [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
+		'betaDb' = [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=BetaClient',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
     ],
     'params' => $params,
 ];
