@@ -351,7 +351,8 @@ class TrackerController extends Controller
     }
 
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
-                                     $startDate = null, $endDate = null, $search = null)
+                                                   $startDate = null, $endDate = null, $search = null,
+                                                   $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
     {
         try{
 
@@ -421,9 +422,6 @@ class TrackerController extends Controller
                 //TODO define a clearer limit
                 $limit = 300;
                 $offset = 0;
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->all();
 
                 $items = $query->offset($offset)
                     ->limit($limit)
@@ -455,73 +453,90 @@ class TrackerController extends Controller
     }
 
     public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
-                                                   $startDate = null, $endDate = null, $search = null)
+                                            $startDate = null, $endDate = null, $search = null,
+                                            $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
     {
         try{
 
             $headers = getallheaders();
-// TODO define and apply filters
-//            if ($division && $workCenter) {
-            WebManagementTrackerAOC::setClient($headers['X-Client']);
-            $query = WebManagementTrackerAOC::find();
-//                $query->where(['Division' => $division]);
-//                $query->andWhere(["Work Center" => $workCenter]);
+            if ($aoc) {
+                WebManagementTrackerAOC::setClient($headers['X-Client']);
+                $query = WebManagementTrackerAOC::find();
+                $aocPossibleValues = ['19'=>'19',
+                    '31'=>'31',
+                    '32'=>'32',
+                    '33'=>'33',
+                    '23'=>'23',
+                    '30'=>'30',
+                    '20'=>'20',
+                    '34'=>'34',
+                    '35'=>'35',
+                    '36'=>'36',
+                    '37'=>'37',
+                    '38'=>'38',
+                    '39'=>'39',
+                    '51'=>'51',
+                    '52'=>'52',
+                    '54'=>'54',
+                    '56'=>'56',
+                    '57'=>'57',
+                    '58'=>'58',
+                    '59'=>'59',
+                    '99'=>'99',
+                ];
 
-//                if ($surveyor) {
-//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
-//                }
+                $sentAocs = explode(',',$aoc);
+                $filterConditions = null;
+                /*
+                 * construct an array of the form
+                 * ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value] for one entry
+                 * [
+                 *   'or',
+                 *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value1],
+                 *    ...
+                 *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>valuen]
+                 * ] -- for multiple entries
+                 */
+                foreach ($sentAocs as $sentAoc) {
+                    $aocKey = trim(strtolower($sentAoc));
+                    if (isset($aocPossibleValues[$aocKey])){
+                        if (null === $filterConditions){
+                            $filterConditions = ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocPossibleValues[$aocKey]];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocPossibleValues[$aocKey]];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocPossibleValues[$aocKey]];
+                        }
+                    }
+                }
 
-//                if (trim($search)) {
-//                    $query->andWhere([
-//                        'or',
-//                        ['like', 'Division', $search],
-//                        ['like', 'Date', $search],
-//                        ['like', '[Surveyor / Inspector]', $search],
-//                        ['like', 'Work Center', $search],
-//                        ['like', 'Latitude', $search],
-//                        ['like', 'Longitude', $search],
-//                        ['like', '[Date Time]', $search],
-//                        ['like', 'House No', $search],
-//                        ['like', 'Street', $search],
-//                        ['like', 'Apt', $search],
-//                        ['like', 'City', $search],
-//                        ['like', 'State', $search],
-//                        ['like', 'Landmark', $search],
-//                        ['like', '[Landmark Description]', $search],
-//                        ['like', '[Accuracy (Meters)]', $search]
-//                    ]);
-//                }
-//                if ($startDate !== null && $endDate !== null) {
-            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-//
-//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
-//                }
+                $query->andWhere($filterConditions);
+// TODO see if the workcenter, surveyor.... filter should be applied here
 
-            $countQuery = clone $query;
+                //TODO define a clearer limit
+                $limit = 300;
+                $offset = 0;
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->all();
 
-            /* page index is 0 based */
-            $totalCount = $countQuery->count();
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+                $sqlString = $items->sql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
 
-//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-            //TODO define a clearer limit
-            $limit = 300;
-            $offset = 0;
-            $items = $query->offset($offset)
-                ->limit($limit)
-                ->all();
-
-//            } else {
-//                $pages = new Pagination(['totalCount' => 0]);
-//                $pages->pageSizeLimit = [1, 100];
-//                $pages->setPage(0);
-//                $pages->setPageSize($perPage);
-//                $items =[];
-//            } // end division and workcenter check
+            } else {
+                $items =[];
+            } // end division and workcenter check
 
             $data = [];
             $data['results'] = $items;
-//            $data['pages'] = $pages;
 
             //send response
             $response = Yii::$app->response;
@@ -538,73 +553,73 @@ class TrackerController extends Controller
     }
 
     public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
-                                                   $startDate = null, $endDate = null, $search = null)
+                                                   $startDate = null, $endDate = null, $search = null,
+                                                   $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
     {
         try{
 
             $headers = getallheaders();
-// TODO define and apply filters
-//            if ($division && $workCenter) {
-            WebManagementTrackerIndications::setClient($headers['X-Client']);
-            $query = WebManagementTrackerIndications::find();
-//                $query->where(['Division' => $division]);
-//                $query->andWhere(["Work Center" => $workCenter]);
 
-//                if ($surveyor) {
-//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
-//                }
+            if ($indications) {
+                WebManagementTrackerIndications::setClient($headers['X-Client']);
+                $query = WebManagementTrackerIndications::find();
 
-//                if (trim($search)) {
-//                    $query->andWhere([
-//                        'or',
-//                        ['like', 'Division', $search],
-//                        ['like', 'Date', $search],
-//                        ['like', '[Surveyor / Inspector]', $search],
-//                        ['like', 'Work Center', $search],
-//                        ['like', 'Latitude', $search],
-//                        ['like', 'Longitude', $search],
-//                        ['like', '[Date Time]', $search],
-//                        ['like', 'House No', $search],
-//                        ['like', 'Street', $search],
-//                        ['like', 'Apt', $search],
-//                        ['like', 'City', $search],
-//                        ['like', 'State', $search],
-//                        ['like', 'Landmark', $search],
-//                        ['like', '[Landmark Description]', $search],
-//                        ['like', '[Accuracy (Meters)]', $search]
-//                    ]);
-//                }
-//                if ($startDate !== null && $endDate !== null) {
-            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-//
-//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
-//                }
+                $indPossibleValues = ['1'=>'1','2p'=>'2+','2'=>'2','3'=>'3'];
 
-            $countQuery = clone $query;
+                $sentIndications = explode(',',$indications);
+                $indFilterConditions = null;
 
-            /* page index is 0 based */
-            $totalCount = $countQuery->count();
+                /*
+                 * construct an array of the form
+                 * ['GradeType'=>value] for one entry
+                 * [
+                 *   'or',
+                 *   ['GradeType'=>value1],
+                 *    ...
+                 *   ['GradeType'=>valuen]
+                 * ] -- for multiple entries
+                 */
+                foreach ($sentIndications as $sentIndication) {
+                    $indKey = trim(strtolower($sentIndication));
+                    if (isset($indPossibleValues[$indKey])){
+                        if (null === $indFilterConditions){
+                            $indFilterConditions = ['GradeType'=>$indPossibleValues[$indKey]];
+                        } elseif ( isset($indFilterConditions[0]) && $indFilterConditions[0]=='or') {
+                            $indFilterConditions[]= ['GradeType'=>$indPossibleValues[$indKey]];
+                        } else {
+                            $tmp = $indFilterConditions;
+                            $indFilterConditions=[];
+                            $indFilterConditions[0] = 'or';
+                            $indFilterConditions[]= $tmp;
+                            $indFilterConditions[]= ['GradeType'=>$indPossibleValues[$indKey]];
+                        }
+                    }
+                }
+
+                $query->andWhere($indFilterConditions);
+// TODO see if the workcenter, surveyor.... filter should be applied here
 
 //                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-            //TODO define a clearer limit
-            $limit = 300;
-            $offset = 0;
-            $items = $query->offset($offset)
-                ->limit($limit)
-                ->all();
+                //TODO define a clearer limit
+                $limit = 300;
+                $offset = 0;
 
-//            } else {
-//                $pages = new Pagination(['totalCount' => 0]);
-//                $pages->pageSizeLimit = [1, 100];
-//                $pages->setPage(0);
-//                $pages->setPageSize($perPage);
-//                $items =[];
-//            } // end division and workcenter check
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->all();
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+            } else {
+                $items =[];
+            } // end indications check
 
             $data = [];
             $data['results'] = $items;
-//            $data['pages'] = $pages;
 
             //send response
             $response = Yii::$app->response;
@@ -621,15 +636,18 @@ class TrackerController extends Controller
     }
 
     public function actionGetHistoryMapCompliance($division=null, $workCenter=null, $surveyor = null,
-                                                   $startDate = null, $endDate = null, $search = null)
+                                                  $startDate = null, $endDate = null, $search = null,
+                                                  $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
     {
         try{
 
             $headers = getallheaders();
-// TODO define and apply filters
+
 //            if ($division && $workCenter) {
             WebManagementTrackerMapGridCompliance::setClient($headers['X-Client']);
             $query = WebManagementTrackerMapGridCompliance::find();
+
+            $query->where(['Division' => $division]);
 //            $query->where(['Division' => $division]);
 //            $query->andWhere(["Work Center" => $workCenter]);
 //
@@ -638,36 +656,15 @@ class TrackerController extends Controller
 //            }
 //
 //            if (trim($search)) {
-//                $query->andWhere([
-//                    'or',
-//                    ['like', 'Division', $search],
-//                    ['like', 'Date', $search],
-//                    ['like', '[Surveyor / Inspector]', $search],
-//                    ['like', 'Work Center', $search],
-//                    ['like', 'Latitude', $search],
-//                    ['like', 'Longitude', $search],
-//                    ['like', '[Date Time]', $search],
-//                    ['like', 'House No', $search],
-//                    ['like', 'Street', $search],
-//                    ['like', 'Apt', $search],
-//                    ['like', 'City', $search],
-//                    ['like', 'State', $search],
-//                    ['like', 'Landmark', $search],
-//                    ['like', '[Landmark Description]', $search],
-//                    ['like', '[Accuracy (Meters)]', $search]
-//                ]);
+// ?????
 //            }
+
 //            if ($startDate !== null && $endDate !== null) {
                 // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
 //                $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 //
 //                $query->andWhere(['between', 'Date', $startDate, $endDate]);
 //            }
-
-            $countQuery = clone $query;
-
-            /* page index is 0 based */
-            $totalCount = $countQuery->count();
 
 //            $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
             //TODO define a clearer limit
