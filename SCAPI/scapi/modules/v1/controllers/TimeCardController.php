@@ -291,8 +291,8 @@ class TimeCardController extends BaseActiveController
 	public function actionGetCards($week, $listPerPage = null, $page = null)
 	{
 		// RBAC permission check is embedded in this action	
-		/*try
-		{*/
+		try
+		{
 			//set db target headers
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
@@ -383,14 +383,14 @@ class TimeCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		/*}
+		}
 		catch(ForbiddenHttpException $e) {
 			throw $e;
 		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
-		}*/
+		}
 	}
 
 	public function paginationProcessor($assetQuery, $page, $listPerPage){
