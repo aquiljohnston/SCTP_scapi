@@ -32,8 +32,8 @@ class PgeMenuController extends MenuController {
             ];
 		return $behaviors;		
 	}
-	
-	public function actionGet($project)
+
+	public function actionGet($project, $permissionsController = MenuController::PERMISSION_CONTROLLER, $permissionCheckParmArray = [])
 	{
 		$headers = getallheaders();
 		$parmArray = array($headers['X-Client']);
