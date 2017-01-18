@@ -40,6 +40,7 @@ class TrackerController extends Controller
                     'get-history-map-indications' => ['get'],
                     'get-history-map-compliance' => ['get'],
                     'get-history-map-controls' => ['get'],
+                    'get-recent-activity-map-info' => ['get'],
 
                 ],  
             ];
@@ -352,7 +353,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
-                                                   $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
+                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -454,7 +455,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
                                             $startDate = null, $endDate = null, $search = null,
-                                            $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
+                                            $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -554,7 +555,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
-                                                   $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
+                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -637,7 +638,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapCompliance($division=null, $workCenter=null, $surveyor = null,
                                                   $startDate = null, $endDate = null, $search = null,
-                                                  $compliance=null, $aoc=null, $indications=null, $surveyBreadcrumbs = null)
+                                                  $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -694,4 +695,78 @@ class TrackerController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+
+    public function actionGetRecentActivityMapInfo($division=null, $workCenter=null, $surveyor = null,
+                                                   $startDate = null, $endDate = null, $search = null,
+                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+    {
+        try{
+
+            $headers = getallheaders();
+
+            if ($division && $workCenter) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $query = WebManagementTrackerCurrentLocation::find();
+
+                $query->where(['Division' => $division]);
+                $query->andWhere(["Work Center" => $workCenter]);
+
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                }
+
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', '[Date]', $search],
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', '[Work Center]', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Battery Level]', $search],
+                        ['like', '[GPS Type]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                //TODO define a clearer limit
+                $limit = 300;
+                $offset = 0;
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+
+
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
 }
