@@ -20,6 +20,7 @@ use app\modules\v1\modules\pge\models\WebManagementTrackerMapGridCompliance;
 
 class TrackerController extends Controller 
 {
+    public $resultsLimit = 300; // limits the maximum returned results
 
 	public function behaviors()
 	{
@@ -353,6 +354,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
                                                    $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
@@ -414,14 +416,23 @@ class TrackerController extends Controller
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
-                $countQuery = clone $query;
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
 
-                /* page index is 0 based */
-//                $totalCount = $countQuery->count();
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
 
-//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-                //TODO define a clearer limit
-                $limit = 300;
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+                $limit =$this->resultsLimit;
                 $offset = 0;
 
                 $items = $query->offset($offset)
@@ -455,6 +466,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
                                             $startDate = null, $endDate = null, $search = null,
+                                            $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
                                             $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
@@ -516,10 +528,26 @@ class TrackerController extends Controller
                 }
 
                 $query->andWhere($filterConditions);
+
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
 // TODO see if the workcenter, surveyor.... filter should be applied here
 
-                //TODO define a clearer limit
-                $limit = 300;
+                $limit =$this->resultsLimit;
                 $offset = 0;
 //                $items = $query->offset($offset)
 //                    ->limit($limit)
@@ -555,6 +583,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
                                                    $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
@@ -600,9 +629,23 @@ class TrackerController extends Controller
                 $query->andWhere($indFilterConditions);
 // TODO see if the workcenter, surveyor.... filter should be applied here
 
-//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-                //TODO define a clearer limit
-                $limit = 300;
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+                $limit =$this->resultsLimit;
                 $offset = 0;
 
 //                $items = $query->offset($offset)
@@ -638,6 +681,7 @@ class TrackerController extends Controller
 
     public function actionGetHistoryMapCompliance($division=null, $workCenter=null, $surveyor = null,
                                                   $startDate = null, $endDate = null, $search = null,
+                                                  $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
@@ -667,9 +711,23 @@ class TrackerController extends Controller
 //                $query->andWhere(['between', 'Date', $startDate, $endDate]);
 //            }
 
-//            $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-            //TODO define a clearer limit
-            $limit = 300;
+            if (null!=$minLat){
+                $query->andWhere(['>=','Latitude',$minLat]);
+            }
+
+            if (null!=$maxLat){
+                $query->andWhere(['<=','Latitude',$maxLat]);
+            }
+
+            if (null!=$minLong){
+                $query->andWhere(['>=','Longitude',$minLong]);
+            }
+
+            if (null!=$maxLong){
+                $query->andWhere(['<=','Longitude',$maxLong]);
+            }
+
+            $limit =$this->resultsLimit;
             $offset = 0;
             $items = $query->offset($offset)
                 ->limit($limit)
@@ -698,6 +756,7 @@ class TrackerController extends Controller
 
     public function actionGetRecentActivityMapInfo($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
                                                    $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
@@ -736,8 +795,23 @@ class TrackerController extends Controller
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
-                //TODO define a clearer limit
-                $limit = 300;
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+                $limit =$this->resultsLimit;
                 $offset = 0;
 
                 $items = $query->offset($offset)
