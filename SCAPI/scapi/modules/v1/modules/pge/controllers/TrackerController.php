@@ -17,6 +17,7 @@ use app\modules\v1\modules\pge\models\WebManagementTrackerBreadcrumbs;
 use app\modules\v1\modules\pge\models\WebManagementTrackerAOC;
 use app\modules\v1\modules\pge\models\WebManagementTrackerIndications;
 use app\modules\v1\modules\pge\models\WebManagementTrackerMapGridCompliance;
+use app\modules\v1\modules\pge\models\AssetAddressCGE;
 
 class TrackerController extends Controller 
 {
@@ -41,6 +42,7 @@ class TrackerController extends Controller
                     'get-history-map-indications' => ['get'],
                     'get-history-map-compliance' => ['get'],
                     'get-history-map-controls' => ['get'],
+                    'get-history-map-cgi' => ['get'],
                     'get-recent-activity-map-info' => ['get'],
 
                 ],  
@@ -355,7 +357,7 @@ class TrackerController extends Controller
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
                                                    $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                                   $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -464,10 +466,108 @@ class TrackerController extends Controller
         }
     }
 
+    public function actionGetHistoryMapCgi($division=null, $workCenter=null, $surveyor = null,
+                                            $startDate = null, $endDate = null, $search = null,
+                                            $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                            $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+    {
+        try{
+
+            $headers = getallheaders();
+            if ($aoc) {
+                AssetAddressCGE::setClient($headers['X-Client']);
+                $query = AssetAddressCGE::find();
+
+                $query->select(['CreatedUserUID','SrcDTLT','Latitude','Longitude','StatusType','CGEReasonType','CGECardNo']);
+                $sentCgis = explode(',',$cgi);
+                $filterConditions = null;
+                /*
+                 * construct an array of the form
+                 * ['CreatedUserUID'=>value] for one entry
+                 * [
+                 *   'or',
+                 *   ['CreatedUserUID'=>value1],
+                 *    ...
+                 *   ['CreatedUserUID'=>valuen]
+                 * ] -- for multiple entries
+                 */
+                foreach ($sentCgis as $sentCgi) {
+                    $uid = trim(strtolower($sentCgi));//trim(strtolower($sentCgis));
+                    if (''==$uid){
+                        continue;
+                    }
+                    if (null === $filterConditions){
+                        $filterConditions = ['CreatedUserUID'=>$uid];
+                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                        $filterConditions[]= ['CreatedUserUID'=>$uid];
+                    } else {
+                        $tmp = $filterConditions;
+                        $filterConditions=[];
+                        $filterConditions[0] = 'or';
+                        $filterConditions[]= $tmp;
+                        $filterConditions[]= ['CreatedUserUID'=>$uid];
+                    }
+                }
+                if (null!=$filterConditions) {
+                    $query->andWhere($filterConditions);
+                }
+
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+// TODO see if the workcenter, surveyor.... filter should be applied here
+
+                $limit =$this->resultsLimit;
+                $offset = 0;
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->all();
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+                $sqlString = $items->sql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
     public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
                                             $startDate = null, $endDate = null, $search = null,
                                             $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                            $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                            $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -475,28 +575,28 @@ class TrackerController extends Controller
             if ($aoc) {
                 WebManagementTrackerAOC::setClient($headers['X-Client']);
                 $query = WebManagementTrackerAOC::find();
-                $aocPossibleValues = ['19'=>'19',
-                    '31'=>'31',
-                    '32'=>'32',
-                    '33'=>'33',
-                    '23'=>'23',
-                    '30'=>'30',
-                    '20'=>'20',
-                    '34'=>'34',
-                    '35'=>'35',
-                    '36'=>'36',
-                    '37'=>'37',
-                    '38'=>'38',
-                    '39'=>'39',
-                    '51'=>'51',
-                    '52'=>'52',
-                    '54'=>'54',
-                    '56'=>'56',
-                    '57'=>'57',
-                    '58'=>'58',
-                    '59'=>'59',
-                    '99'=>'99',
-                ];
+//                $aocPossibleValues = ['19'=>'19',
+//                    '31'=>'31',
+//                    '32'=>'32',
+//                    '33'=>'33',
+//                    '23'=>'23',
+//                    '30'=>'30',
+//                    '20'=>'20',
+//                    '34'=>'34',
+//                    '35'=>'35',
+//                    '36'=>'36',
+//                    '37'=>'37',
+//                    '38'=>'38',
+//                    '39'=>'39',
+//                    '51'=>'51',
+//                    '52'=>'52',
+//                    '54'=>'54',
+//                    '56'=>'56',
+//                    '57'=>'57',
+//                    '58'=>'58',
+//                    '59'=>'59',
+//                    '99'=>'99',
+//                ];
 
                 $sentAocs = explode(',',$aoc);
                 $filterConditions = null;
@@ -511,19 +611,17 @@ class TrackerController extends Controller
                  * ] -- for multiple entries
                  */
                 foreach ($sentAocs as $sentAoc) {
-                    $aocKey = trim(strtolower($sentAoc));
-                    if (isset($aocPossibleValues[$aocKey])){
-                        if (null === $filterConditions){
-                            $filterConditions = ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocPossibleValues[$aocKey]];
-                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocPossibleValues[$aocKey]];
-                        } else {
-                            $tmp = $filterConditions;
-                            $filterConditions=[];
-                            $filterConditions[0] = 'or';
-                            $filterConditions[]= $tmp;
-                            $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocPossibleValues[$aocKey]];
-                        }
+                    $aocTypeCode = intval(trim($sentAoc));
+                    if (null === $filterConditions){
+                        $filterConditions = ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                        $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                    } else {
+                        $tmp = $filterConditions;
+                        $filterConditions=[];
+                        $filterConditions[0] = 'or';
+                        $filterConditions[]= $tmp;
+                        $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
                     }
                 }
 
@@ -584,7 +682,7 @@ class TrackerController extends Controller
     public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
                                                    $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                                   $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -682,7 +780,7 @@ class TrackerController extends Controller
     public function actionGetHistoryMapCompliance($division=null, $workCenter=null, $surveyor = null,
                                                   $startDate = null, $endDate = null, $search = null,
                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                  $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                                  $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
