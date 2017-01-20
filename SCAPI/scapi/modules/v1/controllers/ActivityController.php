@@ -97,8 +97,8 @@ class ActivityController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{		
-		// try
-		// {
+		try
+		{
 			//set db target
 			$headers = getallheaders();
 			Activity::setClient(BaseActiveController::urlPrefix());
@@ -251,11 +251,11 @@ class ActivityController extends BaseActiveController
 			//build and return the response json
 			$response->data = $data; 
 			return $response;
-		// }
-		// catch(\Exception $e) 
-		// {
-			// BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(\Exception $e) 
+		{
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }
