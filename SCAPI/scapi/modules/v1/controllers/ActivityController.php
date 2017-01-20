@@ -2,17 +2,14 @@
 
 namespace app\modules\v1\controllers;
 
-use app\modules\v1\modules\pge\controllers\TaskOutController;
 use Yii;
+use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\models\Activity;
 use app\modules\v1\models\TimeEntry;
 use app\modules\v1\models\MileageEntry;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\modules\pge\controllers\AssetAddressController;
-use app\modules\v1\modules\pge\controllers\WindSpeedController;
-use app\modules\v1\modules\pge\controllers\EquipmentController;
-use app\modules\v1\modules\pge\controllers\WorkQueueController;
+use app\modules\v1\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -115,7 +112,7 @@ class ActivityController extends BaseActiveController
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);			
-			$activityArray = $data["activity"];
+			$activityArray = $data['activity'];
 			
 			//create and format response json
 			$response = Yii::$app->response;
@@ -134,32 +131,29 @@ class ActivityController extends BaseActiveController
 					
 					$activity = new Activity();
 					$clientActivity = new Activity();
-					$activityArray[$i]["ActivityCreateDate"] = Parent::getDate();
-					$activityArray[$i]["ActivityCreatedUserUID"] = $createdBy;
+					$activityArray[$i]['ActivityCreateDate'] = Parent::getDate();
+					$activityArray[$i]['ActivityCreatedUserUID'] = $createdBy;
 					//check array data
 					$timeLength = 0;
 					$mileageLength = 0;
-					if ($activityArray[$i]["timeEntry"] != null)
+					if ($activityArray[$i]['timeEntry'] != null)
 					{
-						$timeArray = $data["activity"][$i]["timeEntry"];
+						$timeArray = $data['activity'][$i]['timeEntry'];
 						//Get first and last time entry from timeArray and pass to ActivityStartTime and ActivityEndTime
 						$timeLength = count($timeArray);
-						$activityArray[$i]["ActivityStartTime"] = $timeArray[0]["TimeEntryStartTime"];
-						$activityArray[$i]["ActivityEndTime"] = $timeArray[$timeLength-1]["TimeEntryEndTime"];
+						$activityArray[$i]['ActivityStartTime'] = $timeArray[0]['TimeEntryStartTime'];
+						$activityArray[$i]['ActivityEndTime'] = $timeArray[$timeLength-1]['TimeEntryEndTime'];
 					}
-					if ($activityArray[$i]["mileageEntry"] != null)
+					if ($activityArray[$i]['mileageEntry'] != null)
 					{
-						$mileageArray = $data["activity"][$i]["mileageEntry"];
+						$mileageArray = $data['activity'][$i]['mileageEntry'];
 						$mileageLength = count($mileageArray);
 					}
 					
 					//load attributes to model
 					$activity->attributes = $activityArray[$i];
 					$clientActivity->attributes = $activity->attributes;
-					
-					Yii::trace("SC Activity: " . json_encode($activity->attributes));
-					Yii::trace("Client Activity: " . json_encode($clientActivity->attributes));
-					
+
 					//save activity to ct
 					if($activity->save())
 					{
@@ -171,72 +165,48 @@ class ActivityController extends BaseActiveController
 						$savedActivity= $activity->toArray();
 						
 						//update response json with new activity data
-						$data["activity"][$i] = $savedActivity;
+						$data['activity'][$i] = $savedActivity;
 						
-						//handle pge equipment calibration
-						if (array_key_exists("EquipmentCalibration", $activityArray[$i]))
+						//Sends activity to client specific parse routine to check for additional client specific activity data
+						//based on client header
+						
+						//check for pge headers
+						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
 						{
-							$savedEquipmentCalibrations = EquipmentController::calibrationParse($activityArray[$i]["EquipmentCalibration"], $headers['X-Client'], $createdBy);
-							$data["activity"][$i]["EquipmentCalibration"] = $savedEquipmentCalibrations;
+							//pge data parse
+							$clientData = PgeActivityController::parseActivityData($activityArray[$i], $headers['X-Client'],$createdBy, $activity->ActivityUID);
+							$data['activity'][$i] = array_merge($data['activity'][$i], $clientData);
 						}
 						
-						//handle pge lock work queue
-						if (array_key_exists("WorkQueue", $activityArray[$i]))
-						{
-							$lockedWorkQueue = WorkQueueController::lockRecords($activityArray[$i]["WorkQueue"], $headers['X-Client'], $createdBy);
-							$data["activity"][$i]["WorkQueue"] = $lockedWorkQueue;
-						}
-						
-						//handle pge wind speed entries
-						if (array_key_exists("WindSpeed", $activityArray[$i]))
-						{
-							$savedWindSpeed = WindSpeedController::create($activityArray[$i]["WindSpeed"], $headers['X-Client'], $createdBy);
-							$data["activity"][$i]["WindSpeed"] = $savedWindSpeed;
-						}
-						
-						//handle pge inspection
-						if (array_key_exists("AssetAddress", $activityArray[$i]))
-						{
-							$savedAssetAddress = AssetAddressController::assetAddressParse($activityArray[$i]["AssetAddress"], $headers['X-Client'], $createdBy, $activity->ActivityUID);
-							$data["activity"][$i]["AssetAddress"] = $savedAssetAddress;
-						}
-
-						if (array_key_exists('TaskOutMaps', $activityArray[$i])) {
-						    Yii::trace("Array key TaskOutMaps Exists!");
-						    TaskOutController::processJSON(json_encode($activityArray[$i]));
-                        } else {
-						    Yii::trace("Array key TaskOutMaps does not exist!");
-                        }
-
 						//change path back to ct db
 						Activity::setClient(BaseActiveController::urlPrefix());
 						$response->setStatusCode(201);
 					
 						//set up empty arrays
-						$data["activity"][$i]["timeEntry"] = array();
-						$data["activity"][$i]["mileageEntry"] = array();
+						$data['activity'][$i]['timeEntry'] = array();
+						$data['activity'][$i]['mileageEntry'] = array();
+						
 						try{
 							//add activityID to corresponding time entries
 							if($timeLength > 0)
 							{
 								for($t = 0; $t < $timeLength; $t++)
 								{
-									$timeArray[$t]["TimeEntryActivityID"] = $data["activity"][$i]["ActivityID"];
+									$timeArray[$t]['TimeEntryActivityID'] = $data['activity'][$i]['ActivityID'];
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
 									$timeEntry->TimeEntryCreatedBy = $createdBy;
 									$timeEntry->TimeEntryCreateDate = Parent::getDate();
-									Yii::Trace("Client Activity: " . json_encode($timeEntry->attributes));
 									if($timeEntry->save())
 										{
 											$response->setStatusCode(201);
 											//update response json with new timeEntry data
-											$data["activity"][$i]["timeEntry"][$t] = $timeEntry;
+											$data['activity'][$i]['timeEntry'][$t] = $timeEntry;
 										}
 									else
 										{
 											//throw a bad request if any save fails
-											$data["activity"][$i]["timeEntry"][$t] = 'Failed to Save Time Entry';
+											$data['activity'][$i]['timeEntry'][$t] = 'Failed to Save Time Entry';
 										}
 								}
 							}
@@ -244,29 +214,28 @@ class ActivityController extends BaseActiveController
 						catch(yii\db\Exception $e)
 						{
 							$data["activity"][$i]["timeEntry"][$t] = 'SQL Exception Occurred';
-						}
+						}						
 						try{
 							//add activityID to corresponding mileage entries
 							if($mileageLength > 0)
 							{
 								for($m = 0; $m < $mileageLength; $m++)
 								{
-									$mileageArray[$m]["MileageEntryActivityID"]= $$data["activity"][$i]["ActivityID"];
+									$mileageArray[$m]['MileageEntryActivityID']= $$data['activity'][$i]['ActivityID'];
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = $createdBy;
 									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
-									Yii::Trace("Client Activity: " . json_encode($mileageEntry->attributes));
 									if($mileageEntry->save())
 										{
 											$response->setStatusCode(201);
 											//update response json with new mileageEntry data
-											$data["activity"][$i]["mileageEntry"][$m] = $mileageEntry;
+											$data['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
 									else
 										{
 											//throw a bad request if any save fails
-											$data["activity"][$i]["mileageEntry"][$m] = 'Failed to Save Mileage Entry';
+											$data['activity'][$i]['mileageEntry'][$m] = 'Failed to Save Mileage Entry';
 
 										}
 								}
@@ -276,9 +245,7 @@ class ActivityController extends BaseActiveController
 						{
 							$data["activity"][$i]["mileageEntry"][$m] = 'SQL Exception Occurred';
 						}
-					} else {
-					    Yii::trace("Could not validate the Activity");
-                    }
+					}
 				}
 			}
 			//build and return the response json
