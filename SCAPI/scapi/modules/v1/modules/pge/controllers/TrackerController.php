@@ -369,12 +369,7 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
 
-//                $query->innerJoinWith([
-//                    WebManagementTrackerBreadcrumbs::tableName() => function($q) {
-//                        $q->select(['*']);
-//                        $q->onCondition(['['.WebManagementTrackerHistory::tableName().'].[UID]'=>'['.WebManagementTrackerBreadcrumbs::tableName().'].[UID]']);
-//                    },
-//                ]);
+
                 $query->select(['*']);
                 $query->from([
                     'th'=>'['.WebManagementTrackerHistory::tableName().']',
@@ -384,10 +379,46 @@ class TrackerController extends Controller
                     '[th].[UID]=[tb].[UID]'
                 );
 
-                $query->where(['Division' => $division]);
-                $query->andWhere(["Work Center" => $workCenter]);
+                $query->where(['[th].[Division]' => $division]);
+                $query->andWhere(["[th].[Work Center]" => $workCenter]);
 
-                if ($surveyor) {
+                // todo find out why the phpbuild in server crashed when also filtering by a set of lanids
+                if (false && $surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['[tb].LanID'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['[tb].LanID'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['[tb].LanID'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+
+                } else if ($surveyor) {
                     $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
@@ -443,8 +474,6 @@ class TrackerController extends Controller
 //                $sqlString = $items->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $items = $items->queryAll();
-
-
             } else {
                 $items =[];
             } // end division and workcenter check
@@ -624,8 +653,43 @@ class TrackerController extends Controller
                         $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
                     }
                 }
-
                 $query->andWhere($filterConditions);
+
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LanID'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LanID'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LanID'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+                }
 
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);
@@ -723,9 +787,43 @@ class TrackerController extends Controller
                         }
                     }
                 }
-
                 $query->andWhere($indFilterConditions);
-// TODO see if the workcenter, surveyor.... filter should be applied here
+
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LanID'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LanID'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LanID'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+                }
 
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);

@@ -15,6 +15,6 @@ class WebManagementTrackerBreadcrumbs extends \app\modules\v1\models\BaseActiveR
      */
     public static function tableName()
     {
-        return 'vWebManagementTrackerBreadcrumbs_Q';
+        return 'vWebManagementTrackerBreadcrumbs';
     }
 }

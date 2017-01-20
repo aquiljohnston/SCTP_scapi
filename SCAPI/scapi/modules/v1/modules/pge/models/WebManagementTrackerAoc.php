@@ -15,6 +15,6 @@ class WebManagementTrackerAOC extends \app\modules\v1\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'vWebManagementTrackerAOC_Q';
+        return 'vWebManagementTrackerAOC';
     }
 }
