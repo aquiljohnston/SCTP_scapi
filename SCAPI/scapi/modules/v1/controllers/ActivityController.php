@@ -100,8 +100,8 @@ class ActivityController extends BaseActiveController
 	 */
 	public function actionCreate()
 	{		
-		try
-		{
+		// try
+		// {
 			//set db target
 			$headers = getallheaders();
 			Activity::setClient(BaseActiveController::urlPrefix());
@@ -215,55 +215,66 @@ class ActivityController extends BaseActiveController
 						//set up empty arrays
 						$data["activity"][$i]["timeEntry"] = array();
 						$data["activity"][$i]["mileageEntry"] = array();
-						
-						//add activityID to corresponding time entries
-						if($timeLength > 0)
-						{
-							for($t = 0; $t < $timeLength; $t++)
+						try{
+							//add activityID to corresponding time entries
+							if($timeLength > 0)
 							{
-								$timeArray[$t]["TimeEntryActivityID"] = $data["activity"][$i]["ActivityID"];
-								$timeEntry = new TimeEntry();
-								$timeEntry->attributes = $timeArray[$t];
-								$timeEntry->TimeEntryCreatedBy = $createdBy;
-								$timeEntry->TimeEntryCreateDate = Parent::getDate();
-								Yii::Trace("Client Activity: " . json_encode($timeEntry->attributes));
-								if($timeEntry->save())
-									{
-										$response->setStatusCode(201);
-										//update response json with new timeEntry data
-										$data["activity"][$i]["timeEntry"][$t] = $timeEntry;
-									}
-								else
-									{
-										//throw a bad request if any save fails
-										$data["activity"][$i]["timeEntry"][$t] = 'Failed to Save Time Entry';
-									}
+								for($t = 0; $t < $timeLength; $t++)
+								{
+									$timeArray[$t]["TimeEntryActivityID"] = $data["activity"][$i]["ActivityID"];
+									$timeEntry = new TimeEntry();
+									$timeEntry->attributes = $timeArray[$t];
+									$timeEntry->TimeEntryCreatedBy = $createdBy;
+									$timeEntry->TimeEntryCreateDate = Parent::getDate();
+									Yii::Trace("Client Activity: " . json_encode($timeEntry->attributes));
+									if($timeEntry->save())
+										{
+											$response->setStatusCode(201);
+											//update response json with new timeEntry data
+											$data["activity"][$i]["timeEntry"][$t] = $timeEntry;
+										}
+									else
+										{
+											//throw a bad request if any save fails
+											$data["activity"][$i]["timeEntry"][$t] = 'Failed to Save Time Entry';
+										}
+								}
 							}
 						}
-						//add activityID to corresponding mileage entries
-						if($mileageLength > 0)
+						catch(yii\db\Exception $e)
 						{
-							for($m = 0; $m < $mileageLength; $m++)
+							$data["activity"][$i]["timeEntry"][$t] = 'SQL Exception Occurred';
+						}
+						try{
+							//add activityID to corresponding mileage entries
+							if($mileageLength > 0)
 							{
-								$mileageArray[$m]["MileageEntryActivityID"]= $$data["activity"][$i]["ActivityID"];
-								$mileageEntry = new MileageEntry();
-								$mileageEntry->attributes = $mileageArray[$m];
-								$mileageEntry->MileageEntryCreatedBy = $createdBy;
-								$mileageEntry->MileageEntryCreateDate = Parent::getDate();
-								Yii::Trace("Client Activity: " . json_encode($mileageEntry->attributes));
-								if($mileageEntry->save())
-									{
-										$response->setStatusCode(201);
-										//update response json with new mileageEntry data
-										$data["activity"][$i]["mileageEntry"][$m] = $mileageEntry;
-									}
-								else
-									{
-										//throw a bad request if any save fails
-										$data["activity"][$i]["mileageEntry"][$m] = 'Failed to Save Mileage Entry';
+								for($m = 0; $m < $mileageLength; $m++)
+								{
+									$mileageArray[$m]["MileageEntryActivityID"]= $$data["activity"][$i]["ActivityID"];
+									$mileageEntry = new MileageEntry();
+									$mileageEntry->attributes = $mileageArray[$m];
+									$mileageEntry->MileageEntryCreatedBy = $createdBy;
+									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
+									Yii::Trace("Client Activity: " . json_encode($mileageEntry->attributes));
+									if($mileageEntry->save())
+										{
+											$response->setStatusCode(201);
+											//update response json with new mileageEntry data
+											$data["activity"][$i]["mileageEntry"][$m] = $mileageEntry;
+										}
+									else
+										{
+											//throw a bad request if any save fails
+											$data["activity"][$i]["mileageEntry"][$m] = 'Failed to Save Mileage Entry';
 
-									}
+										}
+								}
 							}
+						}
+						catch(yii\db\Exception $e)
+						{
+							$data["activity"][$i]["mileageEntry"][$m] = 'SQL Exception Occurred';
 						}
 					} else {
 					    Yii::trace("Could not validate the Activity");
@@ -273,11 +284,11 @@ class ActivityController extends BaseActiveController
 			//build and return the response json
 			$response->data = $data; 
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(\Exception $e) 
+		// {
+			// BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 }
