@@ -1609,7 +1609,7 @@ class DropdownController extends Controller
             CityCounty::setClient($headers['X-Client']);
             // cityList﻿
             // TODO find a better way that selecting all the cities if there are a lot of cities
-            $responseData['dropdowns']['cityList'][]= CityCounty::find()->select(['City'])->orderBy('City ASC')->all();
+            $responseData['dropdowns']['cityList']= CityCounty::find()->select(['City'])->orderBy('City ASC')->all();
 
 //            $mapGridUid = 'MapGrid_852695586_20160824220014_System';
             //﻿routeNames
