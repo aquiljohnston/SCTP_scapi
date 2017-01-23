@@ -1005,19 +1005,15 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
                 $query = WebManagementTrackerCurrentLocation::find();
-//                $query->select([
-//                    'tb.UID',
-//                    'tb.LanID as Inspector',
-//                    'tb.SrcDTLT as Datetime',
-//                    'th.[House No] as [House No]',
-//                    'th.Street',
-//                    'th.City',
-//                    'th.State',
-//                    'tb.Latitude as Latitude',
-//                    'tb.Longitude as Longitude',
-//                    'tb.Speed as Speed',
-//                    'tb.GPSAccuracy as Accuracy'
-//                ]);
+                $query->select([
+                    '[Surveyor / Inspector] as Inspector',
+                    'Date', // Date time is not present in the view
+//                    'City',
+//                    'State',
+                    'Latitude',
+                    'Longitude',
+                    '[Accuracy (Meters)] as Accuracy'
+                ]);
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
