@@ -370,7 +370,19 @@ class TrackerController extends Controller
                 $query = WebManagementTrackerHistory::find();
 
 
-                $query->select(['*']);
+                $query->select([
+                    'tb.UID',
+                    'tb.LanID as Inspector',
+                    'tb.SrcDTLT as Datetime',
+                    'th.[House No] as [House No]',
+                    'th.Street',
+                    'th.City',
+                    'th.State',
+                    'tb.Latitude as Latitude',
+                    'tb.Longitude as Longitude',
+                    'tb.Speed as Speed',
+                    'tb.GPSAccuracy as Accuracy'
+                ]);
                 $query->from([
                     'th'=>'['.WebManagementTrackerHistory::tableName().']',
                 ]);
@@ -425,44 +437,44 @@ class TrackerController extends Controller
                 if (trim($search)) {
                     $query->andWhere([
                         'or',
-                        ['like', 'Division', $search],
-                        ['like', 'Date', $search],
-                        ['like', '[Surveyor / Inspector]', $search],
-                        ['like', 'Work Center', $search],
-                        ['like', 'Latitude', $search],
-                        ['like', 'Longitude', $search],
-                        ['like', '[Date Time]', $search],
-                        ['like', 'House No', $search],
-                        ['like', 'Street', $search],
-                        ['like', 'Apt', $search],
-                        ['like', 'City', $search],
-                        ['like', 'State', $search],
-                        ['like', 'Landmark', $search],
-                        ['like', '[Landmark Description]', $search],
-                        ['like', '[Accuracy (Meters)]', $search]
+                        ['like', 'th.Division', $search],
+                        ['like', 'th.Date', $search],
+                        ['like', 'th.[Surveyor / Inspector]', $search],
+                        ['like', 'th.[Work Center]', $search],
+                        ['like', 'th.Latitude', $search],
+                        ['like', 'th.Longitude', $search],
+                        ['like', 'th.[Date Time]', $search],
+                        ['like', 'th.[House No]', $search],
+                        ['like', 'th.Street', $search],
+                        ['like', 'th.Apt', $search],
+                        ['like', 'th.City', $search],
+                        ['like', 'th.State', $search],
+                        ['like', 'th.Landmark', $search],
+                        ['like', 'th.[Landmark Description]', $search],
+                        ['like', 'th.[Accuracy (Meters)]', $search]
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
                     // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
                     $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
-                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                    $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
                 }
 
                 if (null!=$minLat){
-                    $query->andWhere(['>=','Latitude',$minLat]);
+                    $query->andWhere(['>=','tb.Latitude',$minLat]);
                 }
 
                 if (null!=$maxLat){
-                    $query->andWhere(['<=','Latitude',$maxLat]);
+                    $query->andWhere(['<=','tb.Latitude',$maxLat]);
                 }
 
                 if (null!=$minLong){
-                    $query->andWhere(['>=','Longitude',$minLong]);
+                    $query->andWhere(['>=','tb.Longitude',$minLong]);
                 }
 
                 if (null!=$maxLong){
-                    $query->andWhere(['<=','Longitude',$maxLong]);
+                    $query->andWhere(['<=','tb.Longitude',$maxLong]);
                 }
 
                 $limit =$this->resultsLimit;
@@ -604,6 +616,18 @@ class TrackerController extends Controller
             if ($aoc) {
                 WebManagementTrackerAOC::setClient($headers['X-Client']);
                 $query = WebManagementTrackerAOC::find();
+                $query->select([
+                    'UID',
+                    'LanID as Inspector',
+                    'SurveyDateTime as Datetime',
+                    'HouseNo as [House No]',
+                    'Street1 as Street',
+                    'City',
+                    'State',
+                    'Latitude',
+                    'Longitude',
+                    'AOCType as [AOC Type]'
+                ]);
 //                $aocPossibleValues = ['19'=>'19',
 //                    '31'=>'31',
 //                    '32'=>'32',
@@ -755,7 +779,24 @@ class TrackerController extends Controller
             if ($indications) {
                 WebManagementTrackerIndications::setClient($headers['X-Client']);
                 $query = WebManagementTrackerIndications::find();
+                $query->select([
+                    'UID',
+                    'LanID as Inspector',
+                    'SurveyDateTime as Datetime',
+                    'HouseNo as [House No]',
+                    'Street1 as Street',
+                    'City',
+                    'State',
+                    'Latitude',
+                    'Longitude',
+                    'AboveBelowGroundType as [Leak Source]',//'InitialLeakSourceType as [Leak Source]',
+                    'SORLType as [Leak SORL]',
+                    'fndEquipmentType as [Leak Found By]',//'FoundBy as [Leak Found By]',
+                    'grdEquipmentType as [Leak Grade By]',//'GradeBy as [Leak Grade By]',
+                    'ReadingGrade as [Leak % Gas]',
+                    'GradeType as [Leak Grade]'
 
+                ]);
                 $indPossibleValues = ['1'=>'1','2p'=>'2+','2'=>'2','3'=>'3'];
 
                 $sentIndications = explode(',',$indications);
@@ -887,8 +928,9 @@ class TrackerController extends Controller
 //            if ($division && $workCenter) {
             WebManagementTrackerMapGridCompliance::setClient($headers['X-Client']);
             $query = WebManagementTrackerMapGridCompliance::find();
-
-            $query->where(['Division' => $division]);
+//            $query->select([
+//            ]);
+//            $query->where(['Division' => $division]);
 //            $query->where(['Division' => $division]);
 //            $query->andWhere(["Work Center" => $workCenter]);
 //
@@ -907,21 +949,22 @@ class TrackerController extends Controller
 //                $query->andWhere(['between', 'Date', $startDate, $endDate]);
 //            }
 
-            if (null!=$minLat){
-                $query->andWhere(['>=','Latitude',$minLat]);
-            }
-
-            if (null!=$maxLat){
-                $query->andWhere(['<=','Latitude',$maxLat]);
-            }
-
-            if (null!=$minLong){
-                $query->andWhere(['>=','Longitude',$minLong]);
-            }
-
-            if (null!=$maxLong){
-                $query->andWhere(['<=','Longitude',$maxLong]);
-            }
+            // the compliance view does not have Lat and Long
+//            if (null!=$minLat){
+//                $query->andWhere(['>=','Latitude',$minLat]);
+//            }
+//
+//            if (null!=$maxLat){
+//                $query->andWhere(['<=','Latitude',$maxLat]);
+//            }
+//
+//            if (null!=$minLong){
+//                $query->andWhere(['>=','Longitude',$minLong]);
+//            }
+//
+//            if (null!=$maxLong){
+//                $query->andWhere(['<=','Longitude',$maxLong]);
+//            }
 
             $limit =$this->resultsLimit;
             $offset = 0;
@@ -962,7 +1005,19 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
                 $query = WebManagementTrackerCurrentLocation::find();
-
+//                $query->select([
+//                    'tb.UID',
+//                    'tb.LanID as Inspector',
+//                    'tb.SrcDTLT as Datetime',
+//                    'th.[House No] as [House No]',
+//                    'th.Street',
+//                    'th.City',
+//                    'th.State',
+//                    'tb.Latitude as Latitude',
+//                    'tb.Longitude as Longitude',
+//                    'tb.Speed as Speed',
+//                    'tb.GPSAccuracy as Accuracy'
+//                ]);
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
