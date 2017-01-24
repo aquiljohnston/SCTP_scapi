@@ -213,7 +213,7 @@ class ActivityController extends BaseActiveController
 						}
 						catch(yii\db\Exception $e)
 						{
-							$data["activity"][$i]["timeEntry"][$t] = 'SQL Exception Occurred';
+							$data['activity'][$i]['timeEntry'][$t] = 'SQL Exception Occurred';
 						}						
 						try{
 							//add activityID to corresponding mileage entries
@@ -221,7 +221,7 @@ class ActivityController extends BaseActiveController
 							{
 								for($m = 0; $m < $mileageLength; $m++)
 								{
-									$mileageArray[$m]['MileageEntryActivityID']= $$data['activity'][$i]['ActivityID'];
+									$mileageArray[$m]['MileageEntryActivityID']= $data['activity'][$i]['ActivityID'];
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = $createdBy;
@@ -243,7 +243,7 @@ class ActivityController extends BaseActiveController
 						}
 						catch(yii\db\Exception $e)
 						{
-							$data["activity"][$i]["mileageEntry"][$m] = 'SQL Exception Occurred';
+							$data['activity'][$i]['mileageEntry'][$m] = 'SQL Exception Occurred';
 						}
 					}
 				}
