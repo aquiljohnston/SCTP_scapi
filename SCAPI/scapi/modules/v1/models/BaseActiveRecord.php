@@ -8,6 +8,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	private static $CLIENT_ID = '';
 	
+	//scct databases
+	const SCCT_DEV = 'scctdev';
+	const SCCT_STAGE = 'scctstage';
+	const SCCT_PROD = 'scct';
+	
 	//base comet tracker databases
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
@@ -19,7 +24,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const PGE_PROD = 'pge';
 	
 	//beta client database
-	const BETA = 'beta';
+	const BETA_DEV = 'betadev';
 	
 	public static function getClient()
 	{
@@ -33,31 +38,34 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	
 	public static function getDb()
 	{
-		if (self::$CLIENT_ID == self::CT_DEV)
+		//comet tracker
+		if (self::$CLIENT_ID == self::CT_DEV || self::$CLIENT_ID == self::SCCT_DEV)
 		{
 			return Yii::$app->ctDevDb;
 		}
+		if (self::$CLIENT_ID == self::CT_STAGE || self::$CLIENT_ID == self::SCCT_STAGE)
+		{
+			return Yii::$app->ctStageDb;
+		}
+		if (self::$CLIENT_ID == self::CT_PROD || self::$CLIENT_ID == self::SCCT_PROD)
+		{
+			return Yii::$app->ctProdDb;
+		}
+		//pge
 		if (self::$CLIENT_ID == self::PGE_DEV)
 		{
 			return Yii::$app->pgeDevDb;
-		}
-		if (self::$CLIENT_ID == self::CT_STAGE)
-		{
-			return Yii::$app->ctStageDb;
 		}
 		if (self::$CLIENT_ID == self::PGE_STAGE)
 		{
 			return Yii::$app->pgeStageDb;
 		}
-		if (self::$CLIENT_ID == self::CT_PROD)
-		{
-			return Yii::$app->ctProdDb;
-		}
 		if (self::$CLIENT_ID == self::PGE_PROD)
 		{
 			return Yii::$app->pgeProdDb;
 		}
-		if (self::$CLIENT_ID == self::BETA)
+		//beta
+		if (self::$CLIENT_ID == self::BETA_DEV)
 		{
 			return Yii::$app->betaDb;
 		}
