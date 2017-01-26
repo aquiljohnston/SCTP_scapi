@@ -44,6 +44,8 @@ class TrackerController extends Controller
                     'get-history-map-controls' => ['get'],
                     'get-history-map-cgi' => ['get'],
                     'get-recent-activity-map-info' => ['get'],
+                    'get-download-history-data' => ['get'],
+                    'get-download-recent-activity-data' => ['get']
 
                 ],  
             ];
@@ -1090,4 +1092,181 @@ class TrackerController extends Controller
         }
     }
 
+    public function actionGetDownloadHistoryData($division, $workCenter=null, $surveyor = null, $startDate = null,
+                                              $endDate = null, $search = null)
+    {
+        try{
+            $headers = getallheaders();
+
+            if ($division && $workCenter) {
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $query = WebManagementTrackerHistory::find();
+                $query->where(['Division' => $division]);
+                $query->andWhere(["Work Center" => $workCenter]);
+
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                }
+
+                if (trim($search)!=='') {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', 'Date', $search],
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', 'Work Center', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Date Time]', $search],
+                        ['like', 'House No', $search],
+                        ['like', 'Street', $search],
+                        ['like', 'Apt', $search],
+                        ['like', 'City', $search],
+                        ['like', 'State', $search],
+                        ['like', 'Landmark', $search],
+                        ['like', '[Landmark Description]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = 10000;
+                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
+
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            //send response
+            Yii::$app->response->format = Response::FORMAT_RAW;
+            $headers = Yii::$app->response->headers;
+//            $headers->set('Content-Disposition', 'attachment; filename="tracker_history_'.date('Y-m-d').'.csv');
+            $headers->set('Content-Type', 'text/csv');
+            $firstLine = true;
+            // TODO find a better way of outputting the CSV than this workaround with output buffers
+            ob_start();
+            $fp = fopen('php://output','w');
+            foreach ($items as $line) {
+                if($firstLine) {
+                    $firstLine = false;
+                    fputcsv($fp, array_keys($line));
+                }
+                fputcsv($fp, $line);
+            }
+            fclose($fp);
+            //$a = stream_get_contents($fp);
+            $csvContents = ob_get_clean();
+            //var_dump($a);
+            //var_dump($response);
+            Yii::$app->response->content = $csvContents;
+
+            return ;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetDownloadRecentActivityData($division, $workCenter=null, $surveyor = null, $startDate = null,
+                                                     $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+
+            if ($division && $workCenter) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $query = WebManagementTrackerCurrentLocation::find();
+
+                $query->where(['Division' => $division]);
+                $query->andWhere(["Work Center" => $workCenter]);
+
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                }
+
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', '[Date]', $search],
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', '[Work Center]', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Battery Level]', $search],
+                        ['like', '[GPS Type]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
+                    ]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = 10000;
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            //send response
+            Yii::$app->response->format = Response::FORMAT_RAW;
+            $headers = Yii::$app->response->headers;
+//            $headers->set('Content-Disposition', 'attachment; filename="tracker_recent_activity_'.date('Y-m-d').'.csv');
+            $headers->set('Content-Type', 'text/csv');
+            $firstLine = true;
+            // TODO find a better way of outputting the CSV than this workaround with output buffers
+            ob_start();
+            $fp = fopen('php://output','w');
+            foreach ($items as $line) {
+                if($firstLine) {
+                    $firstLine = false;
+                    fputcsv($fp, array_keys($line));
+                }
+                fputcsv($fp, $line);
+            }
+            fclose($fp);
+            //$a = stream_get_contents($fp);
+            $csvContents = ob_get_clean();
+            //var_dump($a);
+            //var_dump($response);
+            Yii::$app->response->content = $csvContents;
+
+            return ;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
 }
