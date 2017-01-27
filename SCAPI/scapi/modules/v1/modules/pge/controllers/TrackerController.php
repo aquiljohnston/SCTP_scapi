@@ -21,7 +21,8 @@ use app\modules\v1\modules\pge\models\AssetAddressCGE;
 
 class TrackerController extends Controller 
 {
-    public $resultsLimit = 300; // limits the maximum returned results
+    public $mapResultsLimit = 300; // limits the maximum returned results for map api calls
+    public $downloadItemsLimit = 7000; // limits the maximum number of results the csv file will contain
 
 	public function behaviors()
 	{
@@ -479,7 +480,7 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','tb.Longitude',$maxLong]);
                 }
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 
                 $items = $query->offset($offset)
@@ -573,7 +574,7 @@ class TrackerController extends Controller
 
 // TODO see if the workcenter, surveyor.... filter should be applied here
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 //                $items = $query->offset($offset)
 //                    ->limit($limit)
@@ -735,7 +736,7 @@ class TrackerController extends Controller
 
 // TODO see if the workcenter, surveyor.... filter should be applied here
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 //                $items = $query->offset($offset)
 //                    ->limit($limit)
@@ -884,7 +885,7 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 
 //                $items = $query->offset($offset)
@@ -968,7 +969,7 @@ class TrackerController extends Controller
 //                $query->andWhere(['<=','Longitude',$maxLong]);
 //            }
 
-            $limit =$this->resultsLimit;
+            $limit =$this->mapResultsLimit;
             $offset = 0;
             $items = $query->offset($offset)
                 ->limit($limit)
@@ -1060,7 +1061,7 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 
                 $items = $query->offset($offset)
@@ -1101,6 +1102,23 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
+
+                $query->select(
+                    [
+                        '[Date Time]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[House No]',
+                        '[Street]',
+                        '[Apt]',
+                        '[City]',
+                        '[State]',
+                        '[Landmark]',
+                        '[Landmark Description]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
@@ -1136,7 +1154,7 @@ class TrackerController extends Controller
                 }
 
                 $offset = 0;
-                $limit = 10000;
+                $limit = $this->downloadItemsLimit;
                 $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
 
@@ -1195,6 +1213,17 @@ class TrackerController extends Controller
                 WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
                 $query = WebManagementTrackerCurrentLocation::find();
 
+                $query->select(
+                    [
+                        '[Date]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[Battery Level]',
+                        '[GPS Type]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
@@ -1225,7 +1254,7 @@ class TrackerController extends Controller
                 }
 
                 $offset = 0;
-                $limit = 10000;
+                $limit = $this->downloadItemsLimit;
 
                 $items = $query->offset($offset)
                     ->limit($limit)
