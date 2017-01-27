@@ -161,6 +161,12 @@
     <Compile Include="modules\v1\modules\pge\models\WebManagementMapStampDetail.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementMasterLeakLog.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementOQStatus.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementTrackerAoc.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementTrackerBreadcrumbs.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementTrackerCurrentLocation.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementTrackerHistory.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementTrackerIndications.php" />
+    <Compile Include="modules\v1\modules\pge\models\WebManagementTrackerMapGridCompliance.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementUsers.php" />
     <Compile Include="modules\v1\modules\pge\models\WebManagementFlocsDropDown.php" />
     <Compile Include="modules\v1\modules\pge\models\WindSpeed.php" />
