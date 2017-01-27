@@ -916,7 +916,6 @@ class TrackerController extends Controller
                 }
 
                 // TODO filter by AOCType when/if that column is available in the sql view
-                
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
 
@@ -1052,7 +1051,42 @@ class TrackerController extends Controller
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
-                if ($surveyor) {
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(SurveyorLANID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+
+                } else if ($surveyor) {
                     $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
