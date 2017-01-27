@@ -372,7 +372,6 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
 
-
                 $query->select([
                     'tb.UID',
                     'tb.LanID as Inspector',
@@ -397,8 +396,7 @@ class TrackerController extends Controller
                 $query->where(['[th].[Division]' => $division]);
                 $query->andWhere(["[th].[Work Center]" => $workCenter]);
 
-                // todo find out why the phpbuild in server crashed when also filtering by a set of lanids
-                if (false && $surveyorBreadcrumbs) {
+                if ($surveyorBreadcrumbs) {
                     $sentLanIds = explode(',',$surveyorBreadcrumbs);
                     $filterConditions = null;
 
@@ -413,20 +411,20 @@ class TrackerController extends Controller
                      * ] -- for multiple entries
                      */
                     foreach ($sentLanIds as $sentLanId) {
-                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        $lanId = trim(strtolower($sentLanId));
                         if (''==$lanId){
                             continue;
                         }
                         if (null === $filterConditions){
-                            $filterConditions = ['[tb].LanID'=>$lanId];
+                            $filterConditions = ['LOWER([tb].LanID)'=>$lanId];
                         } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['[tb].LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
                         } else {
                             $tmp = $filterConditions;
                             $filterConditions=[];
                             $filterConditions[0] = 'or';
                             $filterConditions[]= $tmp;
-                            $filterConditions[]= ['[tb].LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
                         }
                     }
                     if (null!=$filterConditions) {
@@ -479,6 +477,10 @@ class TrackerController extends Controller
                 if (null!=$maxLong){
                     $query->andWhere(['<=','tb.Longitude',$maxLong]);
                 }
+
+                /////////////////////////////////
+                // TODO filter by indications ( gradeType ) and aoc (AOCType) when/if the columns are available
+                /////////////////////////////////
 
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
@@ -631,6 +633,20 @@ class TrackerController extends Controller
                     'Longitude',
                     'AOCType as [AOC Type]'
                 ]);
+                if ($division){
+                    $query->andWhere(['[DIVISION]' => $division]);
+                }
+                if($workCenter){
+                    $query->andWhere(["[WORKCENTER]" => $workCenter]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
+                }
+
 //                $aocPossibleValues = ['19'=>'19',
 //                    '31'=>'31',
 //                    '32'=>'32',
@@ -702,15 +718,15 @@ class TrackerController extends Controller
                             continue;
                         }
                         if (null === $filterConditions){
-                            $filterConditions = ['LanID'=>$lanId];
+                            $filterConditions = ['LOWER(LanID)'=>$lanId];
                         } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
                         } else {
                             $tmp = $filterConditions;
                             $filterConditions=[];
                             $filterConditions[0] = 'or';
                             $filterConditions[]= $tmp;
-                            $filterConditions[]= ['LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
                         }
                     }
                     if (null!=$filterConditions) {
@@ -734,7 +750,7 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
-// TODO see if the workcenter, surveyor.... filter should be applied here
+                // TODO apply the indications ( GradeType ) filter when/if the column will be available in the sql view
 
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
@@ -745,8 +761,8 @@ class TrackerController extends Controller
                 $items = $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $items->sql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $items = $items->queryAll();
 
             } else {
@@ -869,6 +885,20 @@ class TrackerController extends Controller
                     }
                 }
 
+                if ($division){
+                    $query->andWhere(['[DIVISION]' => $division]);
+                }
+                if($workCenter){
+                    $query->andWhere(["[WORKCENTER]" => $workCenter]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
+                }
+
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);
                 }
@@ -885,6 +915,8 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
+                // TODO filter by AOCType when/if that column is available in the sql view
+                
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
 
