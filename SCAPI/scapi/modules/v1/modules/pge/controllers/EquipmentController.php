@@ -68,7 +68,7 @@ class EquipmentController extends Controller
 	}
 	
 	//Parses Equipment Calibration Array from the activity json and stores it in the database
-	public static function calibrationParse($equipmentCalibrationArray, $client, $userUID)
+	public static function calibrationParse($equipmentCalibrationArray, $client, $userUID, $activityUID)
 	{
 		try
 		{
@@ -103,6 +103,7 @@ class EquipmentController extends Controller
 							//pass data to model
 							$calibrationModel->attributes = $equipmentCalibrationArray[$i];
 							//additional fields
+							$calibrationModel->ActivityUID = $activityUID;
 							$calibrationModel->CreatedUserUID = $userUID;
 							$calibrationModel->ModifiedUserUID = $userUID;
 							
@@ -133,6 +134,7 @@ class EquipmentController extends Controller
 								$calibrationModel->attributes = $equipmentCalibrationArray[$i];
 								//additional fields
 								$calibrationModel->Revision = $revisionCount;
+								$calibrationModel->ActivityUID = $activityUID;
 								$calibrationModel->CreatedUserUID = $userUID;
 								$calibrationModel->ModifiedUserUID = $userUID;
 								
