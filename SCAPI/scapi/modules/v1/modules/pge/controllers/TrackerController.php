@@ -41,7 +41,6 @@ class TrackerController extends Controller
                     'get-history-map-breadcrumbs' => ['get'],
                     'get-history-map-aocs' => ['get'],
                     'get-history-map-indications' => ['get'],
-                    'get-history-map-compliance' => ['get'],
                     'get-history-map-controls' => ['get'],
                     'get-history-map-cgi' => ['get'],
                     'get-recent-activity-map-info' => ['get'],
@@ -950,83 +949,6 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapCompliance($division=null, $workCenter=null, $surveyor = null,
-                                                  $startDate = null, $endDate = null, $search = null,
-                                                  $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                  $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
-    {
-        try{
-
-            $headers = getallheaders();
-
-//            if ($division && $workCenter) {
-            WebManagementTrackerMapGridCompliance::setClient($headers['X-Client']);
-            $query = WebManagementTrackerMapGridCompliance::find();
-//            $query->select([
-//            ]);
-//            $query->where(['Division' => $division]);
-//            $query->where(['Division' => $division]);
-//            $query->andWhere(["Work Center" => $workCenter]);
-//
-//            if ($surveyor) {
-//                $query->andWhere(["Surveyor / Inspector" => $surveyor]);
-//            }
-//
-//            if (trim($search)) {
-// ?????
-//            }
-
-//            if ($startDate !== null && $endDate !== null) {
-                // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-//                $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-//
-//                $query->andWhere(['between', 'Date', $startDate, $endDate]);
-//            }
-
-            // the compliance view does not have Lat and Long
-//            if (null!=$minLat){
-//                $query->andWhere(['>=','Latitude',$minLat]);
-//            }
-//
-//            if (null!=$maxLat){
-//                $query->andWhere(['<=','Latitude',$maxLat]);
-//            }
-//
-//            if (null!=$minLong){
-//                $query->andWhere(['>=','Longitude',$minLong]);
-//            }
-//
-//            if (null!=$maxLong){
-//                $query->andWhere(['<=','Longitude',$maxLong]);
-//            }
-
-            $limit =$this->mapResultsLimit;
-            $offset = 0;
-            $items = $query->offset($offset)
-                ->limit($limit)
-                ->all();
-
-//            } else {
-//                $items =[];
-//            } // end division and workcenter check
-
-            $data = [];
-            $data['results'] = $items;
-
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
     public function actionGetRecentActivityMapInfo($division=null, $workCenter=null, $surveyor = null,
                                                    $startDate = null, $endDate = null, $search = null,
                                                    $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
@@ -1356,6 +1278,85 @@ class TrackerController extends Controller
             Yii::$app->response->content = $csvContents;
 
             return ;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapControls($division=null, $workCenter=null,
+                                           $startDate = null, $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+            if (null !==$division && null !==$workCenter && null !== $startDate && null !== $endDate) {
+                AssetAddressCGE::setClient($headers['X-Client']);
+                $cgiQuery= AssetAddressCGE::find();
+
+                $cgiQuery->select([
+                    'Key'=>'CreatedUserUID',
+                    'DisplayedText'=>'CreatedUserUID'
+                ])->distinct();
+                $cgiQuery->orderBy(['CreatedUserUID' => SORT_ASC]);
+
+                $limit = $this->mapResultsLimit;
+                $offset = 0;
+//TODO see how to filter the results from CGE by workcenter, division, startDate and endDate
+                $uidsQueryCommand = $cgiQuery->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $uidsQueryCommand->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $cgiUids = $uidsQueryCommand->queryAll();
+
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $lanIdsQuery = WebManagementTrackerHistory::find();
+
+                $lanIdsQuery->select(
+                    [
+                        'Key'=>'LOWER([SurveyorLANID])',
+                        'DisplayedText'=>'[Surveyor / Inspector]'
+                    ]
+                )->distinct();
+                $lanIdsQuery->where(['Division' => $division]);
+                $lanIdsQuery->andWhere(['Work Center' => $workCenter]);
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    $lanIdsQuery->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = $this->downloadItemsLimit;
+                $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
+
+
+                $lanIdsQueryCommand = $lanIdsQuery->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $lanIdsQueryCommand->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $surveyors = $lanIdsQueryCommand->queryAll();
+
+                $items = ['cgiFilters'=>$cgiUids,'surveyorFilters'=>$surveyors];
+
+            } else {
+                $items = ['cgiFilters'=>[],'surveyorFilters'=>[]];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['controls'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
