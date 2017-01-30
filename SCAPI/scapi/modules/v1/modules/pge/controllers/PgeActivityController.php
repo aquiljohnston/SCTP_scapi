@@ -50,7 +50,9 @@ class PgeActivityController extends ActivityController
 		//handle pge equipment calibration
 		if (array_key_exists('EquipmentCalibration', $activityData))
 		{
-			$savedEquipmentCalibrations = EquipmentController::calibrationParse($activityData['EquipmentCalibration'], $client, $createdBy);
+			//get activity uid
+			$activityUID = $activityData['ActivityUID'];
+			$savedEquipmentCalibrations = EquipmentController::calibrationParse($activityData['EquipmentCalibration'], $client, $createdBy, $activityUID);
 			$responseData['EquipmentCalibration'] = $savedEquipmentCalibrations;
 		}
 		

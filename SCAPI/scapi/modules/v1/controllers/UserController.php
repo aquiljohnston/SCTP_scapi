@@ -7,7 +7,6 @@ use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Project;
 use app\modules\v1\models\Client;
 use app\modules\v1\models\ProjectUser;
-use app\modules\v1\models\Key;
 use app\modules\v1\models\ActivityCode;
 use app\modules\v1\models\Equipment;
 use app\modules\v1\models\PayCode;
@@ -86,21 +85,34 @@ class UserController extends BaseActiveController
 			
 			PermissionsController::requirePermission('userCreate');
 			
-			//create response
-			$response = Yii::$app->response;
-		
-			//options for bcrypt
-			$options = [
-				'cost' => 12,
-			];
 			//read the post input (use this technique if you have no post variable name):
 			$post = file_get_contents("php://input");
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			$existingUser = SCUser::find()
+				->where(['UserName' =>  $data['UserName']])
+				->all();
+			
+			if($existingUser != null)
+			{
+				$response->setStatusCode(400);
+				$response->data = 'UserName already exist.';
+				return $response;
+			}
+		
+			//options for bcrypt
+			$options = [
+				'cost' => 12,
+			];
+			
 			//handle the password
 			//get pass from data
-			$securedPass = $data["UserKey"];
+			$securedPass = $data['UserPassword'];
 			
 			//decrypt password
 			$decryptedPass = BaseActiveController::decrypt($securedPass);
@@ -109,61 +121,42 @@ class UserController extends BaseActiveController
 			$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 			
 			//begin a transaction to save all user related data
-			$transaction = Yii::$app->db->beginTransaction();
 			
-			try{
-				//create row in the db to hold the hashedPass
-				$keyData = new Key();
-				$keyData->Key1 = $hashedPass;
-				$keyData-> save();
-				
-				//Replace the encoded pass with the ID for the new KeyTb row
-				$data["UserKey"] = $keyData -> KeyID;
-				
-				//maps the data to a new user model and save
-				$user = new SCUser();
-				$user->attributes = $data;
+			//Replace the encoded pass with the ID for the new KeyTb row
+			
+			//maps the data to a new user model and save
+			$user = new SCUser();
+			$user->attributes = $data;
+			$user->UserPassword = $hashedPass;
 
-				$userID = self::getUserFromToken()->UserID;
-				$user->UserCreatedBy = $userID;
-
-
-				//rbac check if attempting to create an admin
-				if($user["UserAppRoleType"] == 'Admin')
-				{
-					PermissionsController::requirePermission('userCreateAdmin');
-				}
-				
-				//created date
-				$user->UserCreatedDate = Parent::getDate();
-
-				if($user-> save())
-				{
-					//assign rbac role
-					$auth = Yii::$app->authManager;
-					if($userRole = $auth->getRole($user["UserAppRoleType"]))
-					{
-						$auth->assign($userRole, $user["UserID"]);
-					}
-					$response->setStatusCode(201);
-					$response->data = $user;
-				}
-				else{
-					throw new \yii\web\HttpException(400);
-				}
-				
-				$transaction->commit();
-			}
-			catch(ForbiddenHttpException $e)
+			//rbac check if attempting to create an admin
+			if($user['UserAppRoleType'] == 'Admin')
 			{
-				$transaction->rollBack();
-				throw $e;
+				PermissionsController::requirePermission('userCreateAdmin');
 			}
-			catch(Exception $e)
+			
+			//created date/by
+			$userID = self::getUserFromToken()->UserID;
+			$user->UserCreatedUID = $userID;
+			$user->UserCreatedDate = Parent::getDate();
+			
+			yii::trace('ActiveDataBase: ' . json_encode(SCUser::getDb()));
+			yii::trace('UserData: ' . json_encode($user->attributes));
+			
+			if($user->save())
 			{
-				$transaction->rollBack();
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
+				//assign rbac role
+				$auth = Yii::$app->authManager;
+				if($userRole = $auth->getRole($user["UserAppRoleType"]))
+				{
+					$auth->assign($userRole, $user["UserID"]);
+				}
+				$response->setStatusCode(201);
+				$user->UserPassword = '';
+				$response->data = $user;
+			}
+			else{
+				throw new \yii\web\HttpException(400);
 			}
 			return $response;
 		}

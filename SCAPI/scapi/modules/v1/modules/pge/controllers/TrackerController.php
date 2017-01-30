@@ -21,7 +21,8 @@ use app\modules\v1\modules\pge\models\AssetAddressCGE;
 
 class TrackerController extends Controller 
 {
-    public $resultsLimit = 300; // limits the maximum returned results
+    public $mapResultsLimit = 300; // limits the maximum returned results for map api calls
+    public $downloadItemsLimit = 7000; // limits the maximum number of results the csv file will contain
 
 	public function behaviors()
 	{
@@ -371,7 +372,6 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
 
-
                 $query->select([
                     'tb.UID',
                     'tb.LanID as Inspector',
@@ -396,8 +396,7 @@ class TrackerController extends Controller
                 $query->where(['[th].[Division]' => $division]);
                 $query->andWhere(["[th].[Work Center]" => $workCenter]);
 
-                // todo find out why the phpbuild in server crashed when also filtering by a set of lanids
-                if (false && $surveyorBreadcrumbs) {
+                if ($surveyorBreadcrumbs) {
                     $sentLanIds = explode(',',$surveyorBreadcrumbs);
                     $filterConditions = null;
 
@@ -412,20 +411,20 @@ class TrackerController extends Controller
                      * ] -- for multiple entries
                      */
                     foreach ($sentLanIds as $sentLanId) {
-                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        $lanId = trim(strtolower($sentLanId));
                         if (''==$lanId){
                             continue;
                         }
                         if (null === $filterConditions){
-                            $filterConditions = ['[tb].LanID'=>$lanId];
+                            $filterConditions = ['LOWER([tb].LanID)'=>$lanId];
                         } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['[tb].LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
                         } else {
                             $tmp = $filterConditions;
                             $filterConditions=[];
                             $filterConditions[0] = 'or';
                             $filterConditions[]= $tmp;
-                            $filterConditions[]= ['[tb].LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
                         }
                     }
                     if (null!=$filterConditions) {
@@ -479,7 +478,11 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','tb.Longitude',$maxLong]);
                 }
 
-                $limit =$this->resultsLimit;
+                /////////////////////////////////
+                // TODO filter by indications ( gradeType ) and aoc (AOCType) when/if the columns are available
+                /////////////////////////////////
+
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 
                 $items = $query->offset($offset)
@@ -573,7 +576,7 @@ class TrackerController extends Controller
 
 // TODO see if the workcenter, surveyor.... filter should be applied here
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 //                $items = $query->offset($offset)
 //                    ->limit($limit)
@@ -630,6 +633,20 @@ class TrackerController extends Controller
                     'Longitude',
                     'AOCType as [AOC Type]'
                 ]);
+                if ($division){
+                    $query->andWhere(['[DIVISION]' => $division]);
+                }
+                if($workCenter){
+                    $query->andWhere(["[WORKCENTER]" => $workCenter]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
+                }
+
 //                $aocPossibleValues = ['19'=>'19',
 //                    '31'=>'31',
 //                    '32'=>'32',
@@ -701,15 +718,15 @@ class TrackerController extends Controller
                             continue;
                         }
                         if (null === $filterConditions){
-                            $filterConditions = ['LanID'=>$lanId];
+                            $filterConditions = ['LOWER(LanID)'=>$lanId];
                         } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
                         } else {
                             $tmp = $filterConditions;
                             $filterConditions=[];
                             $filterConditions[0] = 'or';
                             $filterConditions[]= $tmp;
-                            $filterConditions[]= ['LanID'=>$lanId];
+                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
                         }
                     }
                     if (null!=$filterConditions) {
@@ -733,9 +750,9 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
-// TODO see if the workcenter, surveyor.... filter should be applied here
+                // TODO apply the indications ( GradeType ) filter when/if the column will be available in the sql view
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 //                $items = $query->offset($offset)
 //                    ->limit($limit)
@@ -744,8 +761,8 @@ class TrackerController extends Controller
                 $items = $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $items->sql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $items = $items->queryAll();
 
             } else {
@@ -868,6 +885,20 @@ class TrackerController extends Controller
                     }
                 }
 
+                if ($division){
+                    $query->andWhere(['[DIVISION]' => $division]);
+                }
+                if($workCenter){
+                    $query->andWhere(["[WORKCENTER]" => $workCenter]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
+                }
+
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);
                 }
@@ -884,7 +915,8 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
-                $limit =$this->resultsLimit;
+                // TODO filter by AOCType when/if that column is available in the sql view
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 
 //                $items = $query->offset($offset)
@@ -968,7 +1000,7 @@ class TrackerController extends Controller
 //                $query->andWhere(['<=','Longitude',$maxLong]);
 //            }
 
-            $limit =$this->resultsLimit;
+            $limit =$this->mapResultsLimit;
             $offset = 0;
             $items = $query->offset($offset)
                 ->limit($limit)
@@ -1019,7 +1051,42 @@ class TrackerController extends Controller
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
-                if ($surveyor) {
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(SurveyorLANID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+
+                } else if ($surveyor) {
                     $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
@@ -1060,7 +1127,7 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
 
-                $limit =$this->resultsLimit;
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
 
                 $items = $query->offset($offset)
@@ -1101,6 +1168,23 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
+
+                $query->select(
+                    [
+                        '[Date Time]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[House No]',
+                        '[Street]',
+                        '[Apt]',
+                        '[City]',
+                        '[State]',
+                        '[Landmark]',
+                        '[Landmark Description]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
@@ -1136,7 +1220,7 @@ class TrackerController extends Controller
                 }
 
                 $offset = 0;
-                $limit = 10000;
+                $limit = $this->downloadItemsLimit;
                 $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
 
@@ -1195,6 +1279,17 @@ class TrackerController extends Controller
                 WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
                 $query = WebManagementTrackerCurrentLocation::find();
 
+                $query->select(
+                    [
+                        '[Date]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[Battery Level]',
+                        '[GPS Type]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
@@ -1225,7 +1320,7 @@ class TrackerController extends Controller
                 }
 
                 $offset = 0;
-                $limit = 10000;
+                $limit = $this->downloadItemsLimit;
 
                 $items = $query->offset($offset)
                     ->limit($limit)
