@@ -49,7 +49,7 @@ class AssetAddressController extends Controller
 	
 	//TODO break up code into seperate functions
 
-    public static function assetAddressParse($assetAddressArray, $client, $userUID, $ActivityUID)
+    public static function assetAddressParse($assetAddressArray, $client, $userUID, $ActivityUID, $activityLat, $activityLong)
     {
         try {
             //set db target
@@ -80,6 +80,16 @@ class AssetAddressController extends Controller
 			//assetSaveFlag
 			$assetSavedFlag = false;
 			
+			//check for 0 or empty lat/long
+			if ($assetAddressArray['Latitude'] == 0 || $assetAddressArray['Latitude'] == null)
+			{
+				$assetAddressArray['Latitude'] = $activityLat; 
+			}
+			if ($assetAddressArray['Longitude'] == 0 || $assetAddressArray['Longitude'] == null)
+			{
+				$assetAddressArray['Longitude'] = $activityLong; 
+			}
+
 			if($previousAddress == null)
 			{			
 				//new AssetAddress model
@@ -96,8 +106,6 @@ class AssetAddressController extends Controller
 				$assetAddress->ModifiedUserUID = $userUID;
 				$assetAddress->ActivityUID = $ActivityUID;
 				$assetAddress->SrcOpenDTLT = $assetAddress->SrcDTLT;
-
-				Yii::trace('Asset Address: ' . json_encode($assetAddress->attributes));
 
 				//save model
 				if ($assetAddress->save()){
@@ -142,6 +150,17 @@ class AssetAddressController extends Controller
 
 				//Inspection
 				if ($assetAddressArray['Inspection'] != null) {
+					
+					//check for 0 or empty lat/long
+					if ($assetAddressArray['Inspection']['Latitude'] == 0 || $assetAddressArray['Inspection']['Latitude'] == null)
+					{
+						$assetAddressArray['Inspection']['Latitude'] = $activityLat; 
+					}
+					if ($assetAddressArray['Inspection']['Longitude'] == 0 || $assetAddressArray['Inspection']['Longitude'] == null)
+					{
+						$assetAddressArray['Inspection']['Longitude'] = $activityLong; 
+					}
+					
 					//get previous record
 					$previousInspection = AssetAddressInspection::find()
 						->where(['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID']])
@@ -207,6 +226,17 @@ class AssetAddressController extends Controller
 
 				//CGI
 				if ($assetAddressArray['CGI'] != null) {
+					
+					//check for 0 or empty lat/long
+					if ($assetAddressArray['CGI']['Latitude'] == 0 || $assetAddressArray['CGI']['Latitude'] == null)
+					{
+						$assetAddressArray['CGI']['Latitude'] = $activityLat; 
+					}
+					if ($assetAddressArray['CGI']['Longitude'] == 0 || $assetAddressArray['CGI']['Longitude'] == null)
+					{
+						$assetAddressArray['CGI']['Longitude'] = $activityLong; 
+					}
+					
 					//get previous record
 					$previousCGI = AssetAddressCGE::find()
 						->where(['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID']])
@@ -273,11 +303,22 @@ class AssetAddressController extends Controller
 				}
 
 				//AOCs
-				if ($assetAddressArray['AOCs'] != null) {
+				if ($assetAddressArray['AOCs'] != null) {					
 					$savedData['AOCs'] = [];
 					//loop AOCs
 					$AOCCount = (count($assetAddressArray['AOCs']));
 					for ($i = 0; $i < $AOCCount; $i++) {
+						
+						//check for 0 or empty lat/long
+						if ($assetAddressArray['AOCs'][$i]['Latitude'] == 0 || $assetAddressArray['AOCs'][$i]['Latitude'] == null)
+						{
+							$assetAddressArray['AOCs'][$i]['Latitude'] = $activityLat; 
+						}
+						if ($assetAddressArray['AOCs'][$i]['Longitude'] == 0 || $assetAddressArray['AOCs'][$i]['Longitude'] == null)
+						{
+							$assetAddressArray['AOCs'][$i]['Longitude'] = $activityLong; 
+						}
+						
 						//get previous record
 						$previousAOC = AssetAddressAOC::find()
 							->where(['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID']])
@@ -353,6 +394,17 @@ class AssetAddressController extends Controller
 					//loop indications
 					$IndicationCount = (count($assetAddressArray['Indications']));
 					for ($i = 0; $i < $IndicationCount; $i++) {
+						
+						//check for 0 or empty lat/long
+						if ($assetAddressArray['Indications'][$i]['Latitude'] == 0 || $assetAddressArray['Indications'][$i]['Latitude'] == null)
+						{
+							$assetAddressArray['Indications'][$i]['Latitude'] = $activityLat; 
+						}
+						if ($assetAddressArray['Indications'][$i]['Longitude'] == 0 || $assetAddressArray['Indications'][$i]['Longitude'] == null)
+						{
+							$assetAddressArray['Indications'][$i]['Longitude'] = $activityLong; 
+						}
+						
 						$previousIndication = AssetAddressIndication::find()
 							->where(['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID']])
 							->andWhere(['ActiveFlag' => 1])
