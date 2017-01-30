@@ -1277,6 +1277,7 @@ class DropdownController extends Controller
 			$data = WebManagementDropDownAOCSurveyor::find()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
+				->orderBy('Surveyor ASC')
                 ->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
