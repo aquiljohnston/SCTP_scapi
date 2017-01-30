@@ -73,7 +73,18 @@ class PgeActivityController extends ActivityController
 		//handle pge inspection
 		if (array_key_exists('AssetAddress', $activityData))
 		{
-			$savedAssetAddress = AssetAddressController::assetAddressParse($activityData['AssetAddress'], $client, $createdBy, $activityUID);
+			$activityLat = 0;
+			$activityLong = 0;
+			//get activty lat/long to populate any potential blanks
+			if(array_key_exists('ActivityLatitude', $activityData))
+			{
+				$activityLat = $activityData['ActivityLatitude'];
+			}
+			if(array_key_exists('ActivityLongitude', $activityData))
+			{
+				$activityLong =  $activityData['ActivityLongitude'];
+			}
+			$savedAssetAddress = AssetAddressController::assetAddressParse($activityData['AssetAddress'], $client, $createdBy, $activityUID, $activityLat, $activityLong);
 			$responseData['AssetAddress'] = $savedAssetAddress;
 		}
 		
