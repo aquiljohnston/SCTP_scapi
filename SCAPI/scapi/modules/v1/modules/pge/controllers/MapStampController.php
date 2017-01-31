@@ -65,8 +65,7 @@ class MapStampController extends BaseActiveController {
             WebManagementMapStampDetail::setClient($headers['X-Client']);
 
             $put = file_get_contents("php://input");
-            //$sqlCommand = "EXEC spWebManagementJSON_AssociateToExistingFLOC @JSON_Str=:putData";
-             $sqlCommand = "EXEC spWebManagementJSON_ReAssociateIR @JSON_Str=:putData";
+            $sqlCommand = "EXEC spWebManagementJSON_ReAssociateIR @JSON_Str=:putData";
 
             $command =  WebManagementMapStampDetail::getDb()->createCommand($sqlCommand);
             $command->bindParam(":putData", $put);
