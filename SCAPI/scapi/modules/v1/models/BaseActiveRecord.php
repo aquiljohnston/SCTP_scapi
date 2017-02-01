@@ -18,13 +18,20 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
 	
+	//base comet tracker user
+	const CT_USER = 'app\modules\v1\models\SCUser';
+	
 	//pg&e databases
 	const PGE_DEV = 'pgedev';
 	const PGE_STAGE = 'pgestage';
 	const PGE_PROD = 'pge';
+	//pg&e user model
+	const PGE_USER = 'app\modules\v1\modules\pge\models\PGEUser';
 	
 	//beta client database
 	const BETA_DEV = 'betadev';
+	//beta user model
+	//const BETA_USER= 'In Progress';
 	
 	public static function getClient()
 	{
@@ -69,5 +76,33 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->betaDb;
 		}
+	}
+	
+	//reutrns the file location for the user model associated to a project based on the client header
+	public static function getUserModel($client)
+	{
+		//CometTracker
+		if($client == self::CT_DEV
+		|| $client == self::CT_STAGE
+		|| $client == self::CT_PROD
+		|| $client == self::SCCT_DEV
+		|| $client == self::SCCT_STAGE
+		|| $client == self::SCCT_PROD)
+		{
+			return self::CT_USER;
+		}
+		//PGE
+		if($client == self::PGE_DEV 
+		|| $client == self::PGE_STAGE
+		|| $client == self::PGE_PROD)
+		{
+			return self::PGE_USER;
+		}
+		//Beta - In Progress
+		// if($client == self::BETA_DEV)
+		// {
+			// return self::BETA_USER;
+		// }
+		return null;
 	}
 }

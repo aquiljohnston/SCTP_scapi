@@ -12,6 +12,7 @@ use app\modules\v1\models\Equipment;
 use app\modules\v1\models\PayCode;
 use app\modules\v1\models\AllTimeCardsCurrentWeek;
 use app\modules\v1\models\AllMileageCardsCurrentWeek;
+use app\modules\v1\models\BaseActiveRecord;
 use app\modules\v1\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -120,10 +121,6 @@ class UserController extends BaseActiveController
 			//hash pass with bcrypt
 			$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
 			
-			//begin a transaction to save all user related data
-			
-			//Replace the encoded pass with the ID for the new KeyTb row
-			
 			//maps the data to a new user model and save
 			$user = new SCUser();
 			$user->attributes = $data;
@@ -140,16 +137,13 @@ class UserController extends BaseActiveController
 			$user->UserCreatedUID = $userID;
 			$user->UserCreatedDate = Parent::getDate();
 			
-			yii::trace('ActiveDataBase: ' . json_encode(SCUser::getDb()));
-			yii::trace('UserData: ' . json_encode($user->attributes));
-			
 			if($user->save())
 			{
 				//assign rbac role
 				$auth = Yii::$app->authManager;
-				if($userRole = $auth->getRole($user["UserAppRoleType"]))
+				if($userRole = $auth->getRole($user['UserAppRoleType']))
 				{
-					$auth->assign($userRole, $user["UserID"]);
+					$auth->assign($userRole, $user['UserID']);
 				}
 				$response->setStatusCode(201);
 				$user->UserPassword = '';
@@ -176,7 +170,7 @@ class UserController extends BaseActiveController
 	* @returns json body of the user data
 	* @throws \yii\web\HttpException
 	*/	
-	public function actionUpdate($id)
+	public function actionUpdate($id = null, $jsonData = null, $client = null, $username = null)
 	{
 		try
 		{
@@ -185,16 +179,41 @@ class UserController extends BaseActiveController
 			
 			PermissionsController::requirePermission('userUpdate');
 			
-			$put = file_get_contents("php://input");
-			$data = json_decode($put, true);
+			if($jsonData != null)
+			{
+				$data = $jsonData;
+			}
+			else
+			{
+				$put = file_get_contents("php://input");
+				$data = json_decode($put, true);
+			}
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
+			$responseArray = [];
 			
 			//get user model to be updated
-			$user = SCUser::findOne($id);
+			//check params
+			if($id != null)
+			{
+				$user = SCUser::findOne($id);
+				//set username for future use
+				$username = $user->UserName;
+			}
+			elseif($username != null)
+			{
+				$user = SCUser::find()
+					->where(['UserName' => $username])
+					->one();
+			}
+			else
+			{
+				return 'no id or username';
+				throw new \yii\web\HttpException(400);
+			}
 
-			$currentRole = $user["UserAppRoleType"];
+			$currentRole = $user['UserAppRoleType'];
 
 			PermissionsController::requirePermission('userUpdate' . $currentRole);
 			
@@ -203,91 +222,102 @@ class UserController extends BaseActiveController
 				'cost' => 12,
 			];
 			
-			//begin a transaction to save all user related data
-			$transaction = Yii::$app->db->beginTransaction();
+			//handle the password
+			//get pass from data
+			if(array_key_exists('UserPassword', $data))
+			{
+				$securedPass = $data['UserPassword'];
+				
+				//decrypt password
+				$decryptedPass = BaseActiveController::decrypt($securedPass);
+				
+				//check if new password
+				if($decryptedPass != '')
+				{
+					//hash pass with bcrypt
+					$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
+					$data['UserPassword'] = $hashedPass;
+				}
+				else
+				{
+					unset($data['UserPassword']);
+				}
+			}
+
+			//Don't let client change this attribute
+			if(isset($data['UserCreatedUID'])) {
+				unset($data['UserCreatedUID']);
+			}
 			
-			try{
-				//handle the password
-				//get pass from data
-				if(array_key_exists("UserKey", $data))
-				{
-					$securedPass = $data["UserKey"];
-					
-					//decrypt password
-					$decryptedPass = BaseActiveController::decrypt($securedPass);
-					
-					//check if new password
-					if($decryptedPass != $user->UserKey)
-					{
-						//hash pass with bcrypt
-						$hashedPass = password_hash($decryptedPass, PASSWORD_BCRYPT,$options);
-						
-						//create row in the db to hold the hashedPass
-						$keyData = Key::findOne($user->UserKey);
-						$keyData->Key1 = $hashedPass;
-						$keyData->KeyCreatedBy = self::getUserFromToken()->UserID;
-
-						if($keyData-> update())
-						{
-							//Replace the encoded pass with the ID for the new KeyTb row
-							$data["UserKey"] = $keyData -> KeyID;
-						}
-						else
-						{
-							throw new \yii\web\HttpException(400);
-						}
-					}
-					else
-					{
-						$data["UserKey"] = $decryptedPass;
-					}
-				}
-
-				//Don't let client change this attribute
-				if(isset($data["UserCreatedBy"])) {
-					unset($data["UserCreatedBy"]);
-				}
-				//pass new data to user
-				$user->attributes = $data;
-				// Get modified by from token
-				$user->UserModifiedBy = self::getUserFromToken()->UserID;
-				
-				//rbac check if attempting to create an admin
-				if($user["UserAppRoleType"] == 'Admin')
-				{
-					PermissionsController::requirePermission('userCreateAdmin');
-				}
-				
-				$user->UserModifiedDate = Parent::getDate();
-				
-				if($user-> update())
-				{
-					//handle potential role change
-					$auth = Yii::$app->authManager;
-					if($userRole = $auth->getRole($user["UserAppRoleType"]))
-					{
-						$auth->revokeAll($user["UserID"]);
-						$auth->assign($userRole, $user["UserID"]);
-					}
-					$response->setStatusCode(201);
-					$response->data = $user; 
-				}
-				else{
-					throw new \yii\web\HttpException(400);
-				}
-					
-				$transaction->commit();
-			}
-			catch(ForbiddenHttpException $e)
+			//pass new data to user
+			$user->attributes = $data;
+			// Get modified by from token
+			$user->UserModifiedUID = self::getUserFromToken()->UserID;
+			
+			//rbac check if attempting to create an admin
+			if($user['UserAppRoleType'] == 'Admin')
 			{
-				throw new ForbiddenHttpException;
+				PermissionsController::requirePermission('userCreateAdmin');
 			}
-			catch(Exception $e)
+			
+			$user->UserModifiedDate = Parent::getDate();
+			
+			if($user-> update())
 			{
-				$transaction->rollBack();
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
+				//handle potential role change
+				$auth = Yii::$app->authManager;
+				if($userRole = $auth->getRole($user['UserAppRoleType']))
+				{
+					$auth->revokeAll($user['UserID']);
+					$auth->assign($userRole, $user['UserID']);
+				}
+				$response->setStatusCode(201);
+				$responseArray = $user->attributes;
+				
+				//propagate update to all associated projects
+				//should this be a function call?
+				//find all projects
+				$projectUser = ProjectUser::find()
+				->select('ProjUserProjectID')
+				->where(['ProjUserUserID' => $user->UserID])
+				->all();
+				$projectCount = count($projectUser);
+				
+				//loop projects
+				for($i = 0; $i < $projectCount; $i++)
+				{
+					//get project information
+					$project  = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+					
+					//if client is populated than original call was to a client controller in which the record has already been updated
+					//so an update does not need to be preformed for that project again
+					if($project->ProjectUrlPrefix == $client)
+					{
+						continue;
+					}
+					
+					//get model from base active record based on urlPrefix in project
+					$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+					$userModel::setClient($project->ProjectUrlPrefix);
+					$projectUser = $userModel::find()
+					->where(['UserName' => $username])
+					->andWhere(['UserActiveFlag' => 1])
+					->one();
+					
+					$projectUser->attributes = $data;
+					
+					if($projectUser->update())
+					{
+						$responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
+					}
+				}
+				
 			}
+			else{
+				return 'failed to update base user';
+				throw new \yii\web\HttpException(400);
+			}
+			$response->data = $responseArray; 
 			return $response;
 		}
 		catch(ForbiddenHttpException $e)
@@ -320,6 +350,8 @@ class UserController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $user;
+			
+			$user->UserPassword = '';
 			
 			return $response;
 		}
