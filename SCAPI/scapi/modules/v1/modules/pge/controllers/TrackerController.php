@@ -18,6 +18,7 @@ use app\modules\v1\modules\pge\models\WebManagementTrackerAOC;
 use app\modules\v1\modules\pge\models\WebManagementTrackerIndications;
 use app\modules\v1\modules\pge\models\WebManagementTrackerMapGridCompliance;
 use app\modules\v1\modules\pge\models\AssetAddressCGE;
+use app\modules\v1\modules\pge\models\PGEUser;
 
 class TrackerController extends Controller 
 {
@@ -586,8 +587,8 @@ class TrackerController extends Controller
                 $items = $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $items->sql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $items = $items->queryAll();
 
             } else {
@@ -1301,8 +1302,17 @@ class TrackerController extends Controller
 
                 $cgiQuery->select([
                     'Key'=>'CreatedUserUID',
-                    'DisplayedText'=>'CreatedUserUID'
+                    'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName)"
+//                    'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName,' (',u.UserLANID ,')')"
                 ])->distinct();
+                $cgiQuery->from([
+                    'ac'=>'['.AssetAddressCGE::tableName().']',
+                ]);
+                $cgiQuery->innerJoin(
+                    ['u'=>PGEUser::tableName()],
+                    '[ac].[CreatedUserUID]=[u].[UserUID]'
+                );
+
                 $cgiQuery->where(['ActiveFlag'=>'1']);
                 $cgiQuery->orderBy(['CreatedUserUID' => SORT_ASC]);
 
