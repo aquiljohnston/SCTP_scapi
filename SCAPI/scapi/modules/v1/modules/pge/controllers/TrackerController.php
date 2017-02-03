@@ -23,6 +23,7 @@ class TrackerController extends Controller
 {
     public $mapResultsLimit = 300; // limits the maximum returned results for map api calls
     public $downloadItemsLimit = 7000; // limits the maximum number of results the csv file will contain
+    public $filtersLimit = 52; // limits the number of filter values for CGI or Breadcrumbs
 
 	public function behaviors()
 	{
@@ -524,6 +525,7 @@ class TrackerController extends Controller
                 $query = AssetAddressCGE::find();
 
                 $query->select(['CreatedUserUID','SrcDTLT','Latitude','Longitude','StatusType','CGEReasonType','CGECardNo']);
+                $query->where(['ActiveFlag'=>'1']);
                 $sentCgis = explode(',',$cgi);
                 $filterConditions = null;
                 /*
@@ -1301,9 +1303,10 @@ class TrackerController extends Controller
                     'Key'=>'CreatedUserUID',
                     'DisplayedText'=>'CreatedUserUID'
                 ])->distinct();
+                $cgiQuery->where(['ActiveFlag'=>'1']);
                 $cgiQuery->orderBy(['CreatedUserUID' => SORT_ASC]);
 
-                $limit = $this->mapResultsLimit;
+                $limit = $this->filtersLimit;
                 $offset = 0;
 //TODO see how to filter the results from CGE by workcenter, division, startDate and endDate
                 $uidsQueryCommand = $cgiQuery->offset($offset)
@@ -1332,7 +1335,7 @@ class TrackerController extends Controller
                 }
 
                 $offset = 0;
-                $limit = $this->downloadItemsLimit;
+                $limit = $this->filtersLimit;
                 $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
 
 
