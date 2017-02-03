@@ -107,16 +107,22 @@ class EquipmentController extends Controller
 							$calibrationModel->CreatedUserUID = $userUID;
 							$calibrationModel->ModifiedUserUID = $userUID;
 							
-							//save model
-							if($calibrationModel->save())
-							{
-								//add to response array
-								$savedData = $calibrationModel;
-								$actionType = 'create';
+							try{
+								//save model
+								if($calibrationModel->save())
+								{
+									//add to response array
+									$savedData = $calibrationModel;
+									$actionType = 'create';
+								}
+								else
+								{
+									$savedData = 'Failed to Create Equipment Calibration Record';
+								}
 							}
-							else
+							catch(yii\db\Exception $e)
 							{
-								$savedData = 'Failed to Create Equipment Calibration Record';
+								$savedData = $calibrationModel;
 							}
 						}
 						//else update the previous record
@@ -138,18 +144,24 @@ class EquipmentController extends Controller
 								$calibrationModel->CreatedUserUID = $userUID;
 								$calibrationModel->ModifiedUserUID = $userUID;
 								
-								//save model
-								if($calibrationModel->save())
-								{
-									//add to response array
-									$savedData = $calibrationModel;
-									$actionType = 'update';
+								try{
+									//save model
+									if($calibrationModel->save())
+									{
+										//add to response array
+										$savedData = $calibrationModel;
+										$actionType = 'update';
+									}
+									else
+									{
+										$previousCalibration->ActiveFlag = 1;
+										$previousCalibration->update();
+										$savedData = 'Failed To Save New Equipment Calibration Record';
+									}
 								}
-								else
+								catch(yii\db\Exception $e)
 								{
-									$previousCalibration->ActiveFlag = 1;
-									$previousCalibration->update();
-									$savedData = 'Failed To Save New Equipment Calibration Record';
+									$savedData = $calibrationModel;
 								}
 							}
 							else
