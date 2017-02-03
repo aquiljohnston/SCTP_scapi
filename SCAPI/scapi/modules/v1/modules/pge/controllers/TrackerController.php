@@ -519,7 +519,7 @@ class TrackerController extends Controller
         try{
 
             $headers = getallheaders();
-            if ($aoc) {
+            if ($cgi) {
                 AssetAddressCGE::setClient($headers['X-Client']);
                 $query = AssetAddressCGE::find();
 
