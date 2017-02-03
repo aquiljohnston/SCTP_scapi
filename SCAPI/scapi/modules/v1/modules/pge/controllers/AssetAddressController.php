@@ -107,8 +107,14 @@ class AssetAddressController extends Controller
 				$assetAddress->ActivityUID = $ActivityUID;
 				$assetAddress->SrcOpenDTLT = $assetAddress->SrcDTLT;
 
-				//save model
-				if ($assetAddress->save()){
+				try{
+					//save model
+					if ($assetAddress->save()){
+						$assetSavedFlag = true;
+					}
+				}
+				catch(yii\db\Exception $e)
+				{
 					$assetSavedFlag = true;
 				}
 			}
@@ -137,9 +143,15 @@ class AssetAddressController extends Controller
 					$newAddress->SrcOpenDTLT = $newAddress->SrcDTLT;
 					$newAddress->Revision = $addressRevision;
 					
-					if ($newAddress->save()) {
+					try{
+						if ($newAddress->save()) {
+							$assetSavedFlag = true;
+						}	
+					}
+					catch(yii\db\Exception $e)
+					{
 						$assetSavedFlag = true;
-					}	
+					}
 				}
 			}
 			
@@ -191,10 +203,16 @@ class AssetAddressController extends Controller
 							$newInspection->Revision = $inspectionRevision;
 							$newInspection->ActiveFlag = 1;
 
-							if ($newInspection->save()) {
+							try{
+								if ($newInspection->save()) {
+									$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 1];
+								} else {
+									$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 0];
+								}
+							}
+							catch(yii\db\Exception $e)
+							{
 								$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 1];
-							} else {
-								$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 0];
 							}
 						} else {
 							$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 0];
@@ -216,10 +234,16 @@ class AssetAddressController extends Controller
 						$inspection->ActivityUID = $ActivityUID;
 						$inspection->SrcOpenDTLT = $inspection->SrcDTLT;
 
-						if ($inspection->save()) {
+						try{
+							if ($inspection->save()) {
+								$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 1];
+							} else {
+								$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 0];
+							}
+						}
+						catch(yii\db\Exception $e)
+						{
 							$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 1];
-						} else {
-							$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => 0];
 						}
 					}
 				}
@@ -266,12 +290,18 @@ class AssetAddressController extends Controller
 							$newCGI->SrcOpenDTLT = $newCGI->SrcDTLT;
 							$newCGI->Revision = $cgiRevision;
 
-							//save model
-							if ($newCGI->save()) {
-								//add to response array
+							try{
+								//save model
+								if ($newCGI->save()) {
+									//add to response array
+									$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 1];
+								} else {
+									$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 0];
+								}
+							}
+							catch(yii\db\Exception $e)
+							{
 								$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 1];
-							} else {
-								$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 0];
 							}
 						} else {
 							$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 0];
@@ -292,12 +322,18 @@ class AssetAddressController extends Controller
 						$newCGI->ActivityUID = $ActivityUID;
 						$newCGI->SrcOpenDTLT = $newCGI->SrcDTLT;
 
-						//save model
-						if ($newCGI->save()) {
-							//add to response array
+						try{
+							//save model
+							if ($newCGI->save()) {
+								//add to response array
+								$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 1];
+							} else {
+								$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 0];
+							}
+						}
+						catch(yii\db\Exception $e)
+						{
 							$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 1];
-						} else {
-							$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => 0];
 						}
 					}
 				}
@@ -349,7 +385,8 @@ class AssetAddressController extends Controller
 								$newAOC->DateFound = $newAOC->SrcDTLT;
 								$newAOC->Revision = $aocRevision;
 								$newAOC->ActiveFlag = 1;
-
+							
+							try{
 								//save model
 								if ($newAOC->save()) {
 									//add to response array
@@ -357,6 +394,11 @@ class AssetAddressController extends Controller
 								} else {
 									$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 0];
 								}
+							}
+							catch(yii\db\Exception $e)
+							{
+								$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 1];
+							}
 							} else {
 								$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 0];
 							}
@@ -376,13 +418,20 @@ class AssetAddressController extends Controller
 							$AOC->ActivityUID = $ActivityUID;
 							$AOC->SrcOpenDTLT = $AOC->SrcDTLT;
 							$AOC->DateFound = $AOC->SrcDTLT;
-
-							//save model
-							if ($AOC->save()) {
-								//add to response array
+							
+							//check for sql constraint error
+							try{
+								//save model
+								if ($AOC->save()) {
+									//add to response array
+									$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 1];
+								} else {
+									$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 0];
+								}
+							}
+							catch(yii\db\Exception $e)
+							{
 								$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 1];
-							} else {
-								$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => 0];
 							}
 						}
 					}
@@ -443,56 +492,62 @@ class AssetAddressController extends Controller
 									}
 									$newIndication->LockedFlag = $previousIndication->LockedFlag;
 									//$newIndication->ActiveFlag = 1;
+									
+									try{
+										//save model
+										if ($newIndication->save()) {
+											/*//updateMasterLeakLog StatusType to 'Not Approved'
+											//get most recent master leak log revision
+											$previousMasterLeakLog = MasterLeakLog::find()
+												->where(['MasterLeakLogUID' => $masterLeakLogUID])
+												->andWhere(['ActiveFlag' => 1])
+												->one();*/
 
-									//save model
-									if ($newIndication->save()) {
-										/*//updateMasterLeakLog StatusType to 'Not Approved'
-										//get most recent master leak log revision
-										$previousMasterLeakLog = MasterLeakLog::find()
-											->where(['MasterLeakLogUID' => $masterLeakLogUID])
-											->andWhere(['ActiveFlag' => 1])
-											->one();*/
-
-//                                            /*if ($previousMasterLeakLog->StatusType != 'Not Approved' && $previousMasterLeakLog->StatusType != 'InProgress') {
-//                                                //create new MasterLeakLog object
-//                                                $newMasterLeakLog = new MasterLeakLog;
-//                                                //pass old data to new model
-//                                                $newMasterLeakLog->MasterLeakLogUID = $previousMasterLeakLog->MasterLeakLogUID;
-//                                                $newMasterLeakLog->InspectionRequestLogUID = $previousMasterLeakLog->InspectionRequestLogUID;
-//                                                $newMasterLeakLog->MapGridUID = $previousMasterLeakLog->MapGridUID;
-//                                                $newMasterLeakLog->ServiceDate = $previousMasterLeakLog->ServiceDate;
-//                                                $newMasterLeakLog->CreatedUserUID = $previousMasterLeakLog->CreatedUserUID;
-//                                                //deactivate previous record
-//                                                $previousMasterLeakLog->ActiveFlag = 0;
-//                                                //get revision and increment
-//                                                $masterLeakLogRevision = $previousMasterLeakLog->Revision + 1;
-//                                                if ($previousMasterLeakLog->update()) {
-//                                                    //set new record status type and revision
-//                                                    $newMasterLeakLog->StatusType = 'Not Approved';
-//                                                    $newMasterLeakLog->Revision = $masterLeakLogRevision;
-//                                                    $newMasterLeakLog->ModifiedUserUID = $userUID;
-//                                                    $newMasterLeakLog->SourceID = 'API';
-//                                                    $newMasterLeakLog->SrcDTLT = BaseActiveController::getDate();
-//                                                    $newMasterLeakLog->RevisionComments = 'Indication Updated, Leak Log Reset To "Not Approved".';
-//                                                    if ($newMasterLeakLog->save()) {
-//                                                        //add to response array
-//                                                        $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
-//                                                    } else {
-//                                                        //new master leak log failed to save
-//                                                        $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
-//                                                    }
-//                                                } else {
-//                                                    //previous master leak log failed to update
-//                                                    $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
-//                                                }
-//                                            } else {
-//                                                //master leak log does not require an update StatusType is Not Approved
-//                                                $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
-//                                            }*/
+	//                                            /*if ($previousMasterLeakLog->StatusType != 'Not Approved' && $previousMasterLeakLog->StatusType != 'InProgress') {
+	//                                                //create new MasterLeakLog object
+	//                                                $newMasterLeakLog = new MasterLeakLog;
+	//                                                //pass old data to new model
+	//                                                $newMasterLeakLog->MasterLeakLogUID = $previousMasterLeakLog->MasterLeakLogUID;
+	//                                                $newMasterLeakLog->InspectionRequestLogUID = $previousMasterLeakLog->InspectionRequestLogUID;
+	//                                                $newMasterLeakLog->MapGridUID = $previousMasterLeakLog->MapGridUID;
+	//                                                $newMasterLeakLog->ServiceDate = $previousMasterLeakLog->ServiceDate;
+	//                                                $newMasterLeakLog->CreatedUserUID = $previousMasterLeakLog->CreatedUserUID;
+	//                                                //deactivate previous record
+	//                                                $previousMasterLeakLog->ActiveFlag = 0;
+	//                                                //get revision and increment
+	//                                                $masterLeakLogRevision = $previousMasterLeakLog->Revision + 1;
+	//                                                if ($previousMasterLeakLog->update()) {
+	//                                                    //set new record status type and revision
+	//                                                    $newMasterLeakLog->StatusType = 'Not Approved';
+	//                                                    $newMasterLeakLog->Revision = $masterLeakLogRevision;
+	//                                                    $newMasterLeakLog->ModifiedUserUID = $userUID;
+	//                                                    $newMasterLeakLog->SourceID = 'API';
+	//                                                    $newMasterLeakLog->SrcDTLT = BaseActiveController::getDate();
+	//                                                    $newMasterLeakLog->RevisionComments = 'Indication Updated, Leak Log Reset To "Not Approved".';
+	//                                                    if ($newMasterLeakLog->save()) {
+	//                                                        //add to response array
+	//                                                        $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
+	//                                                    } else {
+	//                                                        //new master leak log failed to save
+	//                                                        $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
+	//                                                    }
+	//                                                } else {
+	//                                                    //previous master leak log failed to update
+	//                                                    $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
+	//                                                }
+	//                                            } else {
+	//                                                //master leak log does not require an update StatusType is Not Approved
+	//                                                $savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
+	//                                            }*/
+											$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
+										} else {
+											//new indication failed to save
+											$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
+										}
+									}
+									catch(yii\db\Exception $e)
+									{
 										$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
-									} else {
-										//new indication failed to save
-										$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
 									}
 								} else {
 									//previous indication failed to update
@@ -524,56 +579,62 @@ class AssetAddressController extends Controller
 								$indication->StatusType = 'In Progress';
 							}
 
-							//save model
-							if ($indication->save()) {
-								//TODO: Move functionality for Master Leak Log Update into seperate function updateMasterLeakLog(), call in both create and update
+							try{
+								//save model
+								if ($indication->save()) {
+									//TODO: Move functionality for Master Leak Log Update into seperate function updateMasterLeakLog(), call in both create and update
 
-								//update map stamp to 'Not Approved' if neccessary
-								//get most recent master leak log revision
-								$previousMasterLeakLog = MasterLeakLog::find()
-									->where(['MasterLeakLogUID' => $masterLeakLogUID])
-									->andWhere(['ActiveFlag' => 1])
-									->one();
+									//update map stamp to 'Not Approved' if neccessary
+									//get most recent master leak log revision
+									$previousMasterLeakLog = MasterLeakLog::find()
+										->where(['MasterLeakLogUID' => $masterLeakLogUID])
+										->andWhere(['ActiveFlag' => 1])
+										->one();
 
-								if ($previousMasterLeakLog->StatusType != 'Not Approved' && $previousMasterLeakLog->StatusType != 'InProgress') {
-									//create new MasterLeakLog object
-									$newMasterLeakLog = new MasterLeakLog;
-									//pass old data to new model
-									$newMasterLeakLog->MasterLeakLogUID = $previousMasterLeakLog->MasterLeakLogUID;
-									$newMasterLeakLog->InspectionRequestLogUID = $previousMasterLeakLog->InspectionRequestLogUID;
-									$newMasterLeakLog->MapGridUID = $previousMasterLeakLog->MapGridUID;
-									$newMasterLeakLog->ServiceDate = $previousMasterLeakLog->ServiceDate;
-									$newMasterLeakLog->CreatedUserUID = $previousMasterLeakLog->CreatedUserUID;
-									//deactivate previous record
-									$previousMasterLeakLog->ActiveFlag = 0;
-									//get revision and increment
-									$masterLeakLogRevision = $previousMasterLeakLog->Revision + 1;
-									if ($previousMasterLeakLog->update()) {
-										//set new record status type and revision
-										$newMasterLeakLog->StatusType = 'Not Approved';
-										$newMasterLeakLog->Revision = $masterLeakLogRevision;
-										$newMasterLeakLog->ModifiedUserUID = $userUID;
-										$newMasterLeakLog->SourceID = 'API';
-										$newMasterLeakLog->SrcDTLT = BaseActiveController::getDate();
-										$newMasterLeakLog->RevisionComments = 'New Indication Created, Leak Log Reset To "Not Approved".';
-										if ($newMasterLeakLog->save()) {
-											//add to response array
-											$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
+									if ($previousMasterLeakLog->StatusType != 'Not Approved' && $previousMasterLeakLog->StatusType != 'InProgress') {
+										//create new MasterLeakLog object
+										$newMasterLeakLog = new MasterLeakLog;
+										//pass old data to new model
+										$newMasterLeakLog->MasterLeakLogUID = $previousMasterLeakLog->MasterLeakLogUID;
+										$newMasterLeakLog->InspectionRequestLogUID = $previousMasterLeakLog->InspectionRequestLogUID;
+										$newMasterLeakLog->MapGridUID = $previousMasterLeakLog->MapGridUID;
+										$newMasterLeakLog->ServiceDate = $previousMasterLeakLog->ServiceDate;
+										$newMasterLeakLog->CreatedUserUID = $previousMasterLeakLog->CreatedUserUID;
+										//deactivate previous record
+										$previousMasterLeakLog->ActiveFlag = 0;
+										//get revision and increment
+										$masterLeakLogRevision = $previousMasterLeakLog->Revision + 1;
+										if ($previousMasterLeakLog->update()) {
+											//set new record status type and revision
+											$newMasterLeakLog->StatusType = 'Not Approved';
+											$newMasterLeakLog->Revision = $masterLeakLogRevision;
+											$newMasterLeakLog->ModifiedUserUID = $userUID;
+											$newMasterLeakLog->SourceID = 'API';
+											$newMasterLeakLog->SrcDTLT = BaseActiveController::getDate();
+											$newMasterLeakLog->RevisionComments = 'New Indication Created, Leak Log Reset To "Not Approved".';
+											if ($newMasterLeakLog->save()) {
+												//add to response array
+												$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
+											} else {
+												//new master leak log failed to save
+												$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
+											}
 										} else {
-											//new master leak log failed to save
+											//previous master leak log failed to update
 											$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
 										}
 									} else {
-										//previous master leak log failed to update
-										$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
+										//Master Leak Log does not require an update StatusType is 'Not Approved'
+										$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
 									}
 								} else {
-									//Master Leak Log does not require an update StatusType is 'Not Approved'
-									$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
+									//failed to save indication
+									$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
 								}
-							} else {
-								//failed to save indication
-								$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 0];
+							}
+							catch(yii\db\Exception $e)
+							{
+								$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => 1];
 							}
 						}
 					}
