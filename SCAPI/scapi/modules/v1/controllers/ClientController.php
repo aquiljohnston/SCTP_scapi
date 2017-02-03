@@ -45,7 +45,7 @@ class ClientController extends BaseActiveController
                     'deactivate' => ['post'],
                     'view' => ['get'],
                     'create' => ['post'],
-                    'update' => ['post'],
+                    'update' => ['put'],
                     'get-client-dropdowns' => ['get']
                 ],
             ];
