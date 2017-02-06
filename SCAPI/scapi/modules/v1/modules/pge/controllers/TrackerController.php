@@ -23,7 +23,7 @@ use app\modules\v1\modules\pge\models\PGEUser;
 class TrackerController extends Controller 
 {
     public $mapResultsLimit = 300; // limits the maximum returned results for map api calls
-    public $downloadItemsLimit = 7000; // limits the maximum number of results the csv file will contain
+    public $downloadItemsLimit = 1000000; // limits the maximum number of results the csv file will contain
     public $filtersLimit = 52; // limits the number of filter values for CGI or Breadcrumbs
 
 	public function behaviors()
@@ -1149,41 +1149,35 @@ class TrackerController extends Controller
                 $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
 
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $items->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
 
-            } else {
-                $items =[];
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+                Yii::$app->response->format = Response::FORMAT_RAW;
+
+                $this->setCsvHeaders();
+                // TODO find a way to use Yii response but without storing the whole response content in a variable
+                $firstLine = true;
+                $fp = fopen('php://output','w');
+
+                while($row = $reader->read()){
+                    if($firstLine) {
+                        $firstLine = false;
+                        fputcsv($fp, array_keys($row));
+                    }
+                    fputcsv($fp, $row);
+                }
+                fclose($fp);
+
+                return '';
             } // end division and workcenter check
 
+            $this->setCsvHeaders();
             //send response
-            Yii::$app->response->format = Response::FORMAT_RAW;
-            $headers = Yii::$app->response->headers;
-//            $headers->set('Content-Disposition', 'attachment; filename="tracker_history_'.date('Y-m-d').'.csv');
-            $headers->set('Content-Type', 'text/csv');
-            $firstLine = true;
-            // TODO find a better way of outputting the CSV than this workaround with output buffers
-            ob_start();
-            $fp = fopen('php://output','w');
-            foreach ($items as $line) {
-                if($firstLine) {
-                    $firstLine = false;
-                    fputcsv($fp, array_keys($line));
-                }
-                fputcsv($fp, $line);
-            }
-            fclose($fp);
-            //$a = stream_get_contents($fp);
-            $csvContents = ob_get_clean();
-            //var_dump($a);
-            //var_dump($response);
-            Yii::$app->response->content = $csvContents;
-
-            return ;
+            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -1247,40 +1241,35 @@ class TrackerController extends Controller
                 $offset = 0;
                 $limit = $this->downloadItemsLimit;
 
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $items->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
-            } else {
-                $items =[];
-            } // end division and workcenter check
+
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+                Yii::$app->response->format = Response::FORMAT_RAW;
+
+                $this->setCsvHeaders();
+                // TODO find a way to use Yii response but without storing the whole response content in a variable
+                $firstLine = true;
+                $fp = fopen('php://output','w');
+
+                while($row = $reader->read()){
+                    if($firstLine) {
+                        $firstLine = false;
+                        fputcsv($fp, array_keys($row));
+                    }
+                    fputcsv($fp, $row);
+                }
+                fclose($fp);
+
+                return '';
+            } // end division and workCenter check
 
             //send response
-            Yii::$app->response->format = Response::FORMAT_RAW;
-            $headers = Yii::$app->response->headers;
-//            $headers->set('Content-Disposition', 'attachment; filename="tracker_recent_activity_'.date('Y-m-d').'.csv');
-            $headers->set('Content-Type', 'text/csv');
-            $firstLine = true;
-            // TODO find a better way of outputting the CSV than this workaround with output buffers
-            ob_start();
-            $fp = fopen('php://output','w');
-            foreach ($items as $line) {
-                if($firstLine) {
-                    $firstLine = false;
-                    fputcsv($fp, array_keys($line));
-                }
-                fputcsv($fp, $line);
-            }
-            fclose($fp);
-            //$a = stream_get_contents($fp);
-            $csvContents = ob_get_clean();
-            //var_dump($a);
-            //var_dump($response);
-            Yii::$app->response->content = $csvContents;
-
-            return ;
+            $this->setCsvHeaders();
+            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -1377,5 +1366,13 @@ class TrackerController extends Controller
             Yii::trace('Exception '.$e->getMessage());
             throw new \yii\web\HttpException(400);
         }
+    }
+
+
+    public function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+//        header('Content-Disposition: attachment; filename="export.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
     }
 }
