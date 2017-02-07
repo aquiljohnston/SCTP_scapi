@@ -24,7 +24,7 @@ class TrackerController extends Controller
 {
     public $mapResultsLimit = 10000; // limits the maximum returned results for map api calls
     public $downloadItemsLimit = 1000000; // limits the maximum number of results the csv file will contain
-    public $filtersLimit = 52; // limits the number of filter values for CGI or Breadcrumbs
+    public $filtersLimit = 104; // limits the number of filter values for CGI or Breadcrumbs
 
 	public function behaviors()
 	{
