@@ -22,7 +22,7 @@ use app\modules\v1\modules\pge\models\PGEUser;
 
 class TrackerController extends Controller 
 {
-    public $mapResultsLimit = 300; // limits the maximum returned results for map api calls
+    public $mapResultsLimit = 10000; // limits the maximum returned results for map api calls
     public $downloadItemsLimit = 1000000; // limits the maximum number of results the csv file will contain
     public $filtersLimit = 52; // limits the number of filter values for CGI or Breadcrumbs
 
@@ -464,19 +464,15 @@ class TrackerController extends Controller
 
                     $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
                 }
-
                 if (null!=$minLat){
                     $query->andWhere(['>=','tb.Latitude',$minLat]);
                 }
-
                 if (null!=$maxLat){
                     $query->andWhere(['<=','tb.Latitude',$maxLat]);
                 }
-
                 if (null!=$minLong){
                     $query->andWhere(['>=','tb.Longitude',$minLong]);
                 }
-
                 if (null!=$maxLong){
                     $query->andWhere(['<=','tb.Longitude',$maxLong]);
                 }
@@ -488,24 +484,22 @@ class TrackerController extends Controller
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
 
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
-            } else {
-                $items =[];
+
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+
+                $this->processAndOutputCsvResponse($reader);
+
+                return '';
             } // end division and workcenter check
 
-            $data = [];
-            $data['results'] = $items;
+            $this->setCsvHeaders();
 
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
+            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -561,19 +555,15 @@ class TrackerController extends Controller
                 if (null!=$filterConditions) {
                     $query->andWhere($filterConditions);
                 }
-
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);
                 }
-
                 if (null!=$maxLat){
                     $query->andWhere(['<=','Latitude',$maxLat]);
                 }
-
                 if (null!=$minLong){
                     $query->andWhere(['>=','Longitude',$minLong]);
                 }
-
                 if (null!=$maxLong){
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
@@ -582,29 +572,22 @@ class TrackerController extends Controller
 
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->all();
-
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
 
-            } else {
-                $items =[];
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+
+                $this->processAndOutputCsvResponse($reader);
+
+                return '';
             } // end division and workcenter check
 
-            $data = [];
-            $data['results'] = $items;
+            $this->setCsvHeaders();
 
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
+            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -714,19 +697,15 @@ class TrackerController extends Controller
                         $query->andWhere($filterConditions);
                     }
                 }
-
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);
                 }
-
                 if (null!=$maxLat){
                     $query->andWhere(['<=','Latitude',$maxLat]);
                 }
-
                 if (null!=$minLong){
                     $query->andWhere(['>=','Longitude',$minLong]);
                 }
-
                 if (null!=$maxLong){
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
@@ -735,29 +714,21 @@ class TrackerController extends Controller
 
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->all();
-
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
 
-            } else {
-                $items =[];
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+                $this->processAndOutputCsvResponse($reader);
+
+                return '';
             } // end division and workcenter check
 
-            $data = [];
-            $data['results'] = $items;
+            $this->setCsvHeaders();
 
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
+            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -900,28 +871,21 @@ class TrackerController extends Controller
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
 
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->all();
-
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
-            } else {
-                $items =[];
+
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+                $this->processAndOutputCsvResponse($reader);
+
+                return '';
             } // end indications check
 
-            $data = [];
-            $data['results'] = $items;
+            $this->setCsvHeaders();
 
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
+            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -1014,19 +978,15 @@ class TrackerController extends Controller
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
-
                 if (null!=$minLat){
                     $query->andWhere(['>=','Latitude',$minLat]);
                 }
-
                 if (null!=$maxLat){
                     $query->andWhere(['<=','Latitude',$maxLat]);
                 }
-
                 if (null!=$minLong){
                     $query->andWhere(['>=','Longitude',$minLong]);
                 }
-
                 if (null!=$maxLong){
                     $query->andWhere(['<=','Longitude',$maxLong]);
                 }
@@ -1034,26 +994,23 @@ class TrackerController extends Controller
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
 
-                $items = $query->offset($offset)
+                $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-                $items = $items->queryAll();
 
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
-            } else {
-                $items =[];
+                $this->processAndOutputCsvResponse($reader);
+
+                return '';
             } // end division and workcenter check
 
-            $data = [];
-            $data['results'] = $items;
+            $this->setCsvHeaders();
 
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
+            return '';
+
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -1127,29 +1084,14 @@ class TrackerController extends Controller
                 $limit = $this->downloadItemsLimit;
                 $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
-
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
-                Yii::$app->response->format = Response::FORMAT_RAW;
-
-                $this->setCsvHeaders();
-                // TODO find a way to use Yii response but without storing the whole response content in a variable
-                $firstLine = true;
-                $fp = fopen('php://output','w');
-
-                while($row = $reader->read()){
-                    if($firstLine) {
-                        $firstLine = false;
-                        fputcsv($fp, array_keys($row));
-                    }
-                    fputcsv($fp, $row);
-                }
-                fclose($fp);
+                $this->processAndOutputCsvResponse($reader);
 
                 return '';
             } // end division and workcenter check
@@ -1223,25 +1165,12 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $items->sql;
+//                $sqlString = $queryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
-                Yii::$app->response->format = Response::FORMAT_RAW;
 
-                $this->setCsvHeaders();
-                // TODO find a way to use Yii response but without storing the whole response content in a variable
-                $firstLine = true;
-                $fp = fopen('php://output','w');
-
-                while($row = $reader->read()){
-                    if($firstLine) {
-                        $firstLine = false;
-                        fputcsv($fp, array_keys($row));
-                    }
-                    fputcsv($fp, $row);
-                }
-                fclose($fp);
+                $this->processAndOutputCsvResponse($reader);
 
                 return '';
             } // end division and workCenter check
@@ -1407,10 +1336,29 @@ class TrackerController extends Controller
         }
     }
 
+    // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');
-//        header('Content-Disposition: attachment; filename="export.csv"');
         header('Pragma: no-cache');
         header('Expires: 0');
+    }
+
+    // helper method for outputting csv data without storing the whole result
+    public function processAndOutputCsvResponse($reader){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $this->setCsvHeaders();
+        // TODO find a way to use Yii response but without storing the whole response content in a variable
+        $firstLine = true;
+        $fp = fopen('php://output','w');
+
+        while($row = $reader->read()){
+            if($firstLine) {
+                $firstLine = false;
+                fputcsv($fp, array_keys($row));
+            }
+            fputcsv($fp, $row);
+        }
+        fclose($fp);
     }
 }
