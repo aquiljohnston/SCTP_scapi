@@ -67,12 +67,17 @@ class EquipmentController extends Controller
         }
 	}
 	
-	//Parses Equipment Calibration Array from the activity json and calls appropriate helper method to store data into the table.
-	public static function calibrationParse($equipmentCalibrationArray, $client, $userUID)
+	//Parses Equipment Calibration Array from the activity json and stores it in the database
+	public static function calibrationParse($equipmentCalibrationArray, $client, $userUID, $activityUID)
 	{
 		try
 		{
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($client);
+			
 			$responseData = [];
+			$savedData = [];
 
 			if($equipmentCalibrationArray != null)
 			{
@@ -80,134 +85,96 @@ class EquipmentController extends Controller
 				$equipmentCalibrationCount = (count($equipmentCalibrationArray));
 				for ($i = 0; $i < $equipmentCalibrationCount; $i++)
 				{
-					//determine appropriate helper method
-					if ($equipmentCalibrationArray[$i]["UpdateFlag"] == 0)
+					if($equipmentCalibrationArray[$i] != null)
 					{
-						$savedData = self::calibrationCreate($equipmentCalibrationArray[$i], $client, $userUID);
-					}
-					if ($equipmentCalibrationArray[$i]["UpdateFlag"] == 1)
-					{
-						$savedData = self::calibrationUpdate($equipmentCalibrationArray[$i], $client, $userUID);
-					}
-					//add to response array
-					$responseData[] = $savedData;
+						//check for a previous record with the same UID
+						$previousCalibration = InspectionsEquipment::find()
+							->where(['InspecitonEquipmentUID' => $equipmentCalibrationArray[$i]['InspecitonEquipmentUID']])
+							->andwhere(['ActiveFlag' => 1])
+							->one();
+						
+						$initialPreviousRecord = $previousCalibration;
+						
+						//if no previous record exist create
+						if ($previousCalibration == null)
+						{
+							//new InspectionsEquipment model
+							$calibrationModel = new InspectionsEquipment();
+							//pass data to model
+							$calibrationModel->attributes = $equipmentCalibrationArray[$i];
+							//additional fields
+							$calibrationModel->ActivityUID = $activityUID;
+							$calibrationModel->CreatedUserUID = $userUID;
+							$calibrationModel->ModifiedUserUID = $userUID;
+							
+							try{
+								//save model
+								if($calibrationModel->save())
+								{
+									//add to response array
+									$savedData = $calibrationModel;
+									$actionType = 'create';
+								}
+								else
+								{
+									$savedData = 'Failed to Create Equipment Calibration Record';
+								}
+							}
+							catch(yii\db\Exception $e)
+							{
+								$savedData = $calibrationModel;
+							}
+						}
+						//else update the previous record
+						else
+						{
+							$previousCalibration->ActiveFlag = 0;
+							$previousCalibration->ModifiedUserUID = $userUID;
+							$revisionCount = $previousCalibration->Revision + 1;
+							//update previous record
+							if($previousCalibration->update())
+							{
+								//new calibrationModel model
+								$calibrationModel = new InspectionsEquipment();
+								//pass data to model
+								$calibrationModel->attributes = $equipmentCalibrationArray[$i];
+								//additional fields
+								$calibrationModel->Revision = $revisionCount;
+								$calibrationModel->ActivityUID = $activityUID;
+								$calibrationModel->CreatedUserUID = $userUID;
+								$calibrationModel->ModifiedUserUID = $userUID;
+								
+								try{
+									//save model
+									if($calibrationModel->save())
+									{
+										//add to response array
+										$savedData = $calibrationModel;
+										$actionType = 'update';
+									}
+									else
+									{
+										$previousCalibration->ActiveFlag = 1;
+										$previousCalibration->update();
+										$savedData = 'Failed To Save New Equipment Calibration Record';
+									}
+								}
+								catch(yii\db\Exception $e)
+								{
+									$savedData = $calibrationModel;
+								}
+							}
+							else
+							{
+								$savedData = 'Failed To Update Previous Equipment Calibration Record';
+							}
+						}
+						//add to response array
+						$responseData[] = $savedData;
+					}			
 				}
 			}
 			return $responseData;		
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-	}
-	
-	//creates a record in the inspections equipment table
-	public static function calibrationCreate($calibrationData, $client, $userUID)
-	{
-		try
-		{			
-			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($client);
-			
-			if($calibrationData != null)
-			{
-				$existingCalibration = InspectionsEquipment::find()
-					->where(['InspecitonEquipmentUID' => $calibrationData['InspecitonEquipmentUID']])
-					->one();
-					
-				if ($existingCalibration == null)
-				{
-					//new InspectionsEquipment model
-					$calibrationModel = new InspectionsEquipment();
-					//pass data to model
-					$calibrationModel->attributes = $calibrationData;
-					//additional fields
-					$calibrationModel->CreatedUserUID = $userUID;
-					$calibrationModel->ModifiedUserUID = $userUID;
-					
-					//save model
-					if($calibrationModel->save())
-					{
-						//add to response array
-						$savedData = $calibrationModel;
-					}
-					else
-					{
-						$savedData = 'Failed to Create Equipment Calibration Record';
-					}
-				}
-				else
-				{
-					$savedData = $existingCalibration;
-				}
-			}
-			return $savedData;		
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-	}
-	
-	//updates a record in the inspections equipment table
-	public static function calibrationUpdate($calibrationData, $client, $userUID)
-	{
-		try
-		{			
-			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($client);
-			
-			if($calibrationData != null)
-			{
-				//get previous calibration record
-				$previousCalibration = InspectionsEquipment::find()
-					->where(['EquipmentLogUID'=> $calibrationData["EquipmentLogUID"]])
-					->andWhere(['ActiveFlag' => 1])
-					->one();
-				$previousCalibration->ActiveFlag = 0;
-				$previousCalibration->ModifiedUserUID = $userUID;
-				$revisionCount = $previousCalibration->Revision + 1;
-				//update previous record
-				if($previousCalibration->update())
-				{
-					//new calibrationModel model
-					$calibrationModel = new InspectionsEquipment();
-					//pass data to model
-					$calibrationModel->attributes = $calibrationData;
-					//additional fields
-					$calibrationModel->Revision = $revisionCount;
-					$calibrationModel->CreatedUserUID = $userUID;
-					$calibrationModel->ModifiedUserUID = $userUID;
-					
-					//save model
-					if($calibrationModel->save())
-					{
-						//add to response array
-						$savedData = $calibrationModel;
-					}
-					else
-					{
-						$previousCalibration->ActiveFlag = 1;
-						$previousCalibration->update();
-						$savedData = 'Failed To New Save Equipment Calibration Record';
-					}
-				}
-				else
-				{
-					$savedData = 'Failed To Update Previous Equipment Calibration Record';
-				}
-			}
-			return $savedData;		
 		}
         catch(ForbiddenHttpException $e)
         {

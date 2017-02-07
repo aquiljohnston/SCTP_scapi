@@ -21,6 +21,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
 use \DateTime;
+use yii\data\Pagination;
 
 /**
  * MileageCardController implements the CRUD actions for MileageCard model.
@@ -290,7 +291,7 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($week)
+	public function actionGetCards($week, $listPerPage = null, $page = null)
 	{
 		// RBAC permission check is embedded in this action	
 		try
@@ -304,6 +305,8 @@ class MileageCardController extends BaseActiveController
 			
 			//response array of mileage cards
 			$mileageCardArray = [];
+            $mileageCardsArr = [];
+            $responseArray = [];
 			
 			//rbac permission check
 			if (PermissionsController::can('mileageCardGetAllCards'))
@@ -311,19 +314,19 @@ class MileageCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
 				{
-					$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
-						->orderBy('UserID,MileageStartDate,ProjectID')
-						->all();
-						
-					$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find();
+                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+                    $responseArray['assets'] = $mileageCardsArr;
+                    $responseArray['pages'] = $paginationResponse['pages'];
 				} 
 				elseif($week == 'current') 
 				{
-					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()
-						->orderBy('UserID,MileageStartDate,ProjectID')
-						->all();
-						
-					$mileageCardArray = array_map(function ($model) {return $model->attributes;},$mileageCards);
+					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find();
+                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+                    $responseArray['assets'] = $mileageCardsArr;
+                    $responseArray['pages'] = $paginationResponse['pages'];
 				}
 			} 
 			//rbac permission check
@@ -337,39 +340,41 @@ class MileageCardController extends BaseActiveController
 				$projectsSize = count($projects);
 				
 				//check if week is prior or current to determine appropriate view
-				if($week == 'prior')
+				if($week == 'prior' && $projectsSize > 0)
 				{
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 					for($i=0; $i < $projectsSize; $i++)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID; 
-							
-						$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
-							->where(['ProjectID' => $projectID])
-							->orderBy('UserID,MileageStartDate,ProjectID')
-							->all();
-						$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+						$projectID = $projects[$i]->ProjUserProjectID;
+                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
+                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
 					}
+                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+                    $responseArray['assets'] = $mileageCardsArr;
+                    $responseArray['pages'] = $paginationResponse['pages'];
 				} 
-				elseif($week == 'current') 
+				elseif($week == 'current' && $projectsSize > 0)
 				{
+                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 					for($i=0; $i < $projectsSize; $i++)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID; 
-						
-						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()
-							->where(['ProjectID' => $projectID])
-							->orderBy('UserID,MileageStartDate,ProjectID')
-							->all();
-						$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+						$projectID = $projects[$i]->ProjUserProjectID;
+                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
+						//$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
 					}
+                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+                    $responseArray['assets'] = $mileageCardsArr;
+                    $responseArray['pages'] = $paginationResponse['pages'];
 				}
 			}
 			else{
 				throw new ForbiddenHttpException;
 			}
-			if (!empty($mileageCardArray))
+			if (!empty($responseArray['assets']))
 			{
-				$response->data = $mileageCardArray;
+				$response->data = $responseArray;
 				$response->setStatusCode(200);
 				return $response;
 			}
@@ -384,4 +389,26 @@ class MileageCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+    public function paginationProcessor($assetQuery, $page, $listPerPage){
+
+        if($page != null)
+        {
+            // set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $pages->pageSizeLimit = [1,100];
+            $offset = $listPerPage*($page-1);
+            $pages->setPageSize($listPerPage);
+            $pages->pageParam = 'mileageCardPage';
+            $pages->params = ['per-page' => $listPerPage, 'mileageCardPage' => $page];
+
+            $assetQuery->offset($offset)
+                ->limit($listPerPage);
+
+            $asset['pages'] = $pages;
+            $asset['Query'] = $assetQuery;
+
+            return $asset;
+        }
+    }
 }

@@ -101,6 +101,9 @@ class PgeRbacController extends Controller
 		$submitMapStamp = $auth->createPermission('submitMapStamp');
 		$submitMapStamp->description = 'Submit a Map Stamp';
 		$auth->add($submitMapStamp);
+		$associateToMaintenancePlan = $auth->createPermission('associateToMaintenancePlan');
+		$associateToMaintenancePlan->description = 'Associate a Map Stamp Record to Different IR';
+		$auth->add($associateToMaintenancePlan);
 		
 		//AOC Permissions//
 		
@@ -255,6 +258,7 @@ class PgeRbacController extends Controller
 		$auth->addChild($supervisorSupport, $transferFLOC);
 		$auth->addChild($supervisorSupport, $editMapStampDetail);
 		$auth->addChild($supervisorSupport, $submitMapStamp);
+		$auth->addChild($supervisorSupport, $associateToMaintenancePlan);
 		
 		//add "Supervisor" role
 		$supervisor = $auth->createRole('Supervisor');

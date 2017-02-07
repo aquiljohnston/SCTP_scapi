@@ -17,9 +17,14 @@ use app\modules\v1\modules\pge\models\WebManagementTrackerBreadcrumbs;
 use app\modules\v1\modules\pge\models\WebManagementTrackerAOC;
 use app\modules\v1\modules\pge\models\WebManagementTrackerIndications;
 use app\modules\v1\modules\pge\models\WebManagementTrackerMapGridCompliance;
+use app\modules\v1\modules\pge\models\AssetAddressCGE;
+use app\modules\v1\modules\pge\models\PGEUser;
 
 class TrackerController extends Controller 
 {
+    public $mapResultsLimit = 300; // limits the maximum returned results for map api calls
+    public $downloadItemsLimit = 1000000; // limits the maximum number of results the csv file will contain
+    public $filtersLimit = 52; // limits the number of filter values for CGI or Breadcrumbs
 
 	public function behaviors()
 	{
@@ -38,14 +43,19 @@ class TrackerController extends Controller
                     'get-history-map-breadcrumbs' => ['get'],
                     'get-history-map-aocs' => ['get'],
                     'get-history-map-indications' => ['get'],
-                    'get-history-map-compliance' => ['get'],
                     'get-history-map-controls' => ['get'],
+                    'get-history-map-cgi' => ['get'],
+                    'get-recent-activity-map-info' => ['get'],
+                    'get-recent-activity-map-controls' => ['get'],
+                    'get-download-history-data' => ['get'],
+                    'get-download-recent-activity-data' => ['get']
 
                 ],  
             ];
 		return $behaviors;	
 	}
-	
+
+	// This methods doesn't appear to be used anymore in the web app. Would it be ok to remove it?
 	public function actionGet($employee = null, $trackingGroup = null, $deviceID = null, $startDate, $endDate/*, $distanceFactor, $timeFactor*/)
 	{
 		try
@@ -351,7 +361,9 @@ class TrackerController extends Controller
     }
 
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
-                                     $startDate = null, $endDate = null, $search = null)
+                                                   $startDate = null, $endDate = null, $search = null,
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                                   $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
     {
         try{
 
@@ -363,13 +375,19 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
 
-//                $query->innerJoinWith([
-//                    WebManagementTrackerBreadcrumbs::tableName() => function($q) {
-//                        $q->select(['*']);
-//                        $q->onCondition(['['.WebManagementTrackerHistory::tableName().'].[UID]'=>'['.WebManagementTrackerBreadcrumbs::tableName().'].[UID]']);
-//                    },
-//                ]);
-                $query->select(['*']);
+                $query->select([
+                    'tb.UID',
+                    'tb.LanID as Inspector',
+                    'tb.SrcDTLT as Datetime',
+                    'th.[House No] as [House No]',
+                    'th.Street',
+                    'th.City',
+                    'th.State',
+                    'tb.Latitude as Latitude',
+                    'tb.Longitude as Longitude',
+                    'tb.Speed as Speed',
+                    'tb.GPSAccuracy as Accuracy'
+                ]);
                 $query->from([
                     'th'=>'['.WebManagementTrackerHistory::tableName().']',
                 ]);
@@ -378,10 +396,601 @@ class TrackerController extends Controller
                     '[th].[UID]=[tb].[UID]'
                 );
 
+                $query->where(['[th].[Division]' => $division]);
+                $query->andWhere(["[th].[Work Center]" => $workCenter]);
+
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER([tb].LanID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+
+                } else if ($surveyor) {
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                }
+
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'th.Division', $search],
+                        ['like', 'th.Date', $search],
+                        ['like', 'th.[Surveyor / Inspector]', $search],
+                        ['like', 'th.[Work Center]', $search],
+                        ['like', 'th.Latitude', $search],
+                        ['like', 'th.Longitude', $search],
+                        ['like', 'th.[Date Time]', $search],
+                        ['like', 'th.[House No]', $search],
+                        ['like', 'th.Street', $search],
+                        ['like', 'th.Apt', $search],
+                        ['like', 'th.City', $search],
+                        ['like', 'th.State', $search],
+                        ['like', 'th.Landmark', $search],
+                        ['like', 'th.[Landmark Description]', $search],
+                        ['like', 'th.[Accuracy (Meters)]', $search]
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
+                }
+
+                if (null!=$minLat){
+                    $query->andWhere(['>=','tb.Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','tb.Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','tb.Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','tb.Longitude',$maxLong]);
+                }
+
+                /////////////////////////////////
+                // TODO filter by indications ( gradeType ) and aoc (AOCType) when/if the columns are available
+                /////////////////////////////////
+
+                $limit =$this->mapResultsLimit;
+                $offset = 0;
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapCgi($division=null, $workCenter=null, $surveyor = null,
+                                            $startDate = null, $endDate = null, $search = null,
+                                            $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                            $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+    {
+        try{
+
+            $headers = getallheaders();
+            if ($cgi) {
+                AssetAddressCGE::setClient($headers['X-Client']);
+                $query = AssetAddressCGE::find();
+
+                $query->select(['CreatedUserUID','SrcDTLT','Latitude','Longitude','StatusType','CGEReasonType','CGECardNo']);
+                $query->where(['ActiveFlag'=>'1']);
+                $sentCgis = explode(',',$cgi);
+                $filterConditions = null;
+                /*
+                 * construct an array of the form
+                 * ['CreatedUserUID'=>value] for one entry
+                 * [
+                 *   'or',
+                 *   ['CreatedUserUID'=>value1],
+                 *    ...
+                 *   ['CreatedUserUID'=>valuen]
+                 * ] -- for multiple entries
+                 */
+                foreach ($sentCgis as $sentCgi) {
+                    $uid = trim(strtolower($sentCgi));//trim(strtolower($sentCgis));
+                    if (''==$uid){
+                        continue;
+                    }
+                    if (null === $filterConditions){
+                        $filterConditions = ['CreatedUserUID'=>$uid];
+                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                        $filterConditions[]= ['CreatedUserUID'=>$uid];
+                    } else {
+                        $tmp = $filterConditions;
+                        $filterConditions=[];
+                        $filterConditions[0] = 'or';
+                        $filterConditions[]= $tmp;
+                        $filterConditions[]= ['CreatedUserUID'=>$uid];
+                    }
+                }
+                if (null!=$filterConditions) {
+                    $query->andWhere($filterConditions);
+                }
+
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+// TODO see if the workcenter, surveyor.... filter should be applied here
+
+                $limit =$this->mapResultsLimit;
+                $offset = 0;
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->all();
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
+                                            $startDate = null, $endDate = null, $search = null,
+                                            $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                            $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+    {
+        try{
+
+            $headers = getallheaders();
+            if ($aoc) {
+                WebManagementTrackerAOC::setClient($headers['X-Client']);
+                $query = WebManagementTrackerAOC::find();
+                $query->select([
+                    'UID',
+                    'LanID as Inspector',
+                    'SurveyDateTime as Datetime',
+                    'HouseNo as [House No]',
+                    'Street1 as Street',
+                    'City',
+                    'State',
+                    'Latitude',
+                    'Longitude',
+                    'AOCType as [AOC Type]'
+                ]);
+                if ($division){
+                    $query->andWhere(['[DIVISION]' => $division]);
+                }
+                if($workCenter){
+                    $query->andWhere(["[WORKCENTER]" => $workCenter]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
+                }
+
+                $sentAocs = explode(',',$aoc);
+                $filterConditions = null;
+                /*
+                 * construct an array of the form
+                 * ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value] for one entry
+                 * [
+                 *   'or',
+                 *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value1],
+                 *    ...
+                 *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>valuen]
+                 * ] -- for multiple entries
+                 */
+                foreach ($sentAocs as $sentAoc) {
+                    $aocTypeCode = intval(trim($sentAoc));
+                    if (null === $filterConditions){
+                        $filterConditions = ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                        $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                    } else {
+                        $tmp = $filterConditions;
+                        $filterConditions=[];
+                        $filterConditions[0] = 'or';
+                        $filterConditions[]= $tmp;
+                        $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                    }
+                }
+                $query->andWhere($filterConditions);
+
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(LanID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+                }
+
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+                // TODO apply the indications ( GradeType ) filter when/if the column will be available in the sql view
+
+                $limit =$this->mapResultsLimit;
+                $offset = 0;
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->all();
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+
+            } else {
+                $items =[];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['results'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
+                                                   $startDate = null, $endDate = null, $search = null,
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                                   $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+    {
+        try{
+
+            $headers = getallheaders();
+
+            if ($indications) {
+                WebManagementTrackerIndications::setClient($headers['X-Client']);
+                $query = WebManagementTrackerIndications::find();
+                $query->select([
+                    'UID',
+                    'LanID as Inspector',
+                    'SurveyDateTime as Datetime',
+                    'HouseNo as [House No]',
+                    'Street1 as Street',
+                    'City',
+                    'State',
+                    'Latitude',
+                    'Longitude',
+                    'AboveBelowGroundType as [Leak Source]',//'InitialLeakSourceType as [Leak Source]',
+                    'SORLType as [Leak SORL]',
+                    'fndEquipmentType as [Leak Found By]',//'FoundBy as [Leak Found By]',
+                    'grdEquipmentType as [Leak Grade By]',//'GradeBy as [Leak Grade By]',
+                    'ReadingGrade as [Leak % Gas]',
+                    'GradeType as [Leak Grade]'
+
+                ]);
+                $indPossibleValues = ['1'=>'1','2p'=>'2+','2'=>'2','3'=>'3'];
+
+                $sentIndications = explode(',',$indications);
+                $indFilterConditions = null;
+
+                /*
+                 * construct an array of the form
+                 * ['GradeType'=>value] for one entry
+                 * [
+                 *   'or',
+                 *   ['GradeType'=>value1],
+                 *    ...
+                 *   ['GradeType'=>valuen]
+                 * ] -- for multiple entries
+                 */
+                foreach ($sentIndications as $sentIndication) {
+                    $indKey = trim(strtolower($sentIndication));
+                    if (isset($indPossibleValues[$indKey])){
+                        if (null === $indFilterConditions){
+                            $indFilterConditions = ['GradeType'=>$indPossibleValues[$indKey]];
+                        } elseif ( isset($indFilterConditions[0]) && $indFilterConditions[0]=='or') {
+                            $indFilterConditions[]= ['GradeType'=>$indPossibleValues[$indKey]];
+                        } else {
+                            $tmp = $indFilterConditions;
+                            $indFilterConditions=[];
+                            $indFilterConditions[0] = 'or';
+                            $indFilterConditions[]= $tmp;
+                            $indFilterConditions[]= ['GradeType'=>$indPossibleValues[$indKey]];
+                        }
+                    }
+                }
+                $query->andWhere($indFilterConditions);
+
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LanID'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LanID'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LanID'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+                }
+
+                if ($division){
+                    $query->andWhere(['[DIVISION]' => $division]);
+                }
+                if($workCenter){
+                    $query->andWhere(["[WORKCENTER]" => $workCenter]);
+                }
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
+                }
+
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
+
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
+
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+                // TODO filter by AOCType when/if that column is available in the sql view
+                $limit =$this->mapResultsLimit;
+                $offset = 0;
+
+//                $items = $query->offset($offset)
+//                    ->limit($limit)
+//                    ->all();
+
+                $items = $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
+            } else {
+                $items =[];
+            } // end indications check
+
+            $data = [];
+            $data['results'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetRecentActivityMapInfo($division=null, $workCenter=null, $surveyor = null,
+                                                   $startDate = null, $endDate = null, $search = null,
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+    {
+        try{
+
+            $headers = getallheaders();
+
+            if ($division && $workCenter) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $query = WebManagementTrackerCurrentLocation::find();
+                $query->select([
+                    '[Surveyor / Inspector] as Inspector',
+                    'Date', // Date time is not present in the view
+//                    'City',
+//                    'State',
+                    'Latitude',
+                    'Longitude',
+                    '[Accuracy (Meters)] as Accuracy'
+                ]);
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
-                if ($surveyor) {
+                if ($surveyorBreadcrumbs) {
+                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(SurveyorLANID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
+
+                } else if ($surveyor) {
                     $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
@@ -389,19 +998,13 @@ class TrackerController extends Controller
                     $query->andWhere([
                         'or',
                         ['like', 'Division', $search],
-                        ['like', 'Date', $search],
+                        ['like', '[Date]', $search],
                         ['like', '[Surveyor / Inspector]', $search],
-                        ['like', 'Work Center', $search],
+                        ['like', '[Work Center]', $search],
                         ['like', 'Latitude', $search],
                         ['like', 'Longitude', $search],
-                        ['like', '[Date Time]', $search],
-                        ['like', 'House No', $search],
-                        ['like', 'Street', $search],
-                        ['like', 'Apt', $search],
-                        ['like', 'City', $search],
-                        ['like', 'State', $search],
-                        ['like', 'Landmark', $search],
-                        ['like', '[Landmark Description]', $search],
+                        ['like', '[Battery Level]', $search],
+                        ['like', '[GPS Type]', $search],
                         ['like', '[Accuracy (Meters)]', $search]
                     ]);
                 }
@@ -412,18 +1015,24 @@ class TrackerController extends Controller
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
-                $countQuery = clone $query;
+                if (null!=$minLat){
+                    $query->andWhere(['>=','Latitude',$minLat]);
+                }
 
-                /* page index is 0 based */
-//                $totalCount = $countQuery->count();
+                if (null!=$maxLat){
+                    $query->andWhere(['<=','Latitude',$maxLat]);
+                }
 
-//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-                //TODO define a clearer limit
-                $limit = 300;
+                if (null!=$minLong){
+                    $query->andWhere(['>=','Longitude',$minLong]);
+                }
+
+                if (null!=$maxLong){
+                    $query->andWhere(['<=','Longitude',$maxLong]);
+                }
+
+                $limit =$this->mapResultsLimit;
                 $offset = 0;
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->all();
 
                 $items = $query->offset($offset)
                     ->limit($limit)
@@ -454,74 +1063,275 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
-                                                   $startDate = null, $endDate = null, $search = null)
+    public function actionGetDownloadHistoryData($division, $workCenter=null, $surveyor = null, $startDate = null,
+                                              $endDate = null, $search = null)
+    {
+        try{
+            $headers = getallheaders();
+
+            if ($division && $workCenter) {
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $query = WebManagementTrackerHistory::find();
+
+                $query->select(
+                    [
+                        '[Date Time]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[House No]',
+                        '[Street]',
+                        '[Apt]',
+                        '[City]',
+                        '[State]',
+                        '[Landmark]',
+                        '[Landmark Description]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
+                $query->where(['Division' => $division]);
+                $query->andWhere(["Work Center" => $workCenter]);
+
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                }
+
+                if (trim($search)!=='') {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', 'Date', $search],
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', 'Work Center', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Date Time]', $search],
+                        ['like', 'House No', $search],
+                        ['like', 'Street', $search],
+                        ['like', 'Apt', $search],
+                        ['like', 'City', $search],
+                        ['like', 'State', $search],
+                        ['like', 'Landmark', $search],
+                        ['like', '[Landmark Description]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
+                    ]);
+                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = $this->downloadItemsLimit;
+                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
+
+
+                $queryCommand= $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+                Yii::$app->response->format = Response::FORMAT_RAW;
+
+                $this->setCsvHeaders();
+                // TODO find a way to use Yii response but without storing the whole response content in a variable
+                $firstLine = true;
+                $fp = fopen('php://output','w');
+
+                while($row = $reader->read()){
+                    if($firstLine) {
+                        $firstLine = false;
+                        fputcsv($fp, array_keys($row));
+                    }
+                    fputcsv($fp, $row);
+                }
+                fclose($fp);
+
+                return '';
+            } // end division and workcenter check
+
+            $this->setCsvHeaders();
+            //send response
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetDownloadRecentActivityData($division, $workCenter=null, $surveyor = null, $startDate = null,
+                                                     $endDate = null, $search = null)
     {
         try{
 
             $headers = getallheaders();
-// TODO define and apply filters
-//            if ($division && $workCenter) {
-            WebManagementTrackerAOC::setClient($headers['X-Client']);
-            $query = WebManagementTrackerAOC::find();
-//                $query->where(['Division' => $division]);
-//                $query->andWhere(["Work Center" => $workCenter]);
 
-//                if ($surveyor) {
-//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
-//                }
+            if ($division && $workCenter) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $query = WebManagementTrackerCurrentLocation::find();
 
-//                if (trim($search)) {
-//                    $query->andWhere([
-//                        'or',
-//                        ['like', 'Division', $search],
-//                        ['like', 'Date', $search],
-//                        ['like', '[Surveyor / Inspector]', $search],
-//                        ['like', 'Work Center', $search],
-//                        ['like', 'Latitude', $search],
-//                        ['like', 'Longitude', $search],
-//                        ['like', '[Date Time]', $search],
-//                        ['like', 'House No', $search],
-//                        ['like', 'Street', $search],
-//                        ['like', 'Apt', $search],
-//                        ['like', 'City', $search],
-//                        ['like', 'State', $search],
-//                        ['like', 'Landmark', $search],
-//                        ['like', '[Landmark Description]', $search],
-//                        ['like', '[Accuracy (Meters)]', $search]
-//                    ]);
-//                }
-//                if ($startDate !== null && $endDate !== null) {
-            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-//
-//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
-//                }
+                $query->select(
+                    [
+                        '[Date]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[Battery Level]',
+                        '[GPS Type]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
+                $query->where(['Division' => $division]);
+                $query->andWhere(["Work Center" => $workCenter]);
 
-            $countQuery = clone $query;
+                if ($surveyor) {
+                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                }
 
-            /* page index is 0 based */
-            $totalCount = $countQuery->count();
+                if (trim($search)) {
+                    $query->andWhere([
+                        'or',
+                        ['like', 'Division', $search],
+                        ['like', '[Date]', $search],
+                        ['like', '[Surveyor / Inspector]', $search],
+                        ['like', '[Work Center]', $search],
+                        ['like', 'Latitude', $search],
+                        ['like', 'Longitude', $search],
+                        ['like', '[Battery Level]', $search],
+                        ['like', '[GPS Type]', $search],
+                        ['like', '[Accuracy (Meters)]', $search]
+                    ]);
+                }
 
-//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-            //TODO define a clearer limit
-            $limit = 300;
-            $offset = 0;
-            $items = $query->offset($offset)
-                ->limit($limit)
-                ->all();
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
-//            } else {
-//                $pages = new Pagination(['totalCount' => 0]);
-//                $pages->pageSizeLimit = [1, 100];
-//                $pages->setPage(0);
-//                $pages->setPageSize($perPage);
-//                $items =[];
-//            } // end division and workcenter check
+                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = $this->downloadItemsLimit;
+
+                $queryCommand= $query->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $items->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+
+                $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
+                Yii::$app->response->format = Response::FORMAT_RAW;
+
+                $this->setCsvHeaders();
+                // TODO find a way to use Yii response but without storing the whole response content in a variable
+                $firstLine = true;
+                $fp = fopen('php://output','w');
+
+                while($row = $reader->read()){
+                    if($firstLine) {
+                        $firstLine = false;
+                        fputcsv($fp, array_keys($row));
+                    }
+                    fputcsv($fp, $row);
+                }
+                fclose($fp);
+
+                return '';
+            } // end division and workCenter check
+
+            //send response
+            $this->setCsvHeaders();
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetHistoryMapControls($division=null, $workCenter=null,
+                                           $startDate = null, $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+            if (null !==$division && null !==$workCenter && null !== $startDate && null !== $endDate) {
+                AssetAddressCGE::setClient($headers['X-Client']);
+                $cgiQuery= AssetAddressCGE::find();
+
+                $cgiQuery->select([
+                    'Key'=>'CreatedUserUID',
+                    'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName)"
+//                    'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName,' (',u.UserLANID ,')')"
+                ])->distinct();
+                $cgiQuery->from([
+                    'ac'=>'['.AssetAddressCGE::tableName().']',
+                ]);
+                $cgiQuery->innerJoin(
+                    ['u'=>PGEUser::tableName()],
+                    '[ac].[CreatedUserUID]=[u].[UserUID]'
+                );
+
+                $cgiQuery->where(['ActiveFlag'=>'1']);
+                $cgiQuery->orderBy(['CreatedUserUID' => SORT_ASC]);
+
+                $limit = $this->filtersLimit;
+                $offset = 0;
+//TODO see how to filter the results from CGE by workcenter, division, startDate and endDate
+                $uidsQueryCommand = $cgiQuery->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $uidsQueryCommand->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $cgiUids = $uidsQueryCommand->queryAll();
+
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $lanIdsQuery = WebManagementTrackerHistory::find();
+
+                $lanIdsQuery->select(
+                    [
+                        'Key'=>'LOWER([SurveyorLANID])',
+                        'DisplayedText'=>'[Surveyor / Inspector]'
+                    ]
+                )->distinct();
+                $lanIdsQuery->where(['Division' => $division]);
+                $lanIdsQuery->andWhere(['Work Center' => $workCenter]);
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    $lanIdsQuery->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = $this->filtersLimit;
+                $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
+
+
+                $lanIdsQueryCommand = $lanIdsQuery->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $lanIdsQueryCommand->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $surveyors = $lanIdsQueryCommand->queryAll();
+
+                $items = ['cgiFilters'=>$cgiUids,'surveyorFilters'=>$surveyors];
+
+            } else {
+                $items = ['cgiFilters'=>[],'surveyorFilters'=>[]];
+            } // end division and workcenter check
 
             $data = [];
-            $data['results'] = $items;
-//            $data['pages'] = $pages;
+            $data['controls'] = $items;
 
             //send response
             $response = Yii::$app->response;
@@ -537,74 +1347,51 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
-                                                   $startDate = null, $endDate = null, $search = null)
+    public function actionGetRecentActivityMapControls($division=null, $workCenter=null,
+                                                $startDate = null, $endDate = null, $search = null)
     {
         try{
 
             $headers = getallheaders();
-// TODO define and apply filters
-//            if ($division && $workCenter) {
-            WebManagementTrackerIndications::setClient($headers['X-Client']);
-            $query = WebManagementTrackerIndications::find();
-//                $query->where(['Division' => $division]);
-//                $query->andWhere(["Work Center" => $workCenter]);
+            if (null !==$division && null !==$workCenter && null !== $startDate && null !== $endDate) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $lanIdsQuery = WebManagementTrackerCurrentLocation::find();
 
-//                if ($surveyor) {
-//                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
-//                }
+                $lanIdsQuery->select(
+                    [
+                        'Key'=>'LOWER([SurveyorLANID])',
+                        'DisplayedText'=>'[Surveyor / Inspector]'
+                    ]
+                )->distinct();
+                $lanIdsQuery->where(['Division' => $division]);
+                $lanIdsQuery->andWhere(['Work Center' => $workCenter]);
 
-//                if (trim($search)) {
-//                    $query->andWhere([
-//                        'or',
-//                        ['like', 'Division', $search],
-//                        ['like', 'Date', $search],
-//                        ['like', '[Surveyor / Inspector]', $search],
-//                        ['like', 'Work Center', $search],
-//                        ['like', 'Latitude', $search],
-//                        ['like', 'Longitude', $search],
-//                        ['like', '[Date Time]', $search],
-//                        ['like', 'House No', $search],
-//                        ['like', 'Street', $search],
-//                        ['like', 'Apt', $search],
-//                        ['like', 'City', $search],
-//                        ['like', 'State', $search],
-//                        ['like', 'Landmark', $search],
-//                        ['like', '[Landmark Description]', $search],
-//                        ['like', '[Accuracy (Meters)]', $search]
-//                    ]);
-//                }
-//                if ($startDate !== null && $endDate !== null) {
-            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-//                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-//
-//                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
-//                }
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    $lanIdsQuery->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
 
-            $countQuery = clone $query;
+                $offset = 0;
+                $limit = $this->filtersLimit;
+                $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
 
-            /* page index is 0 based */
-            $totalCount = $countQuery->count();
 
-//                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-            //TODO define a clearer limit
-            $limit = 300;
-            $offset = 0;
-            $items = $query->offset($offset)
-                ->limit($limit)
-                ->all();
+                $lanIdsQueryCommand = $lanIdsQuery->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $lanIdsQueryCommand->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $surveyors = $lanIdsQueryCommand->queryAll();
 
-//            } else {
-//                $pages = new Pagination(['totalCount' => 0]);
-//                $pages->pageSizeLimit = [1, 100];
-//                $pages->setPage(0);
-//                $pages->setPageSize($perPage);
-//                $items =[];
-//            } // end division and workcenter check
+                $items = ['surveyorFilters'=>$surveyors];
+
+            } else {
+                $items = ['cgiFilters'=>[],'surveyorFilters'=>[]];
+            } // end division and workcenter check
 
             $data = [];
-            $data['results'] = $items;
-//            $data['pages'] = $pages;
+            $data['controls'] = $items;
 
             //send response
             $response = Yii::$app->response;
@@ -620,81 +1407,10 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapCompliance($division=null, $workCenter=null, $surveyor = null,
-                                                   $startDate = null, $endDate = null, $search = null)
-    {
-        try{
-
-            $headers = getallheaders();
-// TODO define and apply filters
-//            if ($division && $workCenter) {
-            WebManagementTrackerMapGridCompliance::setClient($headers['X-Client']);
-            $query = WebManagementTrackerMapGridCompliance::find();
-//            $query->where(['Division' => $division]);
-//            $query->andWhere(["Work Center" => $workCenter]);
-//
-//            if ($surveyor) {
-//                $query->andWhere(["Surveyor / Inspector" => $surveyor]);
-//            }
-//
-//            if (trim($search)) {
-//                $query->andWhere([
-//                    'or',
-//                    ['like', 'Division', $search],
-//                    ['like', 'Date', $search],
-//                    ['like', '[Surveyor / Inspector]', $search],
-//                    ['like', 'Work Center', $search],
-//                    ['like', 'Latitude', $search],
-//                    ['like', 'Longitude', $search],
-//                    ['like', '[Date Time]', $search],
-//                    ['like', 'House No', $search],
-//                    ['like', 'Street', $search],
-//                    ['like', 'Apt', $search],
-//                    ['like', 'City', $search],
-//                    ['like', 'State', $search],
-//                    ['like', 'Landmark', $search],
-//                    ['like', '[Landmark Description]', $search],
-//                    ['like', '[Accuracy (Meters)]', $search]
-//                ]);
-//            }
-//            if ($startDate !== null && $endDate !== null) {
-                // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-//                $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-//
-//                $query->andWhere(['between', 'Date', $startDate, $endDate]);
-//            }
-
-            $countQuery = clone $query;
-
-            /* page index is 0 based */
-            $totalCount = $countQuery->count();
-
-//            $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
-            //TODO define a clearer limit
-            $limit = 300;
-            $offset = 0;
-            $items = $query->offset($offset)
-                ->limit($limit)
-                ->all();
-
-//            } else {
-//                $items =[];
-//            } // end division and workcenter check
-
-            $data = [];
-            $data['results'] = $items;
-
-            //send response
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $data;
-            return $response;
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
-        }
+    public function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+//        header('Content-Disposition: attachment; filename="export.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
     }
 }
