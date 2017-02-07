@@ -46,6 +46,7 @@ class TrackerController extends Controller
                     'get-history-map-controls' => ['get'],
                     'get-history-map-cgi' => ['get'],
                     'get-recent-activity-map-info' => ['get'],
+                    'get-recent-activity-map-controls' => ['get'],
                     'get-download-history-data' => ['get'],
                     'get-download-recent-activity-data' => ['get']
 
@@ -53,7 +54,8 @@ class TrackerController extends Controller
             ];
 		return $behaviors;	
 	}
-	
+
+	// This methods doesn't appear to be used anymore in the web app. Would it be ok to remove it?
 	public function actionGet($employee = null, $trackingGroup = null, $deviceID = null, $startDate, $endDate/*, $distanceFactor, $timeFactor*/)
 	{
 		try
@@ -648,29 +650,6 @@ class TrackerController extends Controller
 
                     $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
                 }
-
-//                $aocPossibleValues = ['19'=>'19',
-//                    '31'=>'31',
-//                    '32'=>'32',
-//                    '33'=>'33',
-//                    '23'=>'23',
-//                    '30'=>'30',
-//                    '20'=>'20',
-//                    '34'=>'34',
-//                    '35'=>'35',
-//                    '36'=>'36',
-//                    '37'=>'37',
-//                    '38'=>'38',
-//                    '39'=>'39',
-//                    '51'=>'51',
-//                    '52'=>'52',
-//                    '54'=>'54',
-//                    '56'=>'56',
-//                    '57'=>'57',
-//                    '58'=>'58',
-//                    '59'=>'59',
-//                    '99'=>'99',
-//                ];
 
                 $sentAocs = explode(',',$aoc);
                 $filterConditions = null;
@@ -1368,6 +1347,65 @@ class TrackerController extends Controller
         }
     }
 
+    public function actionGetRecentActivityMapControls($division=null, $workCenter=null,
+                                                $startDate = null, $endDate = null, $search = null)
+    {
+        try{
+
+            $headers = getallheaders();
+            if (null !==$division && null !==$workCenter && null !== $startDate && null !== $endDate) {
+                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
+                $lanIdsQuery = WebManagementTrackerCurrentLocation::find();
+
+                $lanIdsQuery->select(
+                    [
+                        'Key'=>'LOWER([SurveyorLANID])',
+                        'DisplayedText'=>'[Surveyor / Inspector]'
+                    ]
+                )->distinct();
+                $lanIdsQuery->where(['Division' => $division]);
+                $lanIdsQuery->andWhere(['Work Center' => $workCenter]);
+
+                if ($startDate !== null && $endDate !== null) {
+                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    $lanIdsQuery->andWhere(['between', 'Date', $startDate, $endDate]);
+                }
+
+                $offset = 0;
+                $limit = $this->filtersLimit;
+                $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
+
+
+                $lanIdsQueryCommand = $lanIdsQuery->offset($offset)
+                    ->limit($limit)
+                    ->createCommand();
+//                $sqlString = $lanIdsQueryCommand->sql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $surveyors = $lanIdsQueryCommand->queryAll();
+
+                $items = ['surveyorFilters'=>$surveyors];
+
+            } else {
+                $items = ['cgiFilters'=>[],'surveyorFilters'=>[]];
+            } // end division and workcenter check
+
+            $data = [];
+            $data['controls'] = $items;
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $data;
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
 
     public function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');
