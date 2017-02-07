@@ -26,6 +26,7 @@ use app\modules\v1\modules\pge\models\WebManagementUsers;
 use app\modules\v1\modules\pge\models\WebManagementDivisionWorkCenterFLOCWithIR;
 use app\modules\v1\modules\pge\models\WebManagementDivisionWorkCenterFLOC;
 use app\modules\v1\modules\pge\models\WebManagementMapStampDropDown;
+use app\modules\v1\modules\pge\models\WebManagementDropDownAssociatePlanIR;
 use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocationDropDown;
 use app\modules\v1\modules\pge\models\WebManagementTrackerHistoryDropDown;
 //assigned
@@ -1277,6 +1278,7 @@ class DropdownController extends Controller
 			$data = WebManagementDropDownAOCSurveyor::find()
 				->where(['Division'=>$division])
 				->andWhere(['WorkCenter'=>$workCenter])
+				->orderBy('Surveyor ASC')
                 ->all();
             $namePairs = [null => 'All'];
             $dataSize = count($data);
@@ -1609,7 +1611,7 @@ class DropdownController extends Controller
             CityCounty::setClient($headers['X-Client']);
             // cityList﻿
             // TODO find a better way that selecting all the cities if there are a lot of cities
-            $responseData['dropdowns']['cityList']= CityCounty::find()->select(['City'])->all();
+            $responseData['dropdowns']['cityList']= CityCounty::find()->select(['City'])->orderBy('City ASC')->all();
 
 //            $mapGridUid = 'MapGrid_852695586_20160824220014_System';
             //﻿routeNames
@@ -1750,6 +1752,132 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+    /////////// End WebManagement MapStamp Equipment Services PIC dropdowns //////////////
+
+    /////////// Start WebManagement MapStamp Associate Plan downdown //////////////
+    public function actionGetMapStampAssociatePlanWorkCenterDropDown()
+    {
+        try {
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
+
+            $namePairs = [];
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['WorkCenter'])->distinct()->orderBy('WorkCenter')->all();
+
+            $namePairs = [null => "Select..."];
+            $dataSize = count($query);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$query[$i]->WorkCenter]= $query[$i]->WorkCenter;
+            }
+
+            //send response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetMapStampAssociatePlanFlocDropDown($workcenter){
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
+
+            $namePairs = [];
+            $query = WebManagementDropDownAssociatePlanIR::find()->select('FLOC')->distinct()->where(['WorkCenter'=>$workcenter])->orderBy('FLOC')->all();
+
+            $dataSize = count($query);
+
+            for ($i = 0; $i < $dataSize; $i++) {
+                $namePairs[] = [
+                    'id' => $query[$i]->FLOC,
+                    'name' => $query[$i]->FLOC];
+            }
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetMapStampAssociatePlanSurveyFreqDropDown($workcenter, $floc){
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
+
+            $namePairs = [];
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['SurveyType'])->distinct()->where(['WorkCenter'=>$workcenter])->andWhere(['FLOC'=>$floc])->orderBy('SurveyType')->all();
+            $dataSize = count($query);
+
+            for ($i = 0; $i < $dataSize; $i++) {
+                $namePairs[] = [
+                    'id' => $query[$i]->SurveyType,
+                    'name' => $query[$i]->SurveyType];
+            }
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetMapStampAssociatePlanInspectionRequestDropDown($workcenter, $floc, $surveyfreq){
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
+
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['InspectionRequestUID'])->where(['WorkCenter'=>$workcenter])->andWhere(['FLOC'=>$floc])->andWhere(['SurveyType'=>$surveyfreq])->one();
+            $responseData = $query;
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $responseData;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
     /////////// End WebManagement MapStamp Equipment Services PIC dropdowns //////////////
 
 

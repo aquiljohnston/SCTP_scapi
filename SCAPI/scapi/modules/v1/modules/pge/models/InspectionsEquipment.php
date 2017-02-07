@@ -45,6 +45,7 @@ use Yii;
  * @property double $PGASRead
  * @property string $SCOPMethod
  * @property integer $StationPass
+ * @property string $ActivityUID
  */
 class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
 {
@@ -62,7 +63,7 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspecitonEquipmentUID', 'InspectorOQLogUID', 'EquipmentLogUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'EquipmentType', 'SerialNumber', 'PrNtfNo', 'SAPEqID', 'MWC', 'MPRStatus', 'SafetyIssue', 'InstrumentAge', 'MasterLeakLogUID', 'StatusType', 'SCOPMethod'], 'string'],
+            [['InspecitonEquipmentUID', 'InspectorOQLogUID', 'EquipmentLogUID', 'SourceID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'RevisionComments', 'EquipmentType', 'SerialNumber', 'PrNtfNo', 'SAPEqID', 'MWC', 'MPRStatus', 'SafetyIssue', 'InstrumentAge', 'MasterLeakLogUID', 'StatusType', 'SCOPMethod', 'ActivityUID'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'LastEquipmentDayFlag', 'CalibrationVerificationFlag', 'MPRFlag', 'IsUsedToday', 'LaserCalb', 'StationPass'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset', 'CalbDate'], 'safe'],
             [['ReadPPM', 'AlarmPPM', 'OMDExmQty', 'PLELRead', 'PGASRead'], 'number']
@@ -113,6 +114,7 @@ class InspectionsEquipment extends \app\modules\v1\models\BaseActiveRecord
             'PGASRead' => 'Pgasread',
             'SCOPMethod' => 'Scopmethod',
             'StationPass' => 'Station Pass',
+            'ActivityUID' => 'Activity Uid',
         ];
     }
 }

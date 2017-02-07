@@ -15,6 +15,7 @@ class WebManagementTrackerCurrentLocation extends \app\modules\v1\models\BaseAct
      */
     public static function tableName()
     {
+//        return 'vWebManagementTrackerCurrentLocation_Q';
         return 'vWebManagementTrackerCurrentLocation';
     }
 }

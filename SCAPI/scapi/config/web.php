@@ -13,7 +13,10 @@ $config = [
 		'v1' => [
 			'class' => 'app\modules\v1\Module',
 		],
-	],
+        'v2' => [
+            'class' => 'app\modules\v2\Module'
+        ]
+    ],
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation

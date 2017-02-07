@@ -15,6 +15,6 @@ class WebManagementTrackerIndications extends \app\modules\v1\models\BaseActiveR
      */
     public static function tableName()
     {
-        return 'vWebManagementTrackerIndications_Q';
+        return 'vWebManagementTrackerIndications';
     }
 }
