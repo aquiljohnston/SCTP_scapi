@@ -169,9 +169,9 @@ class UserController extends BaseActiveController
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userUpdate');
-
+			
             if ($jsonData != null) {
-                $data = $jsonData;
+				$data = json_decode($jsonData, true);
             } else {
                 $put = file_get_contents("php://input");
                 $data = json_decode($put, true);
@@ -195,7 +195,7 @@ class UserController extends BaseActiveController
                 return 'no id or username';
                 throw new \yii\web\HttpException(400);
             }
-
+			
             $currentRole = $user['UserAppRoleType'];
 
             PermissionsController::requirePermission('userUpdate' . $currentRole);
@@ -207,7 +207,7 @@ class UserController extends BaseActiveController
 
             //handle the password
             //get pass from data
-            if (array_key_exists('UserPassword', $data)) {
+            if (array_key_exists('UserPassword', $data) && $jsonData == null) {
                 $securedPass = $data['UserPassword'];
 
                 //decrypt password
@@ -267,9 +267,10 @@ class UserController extends BaseActiveController
                     //if client is populated than original call was to a client controller in which the record has already been updated
                     //so an update does not need to be preformed for that project again
                     if ($project->ProjectUrlPrefix == $client) {
+						$responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
                         continue;
                     }
-
+						
                     //get model from base active record based on urlPrefix in project
                     $userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
                     $userModel::setClient($project->ProjectUrlPrefix);
@@ -284,7 +285,6 @@ class UserController extends BaseActiveController
                         $responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
                     }
                 }
-
             } else {
                 return 'failed to update base user';
                 throw new \yii\web\HttpException(400);

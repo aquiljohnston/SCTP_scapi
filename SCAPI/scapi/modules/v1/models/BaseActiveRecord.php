@@ -31,7 +31,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//beta client database
 	const BETA_DEV = 'betadev';
 	//beta user model
-	//const BETA_USER= 'In Progress';
+	const BETA_USER= 'app\modules\v1\modules\beta\models\BetaUser';
 	
 	public static function getClient()
 	{
@@ -91,17 +91,17 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::CT_USER;
 		}
-		//PGE
-		if($client == self::PGE_DEV 
-		|| $client == self::PGE_STAGE
-		|| $client == self::PGE_PROD)
+		//Beta
+		if($client == self::BETA_DEV)
 		{
-			return self::PGE_USER;
+			return self::BETA_USER;
 		}
-		//Beta - In Progress
-		// if($client == self::BETA_DEV)
+		//PGE - Deos not use standard user propagation
+		// if($client == self::PGE_DEV 
+		// || $client == self::PGE_STAGE
+		// || $client == self::PGE_PROD)
 		// {
-			// return self::BETA_USER;
+			// return self::PGE_USER;
 		// }
 		return null;
 	}
