@@ -251,7 +251,6 @@ class UserController extends BaseActiveController
                 $responseArray = $user->attributes;
 
                 //propagate update to all associated projects
-                //should this be a function call?
                 //find all projects
                 $projectUser = ProjectUser::find()
                     ->select('ProjUserProjectID')
@@ -273,6 +272,7 @@ class UserController extends BaseActiveController
 						
                     //get model from base active record based on urlPrefix in project
                     $userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+					if($userModel == null) continue;
                     $userModel::setClient($project->ProjectUrlPrefix);
                     $projectUser = $userModel::find()
                         ->where(['UserName' => $username])
@@ -282,6 +282,15 @@ class UserController extends BaseActiveController
                     $projectUser->attributes = $data;
 
                     if ($projectUser->update()) {
+						 //handle potential role change
+						$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+						if($projectAuthClass != null){
+							$projectAuth = new $projectAuthClass($userModel::getDb());
+							if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+								$projectAuth->revokeAll($projectUser['UserID']);
+								$projectAuth->assign($userRole, $projectUser['UserID']);
+							}
+						}	
                         $responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
                     }
                 }
@@ -296,7 +305,7 @@ class UserController extends BaseActiveController
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
-    }
+    } 
 
     /**
      * Gets the data for a user based on a user id
