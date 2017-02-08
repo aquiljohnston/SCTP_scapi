@@ -1962,7 +1962,7 @@ class DropdownController extends Controller
             WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
 
             $values = WebManagementTrackerCurrentLocationDropDown::find()
-                ->select(['Surveyor'])
+                ->select(['Surveyor','SurveyorLANID'])
                 ->where(['Division' => $division])
                 ->andWhere(['WorkCenter' => $workCenter])
                 ->andWhere(['not' ,['Division' => null]])
@@ -1974,7 +1974,7 @@ class DropdownController extends Controller
             $results = [];
             foreach ($values as $value) {
                 $results[] = [
-                    "id" => $value["Surveyor"],
+                    "id" => strtolower($value["SurveyorLANID"]),
                     "name" => $value["Surveyor"]
                 ];
             }
@@ -2073,7 +2073,7 @@ class DropdownController extends Controller
             WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
 
             $values = WebManagementTrackerHistoryDropDown::find()
-                ->select(['Surveyor'])
+                ->select(['Surveyor','SurveyorLANID'])
                 ->where(['Division' => $division])
                 ->andWhere(['WorkCenter' => $workCenter])
                 ->andWhere(['not' ,['Division' => null]])
@@ -2085,7 +2085,7 @@ class DropdownController extends Controller
             $results = [];
             foreach ($values as $value) {
                 $results[] = [
-                    "id" => $value["Surveyor"],
+                    "id" => strtolower($value["SurveyorLANID"]),
                     "name" => $value["Surveyor"]
                 ];
             }
