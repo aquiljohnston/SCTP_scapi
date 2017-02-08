@@ -193,7 +193,7 @@ class TrackerController extends Controller
                 $query->andWhere(["Work Center" => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                    $query->andWhere(["LOWER(SurveyorLANID)" => $surveyor]);
                 }
 
                 if (trim($search)) {
@@ -280,7 +280,7 @@ class TrackerController extends Controller
                 $query->andWhere(["Work Center" => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                    $query->andWhere(["LOWER(SurveyorLANID)" => $surveyor]);
                 }
 
                 if (trim($search)) {
@@ -360,10 +360,10 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyor = null,
+    public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyors = null,
                                                    $startDate = null, $endDate = null, $search = null,
                                                    $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                                   $cgi=null, $aoc=null, $indications=null)
     {
         try{
 
@@ -399,8 +399,8 @@ class TrackerController extends Controller
                 $query->where(['[th].[Division]' => $division]);
                 $query->andWhere(["[th].[Work Center]" => $workCenter]);
 
-                if ($surveyorBreadcrumbs) {
-                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                if ($surveyors) {
+                    $sentLanIds = explode(',',$surveyors);
                     $filterConditions = null;
 
                     /*
@@ -434,8 +434,6 @@ class TrackerController extends Controller
                         $query->andWhere($filterConditions);
                     }
 
-                } else if ($surveyor) {
-                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
                 if (trim($search)) {
@@ -509,10 +507,10 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapCgi($division=null, $workCenter=null, $surveyor = null,
+    public function actionGetHistoryMapCgi($division=null, $workCenter=null, $surveyors = null,
                                             $startDate = null, $endDate = null, $search = null,
                                             $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                            $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                            $cgi=null, $aoc=null, $indications=null)
     {
         try{
 
@@ -597,10 +595,10 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyor = null,
+    public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyors = null,
                                             $startDate = null, $endDate = null, $search = null,
                                             $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                            $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                            $cgi=null, $aoc=null, $indications=null)
     {
         try{
 
@@ -663,8 +661,8 @@ class TrackerController extends Controller
                 }
                 $query->andWhere($filterConditions);
 
-                if ($surveyorBreadcrumbs) {
-                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                if ($surveyors) {
+                    $sentLanIds = explode(',',$surveyors);
                     $filterConditions = null;
 
                     /*
@@ -739,10 +737,10 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyor = null,
+    public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyors = null,
                                                    $startDate = null, $endDate = null, $search = null,
                                                    $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $compliance=null, $cgi=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                                   $cgi=null, $aoc=null, $indications=null)
     {
         try{
 
@@ -802,8 +800,8 @@ class TrackerController extends Controller
                 }
                 $query->andWhere($indFilterConditions);
 
-                if ($surveyorBreadcrumbs) {
-                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                if ($surveyors) {
+                    $sentLanIds = explode(',',$surveyors);
                     $filterConditions = null;
 
                     /*
@@ -1049,7 +1047,7 @@ class TrackerController extends Controller
                 $query->andWhere(["Work Center" => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                    $query->andWhere(["LOWER(SurveyorLANID)" => $surveyor]);
                 }
 
                 if (trim($search)!=='') {
@@ -1133,7 +1131,7 @@ class TrackerController extends Controller
                 $query->andWhere(["Work Center" => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
+                    $query->andWhere(["LOWER(SurveyorLANID)" => $surveyor]);
                 }
 
                 if (trim($search)) {
