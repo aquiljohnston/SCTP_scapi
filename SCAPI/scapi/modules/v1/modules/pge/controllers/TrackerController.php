@@ -618,7 +618,8 @@ class TrackerController extends Controller
                     'State',
                     'Latitude',
                     'Longitude',
-                    'AOCType as [AOC Type]'
+                    'AOCType as [AOC Type]',
+                    'RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1)) as AOC'
                 ]);
                 if ($division){
                     $query->andWhere(['[DIVISION]' => $division]);
