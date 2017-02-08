@@ -895,10 +895,9 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetRecentActivityMapInfo($division=null, $workCenter=null, $surveyor = null,
+    public function actionGetRecentActivityMapInfo($division=null, $workCenter=null, $surveyors = null,
                                                    $startDate = null, $endDate = null, $search = null,
-                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $compliance=null, $aoc=null, $indications=null, $surveyorBreadcrumbs = null)
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null)
     {
         try{
 
@@ -914,13 +913,14 @@ class TrackerController extends Controller
 //                    'State',
                     'Latitude',
                     'Longitude',
-                    '[Accuracy (Meters)] as Accuracy'
+                    '[Accuracy (Meters)] as Accuracy',
+                    'LOWER([SurveyorLANID]) as SurveyorLanId'
                 ]);
                 $query->where(['Division' => $division]);
                 $query->andWhere(["Work Center" => $workCenter]);
 
-                if ($surveyorBreadcrumbs) {
-                    $sentLanIds = explode(',',$surveyorBreadcrumbs);
+                if ($surveyors) {
+                    $sentLanIds = explode(',',$surveyors);
                     $filterConditions = null;
 
                     /*
@@ -954,8 +954,6 @@ class TrackerController extends Controller
                         $query->andWhere($filterConditions);
                     }
 
-                } else if ($surveyor) {
-                    $query->andWhere(["Surveyor / Inspector" => $surveyor]);
                 }
 
                 if (trim($search)) {
