@@ -17,9 +17,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
-	
 	//base comet tracker user
 	const CT_USER = 'app\modules\v1\models\SCUser';
+	//base comet tracker auth manager
+	const CT_AUTH = 'app\rbac\ScDbManager';
 	
 	//pg&e databases
 	const PGE_DEV = 'pgedev';
@@ -27,11 +28,15 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const PGE_PROD = 'pge';
 	//pg&e user model
 	const PGE_USER = 'app\modules\v1\modules\pge\models\PGEUser';
+	//pg&e auth manager
+	const PGE_AUTH = 'app\rbac\PgeDbManager';
 	
 	//beta client database
 	const BETA_DEV = 'betadev';
 	//beta user model
-	const BETA_USER= 'app\modules\v1\modules\beta\models\BetaUser';
+	const BETA_USER = 'app\modules\v1\modules\beta\models\BetaUser';
+	//beta auth manager
+	const BETA_AUTH = 'app\rbac\BetaDbManager';
 	
 	public static function getClient()
 	{
@@ -78,7 +83,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		}
 	}
 	
-	//reutrns the file location for the user model associated to a project based on the client header
+	//reutrns the file path for the user model associated to a project based on the client header
 	public static function getUserModel($client)
 	{
 		//CometTracker
@@ -95,6 +100,34 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::BETA_DEV)
 		{
 			return self::BETA_USER;
+		}
+		//PGE - Deos not use standard user propagation
+		// if($client == self::PGE_DEV 
+		// || $client == self::PGE_STAGE
+		// || $client == self::PGE_PROD)
+		// {
+			// return self::PGE_USER;
+		// }
+		return null;
+	}
+	
+	//returns the file path for the auth manager associated to a project based on the client header
+	public static function getAuthManager($client)
+	{
+		//CometTracker
+		if($client == self::CT_DEV
+		|| $client == self::CT_STAGE
+		|| $client == self::CT_PROD
+		|| $client == self::SCCT_DEV
+		|| $client == self::SCCT_STAGE
+		|| $client == self::SCCT_PROD)
+		{
+			return self::CT_AUTH;
+		}
+		//Beta
+		if($client == self::BETA_DEV)
+		{
+			return self::BETA_AUTH;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 

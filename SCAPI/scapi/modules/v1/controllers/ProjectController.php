@@ -8,6 +8,7 @@ use app\modules\v1\models\Project;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\models\ProjectUser;
 use app\modules\v1\models\MenusModuleMenu;
+use app\modules\v1\controllers\UserController;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
@@ -356,13 +357,14 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionAddRemoveUsers($projectID)
 	{
-		try
-		{
+		// try
+		// {
 			//set db target
 			$headers = getallheaders();
+			$client = $headers['X-Client'];
 			Project::setClient(BaseActiveController::urlPrefix());
 			
-			// RBAC permission check
+			//RBAC permission check
 			PermissionsController::requirePermission('projectAddRemoveUsers');
 			
 			//create response
@@ -396,6 +398,7 @@ class ProjectController extends BaseActiveController
 				SCUser::setClient(BaseActiveController::urlPrefix());
 				$user = SCUser::findOne($i);
 				$user->link('projects',$project);
+				UserController::createInProject($user, $client);
 				//call sps to create new time cards and mileage cards
 				try
 				{
@@ -474,15 +477,15 @@ class ProjectController extends BaseActiveController
 			$response -> data = $data;
 			
 			return $response;
-		}
-		catch(ForbiddenHttpException $e)
-		{
-			throw new ForbiddenHttpException;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(ForbiddenHttpException $e)
+		// {
+			// throw new ForbiddenHttpException;
+		// }
+		// catch(\Exception $e)  
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 
 	public function actionGetProjectModules($projectID) {

@@ -54,7 +54,7 @@ class BetaUser extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             [['UserUID', 'UserComments', 'UserLoginID', 'UserFirstName', 'UserLastName', 'UserLANID', 'UserPassword', 'UserEmployeeType', 'UserCompanyName', 'UserCompanyPhone', 'UserSupervisorUserUID', 'UserName', 'UserAppRoleType', 'UserPhone', 'HomeWorkCenterUID'], 'string'],
-            [['UserID', 'ProjectID', 'UserRevision', 'UserActiveFlag', 'UserInActiveFlag', 'UserArchiveFlag'], 'integer'],
+            [['ProjectID', 'UserRevision', 'UserActiveFlag', 'UserInActiveFlag', 'UserArchiveFlag'], 'integer'],
             [['UserCreatedDate', 'UserModifiedDate', 'UserInactiveDTLT', 'UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
         ];
     }
