@@ -622,4 +622,46 @@ class UserController extends BaseActiveController
             return $asset;
         }
     }
+	
+	//creates a copy of the scuser $user
+	//in the project db $client
+	//Params
+	//$user - user being added to the project
+	//$client - project url prefix of the project being added to
+	//returns ???
+	public static function createInProject($user, $client)
+	{
+		//get user model based on project 
+		$userModel = BaseActiveRecord::getUserModel($client);
+		if($userModel == null) return;
+        $userModel::setClient($client);
+		
+		//check if user exist in project
+		$existingUser = $userModel::find()
+			->where(['UserName' => $user->UserName])
+			->one();
+		if($existingUser != null) return;
+		
+		//create a new user model based on project 
+		$projectUser = new $userModel();
+		
+		//set userid to null to allow auto increment on sql
+		$user->UserID = null;
+		//pass $user attributes into new model
+		$projectUser->attributes = $user->attributes;
+		//set comment created on addition to project
+		$projectUser->UserComments = 'User created on association to project.';
+		//save into project database
+		if($projectUser->save())
+		{
+			//handle app role assignment
+			$authClass = BaseActiveRecord::getAuthManager($client);
+			if($authClass == null) return;
+			$auth = new $authClass($userModel::getDb());
+			if ($userRole = $auth->getRole($projectUser['UserAppRoleType'])) {
+				$auth->assign($userRole, $projectUser['UserID']);
+			}
+		}
+		return;
+	}
 }
