@@ -475,6 +475,21 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','tb.Longitude',$maxLong]);
                 }
 
+                $query->distinct();
+                // the orderBy is needed for applying distinct
+                $query->orderBy([
+                    'tb.UID' => SORT_ASC,
+//                    'tb.LanID' => SORT_ASC,
+//                    'tb.SrcDTLT' => SORT_ASC,
+//                    'th.[House No]' => SORT_ASC,
+//                    'th.Street' => SORT_ASC,
+//                    'th.City' => SORT_ASC,
+//                    'th.State' => SORT_ASC,
+//                    'tb.Latitude' => SORT_ASC,
+//                    'tb.Longitude' => SORT_ASC,
+//                    'tb.Speed' => SORT_ASC,
+//                    'tb.GPSAccuracy' => SORT_ASC
+                ]);
                 /////////////////////////////////
                 // TODO filter by indications ( gradeType ) and aoc (AOCType) when/if the columns are available
                 /////////////////////////////////
@@ -486,6 +501,7 @@ class TrackerController extends Controller
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $queryCommand->sql;
+//                $sqlString = $queryCommand->rawSql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
