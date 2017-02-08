@@ -357,8 +357,8 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionAddRemoveUsers($projectID)
 	{
-		// try
-		// {
+		try
+		{
 			//set db target
 			$headers = getallheaders();
 			$client = $headers['X-Client'];
@@ -398,7 +398,7 @@ class ProjectController extends BaseActiveController
 				SCUser::setClient(BaseActiveController::urlPrefix());
 				$user = SCUser::findOne($i);
 				$user->link('projects',$project);
-				UserController::createInProject($user, $client);
+				UserController::createInProject($user, $project->ProjectUrlPrefix);
 				//call sps to create new time cards and mileage cards
 				try
 				{
@@ -477,15 +477,15 @@ class ProjectController extends BaseActiveController
 			$response -> data = $data;
 			
 			return $response;
-		// }
-		// catch(ForbiddenHttpException $e)
-		// {
-			// throw new ForbiddenHttpException;
-		// }
-		// catch(\Exception $e)  
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(ForbiddenHttpException $e)
+		{
+			throw new ForbiddenHttpException;
+		}
+		catch(\Exception $e)  
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 
 	public function actionGetProjectModules($projectID) {
