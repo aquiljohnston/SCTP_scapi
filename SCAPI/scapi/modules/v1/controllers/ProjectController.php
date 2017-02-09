@@ -360,8 +360,6 @@ class ProjectController extends BaseActiveController
 		try
 		{
 			//set db target
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
 			Project::setClient(BaseActiveController::urlPrefix());
 			
 			//RBAC permission check
@@ -399,6 +397,8 @@ class ProjectController extends BaseActiveController
 				$user = SCUser::findOne($i);
 				$user->link('projects',$project);
 				UserController::createInProject($user, $project->ProjectUrlPrefix);
+				//reset target db after external call
+				Project::setClient(BaseActiveController::urlPrefix());
 				//call sps to create new time cards and mileage cards
 				try
 				{
