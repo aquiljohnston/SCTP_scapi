@@ -8,6 +8,9 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	private static $CLIENT_ID = '';
 	
+	//base user
+	const BASE_USER = 'app\modules\v1\models\BaseUser';
+	
 	//scct databases
 	const SCCT_DEV = 'scctdev';
 	const SCCT_STAGE = 'scctstage';
@@ -17,9 +20,9 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
-	//base comet tracker user
+	//comet tracker user
 	const CT_USER = 'app\modules\v1\models\SCUser';
-	//base comet tracker auth manager
+	//comet tracker auth manager
 	const CT_AUTH = 'app\rbac\ScDbManager';
 	
 	//pg&e databases
@@ -34,7 +37,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//beta client database
 	const BETA_DEV = 'betadev';
 	//beta user model
-	const BETA_USER = 'app\modules\v1\modules\beta\models\BetaUser';
+	const BETA_USER = self::BASE_USER;
 	//beta auth manager
 	const BETA_AUTH = 'app\rbac\BetaDbManager';
 	
