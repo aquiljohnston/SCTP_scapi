@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v1\controllers;
+namespace app\modules\v2\controllers;
 
 use Yii;
 use app\modules\v1\models\SCUser;
@@ -73,7 +73,8 @@ class UserController extends BaseActiveController
         return $actions;
     }
 
-    use GetAll;
+    //use GetAll;
+	//use DeleteMethodNotAllowed;
 
     /**
      * Creates a new user record in the database and a corresponding key record
@@ -338,8 +339,6 @@ class UserController extends BaseActiveController
         }
     }
 
-    use DeleteMethodNotAllowed;
-
     /**
      * Updates the active flag of a user to 0 for inactive
      * @param $userID id of the user record
@@ -431,7 +430,6 @@ class UserController extends BaseActiveController
      * @returns json body containing userdata, equipment, and projects
      * @throws \yii\web\HttpException
      */
-	 //Used by PGE APK
     public function actionGetMe()
     {
 
@@ -575,19 +573,47 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($listPerPage = null, $page = null)
+    public function actionGetActive($filter = null, $listPerPage = null, $page = null)
     {
         try {
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userGetActive');
-
-            $users = SCUser::find();
-            $paginationResponse = self::paginationProcessor($users, $page, $listPerPage);
-            $usersArr = $paginationResponse['Query']->where("UserActiveFlag = 1")->all();
+			
+			//initialize response array
+			$responseArray['assets'] = [];
+			$responseArray['pages'] = [];
+			
+			//create base of user query
+            $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			//apply filter to query
+			if($filter != null)
+			{
+				$userQuery->andFilterWhere([
+				'or',
+				['like', 'UserName', $filter],
+				['like', 'UserFirstName', $filter],
+				['like', 'UserLastName', $filter],
+				['like', 'UserAppRoleType', $filter],
+				]);
+			}
+			//check if paging parameters were sent
+			if ($page != null) 
+			{
+				//pass query with pagination data to helper method
+				$paginationResponse = self::paginationProcessor($userQuery, $page, $listPerPage);
+				//use updated query with pagination caluse to get data
+				$usersArr = $paginationResponse['Query']->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+			}
+			else
+			{
+				//if no pagination params were sent use base query
+				$usersArr = $userQuery->all();
+			}
+			//populate response array
             $responseArray['assets'] = $usersArr;
-            $responseArray['pages'] = $paginationResponse['pages'];
             
             if (!empty($responseArray['assets'])) {
                 $response = Yii::$app->response;
@@ -604,25 +630,23 @@ class UserController extends BaseActiveController
 
     public function paginationProcessor($assetQuery, $page, $listPerPage)
     {
+		// set pagination
+		$countAssetQuery = clone $assetQuery;
+		$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+		$pages->pageSizeLimit = [1, 100];
+		$offset = $listPerPage * ($page - 1);
+		$pages->setPageSize($listPerPage);
+		$pages->pageParam = 'userPage';
+		$pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
+		
+		//append pagination clause to query
+		$assetQuery->offset($offset)
+			->limit($listPerPage);
 
-        if ($page != null) {
-            // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $pages->pageSizeLimit = [1, 100];
-            $offset = $listPerPage * ($page - 1);
-            $pages->setPageSize($listPerPage);
-            $pages->pageParam = 'userPage';
-            $pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
+		$asset['pages'] = $pages;
+		$asset['Query'] = $assetQuery;
 
-            $assetQuery->offset($offset)
-                ->limit($listPerPage);
-
-            $asset['pages'] = $pages;
-            $asset['Query'] = $assetQuery;
-
-            return $asset;
-        }
+		return $asset;
     }
 	
 	//creates a copy of the scuser $user
