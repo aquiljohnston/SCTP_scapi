@@ -9,7 +9,7 @@ use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
 use app\modules\v1\models\SCUser;
-use app\modules\v1\modules\beta\models\BetaUser;
+use app\modules\v1\models\BaseUser;
 use app\rbac\BetaDbManager;
 
 class BetaPermissionsController extends Controller {
@@ -44,7 +44,7 @@ class BetaPermissionsController extends Controller {
 		$db = BaseActiveRecord::getDb();
 		
 		//find user in beta database
-		$betaUser = BetaUser::find()
+		$betaUser = BaseUser::find()
 			->where(['UserName' => $username])
 			->one();
 		//get user id

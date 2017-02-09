@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v1\modules\beta\models;
+namespace app\modules\v1\models;
 
 use Yii;
 
@@ -37,7 +37,7 @@ use Yii;
  * @property integer $UserArchiveFlag
  * @property string $HomeWorkCenterUID
  */
-class BetaUser extends \app\modules\v1\models\BaseActiveRecord
+class BaseUser extends \app\modules\v1\models\BaseActiveRecord
 {
     /**
      * @inheritdoc

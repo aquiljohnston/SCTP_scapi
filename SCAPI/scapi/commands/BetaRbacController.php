@@ -3,7 +3,7 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use app\modules\v1\modules\beta\models\BetaUser;
+use app\modules\v1\models\BaseUser;
 use app\rbac\BetaDbManager;
 
 /**
@@ -21,8 +21,8 @@ class BetaRbacController extends Controller
 	*/
     public function actionInit($client)
     {
-		BetaUser::setClient($client);
-		$db = BetaUser::getDb();
+		BaseUser::setClient($client);
+		$db = BaseUser::getDb();
 		$auth = new BetaDbManager($db);
 		
 		try{
@@ -621,7 +621,7 @@ class BetaRbacController extends Controller
 		//$auth->addChild($supervisor, $viewAssigned);
 		
 		//assign roles to existing users////////////////////////////////////////
-		$users = BetaUser::find()
+		$users = BaseUser::find()
 				->all();
 		
 		$userSize = count($users);

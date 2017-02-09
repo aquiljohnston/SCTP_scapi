@@ -10,9 +10,9 @@ use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Project;
 use app\modules\v1\models\Client;
 use app\modules\v1\models\ProjectUser;
+use app\modules\v1\models\BaseUser;
 use app\modules\v1\controllers\BaseActiveController;
 use app\modules\v1\controllers\DeleteMethodNotAllowed;
-use app\modules\v1\modules\beta\models\BetaUser;
 use app\modules\v1\modules\beta\controllers\BetaPermissionsController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -32,7 +32,7 @@ use yii\db\Exception;
  */
 class UserController extends BaseActiveController
 {
-	public $modelClass = 'app\modules\v1\modules\beta\models\BetaUser'; 
+	public $modelClass = 'app\modules\v1\models\BaseUser'; 
 	
 	//options for bcrypt
 	private $options = [
@@ -88,7 +88,7 @@ class UserController extends BaseActiveController
 		{
 			//get headers
 			$headers = getallheaders();
-			BetaUser::setClient($headers['X-Client']);
+			BaseUser::setClient($headers['X-Client']);
 			BetaPermissionsController::requirePermission('userCreate', $headers['X-Client']);
 			
 			//read the post input
@@ -133,16 +133,16 @@ class UserController extends BaseActiveController
 			$scUser = new SCUser;
 			$scUser->attributes = $data;
 			
-			BetaUser::setClient($headers['X-Client']);
-			$betaUser = new BetaUser;
+			BaseUser::setClient($headers['X-Client']);
+			$betaUser = new BaseUser;
 			$betaUser->attributes = $data;
 			//get db for rbac
-			$betaDb = BetaUser::getDb();
+			$betaDb = BaseUser::getDb();
 			
 			//rbac check if attempting to create an admin
 			if($betaUser['UserAppRoleType'] == 'Admin')
 			{
-				BetaUser::setClient($headers['X-Client']);
+				BaseUser::setClient($headers['X-Client']);
 				BetaPermissionsController::requirePermission('userCreateAdmin', $headers['X-Client']);
 			}
 			
@@ -154,7 +154,7 @@ class UserController extends BaseActiveController
 			$betaUser->UserCreatedDate = Parent::getDate();
 			
 			//save project level
-			BetaUser::setClient($headers['X-Client']);
+			BaseUser::setClient($headers['X-Client']);
 			if($betaUser-> save())
 			{
 				//assign beta rbac role
@@ -238,7 +238,7 @@ class UserController extends BaseActiveController
 		try
 		{
 			$headers = getallheaders();
-			BetaUser::setClient($headers['X-Client']);
+			BaseUser::setClient($headers['X-Client']);
 			BetaPermissionsController::requirePermission('userUpdate', $headers['X-Client']);
 			
 			SCUser::setClient(BaseActiveController::urlPrefix());
@@ -256,13 +256,13 @@ class UserController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$responseArray = [];
 			
-			BetaUser::setClient($headers['X-Client']);
-			$betaUser = BetaUser::find()
+			BaseUser::setClient($headers['X-Client']);
+			$betaUser = BaseUser::find()
 				->where(['UserID' => $ID])
 				->one();
 				
 			//get beta db for rbac
-			$betaDb = BetaUser::getDb();
+			$betaDb = BaseUser::getDb();
 				
 			if($betaUser->UserName != $data['UserName'])
 			{
@@ -309,11 +309,11 @@ class UserController extends BaseActiveController
 			//rbac check if attempting to create an admin
 			if($betaUser['UserAppRoleType'] == 'Admin')
 			{
-				BetaUser::setClient($headers['X-Client']);
+				BaseUser::setClient($headers['X-Client']);
 				BetaPermissionsController::requirePermission('userCreateAdmin', $headers['X-Client']);
 			}
 			
-			BetaUser::setClient($headers['X-Client']);
+			BaseUser::setClient($headers['X-Client']);
 			if($betaUser->update())
 			{
 				//assign beta rbac role
