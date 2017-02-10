@@ -1955,7 +1955,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerRaSurveyorDropdown($division, $workCenter) {
+    public function actionGetTrackerRaSurveyorDropdown($division, $workCenter, $startDate, $endDate) {
         try{
 
             $headers = getallheaders();
@@ -1968,6 +1968,7 @@ class DropdownController extends Controller
                 ->andWhere(['not' ,['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
                 ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['between', 'Date', $startDate, $endDate])
                 ->distinct()
                 ->all();
 
@@ -2066,7 +2067,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerHSurveyorDropdown($division, $workCenter) {
+    public function actionGetTrackerHSurveyorDropdown($division, $workCenter, $startDate, $endDate) {
         try{
 
             $headers = getallheaders();
@@ -2079,6 +2080,7 @@ class DropdownController extends Controller
                 ->andWhere(['not' ,['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
                 ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['between', 'Date', $startDate, $endDate])
                 ->distinct()
                 ->all();
 

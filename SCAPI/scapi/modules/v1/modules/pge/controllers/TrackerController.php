@@ -17,8 +17,11 @@ use app\modules\v1\modules\pge\models\WebManagementTrackerBreadcrumbs;
 use app\modules\v1\modules\pge\models\WebManagementTrackerAOC;
 use app\modules\v1\modules\pge\models\WebManagementTrackerIndications;
 use app\modules\v1\modules\pge\models\WebManagementTrackerMapGridCompliance;
+use app\modules\v1\modules\pge\models\WebManagementTrackerHistoryDropDown;
+use app\modules\v1\modules\pge\models\WebManagementTrackerCurrentLocationDropDown;
 use app\modules\v1\modules\pge\models\AssetAddressCGE;
 use app\modules\v1\modules\pge\models\PGEUser;
+
 
 class TrackerController extends Controller 
 {
@@ -783,7 +786,7 @@ class TrackerController extends Controller
                     'GradeType as [Leak Grade]'
 
                 ]);
-                $indPossibleValues = ['1'=>'1','2p'=>'2+','2'=>'2','3'=>'3'];
+                $indPossibleValues = ['1'=>'1','2p'=>'2+', '2+'=>'2+', '2%2B'=>'2+', '2 '=>'2+', '2'=>'2', '3'=>'3'];
 
                 $sentIndications = explode(',',$indications);
                 $indFilterConditions = null;
@@ -799,7 +802,8 @@ class TrackerController extends Controller
                  * ] -- for multiple entries
                  */
                 foreach ($sentIndications as $sentIndication) {
-                    $indKey = trim(strtolower($sentIndication));
+                   // $indKey = trim(strtolower($sentIndication));
+                    $indKey = strtolower($sentIndication);
                     if (isset($indPossibleValues[$indKey])){
                         if (null === $indFilterConditions){
                             $indFilterConditions = ['GradeType'=>$indPossibleValues[$indKey]];
@@ -1236,36 +1240,30 @@ class TrackerController extends Controller
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $cgiUids = $uidsQueryCommand->queryAll();
 
-                WebManagementTrackerHistory::setClient($headers['X-Client']);
-                $lanIdsQuery = WebManagementTrackerHistory::find();
+                WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+                $lanIdsQuery = WebManagementTrackerHistoryDropDown::find()
+                    ->select(
+                        [
+                            'Key'=>'LOWER([SurveyorLANID])',
+                            'DisplayedText'=>'[Surveyor]'
+                        ]
+                    )
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['not' ,['Division' => null]])
+                    ->andWhere(['not' ,['WorkCenter' => null]])
+                    ->andWhere(['not' ,['Surveyor' => null]])
+                    ->andWhere(['between', 'Date', $startDate, $endDate])
+                    ->distinct();
 
-                $lanIdsQuery->select(
-                    [
-                        'Key'=>'LOWER([SurveyorLANID])',
-                        'DisplayedText'=>'[Surveyor / Inspector]'
-                    ]
-                )->distinct();
-                $lanIdsQuery->where(['Division' => $division]);
-                $lanIdsQuery->andWhere(['Work Center' => $workCenter]);
+                $lanIdsQuery->orderBy(['Surveyor'=>SORT_ASC]);
 
-                if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-                    $lanIdsQuery->andWhere(['between', 'Date', $startDate, $endDate]);
-                }
-
-                $offset = 0;
-                $limit = $this->filtersLimit;
-                $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
-
-
-                $lanIdsQueryCommand = $lanIdsQuery->offset($offset)
-                    ->limit($limit)
-                    ->createCommand();
+//                $lanIdsQuery->offset($offset)
+//                    ->limit($limit)
+                $lanIdsQueryCommand = $lanIdsQuery->createCommand();
 //                $sqlString = $lanIdsQueryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $surveyors = $lanIdsQueryCommand->queryAll();
-
                 $items = ['cgiFilters'=>$cgiUids,'surveyorFilters'=>$surveyors];
 
             } else {
@@ -1296,32 +1294,26 @@ class TrackerController extends Controller
 
             $headers = getallheaders();
             if (null !==$division && null !==$workCenter && null !== $startDate && null !== $endDate) {
-                WebManagementTrackerCurrentLocation::setClient($headers['X-Client']);
-                $lanIdsQuery = WebManagementTrackerCurrentLocation::find();
+                WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
+                $lanIdsQuery = WebManagementTrackerCurrentLocationDropDown::find()
+                    ->select(
+                        [
+                            'Key'=>'LOWER([SurveyorLANID])',
+                            'DisplayedText'=>'[Surveyor]'
+                        ]
+                    )
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['not' ,['Division' => null]])
+                    ->andWhere(['not' ,['WorkCenter' => null]])
+                    ->andWhere(['not' ,['Surveyor' => null]])
+                    ->andWhere(['between', 'Date', $startDate, $endDate])
+                    ->distinct();
 
-                $lanIdsQuery->select(
-                    [
-                        'Key'=>'LOWER([SurveyorLANID])',
-                        'DisplayedText'=>'[Surveyor / Inspector]'
-                    ]
-                )->distinct();
-                $lanIdsQuery->where(['Division' => $division]);
-                $lanIdsQuery->andWhere(['Work Center' => $workCenter]);
-
-                if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-                    $lanIdsQuery->andWhere(['between', 'Date', $startDate, $endDate]);
-                }
-
-                $offset = 0;
-                $limit = $this->filtersLimit;
-                $lanIdsQuery->orderBy(['Surveyor / Inspector' => SORT_ASC]);
-
-
-                $lanIdsQueryCommand = $lanIdsQuery->offset($offset)
-                    ->limit($limit)
-                    ->createCommand();
+                $lanIdsQuery->orderBy(['Surveyor'=>SORT_ASC]);
+//                $lanIdsQuery->offset($offset)
+//                    ->limit($limit)
+                $lanIdsQueryCommand = $lanIdsQuery->createCommand();
 //                $sqlString = $lanIdsQueryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $surveyors = $lanIdsQueryCommand->queryAll();
