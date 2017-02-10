@@ -214,8 +214,9 @@ class TrackerController extends Controller
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    //Only add the following if the DB field is of type DateTime
+                    //// 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
@@ -236,14 +237,10 @@ class TrackerController extends Controller
 
                 $items = $query->offset($offset)
                     ->limit($limit)
-                    ->all();
-//                $items = WebManagementTrackerCurrentLocation::find()->all();
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->createCommand();
-//                $sqlString = $items->sql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-//                $items = $items->queryAll();
+                    ->createCommand();
+                // $sqlString = $items->rawSql;
+                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
@@ -307,8 +304,9 @@ class TrackerController extends Controller
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    // Only add the folowing if the DB field is Date Time
+                    //// 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
@@ -329,13 +327,10 @@ class TrackerController extends Controller
 
                 $items = $query->offset($offset)
                     ->limit($limit)
-                    ->all();
-//                $items = $query->offset($offset)
-//                    ->limit($limit)
-//                    ->createCommand();
-//                $sqlString = $items->sql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-//                $items = $items->queryAll();
+                    ->createCommand();
+                // $sqlString = $items->rawSql;
+                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $items = $items->queryAll();
 
             } else {
                 $pages = new Pagination(['totalCount' => 0]);
