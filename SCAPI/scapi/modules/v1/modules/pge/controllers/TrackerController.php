@@ -455,8 +455,9 @@ class TrackerController extends Controller
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
+                    // Only add the folowing if the DB field is Date Time
                     // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
                     $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
                 }
@@ -985,8 +986,9 @@ class TrackerController extends Controller
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
+                    // Only add the folowing if the DB field is Date Time
                     // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
@@ -1086,8 +1088,9 @@ class TrackerController extends Controller
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
+                    // Only add the folowing if the DB field is Date Time
                     // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
@@ -1165,8 +1168,9 @@ class TrackerController extends Controller
                 }
 
                 if ($startDate !== null && $endDate !== null) {
+                    // Only add the folowing if the DB field is Date Time
                     // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
@@ -1200,7 +1204,7 @@ class TrackerController extends Controller
     }
 
     public function actionGetHistoryMapControls($division=null, $workCenter=null,
-                                           $startDate = null, $endDate = null, $search = null)
+                                           $startDate = null, $endDate = null, $search = null, $surveyors = null)
     {
         try{
 
@@ -1251,6 +1255,42 @@ class TrackerController extends Controller
                     ->andWhere(['between', 'Date', $startDate, $endDate])
                     ->distinct();
 
+                if (null!=$surveyors) {
+                    $sentLanIds = explode(',',$surveyors);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(SurveyorLANID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $lanIdsQuery->andWhere($filterConditions);
+                    }
+                }
+
                 $lanIdsQuery->orderBy(['Surveyor'=>SORT_ASC]);
 
 //                $lanIdsQuery->offset($offset)
@@ -1283,7 +1323,7 @@ class TrackerController extends Controller
     }
 
     public function actionGetRecentActivityMapControls($division=null, $workCenter=null,
-                                                $startDate = null, $endDate = null, $search = null)
+                                                $startDate = null, $endDate = null, $search = null, $surveyors = null)
     {
         try{
 
@@ -1304,6 +1344,42 @@ class TrackerController extends Controller
                     ->andWhere(['not' ,['Surveyor' => null]])
                     ->andWhere(['between', 'Date', $startDate, $endDate])
                     ->distinct();
+
+                if (null!=$surveyors) {
+                    $sentLanIds = explode(',',$surveyors);
+                    $filterConditions = null;
+
+                    /*
+                     * construct an array of the form
+                     * ['LanID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['LanID'=>value1],
+                     *    ...
+                     *   ['LanID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(SurveyorLANID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(SurveyorLANID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $lanIdsQuery->andWhere($filterConditions);
+                    }
+                }
 
                 $lanIdsQuery->orderBy(['Surveyor'=>SORT_ASC]);
 //                $lanIdsQuery->offset($offset)
