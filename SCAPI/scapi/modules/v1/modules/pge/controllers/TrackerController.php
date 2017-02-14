@@ -374,7 +374,7 @@ class TrackerController extends Controller
                 $query = WebManagementTrackerHistory::find();
 
                 $query->select([
-                    'tb.UID',
+                    'th.UID',
                     'tb.LanID as Inspector',
                     'tb.SrcDTLT as Datetime',
                     'th.[House No] as [House No]',
@@ -394,73 +394,8 @@ class TrackerController extends Controller
                     '[th].[UID]=[tb].[UID]'
                 );
 
-                $query->where(['[th].[Division]' => $division]);
-                $query->andWhere(['[th].[Work Center]' => $workCenter]);
+                $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
-                if ($surveyors) {
-                    $sentLanIds = explode(',',$surveyors);
-                    $filterConditions = null;
-
-                    /*
-                     * construct an array of the form
-                     * ['LanID'=>value] for one entry
-                     * [
-                     *   'or',
-                     *   ['LanID'=>value1],
-                     *    ...
-                     *   ['LanID'=>valuen]
-                     * ] -- for multiple entries
-                     */
-                    foreach ($sentLanIds as $sentLanId) {
-                        $lanId = trim(strtolower($sentLanId));
-                        if (''==$lanId){
-                            continue;
-                        }
-                        if (null === $filterConditions){
-                            $filterConditions = ['LOWER([tb].LanID)'=>$lanId];
-                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
-                        } else {
-                            $tmp = $filterConditions;
-                            $filterConditions=[];
-                            $filterConditions[0] = 'or';
-                            $filterConditions[]= $tmp;
-                            $filterConditions[]= ['LOWER([tb].LanID)'=>$lanId];
-                        }
-                    }
-                    if (null!=$filterConditions) {
-                        $query->andWhere($filterConditions);
-                    }
-
-                }
-
-                if (trim($search)) {
-                    $query->andWhere([
-                        'or',
-                        ['like', 'th.Division', $search],
-                        ['like', 'th.Date', $search],
-                        ['like', 'th.[Surveyor / Inspector]', $search],
-                        ['like', 'th.[Work Center]', $search],
-                        ['like', 'th.Latitude', $search],
-                        ['like', 'th.Longitude', $search],
-                        ['like', 'th.[Date Time]', $search],
-                        ['like', 'th.[House No]', $search],
-                        ['like', 'th.Street', $search],
-                        ['like', 'th.Apt', $search],
-                        ['like', 'th.City', $search],
-                        ['like', 'th.State', $search],
-                        ['like', 'th.Landmark', $search],
-                        ['like', 'th.[Landmark Description]', $search],
-                        ['like', 'th.[Accuracy (Meters)]', $search]
-                    ]);
-                }
-                if ($startDate !== null && $endDate !== null) {
-                    // Only add the following if the DB field is Date Time
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-
-                    $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
-                }
                 if (null!=$minLat){
                     $query->andWhere(['>=','tb.Latitude',$minLat]);
                 }
@@ -477,21 +412,9 @@ class TrackerController extends Controller
                 $query->distinct();
                 // the orderBy is needed for applying distinct
                 $query->orderBy([
-                    'tb.UID' => SORT_ASC,
-//                    'tb.LanID' => SORT_ASC,
-//                    'tb.SrcDTLT' => SORT_ASC,
-//                    'th.[House No]' => SORT_ASC,
-//                    'th.Street' => SORT_ASC,
-//                    'th.City' => SORT_ASC,
-//                    'th.State' => SORT_ASC,
-//                    'tb.Latitude' => SORT_ASC,
-//                    'tb.Longitude' => SORT_ASC,
-//                    'tb.Speed' => SORT_ASC,
-//                    'tb.GPSAccuracy' => SORT_ASC
+                    'th.UID' => SORT_ASC,
                 ]);
-                /////////////////////////////////
-                // TODO filter by indications ( gradeType ) and aoc (AOCType) when/if the columns are available
-                /////////////////////////////////
+
 
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
@@ -550,73 +473,8 @@ class TrackerController extends Controller
                     ['aac'=>AssetAddressCGE::tableName()],
                     '[th].[UID]=[aac].[AssetAddressCGEUID]'
                 );
-                $query->where(['[th].[Division]' => $division]);
-                $query->andWhere(['[th].[Work Center]' => $workCenter]);
-                
-                if ($surveyors) {
-                    $sentLanIds = explode(',',$surveyors);
-                    $filterConditions = null;
 
-                    /*
-                     * construct an array of the form
-                     * ['LanID'=>value] for one entry
-                     * [
-                     *   'or',
-                     *   ['LanID'=>value1],
-                     *    ...
-                     *   ['LanID'=>valuen]
-                     * ] -- for multiple entries
-                     */
-                    foreach ($sentLanIds as $sentLanId) {
-                        $lanId = trim(strtolower($sentLanId));
-                        if (''==$lanId){
-                            continue;
-                        }
-                        if (null === $filterConditions){
-                            $filterConditions = ['LOWER([th].[SurveyorLANID])'=>$lanId];
-                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['LOWER([th].[SurveyorLANID])'=>$lanId];
-                        } else {
-                            $tmp = $filterConditions;
-                            $filterConditions=[];
-                            $filterConditions[0] = 'or';
-                            $filterConditions[]= $tmp;
-                            $filterConditions[]= ['LOWER([th].[SurveyorLANID])'=>$lanId];
-                        }
-                    }
-                    if (null!=$filterConditions) {
-                        $query->andWhere($filterConditions);
-                    }
-
-                }
-
-                if (trim($search)) {
-                    $query->andWhere([
-                        'or',
-                        ['like', 'th.Division', $search],
-                        ['like', 'th.Date', $search],
-                        ['like', 'th.[Surveyor / Inspector]', $search],
-                        ['like', 'th.[Work Center]', $search],
-                        ['like', 'th.Latitude', $search],
-                        ['like', 'th.Longitude', $search],
-                        ['like', 'th.[Date Time]', $search],
-                        ['like', 'th.[House No]', $search],
-                        ['like', 'th.Street', $search],
-                        ['like', 'th.Apt', $search],
-                        ['like', 'th.City', $search],
-                        ['like', 'th.State', $search],
-                        ['like', 'th.Landmark', $search],
-                        ['like', 'th.[Landmark Description]', $search],
-                        ['like', 'th.[Accuracy (Meters)]', $search]
-                    ]);
-                }
-                if ($startDate !== null && $endDate !== null) {
-                    // Only add the following if the DB field is Date Time
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-
-                    $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
-                }
+                $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
                 $sentCgis = explode(',',$cgi);
                 $filterConditions = null;
@@ -664,6 +522,11 @@ class TrackerController extends Controller
                     $query->andWhere(['<=','aac.Longitude',$maxLong]);
                 }
 
+                $query->distinct();
+                $query->orderBy([
+                    'th.UID' => SORT_ASC
+                ]);
+
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
                 $queryCommand= $query->offset($offset)
@@ -700,34 +563,31 @@ class TrackerController extends Controller
 
             $headers = getallheaders();
             if ($aoc) {
-                WebManagementTrackerAOC::setClient($headers['X-Client']);
-                $query = WebManagementTrackerAOC::find();
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $query = WebManagementTrackerHistory::find();
+
                 $query->select([
-                    'UID',
-                    'LanID as Inspector',
-                    'SurveyDateTime as Datetime',
-                    'HouseNo as [House No]',
-                    'Street1 as Street',
-                    'City',
-                    'State',
-                    'Latitude',
-                    'Longitude',
-                    'AOCType as [AOC Type]',
-                    'RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1)) as AOC'
+                    'th.[UID]',
+                    'aoc.LanID as Inspector',
+                    'aoc.SurveyDateTime as Datetime',
+                    'aoc.HouseNo as [House No]',
+                    'aoc.Street1 as Street',
+                    'aoc.City',
+                    'aoc.State',
+                    'aoc.Latitude',
+                    'aoc.Longitude',
+                    'aoc.AOCType as [AOC Type]',
+                    'RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1)) as AOC'
                 ]);
-                if ($division){
-                    $query->andWhere(['[DIVISION]' => $division]);
-                }
-                if($workCenter){
-                    $query->andWhere(['[WORKCENTER]' => $workCenter]);
-                }
+                $query->from([
+                    'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                ]);
+                $query->innerJoin(
+                    ['aoc'=>WebManagementTrackerAOC::tableName()],
+                    '[th].[UID]=[aoc].[UID]'
+                );
 
-                if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-
-                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
-                }
+                $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
                 $sentAocs = explode(',',$aoc);
                 $filterConditions = null;
@@ -744,68 +604,37 @@ class TrackerController extends Controller
                 foreach ($sentAocs as $sentAoc) {
                     $aocTypeCode = intval(trim($sentAoc));
                     if (null === $filterConditions){
-                        $filterConditions = ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                        $filterConditions = ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))'=>$aocTypeCode];
                     } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                        $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                        $filterConditions[]= ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))'=>$aocTypeCode];
                     } else {
                         $tmp = $filterConditions;
                         $filterConditions=[];
                         $filterConditions[0] = 'or';
                         $filterConditions[]= $tmp;
-                        $filterConditions[]= ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX(\'-\',AOCType)-1))'=>$aocTypeCode];
+                        $filterConditions[]= ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))'=>$aocTypeCode];
                     }
                 }
                 $query->andWhere($filterConditions);
 
-                if ($surveyors) {
-                    $sentLanIds = explode(',',$surveyors);
-                    $filterConditions = null;
 
-                    /*
-                     * construct an array of the form
-                     * ['LanID'=>value] for one entry
-                     * [
-                     *   'or',
-                     *   ['LanID'=>value1],
-                     *    ...
-                     *   ['LanID'=>valuen]
-                     * ] -- for multiple entries
-                     */
-                    foreach ($sentLanIds as $sentLanId) {
-                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
-                        if (''==$lanId){
-                            continue;
-                        }
-                        if (null === $filterConditions){
-                            $filterConditions = ['LOWER(LanID)'=>$lanId];
-                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
-                        } else {
-                            $tmp = $filterConditions;
-                            $filterConditions=[];
-                            $filterConditions[0] = 'or';
-                            $filterConditions[]= $tmp;
-                            $filterConditions[]= ['LOWER(LanID)'=>$lanId];
-                        }
-                    }
-                    if (null!=$filterConditions) {
-                        $query->andWhere($filterConditions);
-                    }
-                }
                 if (null!=$minLat){
-                    $query->andWhere(['>=','Latitude',$minLat]);
+                    $query->andWhere(['>=','aoc.Latitude',$minLat]);
                 }
                 if (null!=$maxLat){
-                    $query->andWhere(['<=','Latitude',$maxLat]);
+                    $query->andWhere(['<=','aoc.Latitude',$maxLat]);
                 }
                 if (null!=$minLong){
-                    $query->andWhere(['>=','Longitude',$minLong]);
+                    $query->andWhere(['>=','aoc.Longitude',$minLong]);
                 }
                 if (null!=$maxLong){
-                    $query->andWhere(['<=','Longitude',$maxLong]);
+                    $query->andWhere(['<=','aoc.Longitude',$maxLong]);
                 }
 
-                // TODO apply the indications ( GradeType ) filter when/if the column will be available in the sql view
+                $query->distinct();
+                $query->orderBy([
+                    'th.UID' => SORT_ASC
+                ]);
 
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
@@ -843,26 +672,36 @@ class TrackerController extends Controller
             $headers = getallheaders();
 
             if ($indications) {
-                WebManagementTrackerIndications::setClient($headers['X-Client']);
-                $query = WebManagementTrackerIndications::find();
-                $query->select([
-                    'UID',
-                    'LanID as Inspector',
-                    'SurveyDateTime as Datetime',
-                    'HouseNo as [House No]',
-                    'Street1 as Street',
-                    'City',
-                    'State',
-                    'Latitude',
-                    'Longitude',
-                    'AboveBelowGroundType as [Leak Source]',//'InitialLeakSourceType as [Leak Source]',
-                    'SORLType as [Leak SORL]',
-                    'fndEquipmentType as [Leak Found By]',//'FoundBy as [Leak Found By]',
-                    'grdEquipmentType as [Leak Grade By]',//'GradeBy as [Leak Grade By]',
-                    'ReadingGrade as [Leak % Gas]',
-                    'GradeType as [Leak Grade]'
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $query = WebManagementTrackerHistory::find();
 
+                $query->select([
+                    'th.UID',
+                    'i.LanID as Inspector',
+                    'i.SurveyDateTime as Datetime',
+                    'i.HouseNo as [House No]',
+                    'i.Street1 as Street',
+                    'i.City',
+                    'i.State',
+                    'i.Latitude',
+                    'i.Longitude',
+                    'i.AboveBelowGroundType as [Leak Source]',//'InitialLeakSourceType as [Leak Source]',
+                    'i.SORLType as [Leak SORL]',
+                    'i.fndEquipmentType as [Leak Found By]',//'FoundBy as [Leak Found By]',
+                    'i.grdEquipmentType as [Leak Grade By]',//'GradeBy as [Leak Grade By]',
+                    'i.ReadingGrade as [Leak % Gas]',
+                    'i.GradeType as [Leak Grade]'
                 ]);
+                $query->from([
+                    'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                ]);
+                $query->innerJoin(
+                    ['i'=>WebManagementTrackerIndications::tableName()],
+                    '[th].[UID]=[i].[UID]'
+                );
+
+                $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
+
                 $indPossibleValues = ['1'=>'1','2p'=>'2+', '2+'=>'2+', '2%2B'=>'2+', '2 '=>'2+', '2'=>'2', '3'=>'3'];
 
                 $sentIndications = explode(',',$indications);
@@ -883,87 +722,41 @@ class TrackerController extends Controller
                     $indKey = strtolower($sentIndication);
                     if (isset($indPossibleValues[$indKey])){
                         if (null === $indFilterConditions){
-                            $indFilterConditions = ['GradeType'=>$indPossibleValues[$indKey]];
+                            $indFilterConditions = ['i.GradeType'=>$indPossibleValues[$indKey]];
                         } elseif ( isset($indFilterConditions[0]) && $indFilterConditions[0]=='or') {
-                            $indFilterConditions[]= ['GradeType'=>$indPossibleValues[$indKey]];
+                            $indFilterConditions[]= ['i.GradeType'=>$indPossibleValues[$indKey]];
                         } else {
                             $tmp = $indFilterConditions;
                             $indFilterConditions=[];
                             $indFilterConditions[0] = 'or';
                             $indFilterConditions[]= $tmp;
-                            $indFilterConditions[]= ['GradeType'=>$indPossibleValues[$indKey]];
+                            $indFilterConditions[]= ['i.GradeType'=>$indPossibleValues[$indKey]];
                         }
                     }
                 }
                 $query->andWhere($indFilterConditions);
 
-                if ($surveyors) {
-                    $sentLanIds = explode(',',$surveyors);
-                    $filterConditions = null;
-
-                    /*
-                     * construct an array of the form
-                     * ['LanID'=>value] for one entry
-                     * [
-                     *   'or',
-                     *   ['LanID'=>value1],
-                     *    ...
-                     *   ['LanID'=>valuen]
-                     * ] -- for multiple entries
-                     */
-                    foreach ($sentLanIds as $sentLanId) {
-                        $lanId = trim(strtolower($sentLanId));//trim(strtolower($sentCgis));
-                        if (''==$lanId){
-                            continue;
-                        }
-                        if (null === $filterConditions){
-                            $filterConditions = ['LanID'=>$lanId];
-                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                            $filterConditions[]= ['LanID'=>$lanId];
-                        } else {
-                            $tmp = $filterConditions;
-                            $filterConditions=[];
-                            $filterConditions[0] = 'or';
-                            $filterConditions[]= $tmp;
-                            $filterConditions[]= ['LanID'=>$lanId];
-                        }
-                    }
-                    if (null!=$filterConditions) {
-                        $query->andWhere($filterConditions);
-                    }
-                }
-
-                if ($division){
-                    $query->andWhere(['[DIVISION]' => $division]);
-                }
-                if($workCenter){
-                    $query->andWhere(['[WORKCENTER]' => $workCenter]);
-                }
-
-                if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-
-                    $query->andWhere(['between', 'SurveyDateTime', $startDate, $endDate]);
-                }
-
                 if (null!=$minLat){
-                    $query->andWhere(['>=','Latitude',$minLat]);
+                    $query->andWhere(['>=','i.Latitude',$minLat]);
                 }
 
                 if (null!=$maxLat){
-                    $query->andWhere(['<=','Latitude',$maxLat]);
+                    $query->andWhere(['<=','i.Latitude',$maxLat]);
                 }
 
                 if (null!=$minLong){
-                    $query->andWhere(['>=','Longitude',$minLong]);
+                    $query->andWhere(['>=','i.Longitude',$minLong]);
                 }
 
                 if (null!=$maxLong){
-                    $query->andWhere(['<=','Longitude',$maxLong]);
+                    $query->andWhere(['<=','i.Longitude',$maxLong]);
                 }
 
-                // TODO filter by AOCType when/if that column is available in the sql view
+                $query->distinct();
+                $query->orderBy([
+                    'th.UID' => SORT_ASC
+                ]);
+
                 $limit =$this->mapResultsLimit;
                 $offset = 0;
 
@@ -1517,5 +1310,77 @@ class TrackerController extends Controller
             fputcsv($fp, $row);
         }
         fclose($fp);
+    }
+
+    /* used as a helper function to avoid repeating the code section for indications, aoc, cge and breadcrumbs */
+    public function addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search) {
+        $query->where(['[th].[Division]' => $division]);
+        $query->andWhere(['[th].[Work Center]' => $workCenter]);
+
+        if ($surveyors) {
+            $sentLanIds = explode(',',$surveyors);
+            $filterConditions = null;
+
+            /*
+             * construct an array of the form
+             * ['LanID'=>value] for one entry
+             * [
+             *   'or',
+             *   ['LanID'=>value1],
+             *    ...
+             *   ['LanID'=>valuen]
+             * ] -- for multiple entries
+             */
+            foreach ($sentLanIds as $sentLanId) {
+                $lanId = trim(strtolower($sentLanId));
+                if (''==$lanId){
+                    continue;
+                }
+                if (null === $filterConditions){
+                    $filterConditions = ['LOWER([th].[SurveyorLANID])'=>$lanId];
+                } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                    $filterConditions[]= ['LOWER([th].[SurveyorLANID])'=>$lanId];
+                } else {
+                    $tmp = $filterConditions;
+                    $filterConditions=[];
+                    $filterConditions[0] = 'or';
+                    $filterConditions[]= $tmp;
+                    $filterConditions[]= ['LOWER([th].[SurveyorLANID])'=>$lanId];
+                }
+            }
+            if (null!=$filterConditions) {
+                $query->andWhere($filterConditions);
+            }
+        }
+
+        if (trim($search)) {
+            $query->andWhere([
+                'or',
+                ['like', 'th.Division', $search],
+                ['like', 'th.Date', $search],
+                ['like', 'th.[Surveyor / Inspector]', $search],
+                ['like', 'th.[Work Center]', $search],
+                ['like', 'th.Latitude', $search],
+                ['like', 'th.Longitude', $search],
+                ['like', 'th.[Date Time]', $search],
+                ['like', 'th.[House No]', $search],
+                ['like', 'th.Street', $search],
+                ['like', 'th.Apt', $search],
+                ['like', 'th.City', $search],
+                ['like', 'th.State', $search],
+                ['like', 'th.Landmark', $search],
+                ['like', 'th.[Landmark Description]', $search],
+                ['like', 'th.[Accuracy (Meters)]', $search]
+            ]);
+        }
+        if ($startDate !== null && $endDate !== null) {
+            // Only add the following if the DB field is Date Time
+            // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
+            //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
+
+            $query->andWhere(['between', 'th.Date', $startDate, $endDate]);
+        }
+
+        return $query;
     }
 }
