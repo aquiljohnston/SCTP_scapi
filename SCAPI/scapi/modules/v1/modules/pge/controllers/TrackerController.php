@@ -1084,34 +1084,82 @@ class TrackerController extends Controller
 
             $headers = getallheaders();
             if (null !==$division && null !==$workCenter && null !== $startDate && null !== $endDate) {
-                AssetAddressCGE::setClient($headers['X-Client']);
-                $cgiQuery= AssetAddressCGE::find();
-
+                WebManagementTrackerHistory::setClient($headers['X-Client']);
+                $cgiQuery = WebManagementTrackerHistory::find();
                 $cgiQuery->select([
-                    'Key'=>'CreatedUserUID',
+                    'Key'=>'aac.CreatedUserUID',
                     'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName)"
 //                    'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName,' (',u.UserLANID ,')')"
                 ])->distinct();
+
+                // TODO check if all three joins are really needed or if it would be enough to return the FirstName and LastName of the surveyors as the CGI filters
                 $cgiQuery->from([
-                    'ac'=>'['.AssetAddressCGE::tableName().']',
+                    'th'=>'['.WebManagementTrackerHistory::tableName().']',
                 ]);
                 $cgiQuery->innerJoin(
+                    ['aac'=>AssetAddressCGE::tableName()],
+                    '[th].[UID]=[aac].[AssetAddressCGEUID]'
+                );
+                $cgiQuery->innerJoin(
                     ['u'=>PGEUser::tableName()],
-                    '[ac].[CreatedUserUID]=[u].[UserUID]'
+                    '[aac].[CreatedUserUID]=[u].[UserUID]'
                 );
 
-                $cgiQuery->where(['ActiveFlag'=>'1']);
-                $cgiQuery->orderBy(['CreatedUserUID' => SORT_ASC]);
+                $cgiQuery = $this->addTrackerHistoryTableViewFiltersToQuery($cgiQuery, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
+
+                $cgiQuery->orderBy([
+                    'aac.CreatedUserUID' => SORT_ASC
+                ]);
 
                 $limit = $this->filtersLimit;
                 $offset = 0;
-//TODO see how to filter the results from CGE by workcenter, division, startDate and endDate
                 $uidsQueryCommand = $cgiQuery->offset($offset)
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $uidsQueryCommand->sql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $cgiUids = $uidsQueryCommand->queryAll();
+                // if no CGI results then return the FirstName LastName values for the sent surveyors
+                if (empty($cgiUids) && !empty($surveyors)){
+                    PGEUser::setClient($headers['X-Client']);
+                    $uQuery = PGEUser::find();
+                    $uQuery->select([
+                        'Key'=>'UserUID',
+                        'DisplayedText'=>"CONCAT(UserLastName,', ',UserFirstName)"
+//                    'DisplayedText'=>"CONCAT(UserLastName,', ',UserFirstName,' (',UserLANID ,')')"
+                    ]);
+
+                    $sentLanIds = explode(',',$surveyors);
+                    $filterConditions = null;
+                    foreach ($sentLanIds as $sentLanId) {
+                        $lanId = trim(strtolower($sentLanId));
+                        if (''==$lanId){
+                            continue;
+                        }
+                        if (null === $filterConditions){
+                            $filterConditions = ['LOWER(UserLANID)'=>$lanId];
+                        } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
+                            $filterConditions[]= ['LOWER(UserLANID)'=>$lanId];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions=[];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[]= $tmp;
+                            $filterConditions[]= ['LOWER(UserLANID)'=>$lanId];
+                        }
+                    }
+                    if (null!=$filterConditions) {
+                        $uQuery->andWhere($filterConditions);
+                    }
+                    $limit = $this->filtersLimit;
+                    $offset = 0;
+                    $uidsQueryCommand = $uQuery->offset($offset)
+                        ->limit($limit)
+                        ->createCommand();
+                    //$sqlString = $uidsQueryCommand->sql;
+                    //Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                    $cgiUids = $uidsQueryCommand->queryAll();
+                }
 
                 WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
                 $lanIdsQuery = WebManagementTrackerHistoryDropDown::find()
@@ -1285,6 +1333,11 @@ class TrackerController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+
+
+////////////////////
+// Helper methods
+////////////////////
 
     // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){
