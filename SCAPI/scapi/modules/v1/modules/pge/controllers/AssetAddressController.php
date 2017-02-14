@@ -81,14 +81,30 @@ class AssetAddressController extends Controller
 			$assetSavedFlag = false;
 			
 			//check for 0 or empty lat/long
-			if ($assetAddressArray['Latitude'] == 0 || $assetAddressArray['Latitude'] == null)
+			if (array_key_exists('Latitude', $assetAddressArray))
+			{
+				if ($assetAddressArray['Latitude'] == 0 || $assetAddressArray['Latitude'] == null)
+				{
+					$assetAddressArray['Latitude'] = $activityLat; 
+				}
+			}	
+			else
 			{
 				$assetAddressArray['Latitude'] = $activityLat; 
 			}
-			if ($assetAddressArray['Longitude'] == 0 || $assetAddressArray['Longitude'] == null)
+			
+			if (array_key_exists('Longitude', $assetAddressArray))
 			{
-				$assetAddressArray['Longitude'] = $activityLong; 
+				if ($assetAddressArray['Longitude'] == 0 || $assetAddressArray['Longitude'] == null)
+				{
+					$assetAddressArray['Longitude'] = $activityLong; 
+				}
 			}
+			else
+			{
+				$assetAddressArray['Longitude'] = $activityLat; 
+			}
+			
 
 			if($previousAddress == null)
 			{			
@@ -164,11 +180,26 @@ class AssetAddressController extends Controller
 				if ($assetAddressArray['Inspection'] != null) {
 					
 					//check for 0 or empty lat/long
-					if ($assetAddressArray['Inspection']['Latitude'] == 0 || $assetAddressArray['Inspection']['Latitude'] == null)
+					if (array_key_exists('Latitude', $assetAddressArray['Inspection']))
 					{
-						$assetAddressArray['Inspection']['Latitude'] = $activityLat; 
+						if ($assetAddressArray['Inspection']['Latitude'] == 0 || $assetAddressArray['Inspection']['Latitude'] == null)
+						{
+							$assetAddressArray['Inspection']['Latitude'] = $activityLat; 
+						}
 					}
-					if ($assetAddressArray['Inspection']['Longitude'] == 0 || $assetAddressArray['Inspection']['Longitude'] == null)
+					else
+					{
+						$assetAddressArray['Inspection']['Latitude'] = $activityLat;
+					}
+					
+					if (array_key_exists('Longitude', $assetAddressArray['Inspection']))
+					{
+						if ($assetAddressArray['Inspection']['Longitude'] == 0 || $assetAddressArray['Inspection']['Longitude'] == null)
+						{
+							$assetAddressArray['Inspection']['Longitude'] = $activityLong; 
+						}
+					}
+					else
 					{
 						$assetAddressArray['Inspection']['Longitude'] = $activityLong; 
 					}
@@ -252,11 +283,26 @@ class AssetAddressController extends Controller
 				if ($assetAddressArray['CGI'] != null) {
 					
 					//check for 0 or empty lat/long
-					if ($assetAddressArray['CGI']['Latitude'] == 0 || $assetAddressArray['CGI']['Latitude'] == null)
+					if (array_key_exists('Latitude', $assetAddressArray['CGI']))
+					{
+						if ($assetAddressArray['CGI']['Latitude'] == 0 || $assetAddressArray['CGI']['Latitude'] == null)
+						{
+							$assetAddressArray['CGI']['Latitude'] = $activityLat; 
+						}
+					}
+					else
 					{
 						$assetAddressArray['CGI']['Latitude'] = $activityLat; 
 					}
-					if ($assetAddressArray['CGI']['Longitude'] == 0 || $assetAddressArray['CGI']['Longitude'] == null)
+					
+					if (array_key_exists('Longitude', $assetAddressArray['CGI']))
+					{
+						if ($assetAddressArray['CGI']['Longitude'] == 0 || $assetAddressArray['CGI']['Longitude'] == null)
+						{
+							$assetAddressArray['CGI']['Longitude'] = $activityLong; 
+						}
+					}
+					else
 					{
 						$assetAddressArray['CGI']['Longitude'] = $activityLong; 
 					}
@@ -346,11 +392,26 @@ class AssetAddressController extends Controller
 					for ($i = 0; $i < $AOCCount; $i++) {
 						
 						//check for 0 or empty lat/long
-						if ($assetAddressArray['AOCs'][$i]['Latitude'] == 0 || $assetAddressArray['AOCs'][$i]['Latitude'] == null)
+						if (array_key_exists('Latitude', $assetAddressArray['AOCs'][$i]))
+						{
+							if ($assetAddressArray['AOCs'][$i]['Latitude'] == 0 || $assetAddressArray['AOCs'][$i]['Latitude'] == null)
+							{
+								$assetAddressArray['AOCs'][$i]['Latitude'] = $activityLat; 
+							}
+						}
+						else
 						{
 							$assetAddressArray['AOCs'][$i]['Latitude'] = $activityLat; 
 						}
-						if ($assetAddressArray['AOCs'][$i]['Longitude'] == 0 || $assetAddressArray['AOCs'][$i]['Longitude'] == null)
+						
+						if (array_key_exists('Longitude', $assetAddressArray['AOCs'][$i]))
+						{
+							if ($assetAddressArray['AOCs'][$i]['Longitude'] == 0 || $assetAddressArray['AOCs'][$i]['Longitude'] == null)
+							{
+								$assetAddressArray['AOCs'][$i]['Longitude'] = $activityLong; 
+							}
+						}
+						else
 						{
 							$assetAddressArray['AOCs'][$i]['Longitude'] = $activityLong; 
 						}
@@ -445,11 +506,26 @@ class AssetAddressController extends Controller
 					for ($i = 0; $i < $IndicationCount; $i++) {
 						
 						//check for 0 or empty lat/long
-						if ($assetAddressArray['Indications'][$i]['Latitude'] == 0 || $assetAddressArray['Indications'][$i]['Latitude'] == null)
+						if (array_key_exists('Latitude', $assetAddressArray['Indications'][$i]))
+						{
+							if ($assetAddressArray['Indications'][$i]['Latitude'] == 0 || $assetAddressArray['Indications'][$i]['Latitude'] == null)
+							{
+								$assetAddressArray['Indications'][$i]['Latitude'] = $activityLat; 
+							}
+						}
+						else
 						{
 							$assetAddressArray['Indications'][$i]['Latitude'] = $activityLat; 
 						}
-						if ($assetAddressArray['Indications'][$i]['Longitude'] == 0 || $assetAddressArray['Indications'][$i]['Longitude'] == null)
+						
+						if (array_key_exists('Longitude', $assetAddressArray['Indications'][$i]))
+						{
+							if ($assetAddressArray['Indications'][$i]['Longitude'] == 0 || $assetAddressArray['Indications'][$i]['Longitude'] == null)
+							{
+								$assetAddressArray['Indications'][$i]['Longitude'] = $activityLong; 
+							}
+						}
+						else
 						{
 							$assetAddressArray['Indications'][$i]['Longitude'] = $activityLong; 
 						}
