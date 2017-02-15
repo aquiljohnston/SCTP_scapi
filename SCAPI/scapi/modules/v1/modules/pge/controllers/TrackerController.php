@@ -1146,8 +1146,8 @@ class TrackerController extends Controller
                 $surveyorFilters = $lanIdsQueryCommand->queryAll();
 
 
-                WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
-                $cgiQuery = WebManagementTrackerHistoryDropDown::find();
+                PGEUser::setClient($headers['X-Client']);
+                $cgiQuery = PGEUser::find();
                 $cgiQuery->select([
                     'Key'=>'u.UserUID',
                     'DisplayedText'=>"CONCAT(u.UserLastName,', ',u.UserFirstName)"
@@ -1155,32 +1155,19 @@ class TrackerController extends Controller
                 ])->distinct();
 
                 $cgiQuery->from([
-                    'thd'=>'['.WebManagementTrackerHistoryDropDown::tableName().']',
+                    'u'=>'['.PGEUser::tableName().']',
                 ]);
-                $cgiQuery->innerJoin(
-                    ['u'=>PGEUser::tableName()],
-                    'LOWER([thd].[SurveyorLANID])=[u].[UserLANID]'
-                );
+
                 $filterConditions = null;
+                $lanIds=[];
                 foreach ($surveyorFilters as $surveyor) {
-                    $lanId = $surveyor['Key'];
-                    if (null === $filterConditions){
-                        $filterConditions = ['LOWER(u.UserLANID)'=>$lanId];
-                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                        $filterConditions[]= ['LOWER(u.UserLANID)'=>$lanId];
-                    } else {
-                        $tmp = $filterConditions;
-                        $filterConditions=[];
-                        $filterConditions[0] = 'or';
-                        $filterConditions[]= $tmp;
-                        $filterConditions[]= ['LOWER(u.UserLANID)'=>$lanId];
-                    }
-                    if (null!=$filterConditions) {
-                        $cgiQuery->andWhere($filterConditions);
-                    }
+                    $lanIds[] = $surveyor['Key'];
+                }
+                if (!empty($lanIds)) {
+                    $cgiQuery->where(['u.UserLANID'=>$lanIds]);
                 }
                 $cgiQuery->orderBy([
-                    'u.UserUID' => SORT_ASC
+                    'DisplayedText' => SORT_ASC
                 ]);
 
                 $limit = $this->filtersLimit;
@@ -1190,7 +1177,6 @@ class TrackerController extends Controller
                     ->createCommand();
 //                $sqlString = $uidsQueryCommand->rawSql; //print_r($sqlString);
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
-//                Yii::trace(print_r($surveyor,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $cgiUids = $uidsQueryCommand->queryAll();
 
