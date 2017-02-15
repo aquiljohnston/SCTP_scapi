@@ -3,7 +3,7 @@
 use app\authentication\CTUser;
 
 $params = require(__DIR__ . '/params.php');
-
+set_time_limit(180); // increases max exec time
 $config = [
     'id' => 'scapi',
     'basePath' => dirname(__DIR__),
