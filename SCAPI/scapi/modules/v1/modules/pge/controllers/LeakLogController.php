@@ -366,9 +366,6 @@ class LeakLogController extends BaseActiveController {
                 ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
