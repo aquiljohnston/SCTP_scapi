@@ -116,7 +116,11 @@ class DispatchController extends Controller
 						$responseArray['Maps'][] = $dataArray[$i];
 						continue;
 					}
-				}
+				} else {
+				    // If there is no filter then the data should not be filtered.
+				    $responseArray['Maps'][] = $dataArray[$i];
+				    // No need for continue as this is the last code in the loop.
+                }
 			}
 			$response->data = $responseArray;
 		}
