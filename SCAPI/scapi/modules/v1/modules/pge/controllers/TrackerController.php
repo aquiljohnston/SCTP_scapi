@@ -277,11 +277,9 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
 
-                // TODO find a better solution for the temporary fix of using Date instead of DateTime to avoid duplicate rows
                 $query->select(
                     [
-                        //'[Date Time]',
-                        '[Date] as [Date Time]',
+                        '[Date Time]',
                         '[Surveyor / Inspector]',
                         '[Latitude]',
                         '[Longitude]',
@@ -293,6 +291,7 @@ class TrackerController extends Controller
                         '[Landmark]',
                         '[Landmark Description]',
                         '[Accuracy (Meters)]',
+                        '[UID]',
                     ]
                 );
 
@@ -331,28 +330,14 @@ class TrackerController extends Controller
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
-//                $query->distinct();
-                // TODO revise this
-                $query->groupBy([
-                    '[UID]',
-                    '[Date]',
-                    //'[Date Time]',
-                    '[Surveyor / Inspector]',
-                    '[Latitude]',
-                    '[Longitude]',
-                    '[House No]',
-                    '[Street]',
-                    '[Apt]',
-                    '[City]',
-                    '[State]',
-                    '[Landmark]',
-                    '[Landmark Description]',
-                    '[Accuracy (Meters)]',
-                ]);
+                $query->distinct();
+
                 $countQuery = clone $query;
 
                 $query->orderBy([
-                    '[UID]' => SORT_ASC
+                    'Date Time' => SORT_ASC,
+                    'Surveyor / Inspector' => SORT_ASC,
+                    'UID' => SORT_ASC,
                 ]);
 
                 /* page index is 0 based */
@@ -364,8 +349,6 @@ class TrackerController extends Controller
                 $pages->setPage($page,true);
                 $offset = $pages->getOffset();//$perPage * ($page - 1);
                 $limit = $pages->getLimit();
-
-                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
                 $items = $query->offset($offset)
                     ->limit($limit)
@@ -481,8 +464,8 @@ class TrackerController extends Controller
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $queryCommand->sql;
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $queryCommand->rawSql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
@@ -610,8 +593,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $queryCommand->rawSql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
@@ -738,8 +721,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $queryCommand->rawSql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -879,8 +862,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+//                $sqlString = $queryCommand->rawSql;
+//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -1036,8 +1019,7 @@ class TrackerController extends Controller
 
                 $query->select(
                     [
-                        //'[Date Time]',
-                        '[Date]',
+                        '[Date Time]',
                         '[Surveyor / Inspector]',
                         '[Latitude]',
                         '[Longitude]',
@@ -1049,6 +1031,7 @@ class TrackerController extends Controller
                         '[Landmark]',
                         '[Landmark Description]',
                         '[Accuracy (Meters)]',
+                        '[UID]',
                     ]
                 );
                 $query->where(['Division' => $division]);
@@ -1085,28 +1068,16 @@ class TrackerController extends Controller
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
-//                $query->distinct();
-                // TODO revise this
-                $query->groupBy([
-                    '[UID]',
-                    '[Date]',
-                    //'[Date Time]',
-                    '[Surveyor / Inspector]',
-                    '[Latitude]',
-                    '[Longitude]',
-                    '[House No]',
-                    '[Street]',
-                    '[Apt]',
-                    '[City]',
-                    '[State]',
-                    '[Landmark]',
-                    '[Landmark Description]',
-                    '[Accuracy (Meters)]',
+                $query->distinct();
+                $query->orderBy([
+                    'Date Time' => SORT_ASC,
+                    'Surveyor / Inspector' => SORT_ASC,
+                    'UID' => SORT_ASC,
                 ]);
+
 
                 $offset = 0;
                 $limit = $this->downloadItemsLimit;
-                $query->orderBy(['Date' => SORT_ASC, 'Surveyor / Inspector' => SORT_ASC]);
 
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
