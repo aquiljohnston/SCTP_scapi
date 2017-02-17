@@ -276,6 +276,26 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
+
+                // TODO find a better solution for the temporary fix of using Date instead of DateTime to avoid duplicate rows
+                $query->select(
+                    [
+                        //'[Date Time]',
+                        '[Date] as [Date Time]',
+                        '[Surveyor / Inspector]',
+                        '[Latitude]',
+                        '[Longitude]',
+                        '[House No]',
+                        '[Street]',
+                        '[Apt]',
+                        '[City]',
+                        '[State]',
+                        '[Landmark]',
+                        '[Landmark Description]',
+                        '[Accuracy (Meters)]',
+                    ]
+                );
+
                 $query->where(['Division' => $division]);
                 $query->andWhere(['Work Center' => $workCenter]);
 
@@ -311,7 +331,29 @@ class TrackerController extends Controller
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
 
+//                $query->distinct();
+                // TODO revise this
+                $query->groupBy([
+                    '[UID]',
+                    '[Date]',
+                    //'[Date Time]',
+                    '[Surveyor / Inspector]',
+                    '[Latitude]',
+                    '[Longitude]',
+                    '[House No]',
+                    '[Street]',
+                    '[Apt]',
+                    '[City]',
+                    '[State]',
+                    '[Landmark]',
+                    '[Landmark Description]',
+                    '[Accuracy (Meters)]',
+                ]);
                 $countQuery = clone $query;
+
+                $query->orderBy([
+                    '[UID]' => SORT_ASC
+                ]);
 
                 /* page index is 0 based */
                 $page = max($page-1,0);
@@ -358,10 +400,26 @@ class TrackerController extends Controller
         }
     }
 
+    /**
+     * @param string $division
+     * @param string $workCenter
+     * @param string $surveyors     - comma separated list of lanids. If it is empty not set then it will not filter by
+     *                                surveyors and all available surveyors will be considered
+     * @param string $startDate
+     * @param string $endDate
+     * @param string $search
+     * @param string $minLat
+     * @param string $maxLat
+     * @param string $minLong
+     * @param string $maxLong
+     * @return string
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyors = null,
                                                    $startDate = null, $endDate = null, $search = null,
-                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $cgi=null, $aoc=null, $indications=null)
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null
+                                                   )
     {
         try{
 
@@ -423,8 +481,8 @@ class TrackerController extends Controller
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $queryCommand->sql;
-//                $sqlString = $queryCommand->rawSql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $sqlString = $queryCommand->rawSql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
@@ -445,10 +503,28 @@ class TrackerController extends Controller
         }
     }
 
+    /**
+     * @param string $division
+     * @param string $workCenter
+     * @param string $surveyors     - comma separated list of lanids. If it is empty not set then it will not filter by
+     *                                surveyors and all available surveyors will be considered
+     * @param string $startDate
+     * @param string $endDate
+     * @param string $search
+     * @param string $minLat
+     * @param string $maxLat
+     * @param string $minLong
+     * @param string $maxLong
+     * @param string $cgi           - comma separated list of user ids.  If it has the value _all_ it will not filter by
+     *                                CreatedUserID and consider all
+     * @return string
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
     public function actionGetHistoryMapCgi($division=null, $workCenter=null, $surveyors = null,
                                             $startDate = null, $endDate = null, $search = null,
                                             $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                            $cgi=null, $aoc=null, $indications=null)
+                                            $cgi=null)
     {
         try{
 
@@ -476,38 +552,40 @@ class TrackerController extends Controller
 
                 $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
-                $sentCgis = explode(',',$cgi);
-                $filterConditions = null;
-                /*
-                 * construct an array of the form
-                 * ['CreatedUserUID'=>value] for one entry
-                 * [
-                 *   'or',
-                 *   ['CreatedUserUID'=>value1],
-                 *    ...
-                 *   ['CreatedUserUID'=>valuen]
-                 * ] -- for multiple entries
-                 */
-                foreach ($sentCgis as $sentCgi) {
-                    $uid = trim(strtolower($sentCgi));//trim(strtolower($sentCgis));
-                    if (''==$uid){
-                        continue;
+                if (trim(strtolower($cgi))!='_all_') {
+                    $sentCgis = explode(',', $cgi);
+                    $filterConditions = null;
+                    /*
+                     * construct an array of the form
+                     * ['CreatedUserUID'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['CreatedUserUID'=>value1],
+                     *    ...
+                     *   ['CreatedUserUID'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentCgis as $sentCgi) {
+                        $uid = trim(strtolower($sentCgi));//trim(strtolower($sentCgis));
+                        if ('' == $uid) {
+                            continue;
+                        }
+                        if (null === $filterConditions) {
+                            $filterConditions = ['aac.CreatedUserUID' => $uid];
+                        } elseif (isset($filterConditions[0]) && $filterConditions[0] == 'or') {
+                            $filterConditions[] = ['aac.CreatedUserUID' => $uid];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions = [];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[] = $tmp;
+                            $filterConditions[] = ['aac.CreatedUserUID' => $uid];
+                        }
                     }
-                    if (null === $filterConditions){
-                        $filterConditions = ['aac.CreatedUserUID'=>$uid];
-                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                        $filterConditions[]= ['aac.CreatedUserUID'=>$uid];
-                    } else {
-                        $tmp = $filterConditions;
-                        $filterConditions=[];
-                        $filterConditions[0] = 'or';
-                        $filterConditions[]= $tmp;
-                        $filterConditions[]= ['aac.CreatedUserUID'=>$uid];
-                    }
-                }
 
-                if (null!=$filterConditions) {
-                    $query->andWhere($filterConditions);
+                    if (null != $filterConditions) {
+                        $query->andWhere($filterConditions);
+                    }
                 }
                 if (null!=$minLat){
                     $query->andWhere(['>=','aac.Latitude',$minLat]);
@@ -532,8 +610,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->sql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $sqlString = $queryCommand->rawSql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
@@ -554,10 +632,28 @@ class TrackerController extends Controller
         }
     }
 
+    /**
+     * @param string $division
+     * @param string $workCenter
+     * @param string $surveyors     - comma separated list of lanids. If it is empty not set then it will not filter by
+     *                                surveyors and all available surveyors will be considered
+     * @param string $startDate
+     * @param string $endDate
+     * @param string $search
+     * @param string $minLat
+     * @param string $maxLat
+     * @param string $minLong
+     * @param string $maxLong
+     * @param string $aoc           - comma separated list of AOC Types (only the interger part) .  If it has the value _all_ then it will not filter by
+     *                                AocType and consider all AOCTypes
+     * @return string
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
     public function actionGetHistoryMapAocs($division=null, $workCenter=null, $surveyors = null,
                                             $startDate = null, $endDate = null, $search = null,
                                             $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                            $cgi=null, $aoc=null, $indications=null)
+                                            $aoc=null)
     {
         try{
 
@@ -589,34 +685,35 @@ class TrackerController extends Controller
 
                 $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
-                $sentAocs = explode(',',$aoc);
-                $filterConditions = null;
-                /*
-                 * construct an array of the form
-                 * ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value] for one entry
-                 * [
-                 *   'or',
-                 *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value1],
-                 *    ...
-                 *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>valuen]
-                 * ] -- for multiple entries
-                 */
-                foreach ($sentAocs as $sentAoc) {
-                    $aocTypeCode = intval(trim($sentAoc));
-                    if (null === $filterConditions){
-                        $filterConditions = ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))'=>$aocTypeCode];
-                    } elseif ( isset($filterConditions[0]) && $filterConditions[0]=='or') {
-                        $filterConditions[]= ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))'=>$aocTypeCode];
-                    } else {
-                        $tmp = $filterConditions;
-                        $filterConditions=[];
-                        $filterConditions[0] = 'or';
-                        $filterConditions[]= $tmp;
-                        $filterConditions[]= ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))'=>$aocTypeCode];
+                if (trim(strtolower($aoc))!=='_all_') {
+                    $sentAocs = explode(',', $aoc);
+                    $filterConditions = null;
+                    /*
+                     * construct an array of the form
+                     * ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>value1],
+                     *    ...
+                     *   ['RTRIM(SUBSTRING(AOCType, 1,CHARINDEX('-',AOCType)-1))'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentAocs as $sentAoc) {
+                        $aocTypeCode = intval(trim($sentAoc));
+                        if (null === $filterConditions) {
+                            $filterConditions = ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))' => $aocTypeCode];
+                        } elseif (isset($filterConditions[0]) && $filterConditions[0] == 'or') {
+                            $filterConditions[] = ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))' => $aocTypeCode];
+                        } else {
+                            $tmp = $filterConditions;
+                            $filterConditions = [];
+                            $filterConditions[0] = 'or';
+                            $filterConditions[] = $tmp;
+                            $filterConditions[] = ['RTRIM(SUBSTRING(aoc.AOCType, 1,CHARINDEX(\'-\',aoc.AOCType)-1))' => $aocTypeCode];
+                        }
                     }
+                    $query->andWhere($filterConditions);
                 }
-                $query->andWhere($filterConditions);
-
 
                 if (null!=$minLat){
                     $query->andWhere(['>=','aoc.Latitude',$minLat]);
@@ -641,8 +738,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->sql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $sqlString = $queryCommand->rawSql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -661,11 +758,28 @@ class TrackerController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-
+    /**
+     * @param string $division
+     * @param string $workCenter
+     * @param string $surveyors     - comma separated list of lanids. If it is empty not set then it will not filter by
+     *                                surveyors and all available surveyors will be considered
+     * @param string $startDate
+     * @param string $endDate
+     * @param string $search
+     * @param string $minLat
+     * @param string $maxLat
+     * @param string $minLong
+     * @param string $maxLong
+     * @param string $indications   - comma separated list of GradeTypes.  If it is has the value _all_ then it will not filter by
+     *                                GradeType and consider all gradeTypes
+     * @return string
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
     public function actionGetHistoryMapIndications($division=null, $workCenter=null, $surveyors = null,
                                                    $startDate = null, $endDate = null, $search = null,
                                                    $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
-                                                   $cgi=null, $aoc=null, $indications=null)
+                                                   $indications=null)
     {
         try{
 
@@ -702,39 +816,41 @@ class TrackerController extends Controller
 
                 $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
-                $indPossibleValues = ['1'=>'1','2p'=>'2+', '2+'=>'2+', '2%2B'=>'2+', '2 '=>'2+', '2'=>'2', '3'=>'3'];
+                if (trim(strtolower($indications))!=='_all_') {
+                    $indPossibleValues = ['1' => '1', '2p' => '2+', '2+' => '2+', '2%2B' => '2+', '2 ' => '2+', '2' => '2', '3' => '3'];
 
-                $sentIndications = explode(',',$indications);
-                $indFilterConditions = null;
+                    $sentIndications = explode(',', $indications);
+                    $indFilterConditions = null;
 
-                /*
-                 * construct an array of the form
-                 * ['GradeType'=>value] for one entry
-                 * [
-                 *   'or',
-                 *   ['GradeType'=>value1],
-                 *    ...
-                 *   ['GradeType'=>valuen]
-                 * ] -- for multiple entries
-                 */
-                foreach ($sentIndications as $sentIndication) {
-                   // $indKey = trim(strtolower($sentIndication));
-                    $indKey = strtolower($sentIndication);
-                    if (isset($indPossibleValues[$indKey])){
-                        if (null === $indFilterConditions){
-                            $indFilterConditions = ['i.GradeType'=>$indPossibleValues[$indKey]];
-                        } elseif ( isset($indFilterConditions[0]) && $indFilterConditions[0]=='or') {
-                            $indFilterConditions[]= ['i.GradeType'=>$indPossibleValues[$indKey]];
-                        } else {
-                            $tmp = $indFilterConditions;
-                            $indFilterConditions=[];
-                            $indFilterConditions[0] = 'or';
-                            $indFilterConditions[]= $tmp;
-                            $indFilterConditions[]= ['i.GradeType'=>$indPossibleValues[$indKey]];
+                    /*
+                     * construct an array of the form
+                     * ['GradeType'=>value] for one entry
+                     * [
+                     *   'or',
+                     *   ['GradeType'=>value1],
+                     *    ...
+                     *   ['GradeType'=>valuen]
+                     * ] -- for multiple entries
+                     */
+                    foreach ($sentIndications as $sentIndication) {
+                        // $indKey = trim(strtolower($sentIndication));
+                        $indKey = strtolower($sentIndication);
+                        if (isset($indPossibleValues[$indKey])) {
+                            if (null === $indFilterConditions) {
+                                $indFilterConditions = ['i.GradeType' => $indPossibleValues[$indKey]];
+                            } elseif (isset($indFilterConditions[0]) && $indFilterConditions[0] == 'or') {
+                                $indFilterConditions[] = ['i.GradeType' => $indPossibleValues[$indKey]];
+                            } else {
+                                $tmp = $indFilterConditions;
+                                $indFilterConditions = [];
+                                $indFilterConditions[0] = 'or';
+                                $indFilterConditions[] = $tmp;
+                                $indFilterConditions[] = ['i.GradeType' => $indPossibleValues[$indKey]];
+                            }
                         }
                     }
+                    $query->andWhere($indFilterConditions);
                 }
-                $query->andWhere($indFilterConditions);
 
                 if (null!=$minLat){
                     $query->andWhere(['>=','i.Latitude',$minLat]);
@@ -763,8 +879,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->sql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $sqlString = $queryCommand->rawSql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -920,7 +1036,8 @@ class TrackerController extends Controller
 
                 $query->select(
                     [
-                        '[Date Time]',
+                        //'[Date Time]',
+                        '[Date]',
                         '[Surveyor / Inspector]',
                         '[Latitude]',
                         '[Longitude]',
@@ -968,6 +1085,24 @@ class TrackerController extends Controller
 
                     $query->andWhere(['between', 'Date', $startDate, $endDate]);
                 }
+//                $query->distinct();
+                // TODO revise this
+                $query->groupBy([
+                    '[UID]',
+                    '[Date]',
+                    //'[Date Time]',
+                    '[Surveyor / Inspector]',
+                    '[Latitude]',
+                    '[Longitude]',
+                    '[House No]',
+                    '[Street]',
+                    '[Apt]',
+                    '[City]',
+                    '[State]',
+                    '[Landmark]',
+                    '[Landmark Description]',
+                    '[Accuracy (Meters)]',
+                ]);
 
                 $offset = 0;
                 $limit = $this->downloadItemsLimit;
@@ -976,7 +1111,7 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->sql;
+//                $sqlString = $queryCommand->rawSql;
 //                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
