@@ -133,4 +133,20 @@ class DispatchController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+
+    public function actionGetSurveyors($workCenter = null, $filter = null, $listPerPage = null, $page = null)
+    {
+        $users = [
+            [
+                'Name' => 'Patton, Josh',
+                'Division' => 'Las Vegas'
+            ]
+        ];
+        $responseArray['users'] = $users;
+        //send response
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $responseArray;
+        return $response;
+    }
 }
