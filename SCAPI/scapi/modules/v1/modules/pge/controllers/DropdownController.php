@@ -1852,20 +1852,52 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetMapStampAssociatePlanInspectionRequestDropDown($workcenter, $floc, $surveyfreq){
+    public function actionGetMapStampAssociatePlanInspectionRequestDropDown($notificationID){
         try
         {
             //set db target
             $headers = getallheaders();
             WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
 
-            $query = WebManagementDropDownAssociatePlanIR::find()->select(['InspectionRequestUID'])->where(['WorkCenter'=>$workcenter])->andWhere(['FLOC'=>$floc])->andWhere(['SurveyType'=>$surveyfreq])->one();
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['InspectionRequestUID'])->where(['NotificationNumber'=>$notificationID])->one();
             $responseData = $query;
 
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
             $response->data = $responseData;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetMapStampAssociatePlanNotificationIDDropDown($workcenter, $floc, $surveyfreq){
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
+
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['NotificationNumber'])->where(['WorkCenter'=>$workcenter])->andWhere(['FLOC'=>$floc])->andWhere(['SurveyType'=>$surveyfreq])->all();
+            $dataSize = count($query);
+
+            for ($i = 0; $i < $dataSize; $i++) {
+                $namePairs[] = [
+                    'id' => $query[$i]->NotificationNumber,
+                    'name' => $query[$i]->NotificationNumber];
+            }
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
             return $response;
         }
         catch(ForbiddenHttpException $e)
