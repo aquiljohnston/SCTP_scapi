@@ -122,7 +122,7 @@ class MapStampController extends BaseActiveController {
         }
     }
 
-    public function actionGetMgmt($division, $workCenter=null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
+    public function actionGetMgmt($division, $workCenter=null, $startDate = null, $endDate = null, $search = null, $status='', $page=null, $perPage=null)
     {
         //TODO RBAC permission check
         try{
@@ -136,7 +136,7 @@ class MapStampController extends BaseActiveController {
             $counts['returned'] = 0;
             $counts['completed'] = 0;
 
-            if ($division && $workCenter) {
+            //if ($division && $workCenter) {
                 $query = WebManagementMapStampManagement::find();
                 $query->where(['Division' => $division]);
                 $query->andWhere(['WorkCenter' => $workCenter]);
@@ -179,7 +179,7 @@ class MapStampController extends BaseActiveController {
                 $countQuery = clone $query;
 
                 /* page index is 0 based */
-                $page = max($page-1,0);
+                /*$page = max($page-1,0);
                 $totalCount = $countQuery->count();
                 $pages = new Pagination(['totalCount' => $totalCount]);
                 $pages->pageSizeLimit = [1, 100];
@@ -192,7 +192,10 @@ class MapStampController extends BaseActiveController {
 
                 $entries = $query->offset($offset)
                     ->limit($limit)
-                    ->all();
+                    ->all();*/
+
+                $paginationResponse = self::paginationProcessor($query, $page, $perPage);
+                $mapStampMgmtArr = $paginationResponse['Query']->orderBy(['ComplianceDate' => SORT_ASC, 'FLOC' => SORT_ASC])->all();
 
                 if ($division && $status && $workCenter) {
                     $countQueryInProgress = clone $countersQuery;
@@ -213,17 +216,17 @@ class MapStampController extends BaseActiveController {
                         ->andWhere(['MapStampStatus'=>'Completed'])
                         ->count();
                 }
-            } else {
+            /*} else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
                 $pages->setPage(0);
                 $pages->setPageSize($perPage);
                 $entries =[];
-            } // end division and workcenter check
+            } */// end division and workcenter check
 
             $data = [];
-            $data['results'] = $entries;
-            $data['pages'] = $pages;
+            $data['results'] = $mapStampMgmtArr;
+            $data['pages'] = $paginationResponse['pages'];
 //            $data['totalCount']  = $totalCount;
 //            $data['offset'] = $pages->getOffset();
 //            $data['limit'] = $pages->getLimit();
@@ -356,6 +359,29 @@ class MapStampController extends BaseActiveController {
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    {
+
+        if ($page != null) {
+            // set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $pages->pageSizeLimit = [1, 100];
+            $offset = $listPerPage * ($page - 1);
+            $pages->setPageSize($listPerPage);
+            $pages->pageParam = 'mapStampMgmtPage';
+            $pages->params = ['per-page' => $listPerPage, 'mapStampMgmtPage' => $page];
+
+            $assetQuery->offset($offset)
+                ->limit($listPerPage);
+
+            $asset['pages'] = $pages;
+            $asset['Query'] = $assetQuery;
+
+            return $asset;
         }
     }
 }
