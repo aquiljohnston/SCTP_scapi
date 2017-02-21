@@ -16,7 +16,7 @@ use Yii;
  * @property integer $ActivityPayCode
  * @property double $ActivityLatitude
  * @property double $ActivityLongitude
- * @property string $ActivityArchiveFlag
+ * @property integer $ActivityArchiveFlag
  * @property string $ActivityCreateDate
  * @property string $ActivityCreatedUserUID
  * @property string $ActivityModifiedDate
@@ -33,12 +33,24 @@ use Yii;
  * @property string $ActivityComments
  * @property double $ActivityBatteryLevel
  * @property string $ActivityRevisionComments
- * @property string $ActivityElapsedSec
- *
- * @property MileageEntryTb[] $mileageEntryTbs
- * @property TimeEntryTb[] $timeEntryTbs
+ * @property integer $ActivityElapsedSec
+ * @property string $ActivityGPSSource
+ * @property string $ActivityGPSTime
+ * @property integer $ActivityFixQuality
+ * @property integer $ActivityNumberOfSatellites
+ * @property double $ActivityHDOP
+ * @property double $ActivityAltitudemetersAboveMeanSeaLevel
+ * @property double $ActivityHeightofGeoid
+ * @property double $ActivityTimeSecondsSinceLastDGPS
+ * @property string $ActivityChecksumData
+ * @property double $ActivityBearing
+ * @property double $ActivitySpeed
+ * @property string $ActivityGPSStatus
+ * @property integer $ActivityNumberOfGPSAttempts
+ * @property string $ActivityAppVersion
+ * @property string $ActivityAppVersionName
  */
-class Activity extends BaseActiveRecord
+class Activity extends \app\modules\v1\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -55,9 +67,9 @@ class Activity extends BaseActiveRecord
     {
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT'], 'safe'],
-            [['ActivityTitle', 'ActivityBillingCode', 'ActivityArchiveFlag', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityElapsedSec', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID'], 'string'],
-            [['ActivityCode', 'ActivityPayCode', 'ActivityProjectID'], 'integer'],
-            [['ActivityBatteryLevel', 'ActivityLatitude', 'ActivityLongitude'], 'number']
+            [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName'], 'string'],
+            [['ActivityCode', 'ActivityPayCode', 'ActivityArchiveFlag', 'ActivityProjectID', 'ActivityElapsedSec', 'ActivityFixQuality', 'ActivityNumberOfSatellites', 'ActivityNumberOfGPSAttempts'], 'integer'],
+            [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed'], 'number']
         ];
     }
 
@@ -94,22 +106,21 @@ class Activity extends BaseActiveRecord
             'ActivityBatteryLevel' => 'Activity Battery Level',
             'ActivityRevisionComments' => 'Activity Revision Comments',
             'ActivityElapsedSec' => 'Activity Elapsed Sec',
+            'ActivityGPSSource' => 'Activity Gpssource',
+            'ActivityGPSTime' => 'Activity Gpstime',
+            'ActivityFixQuality' => 'Activity Fix Quality',
+            'ActivityNumberOfSatellites' => 'Activity Number Of Satellites',
+            'ActivityHDOP' => 'Activity Hdop',
+            'ActivityAltitudemetersAboveMeanSeaLevel' => 'Activity Altitudemeters Above Mean Sea Level',
+            'ActivityHeightofGeoid' => 'Activity Heightof Geoid',
+            'ActivityTimeSecondsSinceLastDGPS' => 'Activity Time Seconds Since Last Dgps',
+            'ActivityChecksumData' => 'Activity Checksum Data',
+            'ActivityBearing' => 'Activity Bearing',
+            'ActivitySpeed' => 'Activity Speed',
+            'ActivityGPSStatus' => 'Activity Gpsstatus',
+            'ActivityNumberOfGPSAttempts' => 'Activity Number Of Gpsattempts',
+            'ActivityAppVersion' => 'Activity App Version',
+            'ActivityAppVersionName' => 'Activity App Version Name',
         ];
-    }
-	
-	/**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getMileageEntryTbs()
-    {
-        return $this->hasMany(MileageEntryTb::className(), ['MileageEntryActivityID' => 'ActivityID']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTimeEntryTbs()
-    {
-        return $this->hasMany(TimeEntryTb::className(), ['TimeEntryActivityID' => 'ActivityID']);
     }
 }
