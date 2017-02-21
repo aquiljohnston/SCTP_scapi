@@ -324,7 +324,7 @@ class LeakLogController extends BaseActiveController {
         return $status;
     }
 
-    public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
+    public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=null, $perPage=null)
 	{
         //TODO RBAC permission check
         try{
@@ -339,7 +339,7 @@ class LeakLogController extends BaseActiveController {
             $counts['exceptions'] = 0;
             $counts['completed'] = 0;
 
-            if ($division && $workCenter) {
+            //if ($division && $workCenter) {
                 $query = WebManagementMasterLeakLog::find();
                 $query->where(['Division' => $division]);
                 $query->andWhere(["WorkCenter" => $workCenter]);
@@ -385,7 +385,7 @@ class LeakLogController extends BaseActiveController {
                 $countQuery = clone $query;
 
                 /* page index is 0 based */
-                $page = max($page-1,0);
+                /*$page = max($page-1,0);
                 $totalCount = $countQuery->count();
                 $pages = new Pagination(['totalCount' => $totalCount]);
                 $pages->pageSizeLimit = [1, 100];
@@ -400,7 +400,9 @@ class LeakLogController extends BaseActiveController {
 
                 $leaks = $query->offset($offset)
                     ->limit($limit)
-                    ->all();
+                    ->all();*/
+                $paginationResponse = self::paginationProcessor($query, $page, $perPage);
+                $leakLogMgmtArr = $paginationResponse['Query']->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC, 'FLOC' => SORT_ASC, 'Hours' => SORT_ASC])->all();
 
                 if ($division && $status && $workCenter) {
                     $countQueryNA = clone $countersQuery;
@@ -425,17 +427,17 @@ class LeakLogController extends BaseActiveController {
                         ->andWhere(['Status'=>'Completed'])
                         ->count();
                 }
-            } else {
+            /*} else {
                 $pages = new Pagination(['totalCount' => 0]);
                 $pages->pageSizeLimit = [1, 100];
                 $pages->setPage(0);
                 $pages->setPageSize($perPage);
                 $leaks =[];
-            } // end division and workcenter check
+            } // end division and workcenter check*/
 
             $data = [];
-            $data['results'] = $leaks;
-            $data['pages'] = $pages;
+            $data['results'] = $leakLogMgmtArr;
+            $data['pages'] = $paginationResponse['pages'];
             //            $data['totalCount']  = $totalCount;
             //            $data['offset'] = $pages->getOffset();
             //            $data['limit'] = $pages->getLimit();
@@ -689,6 +691,29 @@ class LeakLogController extends BaseActiveController {
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    {
+
+        if ($page != null) {
+            // set pagination
+            $countAssetQuery = clone $assetQuery;
+            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+            $pages->pageSizeLimit = [1, 100];
+            $offset = $listPerPage * ($page - 1);
+            $pages->setPageSize($listPerPage);
+            $pages->pageParam = 'leakLogMgmtPage';
+            $pages->params = ['per-page' => $listPerPage, 'leakLogMgmtPage' => $page];
+
+            $assetQuery->offset($offset)
+                ->limit($listPerPage);
+
+            $asset['pages'] = $pages;
+            $asset['Query'] = $assetQuery;
+
+            return $asset;
         }
     }
 }
