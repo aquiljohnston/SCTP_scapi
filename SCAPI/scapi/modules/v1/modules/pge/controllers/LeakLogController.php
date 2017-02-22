@@ -369,21 +369,8 @@ class LeakLogController extends BaseActiveController {
 			
 			$countersQuery = clone $query;
 			$status = $this::GetDatabaseStatusFromUiStatus($status);
-
-			if ($status) {
-				if($status == "Submit/Pending")
-				{
-					$query->andFilterWhere(['or', ['=', 'Status', $status], ['=', 'Status', 'Submitted']]);
-				}
-				else
-				{
-					$query->andWhere(['Status' => $status]);
-				}
-			}				
-
-			$paginationResponse = self::paginationProcessor($query, $page, $perPage);
-			$leakLogMgmtArr = $paginationResponse['Query']->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC, 'FLOC' => SORT_ASC, 'Hours' => SORT_ASC])->all();
-
+			
+			//get tab counts
 			if ($division && $status && $workCenter) {
 				$countQueryNA = clone $countersQuery;
 				$countQueryA = clone $countersQuery;
@@ -412,6 +399,37 @@ class LeakLogController extends BaseActiveController {
 					->all();
 				$counts['completed'] = count($completed);
 			}	
+			
+			if ($status) {
+				if($status == 'Submit/Pending')
+				{
+					$query->andFilterWhere(['or', ['=', 'Status', $status], ['=', 'Status', 'Submitted']]);
+					$activeCount = $counts['submittedOrPending'];
+				}
+				if($status == 'Not Approved')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['notApproved'];
+				}
+				if($status == 'Approved/NotSubmitted')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['approvedOrNotSubmitted'];
+				}
+				if($status == 'Rejected')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['exceptions'];
+				}
+				if($status == 'Completed')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['completed'];
+				}
+			}	
+
+			$paginationResponse = self::paginationProcessor($query, $activeCount, $page, $perPage);
+			$leakLogMgmtArr = $paginationResponse['Query']->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC, 'FLOC' => SORT_ASC, 'Hours' => SORT_ASC])->all();
 			
             $data = [];
             $data['results'] = $leakLogMgmtArr;
@@ -664,13 +682,19 @@ class LeakLogController extends BaseActiveController {
         }
     }
 
-    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    public function paginationProcessor($assetQuery, $activeCount=null, $page, $listPerPage)
     {
 
         if ($page != null) {
             // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+			if($activeCount == null){
+				$countAssetQuery = clone $assetQuery;
+				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+			}
+			else
+			{
+				$pages = new Pagination(['totalCount' => $activeCount]);
+			}
             $pages->pageSizeLimit = [1, 100];
             $offset = $listPerPage * ($page - 1);
             $pages->setPageSize($listPerPage);
