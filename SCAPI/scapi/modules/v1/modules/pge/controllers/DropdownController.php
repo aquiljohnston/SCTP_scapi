@@ -2064,7 +2064,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerHWorkCenterDropdown($division) {
+    public function actionGetTrackerHWorkCenterDropdown($division, $flatArray=false) {
         try{
 
             $headers = getallheaders();
@@ -2081,10 +2081,14 @@ class DropdownController extends Controller
 
             $results = [];
             foreach ($values as $value) {
-                $results[] = [
-                    "id" => $value["WorkCenter"],
-                    "name" => $value["WorkCenter"]
-                ];
+                if ($flatArray) {
+                    $results[$value["WorkCenter"]] = $value["WorkCenter"];
+                }else {
+                    $results[] = [
+                        "id" => $value["WorkCenter"],
+                        "name" => $value["WorkCenter"]
+                    ];
+                }
             }
 
             $response = Yii::$app ->response;
@@ -2099,7 +2103,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerHSurveyorDropdown($division, $workCenter, $startDate, $endDate) {
+    public function actionGetTrackerHSurveyorDropdown($division, $workCenter, $startDate, $endDate, $flatArray=false) {
         try{
 
             $headers = getallheaders();
@@ -2118,10 +2122,14 @@ class DropdownController extends Controller
 
             $results = [];
             foreach ($values as $value) {
-                $results[] = [
-                    "id" => strtolower($value["SurveyorLANID"]),
-                    "name" => $value["Surveyor"]
-                ];
+                if ($flatArray) {
+                    $results[strtolower($value["SurveyorLANID"])] = $value["Surveyor"];
+                }else {
+                    $results[] = [
+                        "id" => strtolower($value["SurveyorLANID"]),
+                        "name" => $value["Surveyor"]
+                    ];
+                }
             }
 
             $response = Yii::$app ->response;
