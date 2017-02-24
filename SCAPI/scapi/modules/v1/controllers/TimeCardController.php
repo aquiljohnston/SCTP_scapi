@@ -261,13 +261,29 @@ class TimeCardController extends BaseActiveController
 	{		
 		try
 		{
+			//get http headers
+			$headers = getallheaders();
 			//set db target
 			AllTimeCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardGetCard');
 			
-			$timeCard = AllTimeCardsCurrentWeek::findOne(['UserID'=>$userID]);
+			//get project based on header
+			$project = Project::find()
+				->where(['ProjectUrlPrefix'=>$headers['X-Client']])
+				->one();
+			
+			//get time card
+			$timeCardQuery = AllTimeCardsCurrentWeek::find()
+				->where(['UserID'=>$userID]);
+			if($project != null)
+			{
+				$timeCardQuery->andwhere(['TimeCardProjectID'=>$project->ProjectID]);
+			}
+			$timeCard = $timeCardQuery->one();
+			
+			//handle response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			if ($timeCard != null)
