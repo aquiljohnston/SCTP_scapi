@@ -153,7 +153,8 @@ class ActivityController extends BaseActiveController
 					//load attributes to model
 					$activity->attributes = $activityArray[$i];
 					$clientActivity->attributes = $activity->attributes;
-
+					
+					Activity::setClient(BaseActiveController::urlPrefix());
 					//save activity to ct
 					if($activity->save())
 					{
@@ -245,6 +246,10 @@ class ActivityController extends BaseActiveController
 						{
 							$data['activity'][$i]['mileageEntry'][$m] = 'SQL Exception Occurred';
 						}
+					}
+					else
+					{
+						$data['activity'][$i]['ActivityComments'] = 'Failed to save activity';
 					}
 				}
 			}
