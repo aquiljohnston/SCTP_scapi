@@ -25,7 +25,7 @@ use app\modules\v1\modules\pge\models\PGEUser;
 
 class TrackerController extends Controller 
 {
-    public $mapResultsLimit = 10000; // limits the maximum returned results for map api calls
+    public $mapResultsLimit = 50000; // limits the maximum returned results for map api calls
     public $downloadItemsLimit = 1000000; // limits the maximum number of results the csv file will contain
     public $filtersLimit = 104; // limits the number of filter values for CGI or Breadcrumbs
 
@@ -353,8 +353,8 @@ class TrackerController extends Controller
                 $items = $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                // $sqlString = $items->rawSql;
-                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                 $sqlString = $items->rawSql;
+                 Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
                 $items = $items->queryAll();
 
             } else {
@@ -464,8 +464,8 @@ class TrackerController extends Controller
                     ->limit($limit)
                     ->createCommand();
 //                $sqlString = $queryCommand->sql;
-//                $sqlString = $queryCommand->rawSql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $sqlString = $queryCommand->rawSql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
