@@ -102,7 +102,7 @@ class AssetAddressController extends Controller
 			}
 			else
 			{
-				$assetAddressArray['Longitude'] = $activityLat; 
+				$assetAddressArray['Longitude'] = $activityLong; 
 			}
 			
 
