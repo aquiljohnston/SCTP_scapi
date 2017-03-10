@@ -101,7 +101,7 @@ class EquipmentController extends BaseActiveController
             PermissionsController::requirePermission('equipmentCreate');
 
             $post = file_get_contents("php://input");
-            $data = json_decode($post, true);
+            $data = json_decode(utf8_decode($post), true);
 
             $model = new Equipment();
             $model->attributes = $data;
@@ -142,7 +142,7 @@ class EquipmentController extends BaseActiveController
             PermissionsController::requirePermission('equipmentUpdate');
 
             $put = file_get_contents("php://input");
-            $data = json_decode($put, true);
+            $data = json_decode(utf8_decode($put), true);
 
             $model = Equipment::findOne($id);
             $currentProject = $model->EquipmentProjectID;
@@ -257,7 +257,7 @@ class EquipmentController extends BaseActiveController
 
             //capture put body
             $put = file_get_contents("php://input");
-            $data = json_decode($put, true);
+            $data = json_decode(utf8_decode($put), true);
 
             //create response
             $response = Yii::$app->response;
