@@ -111,7 +111,8 @@ class ActivityController extends BaseActiveController
 			
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);			
+			$data = json_decode(utf8_decode($post), true);
+			//$data = json_decode($post, true);
 			$activityArray = $data['activity'];
 			
 			//create and format response json
