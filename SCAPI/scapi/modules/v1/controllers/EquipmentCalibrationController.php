@@ -67,7 +67,7 @@ class EquipmentCalibrationController extends BaseActiveController
 			
 			//get post data
 			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
+			$data = json_decode(utf8_decode($post), true);
 			
 			//pass data to model
 			$model = new EquipmentCalibration(); 

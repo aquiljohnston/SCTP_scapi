@@ -94,7 +94,7 @@ class UserController extends BaseActiveController
 			//read the post input
 			$post = file_get_contents("php://input");
 			//decode json post input as php array:
-			$data = json_decode($post, true);
+			$data = json_decode(utf8_decode($post), true);
 			
 			//create response
 			$response = Yii::$app->response;
@@ -250,7 +250,7 @@ class UserController extends BaseActiveController
 			];
 			
 			$put = file_get_contents("php://input");
-			$data = json_decode($put, true);
+			$data = json_decode(utf8_decode($put), true);
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;

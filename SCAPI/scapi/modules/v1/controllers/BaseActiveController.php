@@ -74,7 +74,7 @@ class BaseActiveController extends ActiveController
 			BaseActiveRecord::setClient(self::urlPrefix());
 			
 			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
+			$data = json_decode(utf8_decode($post), true);
 
 			$model = new $this->modelClass();
 			$model->attributes = $data;
