@@ -277,9 +277,20 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
-                $query->from([
-                    'th'=>'['.WebManagementTrackerHistory::tableName().']',
-                ]);
+                $timeInterval = intval($timeInterval);
+                if ($timeInterval<0 || $timeInterval>30) {
+                    $timeInterval = 0;
+                }
+                if ($timeInterval>0){
+                    $query->from([
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval)',
+                    ]);
+                    $query->addParams([':timeInterval'=>$timeInterval]);
+                } else {
+                    $query->from([
+                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                    ]);
+                }
                 $colsToSelect =[
                     '[th].[Date Time]',
                     '[th].[Surveyor / Inspector]',
@@ -295,30 +306,7 @@ class TrackerController extends Controller
                     '[th].[Accuracy (Meters)]',
                     '[th].[UID]',
                 ];
-                $timeInterval = intval($timeInterval);
-                if ($timeInterval<0 || $timeInterval>30) {
-                    $timeInterval = 0;
-                }
-                if ($timeInterval>0) {
-                    $colsToSelect =[
-                        'MIN([th].[Date Time]) AS [Date Time]',
-                        '[th].[Surveyor / Inspector]',
-                        'MIN([th].[Latitude]) AS [Latitude]',
-                        'MIN([th].[Longitude]) AS [Longitude]',
-                        '[th].[House No]',
-                        '[th].[Street]',
-                        '[th].[Apt]',
-                        '[th].[City]',
-                        '[th].[State]',
-                        '[th].[Landmark]',
-                        '[th].[Landmark Description]',
-                        '[th].[Accuracy (Meters)]',
-                        'MIN([th].[UID]) AS [UID]',
-                        'CASE WHEN [th].[Landmark]=\'BC\' THEN CONVERT(bigint, DATEDIFF(SECOND, \'2000-01-01 00:00:00\', [th].[Date Time]) / ( :timeInterval *60))
-                            ELSE CONVERT(bigint, DATEDIFF(SECOND, \'2000-01-01 00:00:00\', [th].[Date Time]))
-                        END as dtFiltered'
-                    ];
-                }
+
                 $query->select($colsToSelect);
 
                 $query->where(['[th].[Division]' => $division]);
@@ -357,36 +345,8 @@ class TrackerController extends Controller
                 }
 
 
-                if ($timeInterval>0){
 
-                    $query->groupBy([
-                        'CASE WHEN [th].[Landmark]=\'BC\' THEN CONVERT(bigint, DATEDIFF(SECOND, \'2000-01-01 00:00:00\', [th].[Date Time]) / ( :timeInterval2 *60))
-                            ELSE CONVERT(bigint, DATEDIFF(SECOND, \'2000-01-01 00:00:00\', [th].[Date Time]))
-                          END'
-                        , '[th].[SurveyorLANID]'
-                        , '[th].[CreatedUserUID]'
-                        , '[th].[Division]'
-                        , '[th].[Work Center]'
-                        , '[th].[Surveyor / Inspector]'
-                        , '[th].[House No]'
-                        , '[th].[Street]'
-                        , '[th].[Apt]'
-                        , '[th].[City]'
-                        , '[th].[State]'
-                        , '[th].[Landmark]'
-                        , '[th].[Landmark Description]'
-                        , '[th].[Accuracy (Meters)]'
-//                        , '[th].[Date Time]'
-//                        , '[th].[Latitude]'
-//                        , '[th].[Longitude]'
-//                        , '[th].[UID]'
-
-                    ]);
-                    $query->addParams([':timeInterval'=>$timeInterval]);
-                    $query->addParams([':timeInterval2'=>$timeInterval]); // triggers error if same name is used
-                } else {
-                    $query->distinct();
-                }
+                $query->distinct();
 
                 $countQuery = clone $query;
 
@@ -395,13 +355,7 @@ class TrackerController extends Controller
                     '[th].[Surveyor / Inspector]' => SORT_ASC,
                     '[th].[UID]' => SORT_ASC,
                 ];
-                if ($timeInterval>0){
-                    $orderByCols = [
-                        'MIN([th].[Date Time])' => SORT_ASC,
-                        '[th].[Surveyor / Inspector]' => SORT_ASC,
-                        'MIN([th].[UID])' => SORT_ASC,
-                    ];
-                }
+
                 $query->orderBy($orderByCols);
 
                 /* page index is 0 based */
