@@ -278,8 +278,11 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
                 $timeInterval = intval($timeInterval);
-                if ($timeInterval<0 || $timeInterval>30) {
+                if ($timeInterval<=0) {
                     $timeInterval = 0;
+                }
+                if ($timeInterval>30) {
+                    $timeInterval = 30;
                 }
                 if ($timeInterval>0){
                     $query->from([
@@ -433,6 +436,22 @@ class TrackerController extends Controller
 //                $query = WebManagementTrackerBreadcrumbs::find();
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
+                if ($timeInterval<=0) {
+                    $timeInterval = 0;
+                }
+                if ($timeInterval>30) {
+                    $timeInterval = 30;
+                }
+                if ($timeInterval>0){
+                    $query->from([
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval)',
+                    ]);
+                    $query->addParams([':timeInterval'=>$timeInterval]);
+                } else {
+                    $query->from([
+                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                    ]);
+                }
 
                 $query->select([
                     'th.UID',
@@ -447,9 +466,7 @@ class TrackerController extends Controller
                     'tb.Speed as Speed',
                     'tb.GPSAccuracy as Accuracy'
                 ]);
-                $query->from([
-                    'th'=>'['.WebManagementTrackerHistory::tableName().']',
-                ]);
+
                 $query->innerJoin(
                     ['tb'=>WebManagementTrackerBreadcrumbs::tableName()],
                     '[th].[UID]=[tb].[UID]'
@@ -483,9 +500,9 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->sql;
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                // $sqlString = $queryCommand->sql;
+                // $sqlString = $queryCommand->rawSql;
+                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
@@ -741,8 +758,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                // $sqlString = $queryCommand->rawSql;
+                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -1036,7 +1053,22 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
-
+                if ($timeInterval<=0) {
+                    $timeInterval = 0;
+                }
+                if ($timeInterval>30) {
+                    $timeInterval = 30;
+                }
+                if ($timeInterval>0){
+                    $query->from([
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval)',
+                    ]);
+                    $query->addParams([':timeInterval'=>$timeInterval]);
+                } else {
+                    $query->from([
+                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                    ]);
+                }
                 $query->select(
                     [
                         '[Date Time]',
