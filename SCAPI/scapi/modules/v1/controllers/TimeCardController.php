@@ -304,11 +304,11 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($week, $listPerPage = null, $page = null)
+	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
 		// RBAC permission check is embedded in this action	
-		try
-		{
+		// try
+		// {
 			//set db target headers
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
@@ -358,12 +358,14 @@ class TimeCardController extends BaseActiveController
 				if($week == 'prior' && $projectsSize > 0)
 				{
                     $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-
-                    for($i=0; $i < $projectsSize; $i++)
-                    {
-                        $projectID = $projects[$i]->ProjUserProjectID;
-                        $timeCards->andWhere(['ProjectID'=>$projectID]);
-                    }
+					if($projectsSize > 1)
+					{
+						for($i=1; $i < $projectsSize; $i++)
+						{
+							$projectID = $projects[$i]->ProjUserProjectID;
+							$timeCards->orWhere(['ProjectID'=>$projectID]);
+						}
+					}
                     $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
                     $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
                     $responseArray['assets'] = $timeCardsArr;
@@ -373,11 +375,14 @@ class TimeCardController extends BaseActiveController
 				elseif($week == 'current' && $projectsSize > 0)
 				{
                     $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					for($i=0; $i < $projectsSize; $i++)
+					if($projectsSize > 1)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID;
-                        $timeCards->andWhere(['ProjectID'=>$projectID]);
-                    }
+						for($i=1; $i < $projectsSize; $i++)
+						{
+							$projectID = $projects[$i]->ProjUserProjectID;
+							$timeCards->orWhere(['ProjectID'=>$projectID]);
+						}
+					}
                     $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
                     $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
                     $responseArray['assets'] = $timeCardsArr;
@@ -399,14 +404,14 @@ class TimeCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		}
-		catch(ForbiddenHttpException $e) {
-			throw $e;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		// }
+		// catch(ForbiddenHttpException $e) {
+			// throw $e;
+		// }
+		// catch(\Exception $e)  
+		// {
+			// throw new \yii\web\HttpException(400);
+		// }
 	}
 
     public function actionGetTimeCardsHistoryData($week)
