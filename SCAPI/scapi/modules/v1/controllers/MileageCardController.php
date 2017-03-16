@@ -389,6 +389,95 @@ class MileageCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+
+    public function actionGetMileageCardsHistoryData($week)
+    {
+        // RBAC permission check is embedded in this action
+        try
+        {
+            //set db target headers
+            MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+
+            //response array of mileage cards
+            $mileageCardArray = [];
+            $mileageCardsArr = [];
+
+            //rbac permission check
+            if (PermissionsController::can('mileageCardGetAllCards'))
+            {
+                //check if week is prior or current to determine appropriate view
+                if($week == 'prior')
+                {
+                    $responseArray = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+                elseif($week == 'current')
+                {
+                    $responseArray = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+            }
+            //rbac permission check
+            elseif(PermissionsController::can('mileageCardGetOwnCards'))
+            {
+                $userID = self::getUserFromToken()->UserID;
+                //get user project relations array
+                $projects = ProjectUser::find()
+                    ->where("ProjUserUserID = $userID")
+                    ->all();
+                $projectsSize = count($projects);
+
+                //check if week is prior or current to determine appropriate view
+                if($week == 'prior' && $projectsSize > 0)
+                {
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    for($i=0; $i < $projectsSize; $i++)
+                    {
+                        $projectID = $projects[$i]->ProjUserProjectID;
+                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
+                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+                    }
+                    $responseArray = $mileageCards->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+                elseif($week == 'current' && $projectsSize > 0)
+                {
+                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    for($i=0; $i < $projectsSize; $i++)
+                    {
+                        $projectID = $projects[$i]->ProjUserProjectID;
+                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
+                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+                    }
+                    $responseArray = $mileageCards->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+            }
+            else{
+                throw new ForbiddenHttpException;
+            }
+
+            if (!empty($responseArray))
+            {
+                $this->processAndOutputCsvResponse($responseArray);
+                return '';
+            }
+            $this->setCsvHeaders();
+            //send response
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
     public function paginationProcessor($assetQuery, $page, $listPerPage){
 
         if($page != null)
@@ -410,5 +499,31 @@ class MileageCardController extends BaseActiveController
 
             return $asset;
         }
+    }
+
+    // helper method for setting the csv header for tracker maps csv output
+    public function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    // helper method for outputting csv data without storing the whole result
+    public function processAndOutputCsvResponse($reader){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $this->setCsvHeaders();
+        // TODO find a way to use Yii response but without storing the whole response content in a variable
+        $firstLine = true;
+        $fp = fopen('php://output','w');
+
+        while($row = $reader->read()){
+            if($firstLine) {
+                $firstLine = false;
+                fputcsv($fp, array_keys($row));
+            }
+            fputcsv($fp, $row);
+        }
+        fclose($fp);
     }
 }
