@@ -492,28 +492,31 @@ class UserController extends BaseActiveController
                 }, $payCodes);
                 for ($j = 0; $j < $activityCodesLength; $j++) {
                     //get payroll code
-                    $activityCodesArray[$j]["PayrollCode"] = "TODO";
+                    $activityCodesArray[$j]['PayrollCode'] = 'TODO';
                 }
 
                 $projectModel = Project::findOne($projectID);
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
-                $projectData["ProjectID"] = $projectModel->ProjectID;
-                $projectData["ProjectName"] = $projectModel->ProjectName;
-                $projectData["ProjectClientID"] = $projectModel->ProjectClientID;
-                $projectData["ProjectClientPath"] = $clientModel->ClientFilesPath;
-                $projectData["TimeCard"] = $timeCardModel;
-                $projectData["MileageCard"] = $mileageCardModel;
-                $projectData["ActivityCodes"] = $activityCodesArray;
-                $projectData["PayCodes"] = $payCodesArray;
+                $projectData['ProjectID'] = $projectModel->ProjectID;
+                $projectData['ProjectName'] = $projectModel->ProjectName;
+                $projectData['ProjectClientID'] = $projectModel->ProjectClientID;
+				$projectData['ProjectActivityGPSInterval'] = $projectModel->ProjectActivityGPSInterval;
+                $projectData['ProjectSurveyGPSInterval'] = $projectModel->ProjectSurveyGPSInterval;
+                $projectData['ProjectSurveyGPSMinDistance'] = $projectModel->ProjectSurveyGPSMinDistance;
+                $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
+                $projectData['TimeCard'] = $timeCardModel;
+                $projectData['MileageCard'] = $mileageCardModel;
+                $projectData['ActivityCodes'] = $activityCodesArray;
+                $projectData['PayCodes'] = $payCodesArray;
 
                 $projects[] = $projectData;
             }
 
             //load data into array
             $dataArray = [];
-            $dataArray["User"] = $user;
-            $dataArray["Projects"] = $projects;
-            $dataArray["Equipment"] = $equipment;
+            $dataArray['User'] = $user;
+            $dataArray['Projects'] = $projects;
+            $dataArray['Equipment'] = $equipment;
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
