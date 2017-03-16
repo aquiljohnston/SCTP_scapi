@@ -409,6 +409,97 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 
+    public function actionGetTimeCardsHistoryData($week)
+    {
+        // RBAC permission check is embedded in this action
+        try
+        {
+            //set db target headers
+            $headers = getallheaders();
+            TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+
+            //response array of time cards
+            $timeCardsArr = [];
+            //$responseArray = [];
+
+            //rbac permission check
+            if (PermissionsController::can('timeCardGetAllCards'))
+            {
+                //check if week is prior or current to determine appropriate view
+                if($week == 'prior')
+                {
+                    $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                    //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
+                }
+                elseif($week == 'current')
+                {
+                    $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                    //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
+                }
+            }
+            //rbac permission check
+            elseif (PermissionsController::can('timeCardGetOwnCards'))
+            {
+                $userID = self::getUserFromToken()->UserID;
+                //get user project relations array
+                $projects = ProjectUser::find()
+                    ->where("ProjUserUserID = $userID")
+                    ->all();
+                $projectsSize = count($projects);
+
+                //check if week is prior or current to determine appropriate view
+                if($week == 'prior' && $projectsSize > 0)
+                {
+                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+
+                    for($i=0; $i < $projectsSize; $i++)
+                    {
+                        $projectID = $projects[$i]->ProjUserProjectID;
+                        $timeCards->andWhere(['ProjectID'=>$projectID]);
+                    }
+                    $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+
+                }
+                elseif($week == 'current' && $projectsSize > 0)
+                {
+                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    for($i=0; $i < $projectsSize; $i++)
+                    {
+                        $projectID = $projects[$i]->ProjUserProjectID;
+                        $timeCards->andWhere(['ProjectID'=>$projectID]);
+                    }
+                    $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+            }
+            else{
+                throw new ForbiddenHttpException;
+            }
+
+            if (!empty($responseArray))
+            {
+                $this->processAndOutputCsvResponse($responseArray);
+                return '';
+            }
+            $this->setCsvHeaders();
+            //send response
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
 	public function paginationProcessor($assetQuery, $page, $listPerPage){
 
         if($page != null)
@@ -430,5 +521,31 @@ class TimeCardController extends BaseActiveController
 
             return $asset;
         }
+    }
+
+    // helper method for setting the csv header for tracker maps csv output
+    public function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    // helper method for outputting csv data without storing the whole result
+    public function processAndOutputCsvResponse($reader){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $this->setCsvHeaders();
+        // TODO find a way to use Yii response but without storing the whole response content in a variable
+        $firstLine = true;
+        $fp = fopen('php://output','w');
+
+        while($row = $reader->read()){
+            if($firstLine) {
+                $firstLine = false;
+                fputcsv($fp, array_keys($row));
+            }
+            fputcsv($fp, $row);
+        }
+        fclose($fp);
     }
 }
