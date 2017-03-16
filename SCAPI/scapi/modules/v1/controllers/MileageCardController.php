@@ -291,7 +291,7 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($week, $listPerPage = null, $page = null)
+	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
 		// RBAC permission check is embedded in this action	
 		try
@@ -343,11 +343,13 @@ class MileageCardController extends BaseActiveController
 				if($week == 'prior' && $projectsSize > 0)
 				{
                     $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					for($i=0; $i < $projectsSize; $i++)
+					if($projectsSize > 1)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID;
-                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
-                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+						for($i=1; $i < $projectsSize; $i++)
+						{
+							$projectID = $projects[$i]->ProjUserProjectID;
+							$mileageCards->orWhere(['ProjectID'=>$projectID]);
+						}
 					}
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
@@ -357,11 +359,13 @@ class MileageCardController extends BaseActiveController
 				elseif($week == 'current' && $projectsSize > 0)
 				{
                     $mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					for($i=0; $i < $projectsSize; $i++)
+					if($projectsSize > 1)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID;
-                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
-						//$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+						for($i=1; $i < $projectsSize; $i++)
+						{
+							$projectID = $projects[$i]->ProjUserProjectID;
+							$mileageCards->orWhere(['ProjectID'=>$projectID]);
+						}
 					}
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
