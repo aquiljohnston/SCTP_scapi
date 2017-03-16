@@ -14,18 +14,21 @@ use Yii;
  * @property string $ProjectType
  * @property integer $ProjectStatus
  * @property integer $ProjectClientID
- * @property integer $ProjectState
+ * @property string $ProjectState
  * @property string $ProjectUrlPrefix
  * @property string $ProjectStartDate
  * @property string $ProjectEndDate
  * @property string $ProjectArchiveFlag
  * @property string $ProjectCreateDate
- * @property string $ProjectCreatedBy
+ * @property integer $ProjectCreatedBy
  * @property string $ProjectModifiedDate
- * @property string $ProjectModifiedBy
+ * @property integer $ProjectModifiedBy
+ * @property double $ProjectActivityGPSInterval
+ * @property double $ProjectSurveyGPSInterval
+ * @property integer $ProjectSurveyGPSMinDistance
  *
  * @property ProjectUserTb[] $projectUserTbs
- * @property ProjectOQRequirementstb[] $projectOQRequirementstbs
+ * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
  * @property ClientTb $projectClient
  */
 class Project extends BaseActiveRecord
@@ -45,8 +48,10 @@ class Project extends BaseActiveRecord
     {
         return [
             [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectArchiveFlag', 'ProjectUrlPrefix'], 'string'],
-            [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy'], 'integer'],
-            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate'], 'safe']
+            [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance'], 'integer'],
+            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate'], 'safe'],
+			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
+			[['ProjectUrlPrefix'], 'unique']
         ];
     }
 
@@ -72,6 +77,9 @@ class Project extends BaseActiveRecord
             'ProjectCreatedBy' => 'Project Created By',
             'ProjectModifiedDate' => 'Project Modified Date',
             'ProjectModifiedBy' => 'Project Modified By',
+			'ProjectActivityGPSInterval' => 'Project Activity GPS Interval',
+			'ProjectSurveyGPSInterval' => 'Project Survey GPS Interval',
+			'ProjectSurveyGPSMinDistance' => 'Project Survey GPS Min Distance',
         ];
     }
 
@@ -95,9 +103,9 @@ class Project extends BaseActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getProjectOQRequirementstbs()
+    public function getProjectOQRequirementsTbs()
     {
-        return $this->hasMany(ProjectOQRequirementstb::className(), ['ProjectOQRequirementsProjectID' => 'ProjectID']);
+        return $this->hasMany(ProjectOQRequirementsTb::className(), ['ProjectOQRequirementsProjectID' => 'ProjectID']);
     }
 
     /**
