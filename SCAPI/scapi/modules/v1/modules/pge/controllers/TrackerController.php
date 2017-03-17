@@ -457,6 +457,7 @@ class TrackerController extends Controller
                     'th.UID',
                     'tb.LanID as Inspector',
                     'tb.SrcDTLT as Datetime',
+                    'th.[Date]',
                     'th.[House No] as [House No]',
                     'th.Street',
                     'th.City',
@@ -490,7 +491,12 @@ class TrackerController extends Controller
                 $query->distinct();
                 // the orderBy is needed for applying distinct
                 $query->orderBy([
-                    'th.UID' => SORT_ASC,
+                    //'th.UID' => SORT_ASC,
+                    //'[th].[SurveyorLANID]' => SORT_ASC,
+                    //'[th].[Date Time]' => SORT_ASC,
+                    'tb.LanID' => SORT_ASC,
+                    'tb.SrcDTLT' => SORT_ASC,
+
                 ]);
 
 
