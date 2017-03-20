@@ -119,6 +119,12 @@ class WorkQueueController extends Controller
 				$workQueueCount = (count($workQueueArray));
 				for ($i = 0; $i < $workQueueCount; $i++)
 				{
+					//remove "." from AssignedWorkQueueUID
+					if(array_key_exists('AssignedWorkQueueUID', $workQueueArray[$i]))
+					{
+						$workQueueArray[$i]['AssignedWorkQueueUID'] = self::replacePeriod($workQueueArray[$i]['AssignedWorkQueueUID']);
+					}
+					
 					if($workQueueArray[$i]['DispatchMethod'] == 'Dispatched')
 					{
 						$responseData[] = self::lockDispatched($workQueueArray[$i], $client, $userUID);
@@ -229,7 +235,7 @@ class WorkQueueController extends Controller
 				return $previousWorkQueue;
 			}
 			else
-			{
+			{				
 				//new AssignedWorkQueue model
 				$newRecord = new AssignedWorkQueue;
 				$newRecord->attributes = $workQueue;
@@ -427,5 +433,10 @@ class WorkQueueController extends Controller
         {
             throw new \yii\web\HttpException(400);
         }
+	}
+	
+	private static function replacePeriod($string)
+	{
+		return str_replace('.', '', $string);
 	}
 }

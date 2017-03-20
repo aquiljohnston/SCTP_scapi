@@ -9,6 +9,9 @@ class Module extends \yii\base\Module
         parent::init();
 		
 		$this->modules = [
+			'beta' => [
+				'class' => 'app\modules\v1\modules\beta\Module',
+			],
 			'pge' => [
 				'class' => 'app\modules\v1\modules\pge\Module',
 			],

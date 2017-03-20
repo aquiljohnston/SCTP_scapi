@@ -324,11 +324,10 @@ class LeakLogController extends BaseActiveController {
         return $status;
     }
 
-    public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=1, $perPage=25)
+    public function actionGetMgmt($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $status='', $page=null, $perPage=null)
 	{
         //TODO RBAC permission check
         try{
-
             $headers = getallheaders();
             WebManagementMasterLeakLog::setClient($headers['X-Client']);
 
@@ -338,115 +337,103 @@ class LeakLogController extends BaseActiveController {
             $counts['submittedOrPending'] = 0;
             $counts['exceptions'] = 0;
             $counts['completed'] = 0;
+			
+			$query = WebManagementMasterLeakLog::find();
+			$query->where(['Division' => $division]);
+			$query->andWhere(['WorkCenter' => $workCenter]);
 
-            if ($division && $workCenter) {
-                $query = WebManagementMasterLeakLog::find();
-                $query->where(['Division' => $division]);
-                $query->andWhere(["WorkCenter" => $workCenter]);
+			if ($surveyor) {
+				$query->andWhere(['Surveyor' => $surveyor]);
+			}
 
-                if ($surveyor) {
-                    $query->andWhere(["Surveyor" => $surveyor]);
-                }
+			if (trim($search)) {
+				$query->andWhere([
+				'or',
+				['like', 'Leaks', $search],
+				['like', 'Division', $search],
+				['like', 'Approved', $search],
+				['like', 'HCA', $search],
+				['like', 'Date', $search],
+				['like', 'Surveyor', $search],
+				['like', 'WorkCenter', $search],
+				['like', 'FLOC', $search],
+				['like', 'SurveyFreq', $search],
+				['like', 'FeetOfMain', $search],
+				['like', 'NumofServices', $search],
+				['like', 'Hours', $search]
+			]);
+			}
+			if ($startDate !== null && $endDate !== null) {
+				$query->andWhere(['between', 'Date', $startDate, $endDate]);
+			}
+			
+			$countersQuery = clone $query;
+			$status = $this::GetDatabaseStatusFromUiStatus($status);
+			
+			//get tab counts
+			if ($division && $status && $workCenter) {
+				$countQueryNA = clone $countersQuery;
+				$countQueryA = clone $countersQuery;
+				$countQuerySP = clone $countersQuery;
+				$countQueryE = clone $countersQuery;
+				$countQueryC = clone $countersQuery;
+				//TODO rewrite to improve performance
+				$counts['notApproved'] = $countQueryNA
+					->andWhere(['Status'=>'Not Approved'])
+					->count();
+				$counts['approvedOrNotSubmitted'] = $countQueryA
+					->andWhere(['Status'=>'Approved/NotSubmitted'])
+					->count();
+				$counts['submittedOrPending'] = $countQuerySP
+					->andFilterWhere(['or', ['=', 'Status', 'Submit/Pending'], ['=', 'Status', 'Submitted']])
+					->count();
+				$counts['exceptions'] = $countQueryE
+					->andWhere(['Status'=>'Rejected'])
+					->count();
+				//this is a bad work around, but for some reason the query with count() is taking 35+ seconds
+				// $counts['completed'] = $countQueryC
+					// ->andWhere(['Status'=>'Completed'])
+					// ->count();
+				$completed = $countQueryC
+					->andWhere(['Status'=>'Completed'])
+					->all();
+				$counts['completed'] = count($completed);
+			}	
+			
+			if ($status) {
+				if($status == 'Submit/Pending')
+				{
+					$query->andFilterWhere(['or', ['=', 'Status', $status], ['=', 'Status', 'Submitted']]);
+					$activeCount = $counts['submittedOrPending'];
+				}
+				if($status == 'Not Approved')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['notApproved'];
+				}
+				if($status == 'Approved/NotSubmitted')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['approvedOrNotSubmitted'];
+				}
+				if($status == 'Rejected')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['exceptions'];
+				}
+				if($status == 'Completed')
+				{
+					$query->andWhere(['Status' => $status]);
+					$activeCount = $counts['completed'];
+				}
+			}	
 
-                if (trim($search)) {
-                    $query->andWhere([
-                    'or',
-                    ['like', 'Leaks', $search],
-                    ['like', 'Division', $search],
-                    ['like', 'Approved', $search],
-                    ['like', 'HCA', $search],
-                    ['like', 'Date', $search],
-                    ['like', 'Surveyor', $search],
-                    ['like', 'WorkCenter', $search],
-                    ['like', 'FLOC', $search],
-                    ['like', 'SurveyFreq', $search],
-                    ['like', 'FeetOfMain', $search],
-                    ['like', 'NumofServices', $search],
-                    ['like', 'Hours', $search]
-                ]);
-                }
-                if ($startDate !== null && $endDate !== null) {
-                    // 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
-                    $endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
-
-                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
-                }
-
-                $countersQuery = clone $query;
-                $status = $this::GetDatabaseStatusFromUiStatus($status);
-
-                if ($status) {
-                    if($status == "Submit/Pending")
-                    {
-                        $query->andFilterWhere(['or', ['=', "Status", $status], ['=', "Status", "Submitted"]]);
-                    }
-                    else
-                    {
-                        $query->andWhere(["Status" => $status]);
-                    }
-                }
-                $countQuery = clone $query;
-
-                /* page index is 0 based */
-                $page = max($page-1,0);
-                $totalCount = $countQuery->count();
-                $pages = new Pagination(['totalCount' => $totalCount]);
-                $pages->pageSizeLimit = [1, 100];
-                $pages->setPageSize($perPage);
-                $pages->setPage($page,true);
-                $offset = $pages->getOffset();//$perPage * ($page - 1);
-                $limit = $pages->getLimit();
-//                Yii::trace(PHP_EOL.PHP_EOL.'page '.$page.'   per page '.$perPage.'   offset '.$offset);
-//                Yii::trace(PHP_EOL.'p getpage'.$pages->getPage().' p per page'.$pages->getPageSize().' p offset '.$pages->getOffset().'  p limit '.$pages->getLimit(). PHP_EOL);
-
-                $query->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC, 'FLOC' => SORT_ASC, 'Hours' => SORT_ASC]);
-
-                $leaks = $query->offset($offset)
-                    ->limit($limit)
-                    ->all();
-
-                if ($division && $status && $workCenter) {
-                    $countQueryNA = clone $countersQuery;
-                    $countQueryA = clone $countersQuery;
-                    $countQuerySP = clone $countersQuery;
-                    $countQueryE = clone $countersQuery;
-                    $countQueryC = clone $countersQuery;
-                    //TODO rewrite to improve performance
-                    $counts['notApproved'] = $countQueryNA
-                        ->andWhere(['Status'=>'Not Approved'])
-                        ->count();
-                    $counts['approvedOrNotSubmitted'] = $countQueryA
-                        ->andWhere(['Status'=>'Approved/NotSubmitted'])
-                        ->count();
-                    $counts['submittedOrPending'] = $countQuerySP
-                        ->andFilterWhere(['or', ['=', "Status", 'Submit/Pending'], ['=', "Status", "Submitted"]])
-                        ->count();
-                    $counts['exceptions'] = $countQueryE
-                        ->andWhere(['Status'=>'Rejected'])
-                        ->count();
-                    $counts['completed'] = $countQueryC
-                        ->andWhere(['Status'=>'Completed'])
-                        ->count();
-                }
-            } else {
-                $pages = new Pagination(['totalCount' => 0]);
-                $pages->pageSizeLimit = [1, 100];
-                $pages->setPage(0);
-                $pages->setPageSize($perPage);
-                $leaks =[];
-            } // end division and workcenter check
-
+			$paginationResponse = self::paginationProcessor($query, $activeCount, $page, $perPage);
+			$leakLogMgmtArr = $paginationResponse['Query']->orderBy(['Date' => SORT_ASC, 'Surveyor' => SORT_ASC, 'FLOC' => SORT_ASC, 'Hours' => SORT_ASC])->all();
+			
             $data = [];
-            $data['results'] = $leaks;
-            $data['pages'] = $pages;
-            //            $data['totalCount']  = $totalCount;
-            //            $data['offset'] = $pages->getOffset();
-            //            $data['limit'] = $pages->getLimit();
-            //            $command = $query->createCommand();
-            //            $data['sql'] = $command->sql;
-            //            $data['page'] = $page;
-            //            $data['perPage'] = $perPage;
-
+            $data['results'] = $leakLogMgmtArr;
+            $data['pages'] = $paginationResponse['pages'];
             $data['counts'] = $counts;
 
 			//send response
@@ -692,6 +679,35 @@ class LeakLogController extends BaseActiveController {
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function paginationProcessor($assetQuery, $activeCount=null, $page, $listPerPage)
+    {
+
+        if ($page != null) {
+            // set pagination
+			if($activeCount == null){
+				$countAssetQuery = clone $assetQuery;
+				$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+			}
+			else
+			{
+				$pages = new Pagination(['totalCount' => $activeCount]);
+			}
+            $pages->pageSizeLimit = [1, 100];
+            $offset = $listPerPage * ($page - 1);
+            $pages->setPageSize($listPerPage);
+            $pages->pageParam = 'leakLogMgmtPage';
+            $pages->params = ['per-page' => $listPerPage, 'leakLogMgmtPage' => $page];
+
+            $assetQuery->offset($offset)
+                ->limit($listPerPage);
+
+            $asset['pages'] = $pages;
+            $asset['Query'] = $assetQuery;
+
+            return $asset;
         }
     }
 }
