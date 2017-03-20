@@ -8,6 +8,7 @@ use app\modules\v1\models\Project;
 use app\modules\v1\models\SCUser;
 use app\modules\v1\models\ProjectUser;
 use app\modules\v1\models\MenusModuleMenu;
+use app\modules\v1\controllers\UserController;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
@@ -359,10 +360,9 @@ class ProjectController extends BaseActiveController
 		try
 		{
 			//set db target
-			$headers = getallheaders();
 			Project::setClient(BaseActiveController::urlPrefix());
 			
-			// RBAC permission check
+			//RBAC permission check
 			PermissionsController::requirePermission('projectAddRemoveUsers');
 			
 			//create response
@@ -396,6 +396,9 @@ class ProjectController extends BaseActiveController
 				SCUser::setClient(BaseActiveController::urlPrefix());
 				$user = SCUser::findOne($i);
 				$user->link('projects',$project);
+				UserController::createInProject($user, $project->ProjectUrlPrefix);
+				//reset target db after external call
+				Project::setClient(BaseActiveController::urlPrefix());
 				//call sps to create new time cards and mileage cards
 				try
 				{

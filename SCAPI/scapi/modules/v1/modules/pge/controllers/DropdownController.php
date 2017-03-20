@@ -1852,20 +1852,52 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetMapStampAssociatePlanInspectionRequestDropDown($workcenter, $floc, $surveyfreq){
+    public function actionGetMapStampAssociatePlanInspectionRequestDropDown($notificationID){
         try
         {
             //set db target
             $headers = getallheaders();
             WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
 
-            $query = WebManagementDropDownAssociatePlanIR::find()->select(['InspectionRequestUID'])->where(['WorkCenter'=>$workcenter])->andWhere(['FLOC'=>$floc])->andWhere(['SurveyType'=>$surveyfreq])->one();
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['InspectionRequestUID'])->where(['NotificationNumber'=>$notificationID])->one();
             $responseData = $query;
 
             //send response
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
             $response->data = $responseData;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetMapStampAssociatePlanNotificationIDDropDown($workcenter, $floc, $surveyfreq){
+        try
+        {
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAssociatePlanIR::setClient($headers['X-Client']);
+
+            $query = WebManagementDropDownAssociatePlanIR::find()->select(['NotificationNumber'])->where(['WorkCenter'=>$workcenter])->andWhere(['FLOC'=>$floc])->andWhere(['SurveyType'=>$surveyfreq])->all();
+            $dataSize = count($query);
+
+            for ($i = 0; $i < $dataSize; $i++) {
+                $namePairs[] = [
+                    'id' => $query[$i]->NotificationNumber,
+                    'name' => $query[$i]->NotificationNumber];
+            }
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
             return $response;
         }
         catch(ForbiddenHttpException $e)
@@ -1955,26 +1987,27 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerRaSurveyorDropdown($division, $workCenter) {
+    public function actionGetTrackerRaSurveyorDropdown($division, $workCenter, $startDate, $endDate) {
         try{
 
             $headers = getallheaders();
             WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
 
             $values = WebManagementTrackerCurrentLocationDropDown::find()
-                ->select(['Surveyor'])
+                ->select(['Surveyor','SurveyorLANID'])
                 ->where(['Division' => $division])
                 ->andWhere(['WorkCenter' => $workCenter])
                 ->andWhere(['not' ,['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
                 ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['between', 'Date', $startDate, $endDate])
                 ->distinct()
                 ->all();
 
             $results = [];
             foreach ($values as $value) {
                 $results[] = [
-                    "id" => $value["Surveyor"],
+                    "id" => strtolower($value["SurveyorLANID"]),
                     "name" => $value["Surveyor"]
                 ];
             }
@@ -2031,7 +2064,7 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerHWorkCenterDropdown($division) {
+    public function actionGetTrackerHWorkCenterDropdown($division, $flatArray=false) {
         try{
 
             $headers = getallheaders();
@@ -2048,10 +2081,14 @@ class DropdownController extends Controller
 
             $results = [];
             foreach ($values as $value) {
-                $results[] = [
-                    "id" => $value["WorkCenter"],
-                    "name" => $value["WorkCenter"]
-                ];
+                if ($flatArray) {
+                    $results[$value["WorkCenter"]] = $value["WorkCenter"];
+                }else {
+                    $results[] = [
+                        "id" => $value["WorkCenter"],
+                        "name" => $value["WorkCenter"]
+                    ];
+                }
             }
 
             $response = Yii::$app ->response;
@@ -2066,28 +2103,33 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerHSurveyorDropdown($division, $workCenter) {
+    public function actionGetTrackerHSurveyorDropdown($division, $workCenter, $startDate, $endDate, $flatArray=false) {
         try{
 
             $headers = getallheaders();
             WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
 
             $values = WebManagementTrackerHistoryDropDown::find()
-                ->select(['Surveyor'])
+                ->select(['Surveyor','SurveyorLANID'])
                 ->where(['Division' => $division])
                 ->andWhere(['WorkCenter' => $workCenter])
                 ->andWhere(['not' ,['Division' => null]])
                 ->andWhere(['not' ,['WorkCenter' => null]])
                 ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['between', 'Date', $startDate, $endDate])
                 ->distinct()
                 ->all();
 
             $results = [];
             foreach ($values as $value) {
-                $results[] = [
-                    "id" => $value["Surveyor"],
-                    "name" => $value["Surveyor"]
-                ];
+                if ($flatArray) {
+                    $results[strtolower($value["SurveyorLANID"])] = $value["Surveyor"];
+                }else {
+                    $results[] = [
+                        "id" => strtolower($value["SurveyorLANID"]),
+                        "name" => $value["Surveyor"]
+                    ];
+                }
             }
 
             $response = Yii::$app ->response;

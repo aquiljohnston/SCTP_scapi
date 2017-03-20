@@ -112,6 +112,7 @@ class ActivityController extends BaseActiveController
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
 			$data = json_decode(utf8_decode($post), true);
+
 			$activityArray = $data['activity'];
 			
 			//create and format response json
@@ -133,6 +134,15 @@ class ActivityController extends BaseActiveController
 					$clientActivity = new Activity();
 					$activityArray[$i]['ActivityCreateDate'] = Parent::getDate();
 					$activityArray[$i]['ActivityCreatedUserUID'] = $createdBy;
+					//handle app version from tablet TODO fix this later so it is consistent between web and tablet
+					if(array_key_exists('AppVersion', $activityArray[$i]))
+					{
+						$activityArray[$i]['ActivityAppVersion'] = $activityArray[$i]['AppVersion'];
+					}
+					if(array_key_exists('AppVersionName', $activityArray[$i]))
+					{
+						$activityArray[$i]['ActivityAppVersionName'] = $activityArray[$i]['AppVersionName'];
+					}
 					//check array data
 					$timeLength = 0;
 					$mileageLength = 0;
@@ -153,7 +163,8 @@ class ActivityController extends BaseActiveController
 					//load attributes to model
 					$activity->attributes = $activityArray[$i];
 					$clientActivity->attributes = $activity->attributes;
-
+					
+					Activity::setClient(BaseActiveController::urlPrefix());
 					//save activity to ct
 					if($activity->save())
 					{
@@ -245,6 +256,10 @@ class ActivityController extends BaseActiveController
 						{
 							$data['activity'][$i]['mileageEntry'][$m] = 'SQL Exception Occurred';
 						}
+					}
+					else
+					{
+						$data['activity'][$i]['ActivityComments'] = 'Failed to save activity';
 					}
 				}
 			}
