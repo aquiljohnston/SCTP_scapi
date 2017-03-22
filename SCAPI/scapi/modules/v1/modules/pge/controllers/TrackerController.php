@@ -286,9 +286,13 @@ class TrackerController extends Controller
                 }
                 if ($timeInterval>0){
                     $query->from([
-                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval)',
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
                     ]);
-                    $query->addParams([':timeInterval'=>$timeInterval]);
+                    $query->addParams([
+                        ':timeInterval' => $timeInterval,
+                        ':startDate' => $startDate,
+                        ':endDate' => $endDate
+                    ]);
                 } else {
                     $query->from([
                         'th'=>'['.WebManagementTrackerHistory::tableName().']',
@@ -444,9 +448,13 @@ class TrackerController extends Controller
                 }
                 if ($timeInterval>0){
                     $query->from([
-                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval)',
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
                     ]);
-                    $query->addParams([':timeInterval'=>$timeInterval]);
+                    $query->addParams([
+                        ':timeInterval' => $timeInterval,
+                        ':startDate' => $startDate,
+                        ':endDate' => $endDate
+                    ]);
                 } else {
                     $query->from([
                         'th'=>'['.WebManagementTrackerHistory::tableName().']',
@@ -1067,9 +1075,13 @@ class TrackerController extends Controller
                 }
                 if ($timeInterval>0){
                     $query->from([
-                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval)',
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
                     ]);
-                    $query->addParams([':timeInterval'=>$timeInterval]);
+                    $query->addParams([
+                        ':timeInterval' => $timeInterval,
+                        ':startDate' => $startDate,
+                        ':endDate' => $endDate
+                    ]);
                 } else {
                     $query->from([
                         'th'=>'['.WebManagementTrackerHistory::tableName().']',
