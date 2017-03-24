@@ -197,64 +197,66 @@ class ActivityController extends BaseActiveController
 						$data['activity'][$i]['timeEntry'] = array();
 						$data['activity'][$i]['mileageEntry'] = array();
 						
-						try{
-							//add activityID to corresponding time entries
-							if($timeLength > 0)
+						//add activityID to corresponding time entries
+						if($timeLength > 0)
+						{
+							for($t = 0; $t < $timeLength; $t++)
 							{
-								for($t = 0; $t < $timeLength; $t++)
-								{
-									$timeArray[$t]['TimeEntryActivityID'] = $data['activity'][$i]['ActivityID'];
-									$timeEntry = new TimeEntry();
-									$timeEntry->attributes = $timeArray[$t];
-									$timeEntry->TimeEntryCreatedBy = $createdBy;
-									$timeEntry->TimeEntryCreateDate = Parent::getDate();
+								$timeArray[$t]['TimeEntryActivityID'] = $data['activity'][$i]['ActivityID'];
+								$timeEntry = new TimeEntry();
+								$timeEntry->attributes = $timeArray[$t];
+								$timeEntry->TimeEntryCreatedBy = $createdBy;
+								$timeEntry->TimeEntryCreateDate = Parent::getDate();
+								try{
 									if($timeEntry->save())
-										{
-											$response->setStatusCode(201);
-											//update response json with new timeEntry data
-											$data['activity'][$i]['timeEntry'][$t] = $timeEntry;
-										}
+									{
+										$response->setStatusCode(201);
+										//update response json with new timeEntry data
+										$data['activity'][$i]['timeEntry'][$t] = $timeEntry;
+									}
 									else
-										{
-											//throw a bad request if any save fails
-											$data['activity'][$i]['timeEntry'][$t] = 'Failed to Save Time Entry';
-										}
+									{
+										//throw a bad request if any save fails
+										$data['activity'][$i]['timeEntry'][$t] = 'Failed to Save Time Entry';
+									}
 								}
-							}
-						}
-						catch(yii\db\Exception $e)
-						{
-							$data['activity'][$i]['timeEntry'][$t] = 'SQL Exception Occurred';
-						}						
-						try{
-							//add activityID to corresponding mileage entries
-							if($mileageLength > 0)
-							{
-								for($m = 0; $m < $mileageLength; $m++)
+								catch(yii\db\Exception $e)
 								{
-									$mileageArray[$m]['MileageEntryActivityID']= $data['activity'][$i]['ActivityID'];
-									$mileageEntry = new MileageEntry();
-									$mileageEntry->attributes = $mileageArray[$m];
-									$mileageEntry->MileageEntryCreatedBy = $createdBy;
-									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
-									if($mileageEntry->save())
-										{
-											$response->setStatusCode(201);
-											//update response json with new mileageEntry data
-											$data['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
-										}
-									else
-										{
-											//throw a bad request if any save fails
-											$data['activity'][$i]['mileageEntry'][$m] = 'Failed to Save Mileage Entry';
-
-										}
+									$data['activity'][$i]['timeEntry'][$t] = 'SQL Exception Occurred';
 								}
 							}
 						}
-						catch(yii\db\Exception $e)
+												
+						
+						//add activityID to corresponding mileage entries
+						if($mileageLength > 0)
 						{
-							$data['activity'][$i]['mileageEntry'][$m] = 'SQL Exception Occurred';
+							for($m = 0; $m < $mileageLength; $m++)
+							{
+								$mileageArray[$m]['MileageEntryActivityID']= $data['activity'][$i]['ActivityID'];
+								$mileageEntry = new MileageEntry();
+								$mileageEntry->attributes = $mileageArray[$m];
+								$mileageEntry->MileageEntryCreatedBy = $createdBy;
+								$mileageEntry->MileageEntryCreateDate = Parent::getDate();
+								try{
+									if($mileageEntry->save())
+									{
+										$response->setStatusCode(201);
+										//update response json with new mileageEntry data
+										$data['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
+									}
+									else
+									{
+										//throw a bad request if any save fails
+										$data['activity'][$i]['mileageEntry'][$m] = 'Failed to Save Mileage Entry';
+
+									}
+								}
+								catch(yii\db\Exception $e)
+								{
+									$data['activity'][$i]['mileageEntry'][$m] = 'SQL Exception Occurred';
+								}
+							}
 						}
 					}
 					else
