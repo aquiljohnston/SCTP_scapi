@@ -1,7 +1,7 @@
 <?php
 
 namespace app\modules\v1\modules\pge\controllers;
-set_time_limit(300);
+set_time_limit(600);
 
 use Yii;
 use yii\rest\Controller;
