@@ -151,10 +151,17 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-		$userID = Auth::find()
+		$auth = Auth::find()
 			->where(['AuthToken' => $token])
 			->one();
-        return static::findOne(['UserID' => $userID->AuthUserID]);
+		
+		//handle if auth record does not exist
+		if ($auth == null)
+		{
+			return null;
+		}
+		
+        return static::findOne(['UserID' => $auth->AuthUserID]);
     }
 
     /**

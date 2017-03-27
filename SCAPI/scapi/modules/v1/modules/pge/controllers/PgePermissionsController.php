@@ -42,6 +42,13 @@ class PgePermissionsController extends Controller {
             $token = Yii::$app->request->getAuthUser();
         }
         $user = SCUser::findIdentityByAccessToken($token);
+		
+		//handle if user could not be found
+		if ($user == null)
+		{
+			return false;
+		}
+		
         $userUID = $user->UserUID;
 		
 		BaseActiveRecord::setClient($client);
