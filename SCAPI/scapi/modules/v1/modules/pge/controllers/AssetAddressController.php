@@ -148,7 +148,7 @@ class AssetAddressController extends Controller
 					//pass data to model
 					$newAddress->attributes = $assetAddressArray;
 					//additional fields
-					$newAddress->AssetUID = $assetUID;
+					$newAddress->AssetUID = $previousAddress->AssetUID;
 					$newAddress->AssetInspectionUID = $previousAddress->AssetInspectionUID;
 					$newAddress->MapGridUID = $previousAddress->MapGridUID;
 					$newAddress->MasterLeakLogUID = $previousAddress->MasterLeakLogUID;
@@ -564,6 +564,8 @@ class AssetAddressController extends Controller
 									$newIndication->Revision = $indicationRevision;
 									$newIndication->EquipmentFoundByUID = $previousIndication->EquipmentFoundByUID;
 									$newIndication->EquipmentGradeByUID = $previousIndication->EquipmentGradeByUID;
+									$newIndication->SAPComments = $previousIndication->SAPComments;
+									$newIndication->SAPNo = $previousIndication->SAPNo;
 									if ($newIndication->StatusType == null)
 									{
 										$newIndication->StatusType = $previousStatus;
