@@ -267,7 +267,8 @@ class TrackerController extends Controller
         }
     }
 
-    public function actionGetHistory($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null, $search = null, $page=1, $perPage=25)
+    public function actionGetHistory($division, $workCenter=null, $surveyor = null, $startDate = null, $endDate = null,
+                                     $timeInterval = null, $search = null, $page=1, $perPage=25)
     {
         try{
 
@@ -276,50 +277,70 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
+                $timeInterval = intval($timeInterval);
+                if ($timeInterval<=0) {
+                    $timeInterval = 0;
+                }
+                if ($timeInterval>30) {
+                    $timeInterval = 30;
+                }
+                if ($timeInterval>0){
+                    $query->from([
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
+                    ]);
+                    $query->addParams([
+                        ':timeInterval' => $timeInterval,
+                        ':startDate' => $startDate,
+                        ':endDate' => $endDate
+                    ]);
+                } else {
+                    $query->from([
+                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                    ]);
+                }
+                $colsToSelect =[
+                    '[th].[Date Time]',
+                    '[th].[Surveyor / Inspector]',
+                    '[th].[Latitude]',
+                    '[th].[Longitude]',
+                    '[th].[House No]',
+                    '[th].[Street]',
+                    '[th].[Apt]',
+                    '[th].[City]',
+                    '[th].[State]',
+                    '[th].[Landmark]',
+                    '[th].[Landmark Description]',
+                    '[th].[Accuracy (Meters)]',
+                    '[th].[UID]',
+                ];
 
-                $query->select(
-                    [
-                        '[Date Time]',
-                        '[Surveyor / Inspector]',
-                        '[Latitude]',
-                        '[Longitude]',
-                        '[House No]',
-                        '[Street]',
-                        '[Apt]',
-                        '[City]',
-                        '[State]',
-                        '[Landmark]',
-                        '[Landmark Description]',
-                        '[Accuracy (Meters)]',
-                        '[UID]',
-                    ]
-                );
+                $query->select($colsToSelect);
 
-                $query->where(['Division' => $division]);
-                $query->andWhere(['Work Center' => $workCenter]);
+                $query->where(['[th].[Division]' => $division]);
+                $query->andWhere(['[th].[Work Center]' => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(['LOWER(SurveyorLANID)' => $surveyor]);
+                    $query->andWhere(['LOWER([th].[SurveyorLANID])' => $surveyor]);
                 }
 
                 if (trim($search)) {
                     $query->andWhere([
                         'or',
-                        ['like', 'Division', $search],
-                        ['like', 'Date', $search],
-                        ['like', '[Surveyor / Inspector]', $search],
-                        ['like', 'Work Center', $search],
-                        ['like', 'Latitude', $search],
-                        ['like', 'Longitude', $search],
-                        ['like', '[Date Time]', $search],
-                        ['like', 'House No', $search],
-                        ['like', 'Street', $search],
-                        ['like', 'Apt', $search],
-                        ['like', 'City', $search],
-                        ['like', 'State', $search],
-                        ['like', 'Landmark', $search],
-                        ['like', '[Landmark Description]', $search],
-                        ['like', '[Accuracy (Meters)]', $search]
+                        ['like', '[th].[Division]', $search],
+                        ['like', '[th].[Date Time]', $search],
+                        ['like', '[th].[Surveyor / Inspector]', $search],
+                        ['like', '[th].[Work Center]', $search],
+                        ['like', '[th].[Latitude]', $search],
+                        ['like', '[th].[Longitude]', $search],
+                        ['like', '[th].[Date Time]', $search],
+                        ['like', '[th].[House No]', $search],
+                        ['like', '[th].[Street]', $search],
+                        ['like', '[th].[Apt]', $search],
+                        ['like', '[th].[City]', $search],
+                        ['like', '[th].[State]', $search],
+                        ['like', '[th].[Landmark]', $search],
+                        ['like', '[th].[Landmark Description]', $search],
+                        ['like', '[th].[Accuracy (Meters)]', $search]
                     ]);
                 }
                 if ($startDate !== null && $endDate !== null) {
@@ -327,18 +348,22 @@ class TrackerController extends Controller
                     //// 'Between' takes into account the first second of each day, so we'll add another day to have both dates included in the results
                     //$endDate = date('m/d/Y 00:00:00', strtotime($endDate.' +1 day'));
 
-                    $query->andWhere(['between', 'Date', $startDate, $endDate]);
+                    $query->andWhere(['between', '[th].[Date]', $startDate, $endDate]);
                 }
+
+
 
                 $query->distinct();
 
                 $countQuery = clone $query;
 
-                $query->orderBy([
-                    'Date Time' => SORT_ASC,
-                    'Surveyor / Inspector' => SORT_ASC,
-                    'UID' => SORT_ASC,
-                ]);
+                $orderByCols = [
+                    '[th].[Date Time]' => SORT_ASC,
+                    '[th].[Surveyor / Inspector]' => SORT_ASC,
+                    '[th].[UID]' => SORT_ASC,
+                ];
+
+                $query->orderBy($orderByCols);
 
                 /* page index is 0 based */
                 $page = max($page-1,0);
@@ -395,13 +420,15 @@ class TrackerController extends Controller
      * @param string $maxLat
      * @param string $minLong
      * @param string $maxLong
+     * @param int $timeInterval [0,30]
      * @return string
      * @throws ForbiddenHttpException
      * @throws \yii\web\HttpException
      */
     public function actionGetHistoryMapBreadcrumbs($division=null, $workCenter=null, $surveyors = null,
                                                    $startDate = null, $endDate = null, $search = null,
-                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null
+                                                   $minLat = null, $maxLat = null, $minLong = null, $maxLong = null,
+                                                   $timeInterval = null
                                                    )
     {
         try{
@@ -413,11 +440,32 @@ class TrackerController extends Controller
 //                $query = WebManagementTrackerBreadcrumbs::find();
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
+                if ($timeInterval<=0) {
+                    $timeInterval = 0;
+                }
+                if ($timeInterval>30) {
+                    $timeInterval = 30;
+                }
+                if ($timeInterval>0){
+                    $query->from([
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
+                    ]);
+                    $query->addParams([
+                        ':timeInterval' => $timeInterval,
+                        ':startDate' => $startDate,
+                        ':endDate' => $endDate
+                    ]);
+                } else {
+                    $query->from([
+                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                    ]);
+                }
 
                 $query->select([
                     'th.UID',
                     'tb.LanID as Inspector',
                     'tb.SrcDTLT as Datetime',
+                    'th.[Date]',
                     'th.[House No] as [House No]',
                     'th.Street',
                     'th.City',
@@ -427,9 +475,7 @@ class TrackerController extends Controller
                     'tb.Speed as Speed',
                     'tb.GPSAccuracy as Accuracy'
                 ]);
-                $query->from([
-                    'th'=>'['.WebManagementTrackerHistory::tableName().']',
-                ]);
+
                 $query->innerJoin(
                     ['tb'=>WebManagementTrackerBreadcrumbs::tableName()],
                     '[th].[UID]=[tb].[UID]'
@@ -453,7 +499,12 @@ class TrackerController extends Controller
                 $query->distinct();
                 // the orderBy is needed for applying distinct
                 $query->orderBy([
-                    'th.UID' => SORT_ASC,
+                    //'th.UID' => SORT_ASC,
+                    //'[th].[SurveyorLANID]' => SORT_ASC,
+                    //'[th].[Date Time]' => SORT_ASC,
+                    'tb.LanID' => SORT_ASC,
+                    'tb.SrcDTLT' => SORT_ASC,
+
                 ]);
 
 
@@ -463,9 +514,9 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->sql;
-                $sqlString = $queryCommand->rawSql;
-                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                // $sqlString = $queryCommand->sql;
+                // $sqlString = $queryCommand->rawSql;
+                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
@@ -721,8 +772,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->rawSql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                // $sqlString = $queryCommand->rawSql;
+                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -862,8 +913,8 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-//                $sqlString = $queryCommand->rawSql;
-//                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
+                $sqlString = $queryCommand->rawSql;
+                Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
                 $this->processAndOutputCsvResponse($reader);
@@ -1008,7 +1059,7 @@ class TrackerController extends Controller
     }
 
     public function actionGetDownloadHistoryData($division, $workCenter=null, $surveyor = null, $startDate = null,
-                                              $endDate = null, $search = null)
+                                              $endDate = null, $search = null, $timeInterval = null)
     {
         try{
             $headers = getallheaders();
@@ -1016,7 +1067,26 @@ class TrackerController extends Controller
             if ($division && $workCenter) {
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
-
+                if ($timeInterval<=0) {
+                    $timeInterval = 0;
+                }
+                if ($timeInterval>30) {
+                    $timeInterval = 30;
+                }
+                if ($timeInterval>0){
+                    $query->from([
+                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
+                    ]);
+                    $query->addParams([
+                        ':timeInterval' => $timeInterval,
+                        ':startDate' => $startDate,
+                        ':endDate' => $endDate
+                    ]);
+                } else {
+                    $query->from([
+                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
+                    ]);
+                }
                 $query->select(
                     [
                         '[Date Time]',
