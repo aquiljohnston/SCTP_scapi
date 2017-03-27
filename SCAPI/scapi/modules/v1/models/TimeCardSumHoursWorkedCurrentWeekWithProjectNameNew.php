@@ -31,9 +31,7 @@ class TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew extends BaseActiveReco
      */
     public static function tableName()
     {
-        //return 'TimeCardSumHoursWorkedCurrent_vw'; - old view. needs to be removed from the DB
-        return 'TimeCardSumHoursWorkedCurrentWeekWithProjectNameNewChanged_vw'; // "Changed" added to use new view that
-        //                                                                          is corrected
+        return 'TimeCardSumHoursWorkedCurrentWeekWithProjectName_vw';
     }
 
     /**

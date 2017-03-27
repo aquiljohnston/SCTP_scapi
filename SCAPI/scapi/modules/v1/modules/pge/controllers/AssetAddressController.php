@@ -148,12 +148,12 @@ class AssetAddressController extends Controller
 					//pass data to model
 					$newAddress->attributes = $assetAddressArray;
 					//additional fields
-					$newAddress->AssetUID = $assetUID;
-					$newAddress->AssetInspectionUID = $assetInspectionUID;
-					$newAddress->MapGridUID = $mapGridUID;
-					$newAddress->MasterLeakLogUID = $masterLeakLogUID;
-					$newAddress->InspectionRequestUID = $inspectionRequestUID;
-					$newAddress->CreatedUserUID = $userUID;
+					$newAddress->AssetUID = $previousAddress->AssetUID;
+					$newAddress->AssetInspectionUID = $previousAddress->AssetInspectionUID;
+					$newAddress->MapGridUID = $previousAddress->MapGridUID;
+					$newAddress->MasterLeakLogUID = $previousAddress->MasterLeakLogUID;
+					$newAddress->InspectionRequestUID = $previousAddress->InspectionRequestUID;
+					$newAddress->CreatedUserUID = $previousAddress->CreatedUserUID;
 					$newAddress->ModifiedUserUID = $userUID;
 					$newAddress->ActivityUID = $ActivityUID;
 					$newAddress->SrcOpenDTLT = $newAddress->SrcDTLT;
@@ -223,11 +223,11 @@ class AssetAddressController extends Controller
 							$newInspection->attributes = $assetAddressArray['Inspection'];
 							//additional fields
 							$newInspection->AssetAddressUID = $assetAddressUID;
-							$newInspection->AssetInspectionUID = $assetInspectionUID;
-							$newInspection->MapGridUID = $mapGridUID;
-							$newInspection->MasterLeakLogUID = $masterLeakLogUID;
-							$newInspection->InspectionRequestUID = $inspectionRequestUID;
-							$newInspection->CreatedUserUID = $userUID;
+							$newInspection->AssetInspectionUID = $previousInspection->AssetInspectionUID;
+							$newInspection->MapGridUID = $previousInspection->MapGridUID;
+							$newInspection->MasterLeakLogUID = $previousInspection->MasterLeakLogUID;
+							$newInspection->InspectionRequestUID = $previousInspection->InspectionRequestUID;
+							$newInspection->CreatedUserUID = $previousInspection->CreatedUserUID;
 							$newInspection->ModifiedUserUID = $userUID;
 							$newInspection->ActivityUID = $ActivityUID;
 							$newInspection->SrcOpenDTLT = $newInspection->SrcDTLT;
@@ -326,11 +326,11 @@ class AssetAddressController extends Controller
 							$newCGI->attributes = $assetAddressArray['CGI'];
 							//additional fields
 							$newCGI->AssetAddressUID = $assetAddressUID;
-							$newCGI->AssetInspectionUID = $assetInspectionUID;
-							$newCGI->MapGridUID = $mapGridUID;
-							$newCGI->MasterLeakLogUID = $masterLeakLogUID;
-							$newCGI->InspectionRequestUID = $inspectionRequestUID;
-							$newCGI->CreatedUserUID = $userUID;
+							$newCGI->AssetInspectionUID = $previousCGI->AssetInspectionUID;
+							$newCGI->MapGridUID = $previousCGI->MapGridUID;
+							$newCGI->MasterLeakLogUID = $previousCGI->MasterLeakLogUID;
+							$newCGI->InspectionRequestUID = $previousCGI->InspectionRequestUID;
+							$newCGI->CreatedUserUID = $previousCGI->CreatedUserUID;
 							$newCGI->ModifiedUserUID = $userUID;
 							$newCGI->ActivityUID = $ActivityUID;
 							$newCGI->SrcOpenDTLT = $newCGI->SrcDTLT;
@@ -435,11 +435,11 @@ class AssetAddressController extends Controller
 								$newAOC->attributes = $assetAddressArray['AOCs'][$i];
 								//additional fields
 								$newAOC->AssetAddressUID = $assetAddressUID;
-								$newAOC->AssetInspectionUID = $assetInspectionUID;
-								$newAOC->MapGridUID = $mapGridUID;
-								$newAOC->MasterLeakLogUID = $masterLeakLogUID;
-								$newAOC->InspectionRequestUID = $inspectionRequestUID;
-								$newAOC->CreatedUserUID = $userUID;
+								$newAOC->AssetInspectionUID = $previousAOC->AssetInspectionUID;
+								$newAOC->MapGridUID = $previousAOC->MapGridUID;
+								$newAOC->MasterLeakLogUID = $previousAOC->MasterLeakLogUID;
+								$newAOC->InspectionRequestUID = $previousAOC->InspectionRequestUID;
+								$newAOC->CreatedUserUID = $previousAOC->CreatedUserUID;
 								$newAOC->ModifiedUserUID = $userUID;
 								$newAOC->ActivityUID = $ActivityUID;
 								$newAOC->SrcOpenDTLT = $newAOC->SrcDTLT;
@@ -552,16 +552,20 @@ class AssetAddressController extends Controller
 									$newIndication->attributes = $assetAddressArray['Indications'][$i];
 									//additional fields
 									$newIndication->AssetAddressUID = $assetAddressUID;
-									$newIndication->AssetInspectionUID = $assetInspectionUID;
-									$newIndication->MapGridUID = $mapGridUID;
-									$newIndication->MasterLeakLogUID = $masterLeakLogUID;
-									$newIndication->InspectionRequestUID = $inspectionRequestUID;
-									$newIndication->CreatedUserUID = $userUID;
+									$newIndication->AssetInspectionUID = $previousIndication->AssetInspectionUID;
+									$newIndication->MapGridUID = $previousIndication->MapGridUID;
+									$newIndication->MasterLeakLogUID = $previousIndication->MasterLeakLogUID;
+									$newIndication->InspectionRequestUID = $previousIndication->InspectionRequestUID;
+									$newIndication->CreatedUserUID = $previousIndication->CreatedUserUID;
 									$newIndication->ModifiedUserUID = $userUID;
 									$newIndication->ActivityUID = $ActivityUID;
 									$newIndication->SrcOpenDTLT = $newIndication->SrcDTLT;
 									$newIndication->FoundDateTime = $newIndication->SrcDTLT;
 									$newIndication->Revision = $indicationRevision;
+									$newIndication->EquipmentFoundByUID = $previousIndication->EquipmentFoundByUID;
+									$newIndication->EquipmentGradeByUID = $previousIndication->EquipmentGradeByUID;
+									$newIndication->SAPComments = $previousIndication->SAPComments;
+									$newIndication->SAPNo = $previousIndication->SAPNo;
 									if ($newIndication->StatusType == null)
 									{
 										$newIndication->StatusType = $previousStatus;
