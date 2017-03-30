@@ -30,7 +30,7 @@ class MileageCardSumMilesPriorWeekWithProjectNameNew extends BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'MileageCardSumMilesPriorWeekWithProjectNameNew_vw';
+        return 'MileageCardSumMilesPriorWeekWithProjectName_vw';
     }
 
     /**
