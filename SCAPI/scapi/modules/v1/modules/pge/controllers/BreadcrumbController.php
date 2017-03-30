@@ -1,6 +1,7 @@
 <?php
 
 namespace app\modules\v1\modules\pge\controllers;
+set_time_limit(600);
 
 use Yii;
 use yii\rest\Controller;
@@ -67,7 +68,7 @@ class BreadcrumbController extends Controller
 				$scBreadcrumb->attributes = $breadcrumbs[$i];
 				$scBreadcrumb->BreadcrumbCreatedUserUID = $userUID;
 				$scBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
-				
+
 				BaseActiveRecord::setClient($headers['X-Client']);
 				$pgeBreadcrumb = new PGEBreadcrumb;
 				$pgeBreadcrumb->attributes = $breadcrumbs[$i];
@@ -75,23 +76,25 @@ class BreadcrumbController extends Controller
 				$pgeBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
 				
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				if($scBreadcrumb->save())
-				{
-					BaseActiveRecord::setClient($headers['X-Client']);
-					if($pgeBreadcrumb->save())
-					{
-						$response->setStatusCode(201);
-						$responseArray[] = ['BreadcrumbUID'=>$pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag'=>1];
-					}
-					else
-					{
-						$responseArray[] = ['BreadcrumbUID'=>$pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag'=>0];
-					}
-				}
-				else
-				{
-					$responseArray[] = ['BreadcrumbUID'=>$pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag'=>0];
-				}
+
+                //check if this breadcrumb is already exist.
+                $isExistingPGEBreadCrumb = PGEBreadcrumb::find()
+                    ->where(['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID])
+                    ->one();
+
+                if ($isExistingPGEBreadCrumb == null) {
+                    if ($scBreadcrumb->save()) {
+                        BaseActiveRecord::setClient($headers['X-Client']);
+                        if ($pgeBreadcrumb->save()) {
+                            $response->setStatusCode(201);
+                            $responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
+                        } else {
+                            $responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+                        }
+                    } else {
+                        $responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+                    }
+                }
 			}
 			//return data in response
 			$response->data = $responseArray;
