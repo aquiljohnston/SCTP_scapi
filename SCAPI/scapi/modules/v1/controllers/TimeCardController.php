@@ -121,7 +121,7 @@ class TimeCardController extends BaseActiveController
 			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
-			
+			$approvedCards = []; // Prevents empty array from causing crash
 			//get timecards
 			foreach($cardIDs as $id)
 			{
@@ -131,7 +131,7 @@ class TimeCardController extends BaseActiveController
 			//try to approve time cards
 			try {
 				//create transaction
-				$connection = \Yii::$app->db;
+				$connection = TimeCard::getDb();
 				$transaction = $connection->beginTransaction();
 
 				foreach ($approvedCards as $card) {
