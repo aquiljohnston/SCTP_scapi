@@ -58,10 +58,10 @@ class ProjectController extends BaseActiveController
 	/**
 	* Gets the data for a project based on a project id
 	* @param $id the id of a project record
-	* @returns json body of the project data
+	* @returns Response json body of the project data
 	* @throws \yii\web\HttpException
 	*/	
-	public function actionView($id)
+	public function actionView($id, $joinNames = false)
     {
 		try
 		{
@@ -70,8 +70,18 @@ class ProjectController extends BaseActiveController
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('projectView');
-			
-			$project = Project::findOne($id);
+			if($joinNames) {
+			    $sql = 'SELECT ModifiedUser.UserName as ModifiedUserName, ModifiedUser.UserID as ModifiedUserID, 
+                        CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*
+                        FROM ProjectTb 
+                        JOIN [UserTb] ModifiedUser ON ProjectTb.ProjectModifiedBy = ModifiedUser.UserID
+                        JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
+                        WHERE ProjectTb.ProjectId = :id';
+			    $project = Project::getDb()->createCommand($sql)->bindValue(':id', $id)
+                    ->queryOne();
+            } else {
+			    $project = Project::findOne($id);
+            }
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $project;
