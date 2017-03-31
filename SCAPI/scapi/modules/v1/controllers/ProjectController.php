@@ -71,12 +71,15 @@ class ProjectController extends BaseActiveController
 			// RBAC permission check
 			PermissionsController::requirePermission('projectView');
 			if($joinNames) {
-			    $sql = 'SELECT ModifiedUser.UserName as ModifiedUserName, ModifiedUser.UserID as ModifiedUserID, 
-                        CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*
-                        FROM ProjectTb 
-                        JOIN [UserTb] ModifiedUser ON ProjectTb.ProjectModifiedBy = ModifiedUser.UserID
-                        JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
-                        WHERE ProjectTb.ProjectId = :id';
+			    $sql =
+                    'SELECT ModifiedUser.UserName as ModifiedUserName, ModifiedUser.UserID as ModifiedUserID,
+                    CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
+                    ClientTb.ClientName
+                    FROM ProjectTb 
+                    JOIN [UserTb] ModifiedUser ON ProjectTb.ProjectModifiedBy = ModifiedUser.UserID
+                    JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
+                    LEFT JOIN [ClientTb] ON ProjectTb.ProjectClientID = ClientTb.ClientID
+                    WHERE ProjectTb.ProjectId = :id';
 			    $project = Project::getDb()->createCommand($sql)->bindValue(':id', $id)
                     ->queryOne();
             } else {
