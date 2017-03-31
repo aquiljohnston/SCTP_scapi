@@ -134,114 +134,22 @@ class AssetAddressController extends Controller
 				$savedData = ['AssetAddressUID' => $assetAddressArray['AssetAddressUID'], 'SuccessFlag' => $assetAddressSuccessFlag];
 				//Inspection
 				if ($assetAddressArray['Inspection'] != null) {
-					//flag indicating success of saving inspection record
-					$inspectionSuccessFlag = 0;
 					//check for 0 or empty lat/long
 					$latLongValues = self::checkLatLong($assetAddressArray['Inspection'], $activityLat, $activityLong);
 					$assetAddressArray['Inspection']['Latitude'] = $latLongValues['Latitude'];
-					$assetAddressArray['Inspection']['Longitude'] = $latLongValues['Longitude'];	
-					//get previous record
-					$previousInspection = AssetAddressInspection::find()
-						->where(['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID']])
-						->andWhere(['ActiveFlag' => 1])
-						->one();
-					if ($previousInspection != null) {
-						//update active flag
-						$previousInspection->ActiveFlag = 0;
-						//increment revision
-						$inspectionRevision = $previousInspection->Revision + 1;
-						//update
-						if ($previousInspection->update()) {
-							//if update succeeds create new record
-							//convert model to an array so if can be passed to new model population method
-							$previousInspectionArray = $previousInspection->toArray();
-							//populate additional fields
-							$previousInspectionArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
-							$previousInspectionArray['ModifiedUserUID'] = $userUID;
-							$previousInspectionArray['ActivityUID'] = $generalVariables['ActivityUID'];
-							//new inspection model							
-							$newInspection = self::createInspection($assetAddressArray['Inspection'], $previousInspectionArray, $inspectionRevision);
-							try{
-								if ($newInspection->save()) {
-									$inspectionSuccessFlag = 1;
-								}
-							}
-							catch(yii\db\Exception $e)
-							{
-								$inspectionSuccessFlag = 1;
-							}
-						}
-					} else {
-						//new inspection model
-						$inspection = self::createInspection($assetAddressArray['Inspection'], $generalVariables);
-						try{
-							if ($inspection->save()) {
-								$inspectionSuccessFlag = 1;
-							}
-						}
-						catch(yii\db\Exception $e)
-						{
-							$inspectionSuccessFlag = 1;
-						}
-					}
+					$assetAddressArray['Inspection']['Longitude'] = $latLongValues['Longitude'];
+					//pass data to process function
+					$inspectionSuccessFlag = self::processInspection($assetAddressArray['Inspection'], $generalVariables);
 					$savedData['Inspection'] = ['AssetAddressInspectionUID' => $assetAddressArray['Inspection']['AssetAddressInspectionUID'], 'SuccessFlag' => $inspectionSuccessFlag];
 				}
 				//CGI
 				if ($assetAddressArray['CGI'] != null) {
-					//flag indicating success of saving CGI record
-					$cgiSuccessFlag = 0;
 					//check for 0 or empty lat/long
 					$latLongValues = self::checkLatLong($assetAddressArray['CGI'], $activityLat, $activityLong);
 					$assetAddressArray['CGI']['Latitude'] = $latLongValues['Latitude'];
 					$assetAddressArray['CGI']['Longitude'] = $latLongValues['Longitude'];	
-					//get previous record
-					$previousCGI = AssetAddressCGE::find()
-						->where(['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID']])
-						->andWhere(['ActiveFlag' => 1])
-						->one();
-					if ($previousCGI != null) {
-						//update active flag
-						$previousCGI->ActiveFlag = 0;
-						//increment revision
-						$cgiRevision = $previousCGI->Revision + 1;
-						//update
-						if ($previousCGI->update()) {
-							//if update succeeds create new record
-							//convert model to an array so if can be passed to new model population method
-							$previousCGIArray = $previousCGI->toArray();
-							//populate additional fields
-							$previousCGIArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
-							$previousCGIArray['ModifiedUserUID'] = $userUID;
-							$previousCGIArray['ActivityUID'] = $generalVariables['ActivityUID'];
-							//new inspection model
-							$newCGI = self::createCGE($assetAddressArray['CGI'], $previousCGIArray, $cgiRevision);
-							try{
-								//save model
-								if ($newCGI->save()) {
-									//add to response array
-									$cgiSuccessFlag = 1;
-								}
-							}
-							catch(yii\db\Exception $e)
-							{
-								$cgiSuccessFlag = 1;
-							}
-						}
-					} else {
-						//new CGI model
-						$newCGI = self::createCGE($assetAddressArray['CGI'], $generalVariables);
-						try{
-							//save model
-							if ($newCGI->save()) {
-								//add to response array
-								$cgiSuccessFlag = 1;
-							}
-						}
-						catch(yii\db\Exception $e)
-						{
-							$cgiSuccessFlag = 1;
-						}
-					}
+					//pass data to process function
+					$cgiSuccessFlag = self::processCGI($assetAddressArray['CGI'], $generalVariables);
 					$savedData['CGI'] = ['AssetAddressCGEUID' => $assetAddressArray['CGI']['AssetAddressCGEUID'], 'SuccessFlag' => $cgiSuccessFlag];
 				}
 				//AOCs
@@ -250,59 +158,12 @@ class AssetAddressController extends Controller
 					//loop AOCs
 					$AOCCount = (count($assetAddressArray['AOCs']));
 					for ($i = 0; $i < $AOCCount; $i++) {
-						//flag indicating success of saving aoc record
-						$aocSuccessFlag = 0;
 						//check for 0 or empty lat/long
 						$latLongValues = self::checkLatLong($assetAddressArray['AOCs'][$i], $activityLat, $activityLong);
 						$assetAddressArray['AOCs'][$i]['Latitude'] = $latLongValues['Latitude'];
 						$assetAddressArray['AOCs'][$i]['Longitude'] = $latLongValues['Longitude'];	
-						//get previous record
-						$previousAOC = AssetAddressAOC::find()
-							->where(['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID']])
-							->andWhere(['ActiveFlag' => 1])
-							->one();
-						if ($previousAOC != null) {
-							//update active flag
-							$previousAOC->ActiveFlag = 0;
-							//increment revision
-							$aocRevision = $previousAOC->Revision + 1;
-							//update
-							if ($previousAOC->update()) {
-								//if update succeeds create new record
-								//convert model to an array so if can be passed to new model population method
-								$previousAOCArray = $previousAOC->toArray();
-								//populate additional fields
-								$previousAOCArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
-								$previousAOCArray['ModifiedUserUID'] = $userUID;
-								$previousAOCArray['ActivityUID'] = $generalVariables['ActivityUID'];
-								//new AOC model
-								$newAOC = self::createAOC($assetAddressArray['AOCs'][$i], $previousAOCArray, $aocRevision);
-								try{
-									//save model
-									if ($newAOC->save()) {
-										$aocSuccessFlag = 1;
-									}
-								}
-								catch(yii\db\Exception $e)
-								{
-									$aocSuccessFlag = 1;
-								}
-							}
-						} else {
-							//new AOC model
-							$AOC = self::createAOC($assetAddressArray['AOCs'][$i], $generalVariables);
-							//check for sql constraint error
-							try{
-								//save model
-								if ($AOC->save()) {
-									$aocSuccessFlag = 1;
-								}
-							}
-							catch(yii\db\Exception $e)
-							{
-								$aocSuccessFlag = 1;
-							}
-						}
+						//pass data to process function
+						$aocSuccessFlag = self::processAOC($assetAddressArray['AOCs'][$i], $generalVariables);
 						$savedData['AOCs'][] = ['AssetAddressAOCUID' => $assetAddressArray['AOCs'][$i]['AssetAddressAOCUID'], 'SuccessFlag' => $aocSuccessFlag];
 					}
 				}
@@ -312,66 +173,12 @@ class AssetAddressController extends Controller
 					//loop indications
 					$IndicationCount = (count($assetAddressArray['Indications']));
 					for ($i = 0; $i < $IndicationCount; $i++) {
-						//flag indicating success of saving indication record
-						$indicationSuccessFlag = 0;
 						//check for 0 or empty lat/long
 						$latLongValues = self::checkLatLong($assetAddressArray['Indications'][$i], $activityLat, $activityLong);
 						$assetAddressArray['Indications'][$i]['Latitude'] = $latLongValues['Latitude'];
-						$assetAddressArray['Indications'][$i]['Longitude'] = $latLongValues['Longitude'];	
-						$previousIndication = AssetAddressIndication::find()
-							->where(['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID']])
-							->andWhere(['ActiveFlag' => 1])
-							->one();
-						if ($previousIndication != null) {
-							$previousStatus = $previousIndication->StatusType;
-							if ($previousStatus == 'In Progress' || $previousStatus == 'Pending') {
-								//update active flag
-								$previousIndication->ActiveFlag = 0;
-								//increment revision
-								$indicationRevision = $previousIndication->Revision + 1;
-								if ($previousIndication->update()) {
-									//if update succeeds create new record
-									//convert model to an array so if can be passed to new model population method
-									$previousIndicationArray = $previousIndication->toArray();
-									//populate additional fields
-									$previousIndicationArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
-									$previousIndicationArray['ModifiedUserUID'] = $userUID;
-									$previousIndicationArray['ActivityUID'] = $generalVariables['ActivityUID'];
-									//new indication model
-									$newIndication = self::createIndication($assetAddressArray['Indications'][$i], $previousIndicationArray, $indicationRevision, $previousStatus, true);
-									try{
-										//save model
-										if ($newIndication->save()) {
-											//TODO determine if we need to call master leak log update here
-											//was previously commented out in this location
-											//need to discusss with Gary Wheeler
-											$indicationSuccessFlag = 1;
-										}
-									}
-									catch(yii\db\Exception $e)
-									{
-										$indicationSuccessFlag = 1;
-									}
-								}
-							} else {
-								//status was completed, no update can be performed
-								$indicationSuccessFlag = 1;
-							}
-						} else {
-							//new Indication model
-							$indication = self::createIndication($assetAddressArray['Indications'][$i], $generalVariables);
-							try{
-								//save model
-								if ($indication->save()) {
-									//update map stamp to 'Not Approved' if neccessary
-									$indicationSuccessFlag = self::updateMasterLeakLog($generalVariables['MasterLeakLogUID'], $userUID);
-								}
-							}
-							catch(yii\db\Exception $e)
-							{
-								$indicationSuccessFlag = 1;
-							}
-						}
+						$assetAddressArray['Indications'][$i]['Longitude'] = $latLongValues['Longitude'];
+						//pass data to process function
+						$indicationSuccessFlag = self::processIndication($assetAddressArray['Indications'][$i], $generalVariables);
 						$savedData['Indications'][] = ['AssetAddressIndicationUID' => $assetAddressArray['Indications'][$i]['AssetAddressIndicationUID'], 'SuccessFlag' => $indicationSuccessFlag];
 					}
 				}
@@ -384,7 +191,228 @@ class AssetAddressController extends Controller
         }
     }
 	
-	//helper method used to check for 0 or null lat/long values
+	private static function processInspection($inspectionData, $generalVariables)
+	{
+		//flag indicating success of saving inspection record
+		$inspectionSuccessFlag = 0;
+		//get previous record
+		$previousInspection = AssetAddressInspection::find()
+			->where(['AssetAddressInspectionUID' => $inspectionData['AssetAddressInspectionUID']])
+			->andWhere(['ActiveFlag' => 1])
+			->one();
+		if ($previousInspection != null) {
+			//update active flag
+			$previousInspection->ActiveFlag = 0;
+			//increment revision
+			$inspectionRevision = $previousInspection->Revision + 1;
+			//update
+			if ($previousInspection->update()) {
+				//if update succeeds create new record
+				//convert model to an array so if can be passed to new model population method
+				$previousInspectionArray = $previousInspection->toArray();
+				//populate additional fields
+				$previousInspectionArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
+				$previousInspectionArray['ModifiedUserUID'] = $generalVariables['ModifiedUserUID'];
+				$previousInspectionArray['ActivityUID'] = $generalVariables['ActivityUID'];
+				//new inspection model							
+				$newInspection = self::createInspection($inspectionData, $previousInspectionArray, $inspectionRevision);
+				try{
+					if ($newInspection->save()) {
+						$inspectionSuccessFlag = 1;
+					}
+				}
+				catch(yii\db\Exception $e)
+				{
+					$inspectionSuccessFlag = 1;
+				}
+			}
+		} else {
+			//new inspection model
+			$inspection = self::createInspection($inspectionData, $generalVariables);
+			try{
+				if ($inspection->save()) {
+					$inspectionSuccessFlag = 1;
+				}
+			}
+			catch(yii\db\Exception $e)
+			{
+				$inspectionSuccessFlag = 1;
+			}
+		}
+		return $inspectionSuccessFlag;
+	}
+	
+	private static function processCGI($cgiData, $generalVariables)
+	{
+		//flag indicating success of saving CGI record
+		$cgiSuccessFlag = 0;
+		//get previous record
+		$previousCGI = AssetAddressCGE::find()
+			->where(['AssetAddressCGEUID' => $cgiData['AssetAddressCGEUID']])
+			->andWhere(['ActiveFlag' => 1])
+			->one();
+		if ($previousCGI != null) {
+			//update active flag
+			$previousCGI->ActiveFlag = 0;
+			//increment revision
+			$cgiRevision = $previousCGI->Revision + 1;
+			//update
+			if ($previousCGI->update()) {
+				//if update succeeds create new record
+				//convert model to an array so if can be passed to new model population method
+				$previousCGIArray = $previousCGI->toArray();
+				//populate additional fields
+				$previousCGIArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
+				$previousCGIArray['ModifiedUserUID'] = $generalVariables['ModifiedUserUID'];
+				$previousCGIArray['ActivityUID'] = $generalVariables['ActivityUID'];
+				//new inspection model
+				$newCGI = self::createCGE($cgiData, $previousCGIArray, $cgiRevision);
+				try{
+					//save model
+					if ($newCGI->save()) {
+						//add to response array
+						$cgiSuccessFlag = 1;
+					}
+				}
+				catch(yii\db\Exception $e)
+				{
+					$cgiSuccessFlag = 1;
+				}
+			}
+		} else {
+			//new CGI model
+			$newCGI = self::createCGE($cgiData, $generalVariables);
+			try{
+				//save model
+				if ($newCGI->save()) {
+					//add to response array
+					$cgiSuccessFlag = 1;
+				}
+			}
+			catch(yii\db\Exception $e)
+			{
+				$cgiSuccessFlag = 1;
+			}
+		}
+		return $cgiSuccessFlag;
+	}
+	
+	private static function processAOC($aocData, $generalVariables)
+	{
+		//flag indicating success of saving aoc record
+		$aocSuccessFlag = 0;
+		//get previous record
+		$previousAOC = AssetAddressAOC::find()
+			->where(['AssetAddressAOCUID' => $aocData['AssetAddressAOCUID']])
+			->andWhere(['ActiveFlag' => 1])
+			->one();
+		if ($previousAOC != null) {
+			//update active flag
+			$previousAOC->ActiveFlag = 0;
+			//increment revision
+			$aocRevision = $previousAOC->Revision + 1;
+			//update
+			if ($previousAOC->update()) {
+				//if update succeeds create new record
+				//convert model to an array so if can be passed to new model population method
+				$previousAOCArray = $previousAOC->toArray();
+				//populate additional fields
+				$previousAOCArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
+				$previousAOCArray['ModifiedUserUID'] = $generalVariables['ModifiedUserUID'];
+				$previousAOCArray['ActivityUID'] = $generalVariables['ActivityUID'];
+				//new AOC model
+				$newAOC = self::createAOC($aocData, $previousAOCArray, $aocRevision);
+				try{
+					//save model
+					if ($newAOC->save()) {
+						$aocSuccessFlag = 1;
+					}
+				}
+				catch(yii\db\Exception $e)
+				{
+					$aocSuccessFlag = 1;
+				}
+			}
+		} else {
+			//new AOC model
+			$AOC = self::createAOC($aocData, $generalVariables);
+			//check for sql constraint error
+			try{
+				//save model
+				if ($AOC->save()) {
+					$aocSuccessFlag = 1;
+				}
+			}
+			catch(yii\db\Exception $e)
+			{
+				$aocSuccessFlag = 1;
+			}
+		}
+		return $aocSuccessFlag;
+	}
+	
+	private static function processIndication($indicationData, $generalVariables)
+	{
+		//flag indicating success of saving indication record
+		$indicationSuccessFlag = 0;
+		$previousIndication = AssetAddressIndication::find()
+			->where(['AssetAddressIndicationUID' => $indicationData['AssetAddressIndicationUID']])
+			->andWhere(['ActiveFlag' => 1])
+			->one();
+		if ($previousIndication != null) {
+			$previousStatus = $previousIndication->StatusType;
+			if ($previousStatus == 'In Progress' || $previousStatus == 'Pending') {
+				//update active flag
+				$previousIndication->ActiveFlag = 0;
+				//increment revision
+				$indicationRevision = $previousIndication->Revision + 1;
+				if ($previousIndication->update()) {
+					//if update succeeds create new record
+					//convert model to an array so if can be passed to new model population method
+					$previousIndicationArray = $previousIndication->toArray();
+					//populate additional fields
+					$previousIndicationArray['AssetAddressUID'] = $generalVariables['AssetAddressUID'];
+					$previousIndicationArray['ModifiedUserUID'] = $generalVariables['ModifiedUserUID'];
+					$previousIndicationArray['ActivityUID'] = $generalVariables['ActivityUID'];
+					//new indication model
+					$newIndication = self::createIndication($indicationData, $previousIndicationArray, $indicationRevision, $previousStatus, true);
+					try{
+						//save model
+						if ($newIndication->save()) {
+							//TODO determine if we need to call master leak log update here
+							//was previously commented out in this location
+							//need to discusss with Gary Wheeler
+							$indicationSuccessFlag = 1;
+						}
+					}
+					catch(yii\db\Exception $e)
+					{
+						$indicationSuccessFlag = 1;
+					}
+				}
+			} else {
+				//status was completed, no update can be performed
+				$indicationSuccessFlag = 1;
+			}
+		} else {
+			//new Indication model
+			$indication = self::createIndication($indicationData, $generalVariables);
+			try{
+				//save model
+				if ($indication->save()) {
+					//update map stamp to 'Not Approved' if neccessary
+					$indicationSuccessFlag = self::updateMasterLeakLog($generalVariables['MasterLeakLogUID'], $generalVariables['ModifiedUserUID']);
+				}
+			}
+			catch(yii\db\Exception $e)
+			{
+				$indicationSuccessFlag = 1;
+			}
+		}
+		return $indicationSuccessFlag; 
+	}
+	
+	//function to check for 0 or null lat/long values
 	private static function checkLatLong($dataArray, $lat, $long)
 	{
 		//create response variable
@@ -426,7 +454,7 @@ class AssetAddressController extends Controller
 		return $responseArray;
 	}
 	
-	//helper method to create new Asset Address models
+	//function to create new Asset Address models
 	private static function createAssetAddress($dataArray, $additionalData, $revision = 0)
 	{
 		//new AssetAddress model
@@ -447,7 +475,7 @@ class AssetAddressController extends Controller
 		return $assetAddress;
 	}
 	
-	//helper method to create new Inspection models
+	//function to create new Inspection models
 	private static function createInspection($dataArray, $additionalData, $revision = 0)
 	{
 		//new inspection model
@@ -469,7 +497,7 @@ class AssetAddressController extends Controller
 		return $inspection;
 	}
 	
-	//helper method to create new CGE models
+	//function to create new CGE models
 	private static function createCGE($dataArray, $additionalData, $revision = 0)
 	{
 		//new CGE model
@@ -490,7 +518,7 @@ class AssetAddressController extends Controller
 		return $cgi;
 	}
 	
-	//helper method to create new AOC models
+	//function to create new AOC models
 	private static function createAOC($dataArray, $additionalData, $revision = 0)
 	{
 		//new AOC model
@@ -513,7 +541,7 @@ class AssetAddressController extends Controller
 		return $aoc;
 	}
 	
-	//helper method to create new Indication models
+	//function to create new Indication models
 	private static function createIndication($dataArray, $additionalData, $revision = 0, $status = 'In Progress', $update = false)
 	{
 		//new Indication model
@@ -548,7 +576,7 @@ class AssetAddressController extends Controller
 		return $indication;
 	}
 	
-	//helper method to 
+	//function to update master leak log when indication changes occur
 	private static function updateMasterLeakLog($masterLeakLogUID, $userUID)
 	{
 		//flag indicating success of saving master leak log record
