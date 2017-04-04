@@ -16,7 +16,6 @@ use yii\db\Connection;
 
 class RouteController extends Controller 
 {
-
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -36,11 +35,14 @@ class RouteController extends Controller
 	
 	public function actionRouteOptimization()
 	{
-		// try
-		// {
+		try
+		{
 			//get header and set db path
 			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			if(array_key_exists('X-Client', $headers))
+			{
+				BaseActiveRecord::setClient($headers['X-Client']);
+			}
 			
 			//get post data
 			$post = file_get_contents("php://input");			
@@ -49,8 +51,6 @@ class RouteController extends Controller
 			//create response object
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			
-			$responseArray['routes'] = [];
 			
 			//check possible data keys
 			if($data['mapGrids'] != null)
@@ -71,15 +71,23 @@ class RouteController extends Controller
 				$response->data = 'Bad Request - No valid data key present.';
 				return $response;
 			}
+			//file path for jar
+			$filePath = Yii::$app->basePath . "\web\jar";
 			
-			//$response->data = $paramString;
-			//return $response;
+			//create temp file for data
+			$postDataTemp = tempnam($filePath, 'TSP');
+			$postDataTempName = basename($postDataTemp);
+			$handle = fopen($postDataTemp, 'w');
+			fwrite($handle, $paramString);
+			fclose($handle);
+			
+			//$responseData = $postDataTempName;
 			
 			//set execution path
-			chdir(Yii::$app->basePath . "\web\jar");
+			chdir($filePath);
 			//execute jar file
-			exec("java -jar TSP.jar $paramString", $output);
-			$output = json_decode($output[0]);
+			exec("java -jar TSP.jar $postDataTempName", $output);
+			$responseData = json_decode($output[0]);
 			
 			// $mapCount = count($data['mapGrids']);
 			// for($i; $i < $mapCount; $i++)
@@ -98,17 +106,20 @@ class RouteController extends Controller
 				// $responseArray['routes'][] = $mapData;
 			// }
 
-			//$response->data = $responseArray;
-			$response->data = $output;
+			//clean up temp file
+			unlink($postDataTemp);
+			
+			//send response
+			$response->data = $responseData;
 			return $response;
-		// }
-        // catch(ForbiddenHttpException $e)
-        // {
-            // throw new ForbiddenHttpException;
-        // }
-        // catch(\Exception $e)
-        // {
-            // throw new \yii\web\HttpException(400);
-        // }
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }
