@@ -2030,12 +2030,15 @@ class DropdownController extends Controller
         try{
 
             $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
-			
-			$connection = BaseActiveRecord::getDb();
-			
-			$divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogDivision()");
-			$values = $divisionCommand->queryAll();
+            WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementTrackerHistoryDropDown::find()
+                ->select(['Division'])
+                ->where(['not', ['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->distinct()
+                ->all();
 
             $namePairs = [
                 null => "Select...",
@@ -2051,9 +2054,13 @@ class DropdownController extends Controller
             return $response;
 
         } catch(ForbiddenHttpException $e)  {
+
             throw new ForbiddenHttpException;
+
         } catch(\Exception $e) {
+
             throw new \yii\web\HttpException(400);
+
         }
     }
 
@@ -2061,22 +2068,25 @@ class DropdownController extends Controller
         try{
 
             $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
-			
-			$connection = BaseActiveRecord::getDb();
-			
-			$workQueueCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogWorkCenter(:division)")
-				->bindParam(':division', $division,  \PDO::PARAM_STR);
-			$values = $workQueueCommand->queryAll();
+            WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+
+            $values = WebManagementTrackerHistoryDropDown::find()
+                ->select(['WorkCenter'])
+                ->where(['Division' => $division])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->distinct()
+                ->all();
 
             $results = [];
             foreach ($values as $value) {
                 if ($flatArray) {
-                    $results[$value["Workcenter"]] = $value["Workcenter"];
+                    $results[$value["WorkCenter"]] = $value["WorkCenter"];
                 }else {
                     $results[] = [
-                        "id" => $value["Workcenter"],
-                        "name" => $value["Workcenter"]
+                        "id" => $value["WorkCenter"],
+                        "name" => $value["WorkCenter"]
                     ];
                 }
             }
@@ -2093,25 +2103,30 @@ class DropdownController extends Controller
         }
     }
 
-    public function actionGetTrackerHSurveyorDropdown($workCenter, $flatArray=false) {
+    public function actionGetTrackerHSurveyorDropdown($division, $workCenter, $startDate, $endDate, $flatArray=false) {
         try{
 
             $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
+            WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
 
-            $connection = BaseActiveRecord::getDb();
-			
-			$workQueueCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogSurveyor(:workCenter)")
-				->bindParam(':workCenter', $workCenter,  \PDO::PARAM_STR);
-			$values = $workQueueCommand->queryAll();
-			
+            $values = WebManagementTrackerHistoryDropDown::find()
+                ->select(['Surveyor','SurveyorLANID'])
+                ->where(['Division' => $division])
+                ->andWhere(['WorkCenter' => $workCenter])
+                ->andWhere(['not' ,['Division' => null]])
+                ->andWhere(['not' ,['WorkCenter' => null]])
+                ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['between', 'Date', $startDate, $endDate])
+                ->distinct()
+                ->all();
+
             $results = [];
             foreach ($values as $value) {
                 if ($flatArray) {
-                    $results[strtolower($value["LANID"])] = $value["Surveyor"];
+                    $results[strtolower($value["SurveyorLANID"])] = $value["Surveyor"];
                 }else {
                     $results[] = [
-                        "id" => strtolower($value["LANID"]),
+                        "id" => strtolower($value["SurveyorLANID"]),
                         "name" => $value["Surveyor"]
                     ];
                 }
