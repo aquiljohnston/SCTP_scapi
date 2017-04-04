@@ -2034,7 +2034,7 @@ class DropdownController extends Controller
 			
 			$connection = BaseActiveRecord::getDb();
 			
-			$divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogDivision()");
+			$divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogDivision() Order by Division");
 			$values = $divisionCommand->queryAll();
 
             $namePairs = [
@@ -2065,7 +2065,7 @@ class DropdownController extends Controller
 			
 			$connection = BaseActiveRecord::getDb();
 			
-			$workQueueCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogWorkCenter(:division)")
+			$workQueueCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogWorkCenter(:division) Order by Workcenter")
 				->bindParam(':division', $division,  \PDO::PARAM_STR);
 			$values = $workQueueCommand->queryAll();
 
@@ -2101,7 +2101,7 @@ class DropdownController extends Controller
 
             $connection = BaseActiveRecord::getDb();
 			
-			$workQueueCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogSurveyor(:workCenter)")
+			$workQueueCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogSurveyor(:workCenter) Order by Surveyor")
 				->bindParam(':workCenter', $workCenter,  \PDO::PARAM_STR);
 			$values = $workQueueCommand->queryAll();
 			
