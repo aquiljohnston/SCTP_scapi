@@ -19,7 +19,6 @@ use app\modules\v1\models\Auth;
  * @property string $UserCompanyPhone
  * @property string $UserAppRoleType
  * @property string $UserComments
- * @property string $UserKey
  * @property integer $UserActiveFlag
  * @property integer $UserArchiveFlag
  * @property string $UserCreatedDate
@@ -75,7 +74,6 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserCompanyPhone' => 'User Company Phone',
             'UserAppRoleType' => 'User App Role Type',
             'UserComments' => 'User Comments',
-            //'UserKey' => 'User Key',
             'UserActiveFlag' => 'User Active Flag',
 			'UserArchiveFlag' => 'User Archive Flag',
             'UserCreatedDate' => 'User Created Date',
@@ -114,23 +112,6 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
         return $this->hasMany(Project::className(), ['ProjectID' => 'ProjUserProjectID'])
 			->via('projectUserTbs');
     }
-	
-	// /**
-     // * @return \yii\db\ActiveQuery
-     // */
-    // public function getProjects()
-    // {
-        // return $this->hasMany(ProjectTb::className(), ['ProjectID' => 'ProjUserProjectID'])
-			// ->viaTable('projectUserTbs', ['ProjUserUserID' => 'UserID']);
-    // }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    // public function getUserKey()
-    // {
-        // return $this->hasOne(KeyTb::className(), ['KeyID' => 'UserKey']);
-    // }
 	
 	/**
      * Finds an identity by the given ID.
