@@ -1,6 +1,7 @@
 <?php
 
 namespace app\modules\v2\controllers;
+set_time_limit(600);
 
 use Yii;
 use yii\rest\Controller;
