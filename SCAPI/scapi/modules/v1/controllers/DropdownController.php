@@ -96,7 +96,8 @@ class DropdownController extends Controller
 
         return $response;
     }
-
+	
+	//deprecated, moved to pge module
     public function actionGetLeakLogDivisionDropdown()
     {
         //TODO RBAC permission check
@@ -189,6 +190,8 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	//deprecated, moved to pge module
     public function actionGetLeakLogWorkCenterDropdown($division)
     {
         //TODO RBAC permission check
@@ -229,7 +232,8 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-
+	
+	//deprecated, moved to pge module
     public function actionGetLeakLogSurveyorDropdown($workCenter)
     {
         //TODO RBAC permission check
