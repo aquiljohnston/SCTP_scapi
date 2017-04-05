@@ -55,6 +55,7 @@ $config = [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning','trace'],
+                    'except' => ['yii\web\HttpException:401'],
                 ],
             ],
         ],
