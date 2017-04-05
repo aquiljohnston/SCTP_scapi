@@ -86,7 +86,7 @@ class CTUser extends User
 				$auth->AuthModifiedBy = $userID;
 				$auth->update();
 			} else {
-				$this->logout(true, $token);
+				$this->logout(true, null, $token);
 			}
 		} else {
 			throw new \yii\web\HttpException(401, 'You are requesting with an invalid credential.');
