@@ -208,46 +208,6 @@ class DropdownController extends Controller
         }
 	}
 
-    public function actionGetWeekDropdown()
-    {
-        //TODO RBAC permission check
-        //try{
-        //TODO check headers
-		try{
-			$dropdown = [];
-			$w1sun = new DateTime("07/24/2016");
-			$w1sun = $w1sun->format('m/d/Y');
-			$w1sat = new DateTime("07/30/2016");
-			$w1sat = $w1sat->format('m/d/Y');
-			$w2sun = new DateTime("07/17/2016");
-			$w2sun = $w2sun->format('m/d/Y');
-			$w2sat = new DateTime("07/23/2016");
-			$w2sat = $w2sat->format('m/d/Y');
-			$w3sun = new DateTime("07/10/2016");
-			$w3sun = $w3sun->format('m/d/Y');
-			$w3sat = new DateTime("07/16/2016");
-			$w3sat = $w3sat->format('m/d/Y');
-			//stub data
-			$dropdown[$w1sun . " - " . $w1sat] = $w1sun . " - " . $w1sat;
-			$dropdown[$w2sun . " - " . $w2sat] = $w2sun . " - " . $w2sat;
-			$dropdown[$w3sun . " - " . $w3sat] = $w3sun . " - " . $w3sat;
-
-			//send response
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $dropdown;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
     /*
      * Belongs to LeakLogDetail
      * This is using the wrong View*
@@ -278,57 +238,6 @@ class DropdownController extends Controller
             $response ->format = Response::FORMAT_JSON;
             $response->data = $namePairs;
             return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-    public function actionGetReportDropdown() {
-		try{
-			$data = [];
-
-			$data = [null => "Select..."];
-			$data["Report 1"] = "Report 1";
-			$data["Report 2"] = "Report 2";
-			$data["Report 3"] = "Report 3";
-			$data["Report 4"] = "Report 4";
-			$data["Report 5"] = "Report 5";
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
-			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-	public function actionGetDeviceIdDropdown() {
-		try{
-			$data = [];
-
-			$data = [null => "Select..."];
-			$data["12345678"] = "12345678";
-			$data["87654321"] = "87654321";
-			$data["13572468"] = "13572468";
-			$data["24681357"] = "24681357";
-
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $data;
-			return $response;
 		}
         catch(ForbiddenHttpException $e)
         {
@@ -2144,4 +2053,121 @@ class DropdownController extends Controller
         }
     }
     /////////// End WebManagement Tracker History dropdowns //////////////
+	
+	/////////// Begin Leak Log Management Dropdowns//////////////
+	
+	public function actionGetLeakLogDivisionDropdown()
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$connection = BaseActiveRecord::getDb();
+			
+			$divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogDivision() Order By Division");
+			$values = $divisionCommand->queryAll();
+
+            $namePairs = [
+                null => 'Select...',
+            ];
+            foreach ($values as $value) {
+                $namePairs[$value['Division']] = $value['Division'];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetLeakLogWorkCenterDropdown($division)
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            BaseActiveRecord::setClient($headers['X-Client']);
+
+			$connection = BaseActiveRecord::getDb();
+			
+			$divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogWorkCenter(:division) Order By Workcenter")
+				->bindParam(':division', $division,  \PDO::PARAM_STR);
+			$values = $divisionCommand->queryAll();
+			
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    'id' => $value['Workcenter'],
+                    'name' => $value['Workcenter']
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetLeakLogSurveyorDropdown($workCenter)
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            BaseActiveRecord::setClient($headers['X-Client']);
+
+			$connection = BaseActiveRecord::getDb();
+			
+			$divisionCommand = $connection->createCommand("SELECT Surveyor From fnWebManagementDropDownLeakLogSurveyor(:workCenter) Order By Surveyor")
+				->bindParam(':workCenter', $workCenter,  \PDO::PARAM_STR);
+			$values = $divisionCommand->queryAll();
+			
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    'id' => $value['Surveyor'],
+                    'name' => $value['Surveyor']
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	/////////// End Leak Log Management Dropdowns//////////////
+	
+	
 }
