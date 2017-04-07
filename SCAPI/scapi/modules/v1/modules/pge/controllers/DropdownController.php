@@ -1556,13 +1556,10 @@ class DropdownController extends Controller
 
             $headers = getallheaders();
             WebManagementMapStampDropDown::setClient($headers['X-Client']);
-
-            $values = WebManagementMapStampDropDown::find()
-                ->select(['Division'])
-                ->where(['not', ['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->distinct()
-                ->all();
+            
+            $connection = BaseActiveRecord::getDb();
+            $divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownMapStampDivision() Order By Division");
+            $values = $divisionCommand->queryAll();
 
             $namePairs = [
                 null => "Select...",
@@ -1594,19 +1591,16 @@ class DropdownController extends Controller
             $headers = getallheaders();
             WebManagementMapStampDropDown::setClient($headers['X-Client']);
 
-            $values = WebManagementMapStampDropDown::find()
-                ->select(['WorkCenter'])
-                ->where(['Division' => $division])
-                ->andWhere(['not' ,['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->distinct()
-                ->all();
+            $connection = BaseActiveRecord::getDb();
+            $divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownMapStampWorkCenter(:division) Order By Workcenter")
+                ->bindParam(':division', $division,  \PDO::PARAM_STR);
+            $values = $divisionCommand->queryAll();
 
             $results = [];
             foreach ($values as $value) {
                 $results[] = [
-                    "id" => $value["WorkCenter"],
-                    "name" => $value["WorkCenter"]
+                    "id" => $value["Workcenter"],
+                    "name" => $value["Workcenter"]
                 ];
             }
 
