@@ -435,7 +435,7 @@ class WorkQueueController extends Controller
         }
 	}
 	
-	private static function replacePeriod($string)
+	public static function replacePeriod($string)
 	{
 		return str_replace('.', '', $string);
 	}
