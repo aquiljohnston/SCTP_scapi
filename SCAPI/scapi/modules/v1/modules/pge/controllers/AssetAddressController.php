@@ -19,6 +19,10 @@ use app\modules\v1\modules\pge\models\AssetAddressIndication;
 use app\modules\v1\modules\pge\models\AssetAddressInspection;
 use app\modules\v1\modules\pge\models\AssetInspection;
 use app\modules\v1\modules\pge\models\MasterLeakLog;
+//models for missing ad hoc IR
+use app\modules\v1\modules\pge\models\TabletMapGrids;
+//work queue controller used to handle missing Ad Hoc IRs
+use app\modules\v1\modules\pge\controllers\WorkQueueController;
 
 //The Asset Address Controller recives a json from the activity controller along with the current client(for db target), a userUID of the user who made the request, and
 //an activityUID of the associated activity. It then checks the update flag of the asset address to deterine which function to send the data to. 
@@ -59,6 +63,13 @@ class AssetAddressController extends Controller
             $assetInspection = AssetInspection::find()
                 ->where(['InspectionRequestUID' => $assetAddressArray['General']['InspectionRequestUID']])
                 ->one();
+				
+			//assetInspection is null when an ad hoc IR fails to save
+			if($assetInspection == null)
+			{
+				//call function to create missing Ad Hoc IR returns new assetInspection
+				$assetInspection = self::createIR($client, $userUID, $assetAddressArray);
+			}
 				
             //populate general variables
 			$generalVariables['AssetAddressUID'] = $assetAddressArray['AssetAddressUID'];
@@ -617,5 +628,42 @@ class AssetAddressController extends Controller
 			$successFlag = 1;
 		}
 		return $successFlag;
+	}
+	
+	//function to create ad hoc inspection request when record is missing or broken
+	private static function createIR($client, $userUID, $assetAddressArray)
+	{
+		//get map data based on mapGridUID
+		$mapGrid  = TabletMapGrids::find()
+			->where(['MapGridsUID'=> $assetAddressArray['General']['MapGridUID']])
+			->one();
+		
+		//create array
+		$adHocArray = [];
+		//populate array
+		$adHocArray['MapPlat'] = "$mapGrid->FuncLocMap\/$mapGrid->FuncLocPlat";
+		$adHocArray['PlatPrefix'] = $mapGrid->FuncLocPlatChar2;
+		$adHocArray['Plat'] = $mapGrid->FuncLocPlat;
+		//remove possible "." from assignedWorkQueueUID
+		$adHocArray['AssignedWorkQueueUID'] = WorkQueueController::replacePeriod($assetAddressArray['General']['AssignedWorkQueueUID']);
+		$adHocArray['AssignedUserUID'] = $userUID;
+		$adHocArray['AssignedInspectionRequestUID'] = $assetAddressArray['General']['InspectionRequestUID'];
+		$adHocArray['MapGridUID'] = $assetAddressArray['General']['MapGridUID'];
+		$adHocArray['SurveyType'] = $assetAddressArray['General']['SurveyType'];
+		$adHocArray['WorkCenter'] = $mapGrid->WorkCenter;
+		$adHocArray['DispatchMethod'] = 'Ad Hoc';
+		$adHocArray['MasterLeakLogUID'] = $assetAddressArray['General']['MasterLeakLogUID'];
+		$adHocArray['AssignedDate'] = date("Y-m-d");
+		$adHocArray['SourceID'] = $assetAddressArray['Inspection']['SourceID'];
+		$adHocArray['SrcDTLT'] = $assetAddressArray['SrcDTLT'];
+		$adHocArray['AssetInspectionUID'] = $assetAddressArray['General']['AssetInspectionUID'];
+
+		//pass to adhoc function
+		WorkQueueController::lockAdHoc($adHocArray, $client, $userUID);
+		
+		$assetInspection = AssetInspection::find()
+                ->where(['InspectionRequestUID' => $assetAddressArray['General']['InspectionRequestUID']])
+                ->one();
+		return $assetInspection;
 	}
 }
