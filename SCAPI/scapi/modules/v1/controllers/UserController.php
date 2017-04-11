@@ -503,6 +503,7 @@ class UserController extends BaseActiveController
 				$projectData['ProjectActivityGPSInterval'] = $projectModel->ProjectActivityGPSInterval;
                 $projectData['ProjectSurveyGPSInterval'] = $projectModel->ProjectSurveyGPSInterval;
                 $projectData['ProjectSurveyGPSMinDistance'] = $projectModel->ProjectSurveyGPSMinDistance;
+				$projectData['ProjectMinimumAppVersion'] = $projectModel->ProjectMinimumAppVersion;
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
