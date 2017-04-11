@@ -52,10 +52,11 @@ class Breadcrumb extends \app\modules\v1\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType', 'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID'], 'string'],
+            [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType',
+			'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID', 'BreadcrumbMapPlat'], 'string'],
             [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel'], 'number'],
             [['BreadcrumbGPSTime', 'BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate'], 'safe'],
-            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbMapPlat', 'BreadcrumbArchiveFlag'], 'integer']
+            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag'], 'integer']
         ];
     }
 
