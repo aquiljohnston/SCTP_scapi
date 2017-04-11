@@ -26,6 +26,8 @@ use Yii;
  * @property double $ProjectActivityGPSInterval
  * @property double $ProjectSurveyGPSInterval
  * @property integer $ProjectSurveyGPSMinDistance
+ * @property string $ProjectMinimumAppVersion
+ * @property string $ProjectAppVersionDate
  *
  * @property ProjectUserTb[] $projectUserTbs
  * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
@@ -47,9 +49,9 @@ class Project extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectArchiveFlag', 'ProjectUrlPrefix'], 'string'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectArchiveFlag', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion'], 'string'],
             [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance'], 'integer'],
-            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate'], 'safe'],
+            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectAppVersionDate'], 'safe'],
 			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
 			[['ProjectUrlPrefix'], 'unique']
         ];
@@ -80,6 +82,9 @@ class Project extends BaseActiveRecord
 			'ProjectActivityGPSInterval' => 'Project Activity GPS Interval',
 			'ProjectSurveyGPSInterval' => 'Project Survey GPS Interval',
 			'ProjectSurveyGPSMinDistance' => 'Project Survey GPS Min Distance',
+			'ProjectMinimumAppVersion' => 'Project Minimum App Version',
+			'ProjectAppVersionDate' => 'Project App Version Date',
+			
         ];
     }
 
