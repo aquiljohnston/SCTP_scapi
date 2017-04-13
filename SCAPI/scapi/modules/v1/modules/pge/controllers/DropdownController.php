@@ -71,6 +71,7 @@ class DropdownController extends Controller
                     'get-reporting-group-u-i-d-dropdown' => ['get'],
                     'get-role-dropdown' => ['get'],
                     'get-floc-work-center-dropdown' => ['get'],
+                    'get-user-work-center-dropdown' => ['get'],
                     'get-user-home-work-center-dropdown' => ['get'],
 					'get-dispatch-work-center-dropdown' => ['get'],
 					'get-dispatch-division-dropdown' => ['get'],
@@ -498,6 +499,42 @@ class DropdownController extends Controller
                     ->distinct()
                     ->all();
             }
+			$namePairs = [null => "Select..."];
+            $dataSize = count($data);
+
+            for($i=0; $i < $dataSize; $i++)
+            {
+                $namePairs[$data[$i]->WorkCenter]= $data[$i]->WorkCenter;
+            }
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+	//dispatch, assigned
+	public function actionGetUserWorkCenterDropdown() {
+		try{
+			//db target
+			$headers = getallheaders();
+			WebManagementUsers::setClient($headers['X-Client']);
+
+			//todo permission check
+			$data = WebManagementUsers::find()
+				->select('WorkCenter')
+				->distinct()
+				->where(['not', ['WorkCenter'=> null]])
+                ->all();
 			$namePairs = [null => "Select..."];
             $dataSize = count($data);
 
