@@ -46,6 +46,11 @@ use app\modules\v1\modules\pge\models\TabletFilter;
 use app\modules\v1\modules\pge\models\TabletRegulator;
 use app\modules\v1\modules\pge\models\TabletRouteName;
 
+//moved from v1 dropdown controller
+use app\modules\v1\modules\pge\models\WebManagementLeakLogDropDown;
+use app\modules\v1\modules\pge\models\WebManagementFlocsWithIRDropDown;
+
+
 class DropdownController extends Controller
 {
 
@@ -62,13 +67,9 @@ class DropdownController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get-default-filter' => ['get'],
-                    'get-week-dropdown' => ['get'],
-                    'get-work-center-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
-                    'get-map-plat-dropdown' => ['get'],
-                    'get-surveyor-dropdown' => ['get'],
-                    'get-device-id-dropdown' => ['get'],
                     'get-reporting-group-dropdown' => ['get'],
+                    'get-reporting-group-u-i-d-dropdown' => ['get'],
                     'get-role-dropdown' => ['get'],
                     'get-floc-work-center-dropdown' => ['get'],
                     'get-user-work-center-dropdown' => ['get'],
@@ -96,17 +97,23 @@ class DropdownController extends Controller
                     'get-map-stamp-division-dropdown' => ['get'],
                     'get-map-stamp-workcenter-dropdown' => ['get'],
                     'get-map-stamp-equipment-services-pic-dropdowns' => ['get'],
-                    'get-tracker-ra-division-dropdown' => ['get'],
-                    'get-tracker-ra-workcenter-dropdown' => ['get'],
-                    'get-tracker-ra-surveyor-dropdown' => ['get'],
                     'get-tracker-h-division-dropdown' => ['get'],
                     'get-tracker-h-workcenter-dropdown' => ['get'],
                     'get-tracker-h-surveyor-dropdown' => ['get'],
+					'get-map-plat-dropdown' => ['get'],
+					'get-leak-log-floc-dropdown' => ['get'],
+					'get-date-dependent-dropdown' => ['get'],
+					'get-map-plat-dependent-dropdown' => ['get'],
+					'get-leak-log-division-dropdown' => ['get'],
+					'get-leak-log-work-center-dropdown' => ['get'],
+					'get-leak-log-surveyor-dropdown' => ['get'],
+					'get-surveyor-dependent-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
     }
 	
+	//////////////////////////////Dropdown Defaults Begin/////////////////////////////
 	//helper methods//
 	//gets a users home workCenter based on uid
 	private static function getHomeWorkCenter($userUID)
@@ -207,38 +214,226 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
-
-    /*
+	//////////////////////////////Dropdown Defaults End/////////////////////////////
+	
+   /*
      * Belongs to LeakLogDetail
-     * This is using the wrong View*
      */
-    public function actionGetMapPlatDependentDropdown($workCenter = null, $division = null, $surveyor = null, $date = null) {
+    public function actionGetMapPlatDependentDropdown($division = null, $workCenter = null, $surveyor = null, $date = null) {
 
 		try{
-			//db target
-			$headers = getallheaders();
-			WebManagementDropDownDispatchMapPlat::setClient($headers['X-Client']);
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
 
-			//todo permission check
 
-			$data = WebManagementDropDownDispatchMapPlat::find()
-				->where(['WorkCenter'=>$workCenter])
-                ->all();
-            $namePairs = [];
-            $dataSize = count($data);
-
-            for($i=0; $i < $dataSize; $i++)
+            if($division != null && $workCenter != null && $date != null)
             {
-                $namePairs[]=[
-				'id'=>$data[$i]->MapPlat,
-				'name'=>$data[$i]->MapPlat];
+                // by division and workcenter and date
+                $values = WebManagementLeakLogDropDown::find()
+                        ->select(['Map/Plat'])
+                        ->where(['Division' => $division])
+                        ->andWhere(['WorkCenter' => $workCenter])
+                        ->andWhere(['Date' => $date])
+                        ->andWhere(['not' ,['Surveyor' => null]])
+                        ->distinct()
+						->orderBy(['Map/Plat' => SORT_ASC])
+                        ->all();
             }
-            //send response
-            $response = Yii::$app->response;
-            $response ->format = Response::FORMAT_JSON;
-            $response->data = $namePairs;
+            else if($division != null && $workCenter != null && $surveyor != null)
+            {
+                // by division and workcenter and surveyor
+                $values = WebManagementLeakLogDropDown::find()
+                        ->select(['Map/Plat'])
+                        ->where(['Division' => $division])
+                        ->andWhere(['WorkCenter' => $workCenter])
+                        ->andWhere(['Surveyor' => $surveyor])
+                        ->andWhere(['not' ,['Date' => null]])
+                        ->distinct()
+						->orderBy(['Map/Plat' => SORT_ASC])
+                        ->all();
+            }
+            else if($division != null && $workCenter != null)
+            {
+                // by division and workcenter
+                $values = WebManagementLeakLogDropDown::find()
+                        ->select(['Map/Plat'])
+                        ->where(['Division' => $division])
+                        ->andWhere(['WorkCenter' => $workCenter])
+                        ->andWhere(['not' ,['Date' => null]])
+                        ->andWhere(['not' ,['Map/Plat' => null]])
+                        ->andWhere(['not' ,['Surveyor' => null]])
+                        ->distinct()
+						->orderBy(['Map/Plat' => SORT_ASC])
+                        ->all();
+            }
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    'id' => $value['Map/Plat'],
+                    'name' => $value['Map/Plat']
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
             return $response;
 		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	 /*
+     * Belongs to LeakLogDetail
+     */
+    public function actionGetSurveyorDependentDropdown($division = null, $workCenter = null, $mapPlat = null, $date = null) {
+		//TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
+
+            if($workCenter == null)
+            {
+                // just by division
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['not' ,['Date' => null]])
+                    ->andWhere(['not' ,['Surveyor' => null]])
+                    ->andWhere(['not' ,['Map/Plat' => null]])
+                    ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
+                    ->all();
+            }
+            else if ($mapPlat == null)
+            {
+                // by division and workcenter
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['not' ,['Date' => null]])
+                    ->andWhere(['not' ,['Map/Plat' => null]])
+                    ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
+                    ->all();
+            }
+            else if($date == null)
+            {
+                /// by division and workcenter and mapplat
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['Map/Plat' => $mapPlat])
+                    ->andWhere(['not' ,['Date' => null]])
+                    ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
+                    ->all();
+            }
+            else
+            {
+                /// by division and workcenter and mapplat and date
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Surveyor'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+                    ->andWhere(['Map/Plat' => $mapPlat])
+                    ->andWhere(['Date' => $date])
+                    ->distinct()
+					->orderBy(['Surveyor' => SORT_ASC])
+                    ->all();
+            }
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    'id' => $value['Surveyor'],
+                    'name' => $value['Surveyor']
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+
+    }
+	
+	 /*
+     * Belongs to LeakLogDetail
+     */
+    public function actionGetDateDependentDropdown($division = null, $workCenter = null, $surveyor = null, $mapPlat = null) {
+		try{
+
+            $headers = getallheaders();
+            WebManagementLeakLogDropDown::setClient($headers['X-Client']);
+
+			//$dateCastingMagic = new \yii\db\Expression('(created_at::text)');
+			
+            if($division != null && $workCenter != null && ($surveyor == null || $mapPlat == null))
+            {
+                // just by division and workCenter
+                $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Date', 'OrderByDate'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workCenter])
+					->andWhere(['not' ,['Date' => null]])
+                    ->andWhere(['not' ,['Surveyor' => null]])
+                    ->andWhere(['not' ,['Map/Plat' => null]])
+                    ->distinct()
+					->orderBy(['OrderByDate' => SORT_DESC])
+                    ->all();
+            }
+            else if ($division != null && $workCenter != null && $surveyor != null && $mapPlat != null)
+            {
+                // by division and workcenter and surveyor and mapplat
+                $values = WebManagementLeakLogDropDown::find()
+                     ->select(['Date', 'OrderByDate'])
+                     ->where(['Division' => $division])
+                     ->andWhere(['WorkCenter' => $workCenter])
+                     ->andWhere(['Surveyor' => $surveyor])
+                     ->andWhere(['Map/Plat' => $mapPlat])
+					 ->andWhere(['not' ,['Date' => null]])
+                     ->distinct()
+					 ->orderBy(['OrderByDate' => SORT_DESC])
+                     ->all();
+            }
+
+
+            $results = [];
+            foreach ($values as $value) {
+                $results[] = [
+                    'id' => $value['Date'],
+                    'name' => $value['Date']
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        }
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
@@ -1815,119 +2010,6 @@ class DropdownController extends Controller
 
     /////////// End WebManagement MapStamp Equipment Services PIC dropdowns //////////////
 
-
-    /////////// Start WebManagement Tracker Recent Activity dropdowns //////////////
-    public function actionGetTrackerRaDivisionDropdown() {
-        try{
-
-            $headers = getallheaders();
-            WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
-
-            $values = WebManagementTrackerCurrentLocationDropDown::find()
-                ->select(['Division'])
-                ->where(['not', ['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['Surveyor' => null]])
-                ->distinct()
-                ->all();
-
-            $namePairs = [
-                null => "Select...",
-            ];
-            foreach ($values as $value) {
-                $namePairs[$value["Division"]] = $value["Division"];
-            }
-
-            $response = Yii::$app ->response;
-            $response -> format = Response::FORMAT_JSON;
-            $response -> data = $namePairs;
-
-            return $response;
-
-        } catch(ForbiddenHttpException $e)  {
-
-            throw new ForbiddenHttpException;
-
-        } catch(\Exception $e) {
-
-            throw new \yii\web\HttpException(400);
-
-        }
-    }
-
-    public function actionGetTrackerRaWorkCenterDropdown($division) {
-        try{
-
-            $headers = getallheaders();
-            WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
-
-            $values = WebManagementTrackerCurrentLocationDropDown::find()
-                ->select(['WorkCenter'])
-                ->where(['Division' => $division])
-                ->andWhere(['not' ,['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['Surveyor' => null]])
-                ->distinct()
-                ->all();
-
-            $results = [];
-            foreach ($values as $value) {
-                $results[] = [
-                    "id" => $value["WorkCenter"],
-                    "name" => $value["WorkCenter"]
-                ];
-            }
-
-            $response = Yii::$app ->response;
-            $response -> format = Response::FORMAT_JSON;
-            $response -> data = $results;
-
-            return $response;
-        } catch(ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-    public function actionGetTrackerRaSurveyorDropdown($division, $workCenter, $startDate, $endDate) {
-        try{
-
-            $headers = getallheaders();
-            WebManagementTrackerCurrentLocationDropDown::setClient($headers['X-Client']);
-
-            $values = WebManagementTrackerCurrentLocationDropDown::find()
-                ->select(['Surveyor','SurveyorLANID'])
-                ->where(['Division' => $division])
-                ->andWhere(['WorkCenter' => $workCenter])
-                ->andWhere(['not' ,['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['Surveyor' => null]])
-                ->andWhere(['between', 'Date', $startDate, $endDate])
-                ->distinct()
-                ->all();
-
-            $results = [];
-            foreach ($values as $value) {
-                $results[] = [
-                    "id" => strtolower($value["SurveyorLANID"]),
-                    "name" => $value["Surveyor"]
-                ];
-            }
-
-            $response = Yii::$app ->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $results;
-
-            return $response;
-        }  catch(ForbiddenHttpException $e)  {
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-    /////////// End WebManagement Tracker Recent Activity dropdowns //////////////
-
     /////////// Start WebManagement Tracker History dropdowns //////////////
     public function actionGetTrackerHDivisionDropdown() {
         try{
@@ -2143,6 +2225,111 @@ class DropdownController extends Controller
                 $results[] = [
                     'id' => $value['Surveyor'],
                     'name' => $value['Surveyor']
+                ];
+            }
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $results;
+
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	public function actionGetMapPlatDropdown($division, $workcenter, $surveyor, $date) {
+
+        if($division != null && $workcenter != null)
+        {
+            // by division and workcenter
+            $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Map/Plat'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workcenter])
+                    ->distinct()
+                    ->all();
+        }
+        else if($division != null && $workcenter != null && $surveyor != null)
+        {
+            // by division and workcenter and surveyor
+            $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Map/Plat'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workcenter])
+                    ->andWhere(['Surveyor' => $surveyor])
+                    ->distinct()
+                    ->all();
+        }
+        else if($division != null && $workcenter != null && $date != null)
+        {
+            // by division and workcenter and date
+            $values = WebManagementLeakLogDropDown::find()
+                    ->select(['Map/Plat'])
+                    ->where(['Division' => $division])
+                    ->andWhere(['WorkCenter' => $workcenter])
+                    ->andWhere(['Date' => $date])
+                    ->distinct()
+                    ->all();
+        }
+
+        $results = [];
+        foreach ($values as $value) {
+            $results[] = [
+                'id' => $value['Surveyor'],
+                'name' => $value['Surveyor']
+            ];
+        }
+
+        $response = Yii::$app ->response;
+        $response -> format = Response::FORMAT_JSON;
+        $response -> data = $results;
+
+        return $response;
+    }
+	
+	public function actionGetLeakLogFlocDropdown($workcenter, $isAdhoc)
+    {
+        //TODO RBAC permission check
+        try{
+
+            $headers = getallheaders();
+
+            if($isAdhoc == 0)
+            {
+                WebManagementDivisionWorkCenterFLOCWithIR::setClient($headers['X-Client']);
+                $values = WebManagementDivisionWorkCenterFLOCWithIR::find()
+                    ->select(['FLOC', 'SurveyFreq'])
+                    ->where(['WorkCenter' => $workcenter])
+                    ->andWhere(['not' ,['SurveyFreq' => '']])
+                    ->distinct()
+                    ->all();
+            }
+            else
+            {
+                WebManagementDivisionWorkCenterFLOC::setClient($headers['X-Client']);
+                $values = WebManagementDivisionWorkCenterFLOC::find()
+                   ->select(['FLOC'])
+                   ->where(['WorkCenter' => $workcenter])
+                   ->distinct()
+                   ->all();
+            }
+            $results = [];
+            foreach ($values as $value) {
+                $surveyType = 'Unknown';
+                if($isAdhoc == 0 && $value['SurveyFreq'] != '')
+                {
+                    $surveyType = $value['SurveyFreq'];
+                }
+                $results[] = [
+                    'id' => $surveyType,
+                    'name' => $value['FLOC']
                 ];
             }
 
