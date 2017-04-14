@@ -133,7 +133,8 @@ class MileageCardController extends BaseActiveController
 			try
 			{
 				//create transaction
-				$connection = \Yii::$app->db;
+				//$connection = \Yii::$app->db;
+                $connection = MileageCard::getDb();
 				$transaction = $connection->beginTransaction(); 
 			
 				foreach($approvedCards as $card)
