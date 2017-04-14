@@ -1929,8 +1929,9 @@ class DropdownController extends Controller
     /////////// End WebManagement Tracker Recent Activity dropdowns //////////////
 
     /////////// Start WebManagement Tracker History dropdowns //////////////
-    public function actionGetTrackerHDivisionDropdown() {
-        try{
+    public function actionGetTrackerHDivisionDropdown()
+    {
+        try {
 
             $headers = getallheaders();
             WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
@@ -1938,8 +1939,8 @@ class DropdownController extends Controller
             $values = WebManagementTrackerHistoryDropDown::find()
                 ->select(['Division'])
                 ->where(['not', ['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['Surveyor' => null]])
+                ->andWhere(['not', ['WorkCenter' => null]])
+                ->andWhere(['not', ['Surveyor' => null]])
                 ->distinct()
                 ->all();
 
@@ -1950,43 +1951,51 @@ class DropdownController extends Controller
                 $namePairs[$value["Division"]] = $value["Division"];
             }
 
-            $response = Yii::$app ->response;
-            $response -> format = Response::FORMAT_JSON;
-            $response -> data = $namePairs;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $namePairs;
 
             return $response;
 
-        } catch(ForbiddenHttpException $e)  {
+        } catch (ForbiddenHttpException $e) {
 
             throw new ForbiddenHttpException;
 
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             throw new \yii\web\HttpException(400);
 
         }
     }
 
-    public function actionGetTrackerHWorkCenterDropdown($division, $flatArray=false) {
-        try{
+    public function actionGetTrackerHWorkCenterDropdown($division = null, $flatArray = false)
+    {
+        try {
 
             $headers = getallheaders();
             WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
-
-            $values = WebManagementTrackerHistoryDropDown::find()
-                ->select(['WorkCenter'])
-                ->where(['Division' => $division])
-                ->andWhere(['not' ,['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['Surveyor' => null]])
-                ->distinct()
-                ->all();
+            if ($division !== null && $division !== "") {
+                $values = WebManagementTrackerHistoryDropDown::find()
+                    ->select(['WorkCenter'])
+                    ->where(['not', ['Division' => null]])
+                    ->andWhere(['not', ['WorkCenter' => null]])
+                    ->andWhere(['not', ['Surveyor' => null]])
+                    ->andwhere(['Division' => $division])
+                    ->distinct()->all();
+            } else {
+                $values = WebManagementTrackerHistoryDropDown::find()
+                    ->select(['WorkCenter'])
+                    ->where(['not', ['Division' => null]])
+                    ->andWhere(['not', ['WorkCenter' => null]])
+                    ->andWhere(['not', ['Surveyor' => null]])
+                    ->distinct()->all();
+            }
 
             $results = [];
             foreach ($values as $value) {
                 if ($flatArray) {
                     $results[$value["WorkCenter"]] = $value["WorkCenter"];
-                }else {
+                } else {
                     $results[] = [
                         "id" => $value["WorkCenter"],
                         "name" => $value["WorkCenter"]
@@ -1994,55 +2003,80 @@ class DropdownController extends Controller
                 }
             }
 
-            $response = Yii::$app ->response;
-            $response -> format = Response::FORMAT_JSON;
-            $response -> data = $results;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $results;
 
             return $response;
-        } catch(ForbiddenHttpException $e) {
+        } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
     }
 
-    public function actionGetTrackerHSurveyorDropdown($division, $workCenter, $startDate, $endDate, $flatArray=false) {
-        try{
+    public function actionGetTrackerHWorkCenterDivisionFromSurveyor($surveyor)
+    {
+        $headers = getallheaders();
+        BaseActiveRecord::setClient($headers['X-Client']);
+        $connection = BaseActiveRecord::getDb();
+        $workQueueCommand = $connection->
+        createCommand("SELECT WorkCenter From fnWebManagementDropDownTrackerHistoryWorkcenter(NULL, :Surveyor)")
+            ->bindParam(':Surveyor', $surveyor, \PDO::PARAM_STR);
+        $divisionCommand = $connection->
+        createCommand("SELECT Division From fnWebManagementDropDownTrackerHistoryDivision(:Surveyor)")
+            ->bindParam(':Surveyor', $surveyor, \PDO::PARAM_STR);
+
+        $results["workCenter"] = $workQueueCommand->queryOne()["WorkCenter"];
+        $results["division"] = $divisionCommand->queryOne()["Division"];
+        Yii::trace("Surveyor for aGTHWCDFS: $surveyor");
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $results;
+        return $response;
+    }
+
+    public function actionGetTrackerHSurveyorDropdown($division = null, $workCenter = null, $startDate = null, $endDate = null, $flatArray = false)
+    {
+        try {
 
             $headers = getallheaders();
             WebManagementTrackerHistoryDropDown::setClient($headers['X-Client']);
+            BaseActiveRecord::setClient($headers['X-Client']);
+            $connection = BaseActiveRecord::getDb();
 
-            $values = WebManagementTrackerHistoryDropDown::find()
-                ->select(['Surveyor','SurveyorLANID'])
-                ->where(['Division' => $division])
-                ->andWhere(['WorkCenter' => $workCenter])
-                ->andWhere(['not' ,['Division' => null]])
-                ->andWhere(['not' ,['WorkCenter' => null]])
-                ->andWhere(['not' ,['Surveyor' => null]])
-                ->andWhere(['between', 'Date', $startDate, $endDate])
-                ->distinct()
-                ->all();
+            // If workCenter is empty we set it to null so the SQL function works
+            if ($workCenter == "") {
+                $workCenter = null;
+            }
+            $workQueueCommand = $connection->
+            createCommand("SELECT Surveyor From fnWebManagementDropDownTrackerHistorySurveyor(:Workcenter)")
+                ->bindParam(':Workcenter', $workCenter, \PDO::PARAM_STR);
+            Yii::trace("Raw SQL from actionGetTrackerHSurveyorDropdown: " . $workQueueCommand->getRawSql());
+            $values = $workQueueCommand->queryAll();
 
+            //$results = $values;
             $results = [];
             foreach ($values as $value) {
                 if ($flatArray) {
-                    $results[strtolower($value["SurveyorLANID"])] = $value["Surveyor"];
+                    $results[strtolower($value["Surveyor"])] = $value["Surveyor"];
                 }else {
                     $results[] = [
-                        "id" => strtolower($value["SurveyorLANID"]),
+                        "id" => strtolower($value["Surveyor"]),
                         "name" => $value["Surveyor"]
                     ];
                 }
             }
 
-            $response = Yii::$app ->response;
+            $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $response->data = $results;
 
             return $response;
-        }  catch(ForbiddenHttpException $e)  {
+        } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
     }
