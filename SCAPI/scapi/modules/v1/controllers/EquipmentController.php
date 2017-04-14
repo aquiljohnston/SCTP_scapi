@@ -216,7 +216,7 @@ class EquipmentController extends BaseActiveController
                     //loop user project array get all equipment WHERE equipmentProjectID is equal
                     for ($i = 0; $i < $projectsSize; $i++) {
                         $projectID = $projects[$i]->ProjUserProjectID;
-                        $equipments->addWhere(['EquipmentProjectID' => $projectID]);
+                        $equipments->andWhere(['EquipmentProjectID' => $projectID]);
                     }
                     $paginationResponse = self::paginationProcessor($equipments, $page, $listPerPage);
                     $equipmentsArr = $paginationResponse['Query']->all();
