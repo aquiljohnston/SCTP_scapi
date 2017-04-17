@@ -72,6 +72,17 @@ class RouteController extends Controller
 				$response->data = 'Bad Request - No valid data key present.';
 				return $response;
 			}
+			
+			//check the isRoundTrip option if value is not present default to true
+			if(array_key_exists('isRoundTrip', $data))
+			{
+				$isRoundTrip = $data['isRoundTrip'];
+			}
+			else
+			{
+				$isRoundTrip = true;
+			}
+			
 			//file path for jar
 			$filePath = Yii::$app->basePath . "\web\jar";
 			
@@ -87,7 +98,7 @@ class RouteController extends Controller
 			//set execution path
 			chdir($filePath);
 			//execute jar file
-			exec("java -jar TSP.jar $postDataTempName TwoOpt", $output);
+			exec("java -jar TSP.jar $postDataTempName TwoOpt $isRoundTrip", $output);
 			$responseData = json_decode($output[0]);
 			
 			// $mapCount = count($data['mapGrids']);
@@ -162,6 +173,17 @@ class RouteController extends Controller
 				$response->data = 'Bad Request - No valid data key present.';
 				return $response;
 			}
+			
+			//check the isRoundTrip option if value is not present default to true
+			if(array_key_exists('isRoundTrip', $data))
+			{
+				$isRoundTrip = $data['isRoundTrip'];
+			}
+			else
+			{
+				$isRoundTrip = true;
+			}
+			
 			//file path for jar
 			$filePath = Yii::$app->basePath . "\web\jar";
 			
@@ -177,7 +199,8 @@ class RouteController extends Controller
 			//set execution path
 			chdir($filePath);
 			//execute jar file
-			exec("java -jar TSP.jar $postDataTempName SimulatedAnnealing", $output);
+			//return "java -jar TSP.jar $postDataTempName SimulatedAnnealing $isRoundTrip";
+			exec("java -jar TSP.jar $postDataTempName SimulatedAnnealing $isRoundTrip", $output);
 			$responseData = json_decode($output[0]);
 			
 			// $mapCount = count($data['mapGrids']);
