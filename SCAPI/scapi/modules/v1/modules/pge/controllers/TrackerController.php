@@ -103,7 +103,7 @@ class TrackerController extends Controller
                 $query->andWhere(['[th].[Work Center]' => $workCenter]);
 
                 if ($surveyor) {
-                    $query->andWhere(['LOWER([th].[SurveyorLANID])' => $surveyor]);
+                    $query->andWhere(['LOWER([th].[Surveyor / Inspector])' => strtolower($surveyor)]);
                 }
 
                 if (trim($search)) {
