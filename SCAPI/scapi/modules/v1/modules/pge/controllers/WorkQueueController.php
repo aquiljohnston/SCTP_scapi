@@ -119,27 +119,39 @@ class WorkQueueController extends Controller
 				$workQueueCount = (count($workQueueArray));
 				for ($i = 0; $i < $workQueueCount; $i++)
 				{
-					//remove "." from AssignedWorkQueueUID
-					if(array_key_exists('AssignedWorkQueueUID', $workQueueArray[$i]))
-					{
-						$workQueueArray[$i]['AssignedWorkQueueUID'] = self::replacePeriod($workQueueArray[$i]['AssignedWorkQueueUID']);
+					//try catch to log individual work queue errors
+					try
+					{	
+						//remove "." from AssignedWorkQueueUID
+						if(array_key_exists('AssignedWorkQueueUID', $workQueueArray[$i]))
+						{
+							$workQueueArray[$i]['AssignedWorkQueueUID'] = self::replacePeriod($workQueueArray[$i]['AssignedWorkQueueUID']);
+						}
+						
+						if($workQueueArray[$i]['DispatchMethod'] == 'Dispatched')
+						{
+							$responseData[] = self::lockDispatched($workQueueArray[$i], $client, $userUID);
+						}
+						elseif($workQueueArray[$i]['DispatchMethod'] == 'Self Dispatch')
+						{
+							$responseData[] = self::lockSelfDispatched($workQueueArray[$i], $client, $userUID);
+						}
+						elseif($workQueueArray[$i]['DispatchMethod'] == 'Ad Hoc')
+						{
+							$responseData[] = self::lockAdHoc($workQueueArray[$i], $client, $userUID);
+						}
+						else
+						{
+							$responseData[] = ['AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+						}
 					}
-					
-					if($workQueueArray[$i]['DispatchMethod'] == 'Dispatched')
+					catch(\Exception $e)
 					{
-						$responseData[] = self::lockDispatched($workQueueArray[$i], $client, $userUID);
-					}
-					elseif($workQueueArray[$i]['DispatchMethod'] == 'Self Dispatch')
-					{
-						$responseData[] = self::lockSelfDispatched($workQueueArray[$i], $client, $userUID);
-					}
-					elseif($workQueueArray[$i]['DispatchMethod'] == 'Ad Hoc')
-					{
-						$responseData[] = self::lockAdHoc($workQueueArray[$i], $client, $userUID);
-					}
-					else
-					{
-						$responseData[] = ['AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueArray[$i]);
+						$responseData[] = [
+							'AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'],
+							'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'],
+							'LockedFlag'=>0];
 					}
 				}
 			}
