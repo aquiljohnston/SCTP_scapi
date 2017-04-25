@@ -63,86 +63,95 @@ class MasterLeakLogController extends Controller
 			$logCount = count($logArray);
 			$equipmentCount = count($equipmentArray);
 			$responseData = [];
+			$services = [];
 			
 			for($i = 0; $i < $logCount; $i++)
 			{
-				//reset new master leak log flag
-				$newMLL = false;
-				//get count of current active records with matching master leak log uid
-				$existingLogCount = MasterLeakLog::find()
-					->where(['ActiveFlag' => 1])
-					->andWhere(['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID']])
-					->count();
-				
-				//if count is less than 1 create a new record
-				if($existingLogCount < 1)
+				//try catch to log individual MLL errors
+				try
 				{
-					$masterLeakLog = new MasterLeakLog();
-					$masterLeakLog->attributes = $logArray[$i];
-					$masterLeakLog->CreatedUserUID = $UserUID;
-					$masterLeakLog->ModifiedUserUID = $UserUID;
-					//if new record saves set new record flag to true
-					if ($masterLeakLog->save()) 
+					//reset new master leak log flag
+					$newMLL = false;
+					//get count of current active records with matching master leak log uid
+					$existingLogCount = MasterLeakLog::find()
+						->where(['ActiveFlag' => 1])
+						->andWhere(['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID']])
+						->count();
+					
+					//if count is less than 1 create a new record
+					if($existingLogCount < 1)
 					{
-						$newMLL = true;
-					}
-				}
-				
-				//if new record or count is greater than 0 process equipment
-				if($newMLL || $existingLogCount > 0)
-				{
-					$services = [];
-					for($j = 0; $j < $equipmentCount; $j++)
-					{
-						//reset new inspection service flag
-						$newIS = false;
-						//get count of current active recrods with matching master leak log and inspection equipment uids
-						$existingISCount = InspectionService::find()
-							->where(['ActiveFlag' => 1])
-							->andWhere(['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID']])
-							->andWhere(['InspectionEquipmentUID' => $equipmentArray[$j]['InspectionEquipmentUID']])
-							->count();
-						
-						//if count is less than 1 create a new record
-						if($existingISCount < 1)
+						$masterLeakLog = new MasterLeakLog();
+						$masterLeakLog->attributes = $logArray[$i];
+						$masterLeakLog->CreatedUserUID = $UserUID;
+						$masterLeakLog->ModifiedUserUID = $UserUID;
+						//if new record saves set new record flag to true
+						if ($masterLeakLog->save()) 
 						{
-							$inspectionService = new InspectionService();
-							$inspectionService->attributes = $logArray[$i];
-							$inspectionService->InspectionServicesUID = BaseActiveController::generateUID('InspectionService', 'API');
-							$inspectionService->InspectionRequestUID = $logArray[$i]['InspectionRequestLogUID'];
-							$inspectionService->InspectionEquipmentUID = $equipmentArray[$j]['InspectionEquipmentUID'];
-							$inspectionService->CreatedUserUID = $UserUID;
-							$inspectionService->ModifiedUserUID = $UserUID;
-							$inspectionService->PlaceHolderFlag = 1;
-							$inspectionService->StatusType = 'In Progress';
-							//if new record saves set new record flag to true
-							if ($inspectionService->save())
-							{
-								$newIS = true;
-							}
-						}
-						
-						//if new record or count is greater than 0 add to response
-						if ($newIS || $existingISCount > 0)
-						{
-							$services[] = ['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID'],
-							'InspectionEquipmentUID' => $equipmentArray[$j]['InspectionEquipmentUID'],
-							'Success' => 1];
-						}
-						else
-						{
-							$services[] = ['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID'],
-								'InspectionEquipmentUID' => $equipmentArray[$j]['InspectionEquipmentUID'],
-								'Success' => 0];
+							$newMLL = true;
 						}
 					}
 					
-					$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'Success'=>1, 'Services' => $services];
+					//if new record or count is greater than 0 process equipment
+					if($newMLL || $existingLogCount > 0)
+					{
+						for($j = 0; $j < $equipmentCount; $j++)
+						{
+							//reset new inspection service flag
+							$newIS = false;
+							//get count of current active recrods with matching master leak log and inspection equipment uids
+							$existingISCount = InspectionService::find()
+								->where(['ActiveFlag' => 1])
+								->andWhere(['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID']])
+								->andWhere(['InspectionEquipmentUID' => $equipmentArray[$j]['InspectionEquipmentUID']])
+								->count();
+							
+							//if count is less than 1 create a new record
+							if($existingISCount < 1)
+							{
+								$inspectionService = new InspectionService();
+								$inspectionService->attributes = $logArray[$i];
+								$inspectionService->InspectionServicesUID = BaseActiveController::generateUID('InspectionService', 'API');
+								$inspectionService->InspectionRequestUID = $logArray[$i]['InspectionRequestLogUID'];
+								$inspectionService->InspectionEquipmentUID = $equipmentArray[$j]['InspectionEquipmentUID'];
+								$inspectionService->CreatedUserUID = $UserUID;
+								$inspectionService->ModifiedUserUID = $UserUID;
+								$inspectionService->PlaceHolderFlag = 1;
+								$inspectionService->StatusType = 'In Progress';
+								//if new record saves set new record flag to true
+								if ($inspectionService->save())
+								{
+									$newIS = true;
+								}
+							}
+							
+							//if new record or count is greater than 0 add to response
+							if ($newIS || $existingISCount > 0)
+							{
+								$services[] = ['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID'],
+								'InspectionEquipmentUID' => $equipmentArray[$j]['InspectionEquipmentUID'],
+								'Success' => 1];
+							}
+							else
+							{
+								$services[] = ['MasterLeakLogUID' => $logArray[$i]['MasterLeakLogUID'],
+									'InspectionEquipmentUID' => $equipmentArray[$j]['InspectionEquipmentUID'],
+									'Success' => 0];
+							}
+						}
+						
+						$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'Success'=>1, 'Services' => $services];
+					}
+					else
+					{
+						$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'Success'=>0, 'Services' => $services];
+					}	
 				}
-				else
+				catch(\Exception $e)
 				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $logArray[$i]);
 					$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'Success'=>0, 'Services' => $services];
-				}		
+				}
 			}
 			//send response
 			$response = Yii::$app->response;
