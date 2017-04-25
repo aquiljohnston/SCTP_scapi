@@ -63,43 +63,52 @@ class BreadcrumbController extends Controller
 			//traverse breadcrumb array
 			for($i = 0; $i < $breadcrumbCount; $i++)
 			{
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				$scBreadcrumb = new Breadcrumb;
-				$scBreadcrumb->attributes = $breadcrumbs[$i];
-				$scBreadcrumb->BreadcrumbCreatedUserUID = $userUID;
-				$scBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
-
-				BaseActiveRecord::setClient($headers['X-Client']);
-				$pgeBreadcrumb = new PGEBreadcrumb;
-				$pgeBreadcrumb->attributes = $breadcrumbs[$i];
-				$pgeBreadcrumb->BreadcrumbCreatedUserUID = $userUID;
-				$pgeBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
-				
-                //check if pge breadcrumb already exist.
-                $previousBreadcrumb = PGEBreadcrumb::find()
-                    ->where(['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID])
-                    ->one();
-
-                if ($previousBreadcrumb == null) {
-					//point at ct db
+				//try catch to log individual breadcrumb errors
+				try
+				{					
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-                    if ($scBreadcrumb->save()) {
-						//point at client db
-                        BaseActiveRecord::setClient($headers['X-Client']);
-                        if ($pgeBreadcrumb->save()) {
-                            $response->setStatusCode(201);
-                            $responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
-                        } else {
-                            $responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
-                        }
-                    } else {
-                        $responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
-                    }
-                }
-				else
+					$scBreadcrumb = new Breadcrumb;
+					$scBreadcrumb->attributes = $breadcrumbs[$i];
+					$scBreadcrumb->BreadcrumbCreatedUserUID = $userUID;
+					$scBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
+
+					BaseActiveRecord::setClient($headers['X-Client']);
+					$pgeBreadcrumb = new PGEBreadcrumb;
+					$pgeBreadcrumb->attributes = $breadcrumbs[$i];
+					$pgeBreadcrumb->BreadcrumbCreatedUserUID = $userUID;
+					$pgeBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
+					
+					//check if pge breadcrumb already exist.
+					$previousBreadcrumb = PGEBreadcrumb::find()
+						->where(['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID])
+						->one();
+
+					if ($previousBreadcrumb == null) {
+						//point at ct db
+						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+						if ($scBreadcrumb->save()) {
+							//point at client db
+							BaseActiveRecord::setClient($headers['X-Client']);
+							if ($pgeBreadcrumb->save()) {
+								$response->setStatusCode(201);
+								$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
+							} else {
+								$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+							}
+						} else {
+							$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+						}
+					}
+					else
+					{
+						//send success if breadcrumb record was already saved previously
+						$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
+					}
+				}
+				catch(\Exception $e)
 				{
-					//send success if breadcrumb record was already saved previously
-					$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
+					$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 				}
 			}
 			//return data in response
