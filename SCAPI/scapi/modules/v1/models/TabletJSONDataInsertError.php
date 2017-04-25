@@ -11,10 +11,6 @@ use Yii;
  * @property string $SvrDTLT
  * @property string $SvrDTLT_Offset
  * @property string $InsertedData
- * @property string $InsertedData2
- * @property string $InsertedData3
- * @property string $InsertedData4
- * @property string $InsertedData5
  * @property integer $ErrorNumber
  * @property string $ErrorMessage
  */
@@ -35,7 +31,7 @@ class TabletJSONDataInsertError extends \app\modules\v1\models\BaseActiveRecord
     {
         return [
             [['SvrDTLT', 'SvrDTLT_Offset'], 'safe'],
-            [['InsertedData', 'InsertedData2', 'InsertedData3', 'InsertedData4', 'InsertedData5', 'ErrorMessage'], 'string'],
+            [['InsertedData', 'ErrorMessage'], 'string'],
             [['ErrorNumber'], 'integer']
         ];
     }
@@ -50,10 +46,6 @@ class TabletJSONDataInsertError extends \app\modules\v1\models\BaseActiveRecord
             'SvrDTLT' => 'Svr Dtlt',
             'SvrDTLT_Offset' => 'Svr Dtlt  Offset',
             'InsertedData' => 'Inserted Data',
-            'InsertedData2' => 'Inserted Data2',
-            'InsertedData3' => 'Inserted Data3',
-            'InsertedData4' => 'Inserted Data4',
-            'InsertedData5' => 'Inserted Data5',
             'ErrorNumber' => 'Error Number',
             'ErrorMessage' => 'Error Message',
         ];

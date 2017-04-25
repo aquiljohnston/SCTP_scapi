@@ -191,16 +191,12 @@ class BaseActiveController extends ActiveController
 		$archiveBreadcrumb->save();
 	}
 	
-	public static function archiveErrorJson($data, $error, $client, $data2 = null, $data3 = null, $data4 = null, $data5 = null)
+	public static function archiveErrorJson($json, $error, $client)
 	{
 		TabletJSONDataInsertError::setClient($client);
 		
 		$archiveError = new TabletJSONDataInsertError;
-		$archiveError->InsertedData = $data;
-		$archiveError->InsertedData2 = json_encode($data2);
-		$archiveError->InsertedData3 = json_encode($data3);
-		$archiveError->InsertedData4 = json_encode($data4);
-		$archiveError->InsertedData5 = json_encode($data5);
+		$archiveError->InsertedData = $json;
 		$archiveError->ErrorNumber = $error->getCode();
 		$archiveError->ErrorMessage = $error->getMessage();
 		
