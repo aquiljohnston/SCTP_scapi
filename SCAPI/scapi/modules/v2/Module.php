@@ -7,15 +7,13 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
-		/*
 		$this->modules = [
 			'pge' => [
 				'class' => 'app\modules\v2\modules\pge\Module',
 			],
-			'scana' => [
+			/*'scana' => [
 				'class' => 'app\modules\v2\modules\scana\Module',
-			],
+			],*/
 		];
-		*/
     }
 }
