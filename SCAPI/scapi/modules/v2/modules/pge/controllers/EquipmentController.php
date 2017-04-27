@@ -88,7 +88,6 @@ class EquipmentController extends Controller
 					//try catch to log individual equipment errors
 					try
 					{	
-						if(true) throw new \yii\web\HttpException(400);
 						if($equipmentCalibrationArray[$i] != null)
 						{
 							//check for a previous record with the same UID
