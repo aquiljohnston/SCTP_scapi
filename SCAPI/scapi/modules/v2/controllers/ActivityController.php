@@ -220,7 +220,23 @@ class ActivityController extends BaseActiveController
 									}
 									catch(yii\db\Exception $e)
 									{
-										$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+										//return $e->errorInfo;
+										//if db exception is 2601, duplicate contraint then success
+										if(in_array($e->errorInfo[1], array(2601, 2627)))
+										{
+											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+										}
+										else //log other errors and retrun failure
+										{
+											BaseActiveController::archiveErrorJson(
+												file_get_contents("php://input"),
+												$e,
+												getallheaders()['X-Client'],
+												$data['activity'][$i],
+												$data['activity'][$i]['timeEntry'][$t]
+												);
+											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
+										}
 									}
 								}
 							}
@@ -252,7 +268,22 @@ class ActivityController extends BaseActiveController
 									}
 									catch(yii\db\Exception $e)
 									{
-										$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>1];
+										//if db exception is 2601, duplicate contraint then success
+										if(in_array($e->errorInfo[1], array(2601, 2627)))
+										{
+											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>1];
+										}
+										else //log other errors and retrun failure
+										{
+											BaseActiveController::archiveErrorJson(
+												file_get_contents("php://input"),
+												$e,
+												getallheaders()['X-Client'],
+												$data['activity'][$i],
+												$data['activity'][$i]['mileageEntry'][$m]
+												);
+											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>0];
+										}
 									}
 								}
 							}
@@ -266,7 +297,7 @@ class ActivityController extends BaseActiveController
 					catch(\Exception $e)
 					{
 						//log activity error
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 						//set success flag for activity
 						$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
 					}
