@@ -124,8 +124,16 @@ class EquipmentController extends Controller
 								}
 								catch(yii\db\Exception $e)
 								{
-									//catch duplicate records exception
-									$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>1];
+									if(in_array($e->errorInfo[1], array(2601, 2627)))
+									{
+										//catch duplicate records exception
+										$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>1];
+									}
+									else
+									{
+										BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $equipmentCalibrationArray[$i]);
+										$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>0];
+									}
 								}
 							}
 							//else update the previous record
@@ -163,8 +171,18 @@ class EquipmentController extends Controller
 									}
 									catch(yii\db\Exception $e)
 									{
-										//catch duplicate records exception
-										$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>1];
+										if(in_array($e->errorInfo[1], array(2601, 2627)))
+										{
+											//catch duplicate records exception
+											$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>1];
+										}
+										else
+										{
+											$previousCalibration->ActiveFlag = 1;
+											$previousCalibration->update();
+											BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $equipmentCalibrationArray[$i]);
+											$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>0];
+										}
 									}
 								}
 								else
