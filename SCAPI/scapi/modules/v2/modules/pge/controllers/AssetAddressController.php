@@ -111,7 +111,15 @@ class AssetAddressController extends Controller
 					}
 					catch(yii\db\Exception $e)
 					{
-						$assetAddressSuccessFlag = 1;
+						if(in_array($e->errorInfo[1], array(2601, 2627)))
+						{
+							$assetAddressSuccessFlag = 1;
+						}
+						else
+						{
+							BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $assetAddressArray);
+							$assetAddressSuccessFlag = 0;
+						}
 					}
 				}
 				else
@@ -129,15 +137,29 @@ class AssetAddressController extends Controller
 						$previousAddressArray['ModifiedUserUID'] = $userUID;
 						$previousAddressArray['ActivityUID'] = $generalVariables['ActivityUID'];
 						//new AssetAddress model
-						$newAddress = self::createAssetAddress($assetAddressArray, $previousAddressArray, $addressRevision);					
+						$newAddress = self::createAssetAddress($assetAddressArray, $previousAddressArray, $addressRevision);										
 						try{
 							if ($newAddress->save()) {
 								$assetAddressSuccessFlag = 1;
-							}	
+							}
+							else
+							{
+								$previousAddress->ActiveFlag = 1;
+								$previousAddress->update();
+							}
 						}
 						catch(yii\db\Exception $e)
 						{
-							$assetAddressSuccessFlag = 1;
+							if(in_array($e->errorInfo[1], array(2601, 2627)))
+							{
+								$assetAddressSuccessFlag = 1;
+							}
+							else
+							{
+								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $assetAddressArray);
+								$previousAddress->ActiveFlag = 1;
+								$previousAddress->update();
+							}
 						}
 					}
 				}	
@@ -272,10 +294,23 @@ class AssetAddressController extends Controller
 					if ($newInspection->save()) {
 						$inspectionSuccessFlag = 1;
 					}
+					else{
+						$previousInspection->ActiveFlag = 1;
+						$previousInspection->update();
+					}
 				}
 				catch(yii\db\Exception $e)
 				{
-					$inspectionSuccessFlag = 1;
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$inspectionSuccessFlag = 1;
+					}
+					else
+					{
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $inspectionData);
+						$previousInspection->ActiveFlag = 1;
+						$previousInspection->update();
+					}
 				}
 			}
 		} else {
@@ -288,7 +323,14 @@ class AssetAddressController extends Controller
 			}
 			catch(yii\db\Exception $e)
 			{
-				$inspectionSuccessFlag = 1;
+				if(in_array($e->errorInfo[1], array(2601, 2627)))
+				{
+					$inspectionSuccessFlag = 1;
+				}
+				else
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $inspectionData);
+				}
 			}
 		}
 		return $inspectionSuccessFlag;
@@ -325,10 +367,23 @@ class AssetAddressController extends Controller
 						//add to response array
 						$cgiSuccessFlag = 1;
 					}
+					else{
+						$previousCGI->ActiveFlag = 1;
+						$previousCGI->update();
+					}
 				}
 				catch(yii\db\Exception $e)
 				{
-					$cgiSuccessFlag = 1;
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$cgiSuccessFlag = 1;
+					}
+					else
+					{
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $cgiData);
+						$previousCGI->ActiveFlag = 1;
+						$previousCGI->update();
+					}
 				}
 			}
 		} else {
@@ -343,7 +398,14 @@ class AssetAddressController extends Controller
 			}
 			catch(yii\db\Exception $e)
 			{
-				$cgiSuccessFlag = 1;
+				if(in_array($e->errorInfo[1], array(2601, 2627)))
+				{
+					$cgiSuccessFlag = 1;
+				}
+				else
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $cgiData);
+				}
 			}
 		}
 		return $cgiSuccessFlag;
@@ -379,10 +441,24 @@ class AssetAddressController extends Controller
 					if ($newAOC->save()) {
 						$aocSuccessFlag = 1;
 					}
+					else
+					{
+						$previousAOC->ActiveFlag = 1;
+						$previousAOC->update();
+					}
 				}
 				catch(yii\db\Exception $e)
 				{
-					$aocSuccessFlag = 1;
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$aocSuccessFlag = 1;
+					}
+					else
+					{
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, null, $aocData);
+						$previousAOC->ActiveFlag = 1;
+						$previousAOC->update();
+					}
 				}
 			}
 		} else {
@@ -397,7 +473,14 @@ class AssetAddressController extends Controller
 			}
 			catch(yii\db\Exception $e)
 			{
-				$aocSuccessFlag = 1;
+				if(in_array($e->errorInfo[1], array(2601, 2627)))
+				{
+					$aocSuccessFlag = 1;
+				}
+				else
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, null, $aocData);
+				}
 			}
 		}
 		return $aocSuccessFlag;
@@ -436,10 +519,24 @@ class AssetAddressController extends Controller
 							//need to discusss with Gary Wheeler
 							$indicationSuccessFlag = 1;
 						}
+						else
+						{
+							$previousIndication->ActiveFlag = 1;
+							$previousIndication->update();
+						}
 					}
 					catch(yii\db\Exception $e)
 					{
-						$indicationSuccessFlag = 1;
+						if(in_array($e->errorInfo[1], array(2601, 2627)))
+						{
+							$indicationSuccessFlag = 1;
+						}
+						else
+						{
+							BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, null, $indicationData);
+							$previousIndication->ActiveFlag = 1;
+							$previousIndication->update();
+						}
 					}
 				}
 			} else {
@@ -458,7 +555,16 @@ class AssetAddressController extends Controller
 			}
 			catch(yii\db\Exception $e)
 			{
-				$indicationSuccessFlag = 1;
+				if(in_array($e->errorInfo[1], array(2601, 2627)))
+				{
+					$indicationSuccessFlag = 1;
+				}
+				else
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, null, $indicationData);
+					$previousIndication->ActiveFlag = 1;
+					$previousIndication->update();
+				}
 			}
 		}
 		return $indicationSuccessFlag; 
