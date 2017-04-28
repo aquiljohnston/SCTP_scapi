@@ -2330,6 +2330,60 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+
+    public function actionGetLeakLogRefactoredDropdown()
+    {
+        //TODO RBAC permission check
+        try {
+
+            $headers = getallheaders();
+            BaseActiveRecord::setClient($headers['X-Client']);
+
+            $connection = BaseActiveRecord::getDb();
+
+            $combinedArray = array();
+
+            $divisionNamePairs = [
+                null => 'Select...',
+            ];
+
+            $divisionCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogDivision() Order By Division");
+            $values = $divisionCommand->queryAll();
+
+            foreach ($values as $value) {
+                $divisionNamePairs[$value['Division']] = $value['Division'];
+            }
+
+            $combinedArray['Division'] = $divisionNamePairs;
+            $combinedArray['DivisionWorkCenter'] = array();
+            $combinedArray['DivisionWorkCenter'] = [
+                null => ['Select...'],
+            ];
+
+            foreach ($values as $value) {
+                $workCenterCommand = $connection->createCommand("SELECT * From fnWebManagementDropDownLeakLogWorkCenter(:division) Order By Workcenter")
+                    ->bindParam(':division', $value['Division'], \PDO::PARAM_STR);
+                $workCenterValues = $workCenterCommand->queryAll();
+                foreach ($workCenterValues as $workCenter) {
+                    $workCenterNamePairs[] = $workCenter['Workcenter'];
+                }
+                $combinedArray['DivisionWorkCenter'][$value['Division']] = $workCenterNamePairs;
+
+                // reset temp array
+                $workCenterNamePairs = [];
+            }
+
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $combinedArray;
+
+            return $response;
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
 	/////////// End Leak Log Management Dropdowns//////////////
 	
 	
