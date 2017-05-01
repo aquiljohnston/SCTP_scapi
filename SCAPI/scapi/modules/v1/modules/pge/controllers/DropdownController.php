@@ -1297,7 +1297,8 @@ class DropdownController extends Controller
 	//////////////////////ASSIGNED DROPDOWNS END/////////////////////
 
 	/////////////////////AOC DROPDOWNS BEGIN////////////////////////
-	public function actionGetAocDivisionDropdown()
+	// not in use
+    public function actionGetAocDivisionDropdown()
     {
         try{
 			//set db target
@@ -1331,6 +1332,7 @@ class DropdownController extends Controller
         }
     }
 
+    // not in use
 	public function actionGetAocWorkCenterDropdown($division)
     {
         try{
@@ -1434,6 +1436,61 @@ class DropdownController extends Controller
             $response = Yii::$app->response;
             $response ->format = Response::FORMAT_JSON;
             $response->data = $namePairs;
+            return $response;
+        }
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    public function actionGetAocDivisionWorkCenterDropdown()
+    {
+        try{
+            //set db target
+            $headers = getallheaders();
+            WebManagementDropDownAOCDivision::setClient($headers['X-Client']);
+
+            //todo permission check
+
+            $divisionData = WebManagementDropDownAOCDivision::find()
+                ->all();
+            $divisionNamePairs = [null => "Select..."];
+            $divisionDataSize = count($divisionData);
+
+            foreach ($divisionData as $value) {
+                $divisionNamePairs[$value['Division']] = $value['Division'];
+            }
+
+            $combinedArray['Division'] = $divisionNamePairs;
+            $combinedArray['DivisionWorkCenter'] = array();
+            $combinedArray['DivisionWorkCenter'] = [
+                null => ['Select...'],
+            ];
+
+            for($i=0; $i < $divisionDataSize; $i++)
+            {
+                $namePairs[$divisionData[$i]->Division]= $divisionData[$i]->Division;
+                $workCenterData = WebManagementDropDownAOCWorkCenter::find()
+                    ->where(['Division'=>$divisionData[$i]->Division])
+                    ->all();
+                for ($j = 0; $j < count($workCenterData); $j++){
+                    $workCenterNamePairs[] = $workCenterData[$j]->WorkCenter;
+                }
+                $combinedArray['DivisionWorkCenter'][$divisionData[$i]['Division']] = $workCenterNamePairs;
+
+                // reset temp array
+                $workCenterNamePairs = [];
+            }
+
+            //send response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            $response->data = $combinedArray;
             return $response;
         }
         catch(ForbiddenHttpException $e)
@@ -1744,6 +1801,7 @@ class DropdownController extends Controller
     /////////// WebManagement LeakLog form modal dropdowns end //////////
 
     /////////// Start WebManagement MapStamp dropdowns //////////////
+    // not in use
     public function actionGetMapStampDivisionDropdown() {
         try{
 
@@ -1778,6 +1836,7 @@ class DropdownController extends Controller
         }
     }
 
+    // not in use
     public function actionGetMapStampWorkCenterDropdown($division) {
         try{
 
@@ -2183,7 +2242,8 @@ class DropdownController extends Controller
     /////////// End WebManagement Tracker History dropdowns //////////////
 	
 	/////////// Begin Leak Log Management Dropdowns//////////////
-	
+
+    // not in use
 	public function actionGetLeakLogDivisionDropdown()
     {
         //TODO RBAC permission check
@@ -2219,7 +2279,8 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
-	
+
+    // not in use
 	public function actionGetLeakLogWorkCenterDropdown($division)
     {
         //TODO RBAC permission check
