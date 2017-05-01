@@ -1448,6 +1448,10 @@ class DropdownController extends Controller
         }
     }
 
+    /**
+     * return data for both division and work center dropdown
+     * @return mixed
+     */
     public function actionGetAocDivisionWorkCenterDropdown()
     {
         try{
@@ -1868,6 +1872,10 @@ class DropdownController extends Controller
         }
     }
 
+    /**
+     * return combined data for both division and work center dropdown
+     * @return mixed
+     */
     public function actionGetMapStampRefactoredDropdown()
     {
         //TODO RBAC permission check
@@ -2446,6 +2454,10 @@ class DropdownController extends Controller
         }
     }
 
+    /**
+     * return combined data for both division and work center dropdown
+     * @return mixed
+     */
     public function actionGetLeakLogRefactoredDropdown()
     {
         //TODO RBAC permission check
