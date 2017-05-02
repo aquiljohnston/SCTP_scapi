@@ -164,9 +164,7 @@ class BaseActiveController extends ActiveController
 		return $prefix;
 	}
 	
-	// TabletDataInsertArchive;
-	// TabletDataInsertBreadcrumbArchive;
-	// TabletJSONDataInsertError;
+	//Archives incoming json records for logging and data recovery
 	public static function archiveJson($json, $type, $userUID, $client)
 	{
 		TabletDataInsertArchive::setClient($client);
@@ -179,6 +177,7 @@ class BaseActiveController extends ActiveController
 		$archiveRecord->save();
 	}
 	
+	//Archives incoming breadcrumb jsons for logging and data recovery
 	public static function archiveBreadcrumbJson($json, $userUID, $client)
 	{
 		TabletDataInsertBreadcrumbArchive::setClient($client);
@@ -191,6 +190,7 @@ class BaseActiveController extends ActiveController
 		$archiveBreadcrumb->save();
 	}
 	
+	//inserts a new error record into tTabletJSONDataInsertError table for given $client
 	public static function archiveErrorJson($data, $error, $client, $data2 = null, $data3 = null, $data4 = null, $data5 = null)
 	{
 		TabletJSONDataInsertError::setClient($client);
@@ -205,5 +205,12 @@ class BaseActiveController extends ActiveController
 		$archiveError->ErrorMessage = $error->getMessage();
 		
 		$archiveError->save();
+	}
+	
+	//creates a new validation error exception for the given model name for logging purposes.
+	public static function modelValidationException($model)
+	{
+		$e = new ErrorException(get_class($model) . ' Validation Exception: ' . json_encode($model->errors), 42, 2);
+		return $e;
 	}
 }
