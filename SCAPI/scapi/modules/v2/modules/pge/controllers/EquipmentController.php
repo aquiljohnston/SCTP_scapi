@@ -119,7 +119,7 @@ class EquipmentController extends Controller
 									}
 									else
 									{
-										$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>0];
+										throw BaseActiveController::modelValidationException($calibrationModel);
 									}
 								}
 								catch(yii\db\Exception $e)
@@ -166,7 +166,7 @@ class EquipmentController extends Controller
 										{
 											$previousCalibration->ActiveFlag = 1;
 											$previousCalibration->update();
-											$savedData = ['InspecitonEquipmentUID'=>$equipmentCalibrationArray[$i]['InspecitonEquipmentUID'], 'SuccessFlag'=>0];
+											throw BaseActiveController::modelValidationException($calibrationModel);
 										}
 									}
 									catch(yii\db\Exception $e)
