@@ -90,6 +90,10 @@ class MasterLeakLogController extends Controller
 						{
 							$newMLL = true;
 						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($masterLeakLog);
+						}
 					}
 					
 					//if new record or count is greater than 0 process equipment
@@ -122,6 +126,11 @@ class MasterLeakLogController extends Controller
 								if ($inspectionService->save())
 								{
 									$newIS = true;
+								}
+								else
+								{
+									$e = BaseActiveController::modelValidationException($inspectionService);
+									BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $logArray[$i], $equipmentArray[$j]);
 								}
 							}
 							
@@ -172,97 +181,102 @@ class MasterLeakLogController extends Controller
 	
 	public function actionDelete()
 	{
-		//TODO add try catch
-		
-		//get UID of user making request
-		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-		$UserUID = BaseActiveController::getUserFromToken()->UserUID;
-		
-		$headers = getallheaders();
-		MasterLeakLog::setClient($headers['X-Client']);
-		
-		$put = file_get_contents("php://input");
-		$data = json_decode($put, true);
-		
-		//save json to archive
-		BaseActiveController::archiveJson($put, 'MasterLeakLogDelete', $UserUID, $headers['X-Client']);
-		
-		$leakLogCount = count($data['LeakLogs']);
-		
-		$responseData = [];
-		
-		for($i = 0 ; $i < $leakLogCount; $i++)
+		try
 		{
-			$services = [];
-			//handle associated inspection services
-			$inspectionServices = InspectionService::find()
-				->where(['MasterLeakLogUID' => $data['LeakLogs'][$i]])
-				->andWhere(['ActiveFlag' => 1])
-				->andWhere(['<>','StatusType', 'Deleted'])
-				->all();
-				
-			$inspectionServiceCount = count($inspectionServices);
-			$inspectionServiceProcessedCount = 0;
+			//get UID of user making request
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$UserUID = BaseActiveController::getUserFromToken()->UserUID;
 			
-			for ($j = 0; $j < $inspectionServiceCount; $j++)
+			$headers = getallheaders();
+			MasterLeakLog::setClient($headers['X-Client']);
+			
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//save json to archive
+			BaseActiveController::archiveJson($put, 'MasterLeakLogDelete', $UserUID, $headers['X-Client']);
+			
+			$leakLogCount = count($data['LeakLogs']);
+			
+			$responseData = [];
+			
+			for($i = 0 ; $i < $leakLogCount; $i++)
 			{
-				//$previousInspectionService = new InspectionService();
-				$previousInspectionService = $inspectionServices[$j];
-				$newInspectionService = new InspectionService();
-				//$previousInspectionService->attributes = $inspectionServices[s$j];
-				//$newInspectionService->attributes = $inspectionServices[$j];
-				$newInspectionService->attributes = $inspectionServices[$j]->attributes;
-				//deactivate previous
-				$previousInspectionService->ActiveFlag = 0;
-				//increment revision
-				$newInspectionService->Revision = $previousInspectionService->Revision + 1;
-				//set satus to deleted
-				$newInspectionService->StatusType = "Deleted";
-				if($previousInspectionService->update())
+				$services = [];
+				//handle associated inspection services
+				$inspectionServices = InspectionService::find()
+					->where(['MasterLeakLogUID' => $data['LeakLogs'][$i]])
+					->andWhere(['ActiveFlag' => 1])
+					->andWhere(['<>','StatusType', 'Deleted'])
+					->all();
+					
+				$inspectionServiceCount = count($inspectionServices);
+				$inspectionServiceProcessedCount = 0;
+				
+				for ($j = 0; $j < $inspectionServiceCount; $j++)
 				{
-					if($newInspectionService->save())
+					//$previousInspectionService = new InspectionService();
+					$previousInspectionService = $inspectionServices[$j];
+					$newInspectionService = new InspectionService();
+					//$previousInspectionService->attributes = $inspectionServices[s$j];
+					//$newInspectionService->attributes = $inspectionServices[$j];
+					$newInspectionService->attributes = $inspectionServices[$j]->attributes;
+					//deactivate previous
+					$previousInspectionService->ActiveFlag = 0;
+					//increment revision
+					$newInspectionService->Revision = $previousInspectionService->Revision + 1;
+					//set satus to deleted
+					$newInspectionService->StatusType = "Deleted";
+					if($previousInspectionService->update())
 					{
-						$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
-							'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
-							'SuccessFlag' => 1];
+						if($newInspectionService->save())
+						{
+							$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
+								'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
+								'SuccessFlag' => 1];
+						}
+						else
+						{
+							$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
+								'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
+								'SuccessFlag' => 0];
+						}
 					}
 					else
 					{
 						$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
-							'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
-							'SuccessFlag' => 0];
+								'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
+								'SuccessFlag' => 0];
 					}
 				}
-				else
-				{
-					$services[] = ['MasterLeakLogUID' => $data['LeakLogs'][$i],
-							'InspectionEquipmentUID' => $inspectionServices[$j]['InspectionEquipmentUID'],
-							'SuccessFlag' => 0];
-				}
-			}
-			
-			//handle mll
-			$previousMLL = MasterLeakLog::find()
-				->where(['MasterLeakLogUID' => $data['LeakLogs'][$i]])
-				->andWhere(['ActiveFlag' => 1])
-				->andWhere(['<>','StatusType', 'Deleted'])
-				->one();
 				
-			if ($previousMLL != null)
-			{
-				$newMLL = new MasterLeakLog();
-				$newMLL->attributes = $previousMLL->attributes;
-				//deactivate previous record
-				$previousMLL->ActiveFlag = 0;
-				//increment revision
-				$newMLL->Revision = $previousMLL->Revision + 1;
-				//set satus to deleted
-				$newMLL->StatusType = 'Deleted';
-				if($previousMLL->update())
+				//handle mll
+				$previousMLL = MasterLeakLog::find()
+					->where(['MasterLeakLogUID' => $data['LeakLogs'][$i]])
+					->andWhere(['ActiveFlag' => 1])
+					->andWhere(['<>','StatusType', 'Deleted'])
+					->one();
+					
+				if ($previousMLL != null)
 				{
-					if($newMLL->save())
+					$newMLL = new MasterLeakLog();
+					$newMLL->attributes = $previousMLL->attributes;
+					//deactivate previous record
+					$previousMLL->ActiveFlag = 0;
+					//increment revision
+					$newMLL->Revision = $previousMLL->Revision + 1;
+					//set satus to deleted
+					$newMLL->StatusType = 'Deleted';
+					if($previousMLL->update())
 					{
-						$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'SuccessFlag'=>1, 'Services' => $services];
+						if($newMLL->save())
+						{
+							$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'SuccessFlag'=>1, 'Services' => $services];
+						}
+						else
+						{
+							$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'SuccessFlag'=>0, 'Services' => $services];
+						}
 					}
 					else
 					{
@@ -271,18 +285,23 @@ class MasterLeakLogController extends Controller
 				}
 				else
 				{
-					$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'SuccessFlag'=>0, 'Services' => $services];
+					$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'SuccessFlag'=>1, 'Services' => $services];
 				}
 			}
-			else
-			{
-				$responseData[] = ['MasterLeakLogUID'=> $data['LeakLogs'][$i], 'SuccessFlag'=>1, 'Services' => $services];
-			}
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
 		}
-		//send response
-		$response = Yii::$app->response;
-		$response->format = Response::FORMAT_JSON;
-		$response->data = $responseData;
-		return $response;
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }
