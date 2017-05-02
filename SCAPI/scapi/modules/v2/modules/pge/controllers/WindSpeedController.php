@@ -74,7 +74,7 @@ class WindSpeedController extends Controller
 							}
 							else
 							{
-								$savedData[] = ['WindSpeedUID'=>$windSpeedArray[$i]['WindSpeedUID'], 'SuccessFlag'=>0];
+								throw BaseActiveController::modelValidationException($windSpeed);
 							}
 						}
 						else
