@@ -12,6 +12,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\base\ErrorException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
@@ -172,7 +173,13 @@ class ActivityController extends BaseActiveController
 						{
 							//change db path to save on client db
 							Activity::setClient($headers['X-Client']);
-							$clientActivity->save();
+							//save client activity and log error
+							//$clientActivity->save();
+							if(!$clientActivity->save())
+							{
+								$e = BaseActiveController::modelValidationException($clientActivity);
+								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+							}
 							
 							//set success flag for activity
 							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
@@ -214,6 +221,14 @@ class ActivityController extends BaseActiveController
 										}
 										else
 										{
+											//log validation error
+											$e = BaseActiveController::modelValidationException($timeEntry);
+											BaseActiveController::archiveErrorJson(
+												file_get_contents("php://input"),
+												$e,
+												getallheaders()['X-Client'],
+												$data['activity'][$i],
+												$data['activity'][$i]['timeEntry'][$t]);
 											//set success flag for time entry
 											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
 										}
@@ -233,8 +248,7 @@ class ActivityController extends BaseActiveController
 												$e,
 												getallheaders()['X-Client'],
 												$data['activity'][$i],
-												$data['activity'][$i]['timeEntry'][$t]
-												);
+												$data['activity'][$i]['timeEntry'][$t]);
 											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
 										}
 									}
@@ -261,6 +275,14 @@ class ActivityController extends BaseActiveController
 										}
 										else
 										{
+											//log validation error
+											$e = BaseActiveController::modelValidationException($mileageEntry);
+											BaseActiveController::archiveErrorJson(
+												file_get_contents("php://input"),
+												$e,
+												getallheaders()['X-Client'],
+												$data['activity'][$i],
+												$data['activity'][$i]['mileageEntry'][$m]);
 											//set success flag for mileage entry
 											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>0];
 
@@ -290,8 +312,8 @@ class ActivityController extends BaseActiveController
 						}
 						else
 						{
-							//set success flag for activity
-							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
+							//activiy model validation exception
+							throw BaseActiveController::modelValidationException($activity);
 						}
 					}
 					catch(\Exception $e)
