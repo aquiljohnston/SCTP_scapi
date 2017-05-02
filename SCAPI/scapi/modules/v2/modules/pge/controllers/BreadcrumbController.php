@@ -93,10 +93,12 @@ class BreadcrumbController extends Controller
 								$response->setStatusCode(201);
 								$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
 							} else {
-								$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+								//model validation exception
+								throw BaseActiveController::modelValidationException($pgeBreadcrumb);
 							}
 						} else {
-							$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+							//model validation exception
+							throw BaseActiveController::modelValidationException($scBreadcrumb);
 						}
 					}
 					else
