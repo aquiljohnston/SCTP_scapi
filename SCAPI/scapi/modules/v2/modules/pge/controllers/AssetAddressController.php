@@ -108,6 +108,10 @@ class AssetAddressController extends Controller
 						if ($assetAddress->save()){
 							$assetAddressSuccessFlag = 1;
 						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($assetAddress);
+						}
 					}
 					catch(yii\db\Exception $e)
 					{
@@ -146,6 +150,7 @@ class AssetAddressController extends Controller
 							{
 								$previousAddress->ActiveFlag = 1;
 								$previousAddress->update();
+								throw BaseActiveController::modelValidationException($newAddress);
 							}
 						}
 						catch(yii\db\Exception $e)
@@ -297,6 +302,7 @@ class AssetAddressController extends Controller
 					else{
 						$previousInspection->ActiveFlag = 1;
 						$previousInspection->update();
+						throw BaseActiveController::modelValidationException($newInspection);
 					}
 				}
 				catch(yii\db\Exception $e)
@@ -319,6 +325,10 @@ class AssetAddressController extends Controller
 			try{
 				if ($inspection->save()) {
 					$inspectionSuccessFlag = 1;
+				}
+				else
+				{
+					throw BaseActiveController::modelValidationException($inspection);
 				}
 			}
 			catch(yii\db\Exception $e)
@@ -370,6 +380,7 @@ class AssetAddressController extends Controller
 					else{
 						$previousCGI->ActiveFlag = 1;
 						$previousCGI->update();
+						throw BaseActiveController::modelValidationException($newCGI);
 					}
 				}
 				catch(yii\db\Exception $e)
@@ -394,6 +405,10 @@ class AssetAddressController extends Controller
 				if ($newCGI->save()) {
 					//add to response array
 					$cgiSuccessFlag = 1;
+				}
+				else
+				{
+					throw BaseActiveController::modelValidationException($newCGI);
 				}
 			}
 			catch(yii\db\Exception $e)
@@ -445,6 +460,7 @@ class AssetAddressController extends Controller
 					{
 						$previousAOC->ActiveFlag = 1;
 						$previousAOC->update();
+						throw BaseActiveController::modelValidationException($newAOC);
 					}
 				}
 				catch(yii\db\Exception $e)
@@ -469,6 +485,10 @@ class AssetAddressController extends Controller
 				//save model
 				if ($AOC->save()) {
 					$aocSuccessFlag = 1;
+				}
+				else
+				{
+					throw BaseActiveController::modelValidationException($AOC);
 				}
 			}
 			catch(yii\db\Exception $e)
@@ -523,6 +543,7 @@ class AssetAddressController extends Controller
 						{
 							$previousIndication->ActiveFlag = 1;
 							$previousIndication->update();
+							throw BaseActiveController::modelValidationException($newIndication);
 						}
 					}
 					catch(yii\db\Exception $e)
@@ -551,6 +572,10 @@ class AssetAddressController extends Controller
 				if ($indication->save()) {
 					//update map stamp to 'Not Approved' if neccessary
 					$indicationSuccessFlag = self::updateMasterLeakLog($generalVariables['MasterLeakLogUID'], $generalVariables['ModifiedUserUID']);
+				}
+				else
+				{
+					throw BaseActiveController::modelValidationException($indication);
 				}
 			}
 			catch(yii\db\Exception $e)
