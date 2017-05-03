@@ -147,8 +147,7 @@ class WorkQueueController extends Controller
 					}
 					catch(\Exception $e)
 					{
-						//TODO consider altering first param
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueArray[$i]);
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueArray, $workQueueArray[$i]);
 						$responseData[] = [
 							'AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'],
 							'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'],
@@ -208,6 +207,8 @@ class WorkQueueController extends Controller
 				{
 					$previousRecord->ActiveFlag = 1;
 					$previousRecord->update();
+					$e = BaseActiveController::modelValidationException($newRecord);
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
 					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
 				}
 			}
@@ -245,7 +246,7 @@ class WorkQueueController extends Controller
 			
 			if ($previousWorkQueue != null)
 			{
-				return $previousWorkQueue;
+				return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>1];
 			}
 			else
 			{				
@@ -264,6 +265,8 @@ class WorkQueueController extends Controller
 				}
 				else
 				{
+					$e = BaseActiveController::modelValidationException($newRecord);
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
 					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
 				}
 			}
@@ -338,6 +341,12 @@ class WorkQueueController extends Controller
 				{
 					$sudoIRSaved = true;
 				}
+				else
+				{
+					$e = BaseActiveController::modelValidationException($sudoIR);
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
+					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
+				}
 			}
 			else
 			{
@@ -377,6 +386,11 @@ class WorkQueueController extends Controller
 					{
 						$assetInspectionSaved = true;
 					}
+					else{
+						$e = BaseActiveController::modelValidationException($assetInspection);
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
+						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
+					}
 				}
 				else{
 					$assetInspectionSaved = true;
@@ -390,10 +404,9 @@ class WorkQueueController extends Controller
 						->andWhere(['ActiveFlag' => 1])
 						->one();
 						
-					$previousAssignedWorkQueueSaved = false;
-					$newAssignedWorkQueueSaved = false;
+					$assignedWorkQueueSaved = false;
 						
-					if($previousAssignedWorkQueue == null)
+					if($assignedWorkQueueSaved == null)
 					{
 						//update for missing fields
 						//new AssignedWorkQueue model
@@ -407,26 +420,26 @@ class WorkQueueController extends Controller
 						
 						if($assignedWorkQueue->save())
 						{
-							$newAssignedWorkQueueSaved = true;
+							$assignedWorkQueueSaved = true;
+						}
+						else
+						{
+							$e = BaseActiveController::modelValidationException($assignedWorkQueue);
+							BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
+							return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
 						}
 					}
 					else{
-						$previousAssignedWorkQueueSaved = true;
+						$assignedWorkQueueSaved = true;
 					}
-					
-					if($newAssignedWorkQueueSaved)
-					{
-						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>1];
-					}
-					elseif($previousAssignedWorkQueueSaved)
+					if($assignedWorkQueueSaved)
 					{
 						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>1];
 					}
 					else
 					{
 						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
-					}
-					
+					}	
 				}
 				else
 				{
