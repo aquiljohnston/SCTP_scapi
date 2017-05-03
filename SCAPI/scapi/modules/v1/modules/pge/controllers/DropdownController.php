@@ -1459,6 +1459,8 @@ class DropdownController extends Controller
             $headers = getallheaders();
             WebManagementDropDownAOCDivision::setClient($headers['X-Client']);
 
+            $combinedArray = array();
+            $workCenterNamePairs = array();
             //todo permission check
 
             $divisionData = WebManagementDropDownAOCDivision::find()
@@ -1887,8 +1889,9 @@ class DropdownController extends Controller
             $connection = BaseActiveRecord::getDb();
 
             $combinedArray = array();
+            $workCenterNamePairs = array();
 
-            $divisionNamePairs = [
+             $divisionNamePairs= [
                 null => 'Select...',
             ];
 
@@ -1900,9 +1903,8 @@ class DropdownController extends Controller
             }
 
             $combinedArray['Division'] = $divisionNamePairs;
-            $combinedArray['DivisionWorkCenter'] = array();
             $combinedArray['DivisionWorkCenter'] = [
-                null => ['Select...'],
+                null => 'Select...',
             ];
 
             foreach ($values as $value) {
@@ -2435,6 +2437,7 @@ class DropdownController extends Controller
             $connection = BaseActiveRecord::getDb();
 
             $combinedArray = array();
+            $workCenterNamePairs = array();
 
             $divisionNamePairs = [
                 null => 'Select...',
