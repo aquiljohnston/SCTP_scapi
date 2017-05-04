@@ -142,7 +142,7 @@ class WorkQueueController extends Controller
 						}
 						else
 						{
-							$responseData[] = ['AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'], 'LockedFlag'=>0];
+							$responseData[] = ['AssignedInspectionRequestUID'=>$workQueueArray[$i]['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueueArray[$i]['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
 						}
 					}
 					catch(\Exception $e)
