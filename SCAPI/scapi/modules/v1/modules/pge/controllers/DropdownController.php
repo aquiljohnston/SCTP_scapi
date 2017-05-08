@@ -2260,14 +2260,20 @@ class DropdownController extends Controller
             Yii::trace("Raw SQL from actionGetTrackerHSurveyorDropdown: " . $workQueueCommand->getRawSql());
             $values = $workQueueCommand->queryAll();
 
+
+
             //$results = $values;
             $results = [];
             foreach ($values as $value) {
                 if ($flatArray) {
-                    $results[strtolower($value["Surveyor"])] = $value["Surveyor"];
+                    preg_match('~\((.*?)\)~', strtolower($value["Surveyor"]), $output);
+                    $lanId = strtolower($output[1]);
+                    $results[$lanId] = $value["Surveyor"];
                 }else {
+                    preg_match('~\((.*?)\)~', strtolower($value["Surveyor"]), $output);
+                    $lanId = strtolower($output[1]);
                     $results[] = [
-                        "id" => strtolower($value["Surveyor"]),
+                        "id" => $lanId,
                         "name" => $value["Surveyor"]
                     ];
                 }
