@@ -2266,10 +2266,13 @@ class DropdownController extends Controller
             $results = [];
             foreach ($values as $value) {
                 if ($flatArray) {
+                    // Strip the LANID out of a String with format "Lastname, Firstname (LANID)"
                     preg_match('~\((.*?)\)~', strtolower($value["Surveyor"]), $output);
                     $lanId = strtolower($output[1]);
                     $results[$lanId] = $value["Surveyor"];
                 }else {
+                    // Strip the LANID out of a String with format "Lastname, Firstname (LANID)"
+                    // TODO: DRY this
                     preg_match('~\((.*?)\)~', strtolower($value["Surveyor"]), $output);
                     $lanId = strtolower($output[1]);
                     $results[] = [
