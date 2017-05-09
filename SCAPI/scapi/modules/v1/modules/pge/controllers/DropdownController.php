@@ -1458,8 +1458,6 @@ class DropdownController extends Controller
             //set db target
             $headers = getallheaders();
             WebManagementDropDownAOCDivision::setClient($headers['X-Client']);
-            $combinedArray = array();
-            $workCenterNamePairs = array();
 
             $combinedArray = array();
             $workCenterNamePairs = array();
