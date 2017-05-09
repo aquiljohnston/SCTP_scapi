@@ -1904,7 +1904,7 @@ class DropdownController extends Controller
 
             $combinedArray['Division'] = $divisionNamePairs;
             $combinedArray['DivisionWorkCenter'] = [
-                null => 'Select...',
+                null => ['Select...'],
             ];
 
             foreach ($values as $value) {
