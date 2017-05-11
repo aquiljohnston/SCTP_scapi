@@ -9,8 +9,8 @@ use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Project;
 use app\modules\v1\models\ProjectUser;
 use app\modules\v1\models\AllTimeCardsCurrentWeek;
-use app\modules\v1\models\TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew;
-use app\modules\v1\models\TimeCardSumHoursWorkedPriorWeekWithProjectNameNew;
+use app\modules\v1\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
+use app\modules\v1\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -307,11 +307,11 @@ class TimeCardController extends BaseActiveController
 	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
 		// RBAC permission check is embedded in this action	
-		// try
-		// {
+		try
+		{
 			//set db target headers
 			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+			TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 			
 			//format response
 			$response = Yii::$app->response;
@@ -327,7 +327,7 @@ class TimeCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
 				{
-					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find();
+					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find();
                     $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
                     $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
                     $responseArray['assets'] = $timeCardsArr;
@@ -336,7 +336,7 @@ class TimeCardController extends BaseActiveController
                 }
             elseif($week == 'current')
 				{
-					$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find();
+					$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find();
                     $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
                     $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
                     $responseArray['assets'] = $timeCardsArr;
@@ -357,7 +357,7 @@ class TimeCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior' && $projectsSize > 0)
 				{
-                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 					if($projectsSize > 1)
 					{
 						for($i=1; $i < $projectsSize; $i++)
@@ -374,7 +374,7 @@ class TimeCardController extends BaseActiveController
 				} 
 				elseif($week == 'current' && $projectsSize > 0)
 				{
-                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 					if($projectsSize > 1)
 					{
 						for($i=1; $i < $projectsSize; $i++)
@@ -404,14 +404,14 @@ class TimeCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		// }
-		// catch(ForbiddenHttpException $e) {
-			// throw $e;
-		// }
-		// catch(\Exception $e)  
-		// {
-			// throw new \yii\web\HttpException(400);
-		// }
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)  
+		{
+			throw new \yii\web\HttpException(400);
+		}
 	}
 
     public function actionGetTimeCardsHistoryData($week)
@@ -421,7 +421,7 @@ class TimeCardController extends BaseActiveController
         {
             //set db target headers
             $headers = getallheaders();
-            TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
             //format response
             $response = Yii::$app->response;
@@ -437,13 +437,13 @@ class TimeCardController extends BaseActiveController
                 //check if week is prior or current to determine appropriate view
                 if($week == 'prior')
                 {
-                    $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                     //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
                 }
                 elseif($week == 'current')
                 {
-                    $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                     //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
                 }
@@ -461,7 +461,7 @@ class TimeCardController extends BaseActiveController
                 //check if week is prior or current to determine appropriate view
                 if($week == 'prior' && $projectsSize > 0)
                 {
-                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 
                     for($i=0; $i < $projectsSize; $i++)
                     {
@@ -474,7 +474,7 @@ class TimeCardController extends BaseActiveController
                 }
                 elseif($week == 'current' && $projectsSize > 0)
                 {
-                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
                     for($i=0; $i < $projectsSize; $i++)
                     {
                         $projectID = $projects[$i]->ProjUserProjectID;
