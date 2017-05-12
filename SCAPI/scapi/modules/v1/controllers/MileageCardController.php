@@ -16,6 +16,7 @@ use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -294,7 +295,7 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
-		// RBAC permission check is embedded in this action	
+		//RBAC permission check is embedded in this action	
 		try
 		{
 			//set db target headers
@@ -388,9 +389,9 @@ class MileageCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
