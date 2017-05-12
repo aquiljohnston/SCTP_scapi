@@ -579,13 +579,6 @@ class UserController extends BaseActiveController
     {
         try {
 
-            //Set blank input to null
-            $filter = ($filter === "") ? null : $filter;
-            $filterusername = ($filterusername === "") ? null : $filterusername;
-            $filterfirstname = ($filterfirstname === "") ? null : $filterfirstname;
-            $filterlastname = ($filterlastname === "") ? null : $filterlastname;
-            $filterroletype = ($filterroletype === "") ? null : $filterroletype;
-
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
