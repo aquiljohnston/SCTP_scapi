@@ -573,9 +573,19 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($filter = null, $listPerPage = null, $page = null)
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null,
+                                    $filterusername = null, $filterfirstname = null, $filterlastname = null,
+                                    $filterroletype = null)
     {
         try {
+
+            //Set blank input to null
+            $filter = ($filter === "") ? null : $filter;
+            $filterusername = ($filterusername === "") ? null : $filterusername;
+            $filterfirstname = ($filterfirstname === "") ? null : $filterfirstname;
+            $filterlastname = ($filterlastname === "") ? null : $filterlastname;
+            $filterroletype = ($filterroletype === "") ? null : $filterroletype;
+
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -598,6 +608,26 @@ class UserController extends BaseActiveController
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
+			if($filterusername != null) {
+			    $userQuery->andWhere([
+			        'like', 'UserName', $filterusername
+                ]);
+            }
+            if($filterfirstname != null) {
+			    $userQuery->andWhere([
+			        'like', 'UserFirstName', $filterfirstname
+                ]);
+            }
+            if($filterlastname != null) {
+			    $userQuery->andWhere([
+			        'like', 'UserLastName', $filterlastname
+                ]);
+            }
+            if($filterroletype != null) {
+			    $userQuery->andWhere([
+			        'like', 'UserAppROleType', $filterroletype
+                ]);
+            }
 			//check if paging parameters were sent
 			if ($page != null) 
 			{
