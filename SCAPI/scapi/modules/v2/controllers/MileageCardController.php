@@ -1,28 +1,26 @@
 <?php
 
 namespace app\modules\v2\controllers;
-/*
- * NOTICE: If you want to replace any of the below v1 classes with a v2 version
- * you must change the corresponding use statement.
- */
-use app\modules\v1\controllers\CreateMethodNotAllowed;
-use app\modules\v1\controllers\DeleteMethodNotAllowed;
-use app\modules\v1\controllers\PermissionsController;
-use app\modules\v1\controllers\UpdateMethodNotAllowed;
+
+use app\modules\v2\controllers\CreateMethodNotAllowed;
+use app\modules\v2\controllers\DeleteMethodNotAllowed;
+use app\modules\v2\controllers\PermissionsController;
+use app\modules\v2\controllers\UpdateMethodNotAllowed;
 use Yii;
-use app\modules\v1\models\MileageCard;
-use app\modules\v1\models\MileageEntry;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\models\Project;
-use app\modules\v1\models\ProjectUser;
-use app\modules\v1\models\AllMileageCardsCurrentWeek;
-use app\modules\v1\models\MileageCardSumMilesCurrentWeekWithProjectNameNew;
-use app\modules\v1\models\MileageCardSumMilesPriorWeekWithProjectNameNew;
-use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v2\models\MileageCard;
+use app\modules\v2\models\MileageEntry;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Project;
+use app\modules\v2\models\ProjectUser;
+use app\modules\v2\models\AllMileageCardsCurrentWeek;
+use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
+use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
+use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -35,7 +33,7 @@ use yii\data\Pagination;
  */
 class MileageCardController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v2\models\MileageCard';
+    public $modelClass = 'app\modules\v2\models\MileageCard'; 
 	
 	public function behaviors()
 	{
@@ -131,7 +129,7 @@ class MileageCardController extends BaseActiveController
 			$cardIDs = $data["cardIDArray"];
 			
 			//get timecards
-            $approvedCards = []; //Prevent uninitialized error
+			$approvedCards = []; //Prevent uninitialized error
 			foreach($cardIDs as $id)
 			{
 				$approvedCards[]= MileageCard::findOne($id);
@@ -141,7 +139,7 @@ class MileageCardController extends BaseActiveController
 			try
 			{
 				//create transaction
-				$connection = MileageCard::getDb();
+                $connection = MileageCard::getDb();
 				$transaction = $connection->beginTransaction(); 
 			
 				foreach($approvedCards as $card)
@@ -154,10 +152,12 @@ class MileageCardController extends BaseActiveController
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
-				$data = [];
-				$data['cards'] = $approvedCards;
-				$data['success'] = true;
-				$response->data = $data;
+				//Response format previously modified by Josh Patton for unknown reason
+				// $data = [];
+                // $data['cards'] = $approvedCards;
+                // $data['success'] = true;
+                // $response->data = $data;
+				$response->data = $approvedCards; 
 				return $response;
 			}
 			//if transaction fails rollback changes and send error
@@ -165,24 +165,28 @@ class MileageCardController extends BaseActiveController
 			{
 				$transaction->rollBack();
 				$response->setStatusCode(400);
-                $data = [];
-                $data['cards'] = null;
-                $data['status'] = "400 Bad Request";
-                $data['success'] = false;
-				$response->data = $data;
+				//Response format previously modified by Josh Patton for unknown reason
+				// $data = [];
+                // $data['cards'] = null;
+                // $data['status'] = "400 Bad Request";
+                // $data['success'] = false;
+                // $response->data = $data;
+				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
 		}
 		catch(\Exception $e) 
 		{
-		    throw $e;
-            $response->setStatusCode(400);
-            $data = [];
-            $data['cards'] = null;
-            $data['status'] = "400 Bad Request";
-            $data['success'] = false;
-            $response->data = $data;
-            return $response;
+			//Response format previously modified by Josh Patton for unknown reason
+			// throw $e;
+            // $response->setStatusCode(400);
+            // $data = [];
+            // $data['cards'] = null;
+            // $data['status'] = "400 Bad Request";
+            // $data['success'] = false;
+            // $response->data = $data;
+            // return $response;
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
@@ -313,13 +317,13 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($week, $listPerPage = null, $page = null)
+	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
 		// RBAC permission check is embedded in this action	
 		try
 		{
 			//set db target headers
-			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+			MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 			
 			//format response
 			$response = Yii::$app->response;
@@ -336,7 +340,7 @@ class MileageCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
 				{
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find();
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
@@ -344,7 +348,7 @@ class MileageCardController extends BaseActiveController
 				} 
 				elseif($week == 'current') 
 				{
-					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find();
+					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
@@ -364,12 +368,14 @@ class MileageCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior' && $projectsSize > 0)
 				{
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					for($i=0; $i < $projectsSize; $i++)
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+					if($projectsSize > 1)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID;
-                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
-                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+						for($i=1; $i < $projectsSize; $i++)
+						{
+							$projectID = $projects[$i]->ProjUserProjectID;
+							$mileageCards->orWhere(['ProjectID'=>$projectID]);
+						}
 					}
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
@@ -378,12 +384,14 @@ class MileageCardController extends BaseActiveController
 				} 
 				elseif($week == 'current' && $projectsSize > 0)
 				{
-                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					for($i=0; $i < $projectsSize; $i++)
+                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+					if($projectsSize > 1)
 					{
-						$projectID = $projects[$i]->ProjUserProjectID;
-                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
-						//$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+						for($i=1; $i < $projectsSize; $i++)
+						{
+							$projectID = $projects[$i]->ProjUserProjectID;
+							$mileageCards->orWhere(['ProjectID'=>$projectID]);
+						}
 					}
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
@@ -405,12 +413,101 @@ class MileageCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
+
+    public function actionGetMileageCardsHistoryData($week)
+    {
+        // RBAC permission check is embedded in this action
+        try
+        {
+            //set db target headers
+            MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+
+            //response array of mileage cards
+            $mileageCardArray = [];
+            $mileageCardsArr = [];
+
+            //rbac permission check
+            if (PermissionsController::can('mileageCardGetAllCards'))
+            {
+                //check if week is prior or current to determine appropriate view
+                if($week == 'prior')
+                {
+                    $responseArray = MileageCardSumMilesPriorWeekWithProjectName::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+                elseif($week == 'current')
+                {
+                    $responseArray = MileageCardSumMilesCurrentWeekWithProjectName::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+            }
+            //rbac permission check
+            elseif(PermissionsController::can('mileageCardGetOwnCards'))
+            {
+                $userID = self::getUserFromToken()->UserID;
+                //get user project relations array
+                $projects = ProjectUser::find()
+                    ->where("ProjUserUserID = $userID")
+                    ->all();
+                $projectsSize = count($projects);
+
+                //check if week is prior or current to determine appropriate view
+                if($week == 'prior' && $projectsSize > 0)
+                {
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    for($i=0; $i < $projectsSize; $i++)
+                    {
+                        $projectID = $projects[$i]->ProjUserProjectID;
+                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
+                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+                    }
+                    $responseArray = $mileageCards->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+                elseif($week == 'current' && $projectsSize > 0)
+                {
+                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    for($i=0; $i < $projectsSize; $i++)
+                    {
+                        $projectID = $projects[$i]->ProjUserProjectID;
+                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
+                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+                    }
+                    $responseArray = $mileageCards->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                }
+            }
+            else{
+                throw new ForbiddenHttpException;
+            }
+
+            if (!empty($responseArray))
+            {
+                $this->processAndOutputCsvResponse($responseArray);
+                return '';
+            }
+            $this->setCsvHeaders();
+            //send response
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
     public function paginationProcessor($assetQuery, $page, $listPerPage){
 
         if($page != null)
@@ -432,5 +529,31 @@ class MileageCardController extends BaseActiveController
 
             return $asset;
         }
+    }
+
+    // helper method for setting the csv header for tracker maps csv output
+    public function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    // helper method for outputting csv data without storing the whole result
+    public function processAndOutputCsvResponse($reader){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $this->setCsvHeaders();
+        // TODO find a way to use Yii response but without storing the whole response content in a variable
+        $firstLine = true;
+        $fp = fopen('php://output','w');
+
+        while($row = $reader->read()){
+            if($firstLine) {
+                $firstLine = false;
+                fputcsv($fp, array_keys($row));
+            }
+            fputcsv($fp, $row);
+        }
+        fclose($fp);
     }
 }

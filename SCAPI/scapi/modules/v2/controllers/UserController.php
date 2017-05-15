@@ -3,18 +3,18 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\models\Project;
-use app\modules\v1\models\Client;
-use app\modules\v1\models\ProjectUser;
-use app\modules\v1\models\ActivityCode;
-use app\modules\v1\models\Equipment;
-use app\modules\v1\models\PayCode;
-use app\modules\v1\models\AllTimeCardsCurrentWeek;
-use app\modules\v1\models\AllMileageCardsCurrentWeek;
-use app\modules\v1\models\BaseActiveRecord;
-use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\controllers\PermissionsController;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Project;
+use app\modules\v2\models\Client;
+use app\modules\v2\models\ProjectUser;
+use app\modules\v2\models\ActivityCode;
+use app\modules\v2\models\Equipment;
+use app\modules\v2\models\PayCode;
+use app\modules\v2\models\AllTimeCardsCurrentWeek;
+use app\modules\v2\models\AllMileageCardsCurrentWeek;
+use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\PermissionsController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -33,7 +33,7 @@ use yii\data\Pagination;
  */
 class UserController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v1\models\SCUser';
+    public $modelClass = 'app\modules\v2\models\SCUser';
 
     /**
      * sets verb filters for http request
