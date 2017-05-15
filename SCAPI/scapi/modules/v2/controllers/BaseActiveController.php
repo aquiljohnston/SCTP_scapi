@@ -9,14 +9,11 @@ use app\modules\v2\models\TabletDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\authentication\TokenAuth;
-use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
-use yii\web\ForbiddenHttpException;
-use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\base\ErrorException;
-use yii\db\Exception;
+use yii\data\Pagination;
 
 class BaseActiveController extends ActiveController
 {	
@@ -213,4 +210,25 @@ class BaseActiveController extends ActiveController
 		$e = new ErrorException(get_class($model) . ' Validation Exception: ' . json_encode($model->errors), 42, 2);
 		return $e;
 	}
+
+    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    {
+        // set pagination
+        $countAssetQuery = clone $assetQuery;
+        $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+        $pages->pageSizeLimit = [1, 100];
+        $offset = $listPerPage * ($page - 1);
+        $pages->setPageSize($listPerPage);
+        $pages->pageParam = 'userPage';
+        $pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
+
+        //append pagination clause to query
+        $assetQuery->offset($offset)
+            ->limit($listPerPage);
+
+        $asset['pages'] = $pages;
+        $asset['Query'] = $assetQuery;
+
+        return $asset;
+    }
 }
