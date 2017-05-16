@@ -277,7 +277,7 @@ class EquipmentController extends BaseActiveController
             //try to accept equipment
             try {
                 //create transaction
-                $connection = \Yii::$app->db;
+                $connection = Equipment::getDb();
                 $transaction = $connection->beginTransaction();
 
                 foreach ($approvedEquipment as $equipment) {
