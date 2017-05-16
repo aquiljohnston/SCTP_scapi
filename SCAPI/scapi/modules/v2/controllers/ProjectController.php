@@ -2,12 +2,12 @@
 
 namespace app\modules\v2\controllers;
 
-use app\modules\v1\models\MenusProjectModule;
+use app\modules\v2\models\MenusProjectModule;
 use Yii;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\ProjectUser;
-use app\modules\v1\models\MenusModuleMenu;
+use app\modules\v2\models\MenusModuleMenu;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
