@@ -622,6 +622,7 @@ class BetaRbacController extends Controller
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = BaseUser::find()
+				->where(['UserActiveFlag' => 1])
 				->all();
 		
 		$userSize = count($users);
