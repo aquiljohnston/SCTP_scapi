@@ -622,6 +622,7 @@ class RbacController extends Controller
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
+				->where(['UserActiveFlag' => 1])
 				->all();
 		
 		$userSize = count($users);
