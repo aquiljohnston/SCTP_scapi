@@ -1464,6 +1464,7 @@ class DropdownController extends Controller
             //todo permission check
 
             $divisionData = WebManagementDropDownAOCDivision::find()
+				->orderBy('Division')
                 ->all();
             $divisionNamePairs = [null => "Select..."];
             $divisionDataSize = count($divisionData);
@@ -1483,6 +1484,7 @@ class DropdownController extends Controller
                 $namePairs[$divisionData[$i]->Division]= $divisionData[$i]->Division;
                 $workCenterData = WebManagementDropDownAOCWorkCenter::find()
                     ->where(['Division'=>$divisionData[$i]->Division])
+					->orderBy('WorkCenter')
                     ->all();
                 for ($j = 0; $j < count($workCenterData); $j++){
                     $workCenterNamePairs[] = $workCenterData[$j]->WorkCenter;
