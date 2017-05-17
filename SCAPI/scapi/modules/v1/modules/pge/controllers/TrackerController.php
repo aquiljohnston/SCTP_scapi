@@ -62,7 +62,8 @@ class TrackerController extends Controller
                 $query = WebManagementTrackerHistory::find();
                 $timeInterval = intval($timeInterval);
                 if ($timeInterval<=0) {
-                    $timeInterval = 0;
+					//andre and jose's madness
+                    $timeInterval = 1;
                 }
                 if ($timeInterval>30) {
                     $timeInterval = 30;
@@ -224,7 +225,8 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
                 if ($timeInterval<=0) {
-                    $timeInterval = 0;
+                    //andre and jose's madness
+                    $timeInterval = 1;
                 }
                 if ($timeInterval>30) {
                     $timeInterval = 30;
@@ -727,7 +729,8 @@ class TrackerController extends Controller
                 WebManagementTrackerHistory::setClient($headers['X-Client']);
                 $query = WebManagementTrackerHistory::find();
                 if ($timeInterval<=0) {
-                    $timeInterval = 0;
+                    //andre and jose's madness
+                    $timeInterval = 1;
                 }
                 if ($timeInterval>30) {
                     $timeInterval = 30;
