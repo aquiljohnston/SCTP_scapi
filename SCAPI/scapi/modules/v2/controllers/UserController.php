@@ -2,6 +2,7 @@
 
 namespace app\modules\v2\controllers;
 
+use app\modules\v2\models\Auth;
 use Yii;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Project;
@@ -342,7 +343,7 @@ class UserController extends BaseActiveController
     /**
      * Updates the active flag of a user to 0 for inactive
      * @param $userID id of the user record
-     * @returns json body of user data
+     * @returns Response json body of user data
      * @throws \yii\web\HttpException
      */
     public function actionDeactivate($userID)
@@ -372,6 +373,8 @@ class UserController extends BaseActiveController
                 $userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
                 $userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
                 $userDeactivateCommand->execute();
+                //Log out user so that they don't receive 403s if loggedin or deactivating self
+                Auth::findOne(["AuthUserID" => $userID])->delete();
                 $response->data = $user;
             } catch (Exception $e) {
                 $response->setStatusCode(400);
@@ -618,7 +621,7 @@ class UserController extends BaseActiveController
             }
             if($filterroletype != null) {
 			    $userQuery->andWhere([
-			        'like', 'UserAppROleType', $filterroletype
+			        'like', 'UserAppRoleType', $filterroletype
                 ]);
             }
 			//check if paging parameters were sent
