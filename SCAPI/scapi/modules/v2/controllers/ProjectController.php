@@ -102,8 +102,7 @@ class ProjectController extends BaseActiveController
 	* @throws ForbiddenHttpException If permissions are not granted for request
 	*/
     public function actionGetAll($limitToUser = null, $listPerPage = null,
-                                $page = null, $filter = null, $filterprojectname = null,
-                                $filtertype = null, $filterstate = null)
+                                $page = 1, $filter = null)
 	{
 		if(($limitToUser != "true" && $limitToUser != "1") && PermissionsController::can("projectGetAll")) {
 			try
@@ -143,52 +142,22 @@ class ProjectController extends BaseActiveController
                 ['like', 'ProjectState', $filter],
             ]);
         }
-        if($filterprojectname != null) {
-            $projects->andWhere([
-                'like', 'ProjectName', $filterprojectname
-            ]);
-        }
-        if($filtertype != null) {
-            $projects->andWhere([
-                'like', 'ProjectType', $filtertype
-            ]);
-        }
-        if($filterstate != null) {
-            $projects->andWhere([
-                'like', 'ProjectState', $filterstate
-            ]);
-        }
-        //check if paging parameters were sent
-        if ($page != null)
-        {
-            //pass query with pagination data to helper method
-            $paginationResponse = self::paginationProcessor($projects, $page, $listPerPage);
-            //use updated query with pagination
-            $projectArr = $paginationResponse['Query']->all();
-            $responseArray['pages'] = $paginationResponse['pages'];
-        }
-        else
-        {
-            //if no pagination params were sent use base query
-            $projectArr = $projects->all();
-        }
+
+        //pass query with pagination data to helper method
+        $paginationResponse = self::paginationProcessor($projects, $page, $listPerPage);
+        //use updated query with pagination
+        $projectArr = $paginationResponse['Query']->all();
+        $responseArray['pages'] = $paginationResponse['pages'];
+
         //populate response array
         $responseArray['assets'] = $projectArr;
 
-        if (!empty($responseArray['assets'])) {
+        //if (!empty($responseArray['assets'])) {
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $response->setStatusCode(200);
             $response->data = $responseArray;
-        }
-
-		$result = $projects->all();
-
-        $response = Yii::$app ->response;
-        $response -> format = Response::FORMAT_JSON;
-        $response -> data = $result;
-        return $response;
-
+        //}
     }
 	
 	/**
