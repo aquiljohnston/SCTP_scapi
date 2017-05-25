@@ -5,7 +5,7 @@ namespace app\rbac;
 use Yii;
 use yii\rbac\DbManager;
 
-class BetaDbManager extends DbManager
+class YorkDbManager extends DbManager
 {
 	public $db = '';
 	/**
