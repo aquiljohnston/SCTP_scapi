@@ -9,6 +9,8 @@ use yii\filters\VerbFilter;
 use yii\data\Pagination;
 use app\authentication\TokenAuth;
 use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\models\AvailableWorkQueue;
+use app\modules\v2\models\AssignedWorkQueue;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
@@ -29,100 +31,58 @@ class DispatchController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get' => ['get'],
+					'get-surveyors' => ['get'],
+					'dispatch' => ['post'],
+					'unassign'
                 ],
             ];
 		return $behaviors;	
 	}
 	
-	public function actionGet($division = null, $filter = null, $listPerPage = null, $page = null)
+	public function actionGet($filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			
+			$assetQuery = AvailableWorkQueue::find()->where(['CompletedFlag' => 0]);
+			
+			// if($filter != null)
+			// {
+				// $assetQuery->andFilterWhere([
+				// 'or',
+				// ['like', 'Division', $filter],
+				// ['like', 'WorkCenter', $filter],
+				// ['like', 'SurveyType', $filter],
+				// ['like', 'FLOC', $filter],
+				// ['like', 'Notification ID', $filter],
+				// ['like', 'ComplianceDueDate', $filter],
+				// ['like', 'SAP Released', $filter],
+				// ['like', 'ComplianceYearMonth', $filter],
+				// ['like', 'PreviousServices', $filter],
+				// ]);
+			// }
+			
+			if($page != null)
+			{
+				//pass query with pagination data to helper method
+				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//use updated query with pagination caluse to get data
+				$assets = $paginationResponse['Query']->orderBy('ComplianceEnd')
+				->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray['assets'] = $assets;
+			}
+			
 			//create response object
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			
-			//stubdata
-			$record1 = [
-			'Division' => 'Atlanta',
-			'MapGrid' => '163-43-1-C',
-			'ComplianceStartDate' => '2017-01-01',
-			'ComplianceEndDate' => '2017-11-30'
-			];
-			$record2 = [
-			'Division' => 'Norcross',
-			'MapGrid' => '161-40-1-B',
-			'ComplianceStartDate' => '2017-01-01',
-			'ComplianceEndDate' => '2017-11-30'
-			];
-			$record3 = [
-			'Division' => 'Johns Creek',
-			'MapGrid' => '162-45-1-A',
-			'ComplianceStartDate' => '2017-01-01',
-			'ComplianceEndDate' => '2017-11-30'
-			];
-			$record4 = [
-			'Division' => 'Duluth',
-			'MapGrid' => '160-47-1-D',
-			'ComplianceStartDate' => '2017-01-01',
-			'ComplianceEndDate' => '2017-11-30'
-			];
-			
-			//add stub data to array
-			$dataArray = [];
-			$dataArray[] = $record1;
-			$dataArray[] = $record2;
-			$dataArray[] = $record3;
-			$dataArray[] = $record4;
-			
-			//loop stub data for filters
-			$dataLength = count($dataArray);
-			for($i = 0; $i < $dataLength; $i++)
-			{
-				if($division != null)
-				{
-					if($dataArray[$i]['Division'] != $division)
-					{
-						array_splice($dataArray, $i, 1);
-						$dataLength = count($dataArray);
-						$i--;
-					}
-				}
-			}
-			//create response array
-			$responseArray = [];
-			//loop for filter
-			for($i = 0; $i < $dataLength; $i++)
-			{
-				if($filter != null)
-				{
-					if(stripos($dataArray[$i]['Division'], $filter) !== false)
-					{
-						$responseArray['Maps'][] = $dataArray[$i];
-						continue;
-					}
-					if(stripos($dataArray[$i]['MapGrid'], $filter) !== false)
-					{
-						$responseArray['Maps'][] = $dataArray[$i];
-						continue;
-					}
-					if(stripos($dataArray[$i]['ComplianceStartDate'], $filter) !== false)
-					{
-						$responseArray['Maps'][] = $dataArray[$i];
-						continue;
-					}
-					if(stripos($dataArray[$i]['ComplianceEndDate'], $filter) !== false)
-					{
-						$responseArray['Maps'][] = $dataArray[$i];
-						continue;
-					}
-				} else {
-				    // If there is no filter then the data should not be filtered.
-				    $responseArray['Maps'][] = $dataArray[$i];
-				    // No need for continue as this is the last code in the loop.
-                }
-			}
 			$response->data = $responseArray;
+			return $response;
 		}
         catch(ForbiddenHttpException $e)
         {
