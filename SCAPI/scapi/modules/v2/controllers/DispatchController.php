@@ -299,9 +299,9 @@ class DispatchController extends Controller
 			$assignedWork = WorkQueue::find()
 				->where(['ClientWorkOrderID' => $workOrders[$i]['ClientWorkOrderID']])
 				->andWhere(['AssignedUserID' => $userID])
-				->all();
+				->count();
 			//if no record exist create one
-			if($assignedWork == null)
+			if($assignedWork < 1)
 			{				
 				$newAssignment = new WorkQueue;
 				$newAssignment->CreatedBy = $createdBy;
