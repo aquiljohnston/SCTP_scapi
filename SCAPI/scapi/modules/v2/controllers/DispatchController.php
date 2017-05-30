@@ -276,6 +276,9 @@ class DispatchController extends Controller
 	{
 		$results = [];
 		
+		//get status code for Assigned work			
+		$assignedCode = self::statusCodeLookup('Assigned');
+		
 		//build query to get work orders based on map grid and section(optional)
 		$workOrdersQuery = WorkOrder::find()
 			->where(['MapGrid' => $mapGrid]);
@@ -291,9 +294,6 @@ class DispatchController extends Controller
 		for($i = 0; $i < $workOrdersCount; $i++)
 		{
 			$successFlag = 0;
-			
-			//get status code for Assigned work			
-			$assignedCode = self::statusCodeLookup('Assigned');
 			
 			//check for existing records
 			$assignedWork = WorkQueue::find()
