@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vAvailableWorkQueue".
+ * This is the model class for table "vAssignedWorkQueue".
  *
  * @property integer $tWorkOrderID
  * @property string $ClientWorkOrderID
@@ -42,15 +42,16 @@ use Yii;
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
+ * @property string $Assigned To
  */
-class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
+class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vAvailableWorkQueue';
+        return 'vAssignedWorkQueue';
     }
 
     /**
@@ -61,7 +62,7 @@ class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['tWorkOrderID'], 'required'],
             [['tWorkOrderID', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
-            [['ClientWorkOrderID', 'CreatedBy', 'ModifiedBy', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
+            [['ClientWorkOrderID', 'CreatedBy', 'ModifiedBy', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Assigned To'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
         ];
@@ -108,6 +109,7 @@ class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'SequenceNumber' => 'Sequence Number',
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
+            'Assigned To' => 'Assigned  To',
         ];
     }
 }
