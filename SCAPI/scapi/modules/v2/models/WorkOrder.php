@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vAvailableWorkQueue".
+ * This is the model class for table "tWorkOrder".
  *
  * @property integer $tWorkOrderID
  * @property string $ClientWorkOrderID
@@ -43,14 +43,14 @@ use Yii;
  * @property string $SectionNumber
  * @property string $Shape
  */
-class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
+class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vAvailableWorkQueue';
+        return 'tWorkOrder';
     }
 
     /**
@@ -59,11 +59,10 @@ class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['tWorkOrderID'], 'required'],
-            [['tWorkOrderID', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
             [['ClientWorkOrderID', 'CreatedBy', 'ModifiedBy', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
+            [['CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
         ];
     }
 
