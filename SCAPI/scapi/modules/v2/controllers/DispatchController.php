@@ -285,6 +285,9 @@ class DispatchController extends Controller
 			//count number of items to unassign
 			$unassignCount = count($data['data']);
 			
+			//get assinged status code
+			$assignedCode = self::statusCodeLookup('Assigned');
+			
 			//process unassign
 			//nested for loop needed because map grid does not exist in work queue
 			//planned to iterate on this design and change to work order id
@@ -300,6 +303,7 @@ class DispatchController extends Controller
 					$workQueue = WorkQueue::find()
 						->where(['ClientWorkOrderID' => $workOrders[$j]->ClientWorkOrderID])
 						->andWhere(['AssignedUserID' => $data['data'][$i]['AssignedUserID']])
+						->andWhere(['WorkQueueStatus' => $assignedCode])
 						->one();
 					if($workQueue != null)
 					{
