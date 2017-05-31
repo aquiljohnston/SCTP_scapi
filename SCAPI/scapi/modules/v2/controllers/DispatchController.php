@@ -38,7 +38,7 @@ class DispatchController extends Controller
 					'get-surveyors' => ['get'],
 					'dispatch' => ['post'],
 					'get-assigned' => ['get'],
-					'unassign' => ['post'],
+					'unassign' => ['delete'],
                 ],
             ];
 		return $behaviors;	
@@ -256,6 +256,70 @@ class DispatchController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionUnassign()
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true);
+			//create response format
+			$responseData = [];
+			
+			//count number of items to unassign
+			$unassignCount = count($data['data']);
+			
+			//process unassign
+			//nested for loop needed because map grid does not exist in work queue
+			//planned to iterate on this design and change to work order id
+			for($i = 0; $i < $unassignCount; $i++)
+			{
+				$workOrders = WorkOrder::find()
+					->where(['MapGrid' => $data['data'][$i]['MapGrid']])
+					->all();
+				$workOrdersCount = count($workOrders);
+				for($j = 0; $j < $workOrdersCount; $j++)
+				{
+					$successFlag = 0;
+					$workQueue = WorkQueue::find()
+						->where(['ClientWorkOrderID' => $workOrders[$j]->ClientWorkOrderID])
+						->andWhere(['AssignedUserID' => $data['data'][$i]['AssignedUserID']])
+						->one();
+					if($workQueue != null)
+					{
+						if($workQueue->delete())
+						{
+							$successFlag = 1;
+						}
+						$responseData[] = [
+							'MapGrid' => $data['data'][$i]['MapGrid'],
+							'AssignedUserID' => $data['data'][$i]['AssignedUserID'],
+							'ClientWorkOrderID' => $workOrders[$j]->ClientWorkOrderID,
+							'SuccessFlag' => $successFlag
+						];
+					}
+				}
+			}
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
