@@ -5,7 +5,7 @@ namespace app\rbac;
 use Yii;
 use yii\rbac\DbManager;
 
-class YorkDbManager extends DbManager
+class ClientDbManager extends DbManager
 {
 	public $db = '';
 	/**

@@ -12,9 +12,9 @@ use yii;
 use yii\web\Controller;
 use yii\web\Response;
 use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
-use app\modules\v2\models\SCUser;
-use app\rbac\ScDbManager;
+use app\rbac\ClientDbManager;
 
 class PermissionsController extends Controller {
 
@@ -30,19 +30,30 @@ class PermissionsController extends Controller {
         }
     }
 
-    public static function can($permissionName, $token = null)
+    public static function can($permissionName, $client = null, $token = null)
     {
-        if (YII_ENV_DEV && defined('DEV_DISABLE_PERMISSION_CHECK') && DEV_DISABLE_PERMISSION_CHECK) {
-            return true;
-        }
-		SCUser::setClient(BaseActiveController::urlPrefix());
+		if($client == null)
+		{
+			$client = BaseActiveController::urlPrefix();
+		}
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
         if($token === null) {
             $token = Yii::$app->request->getAuthUser();
         }
-        $user = SCUser::findIdentityByAccessToken($token);
+		$user = BaseActiveController::getClientUser($client);
+		
+		//handle if user could not be found
+		if ($user == null)
+		{
+			return false;
+		}
+		
         $userID = $user->UserID;
 
-        if (($manager = Yii::$app->getAuthManager()) === null) {
+		BaseActiveRecord::setClient($client);
+		$db = BaseActiveRecord::getDb();
+		
+        if (($manager = new ClientDbManager($db)) === null) {
             return false;
         }
 
