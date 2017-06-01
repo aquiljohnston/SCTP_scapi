@@ -5,6 +5,7 @@ namespace app\modules\v2\controllers;
 use Yii;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\SCUser;
+use app\modules\v2\models\BaseUser;
 use app\modules\v2\models\TabletDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
@@ -109,7 +110,19 @@ class BaseActiveController extends ActiveController
 		}
 		return SCUser::findIdentityByAccessToken($token);
 	}
-
+	
+	//function gets user from client table based on token and client header
+	public static function getClientUser($client)
+	{
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		$ctUser = self::getUserFromToken();
+		
+		BaseActiveRecord::setClient($client);
+		$clientUser = BaseUser::find()
+			->where(['UserName' => $ctUser->UserName])
+			->one();
+		return $clientUser;
+	}
 	
     public static function inDateRange($day, $startDate, $endDate) {
         //$day .= " 12:00:00pm";

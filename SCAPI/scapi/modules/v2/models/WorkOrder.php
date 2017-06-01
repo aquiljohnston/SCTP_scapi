@@ -7,10 +7,10 @@ use Yii;
 /**
  * This is the model class for table "tWorkOrder".
  *
- * @property integer $tWorkOrderID
+ * @property integer $ID
  * @property string $ClientWorkOrderID
- * @property string $CreatedBy
- * @property string $ModifiedBy
+ * @property integer $CreatedBy
+ * @property integer $ModifiedBy
  * @property string $CreatedDateTime
  * @property string $ModifiedDateTime
  * @property string $InspectionType
@@ -42,6 +42,9 @@ use Yii;
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
+ *
+ * @property UserTb $createdBy
+ * @property UserTb $modifiedBy
  */
 class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -59,10 +62,12 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ClientWorkOrderID', 'CreatedBy', 'ModifiedBy', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
+            [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
-            [['CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
+            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
+            [['ModifiedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['ModifiedBy' => 'UserID']],
         ];
     }
 
@@ -72,7 +77,7 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'tWorkOrderID' => 'T Work Order ID',
+            'ID' => 'ID',
             'ClientWorkOrderID' => 'Client Work Order ID',
             'CreatedBy' => 'Created By',
             'ModifiedBy' => 'Modified By',
@@ -108,5 +113,21 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
         ];
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getCreatedBy()
+    {
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'CreatedBy']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getModifiedBy()
+    {
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'ModifiedBy']);
     }
 }

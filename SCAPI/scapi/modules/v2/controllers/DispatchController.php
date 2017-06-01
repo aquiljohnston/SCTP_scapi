@@ -146,12 +146,11 @@ class DispatchController extends Controller
 	{
 		try
 		{
-			// get created by
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			$createdBy = BaseActiveController::getUserFromToken()->UserName;
-			
-			//set db
+			//get client headers
 			$headers = getallheaders();
+			// get created by
+			$createdBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
+			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			//get post data
@@ -303,7 +302,7 @@ class DispatchController extends Controller
 				{
 					$successFlag = 0;
 					$workQueue = WorkQueue::find()
-						->where(['ClientWorkOrderID' => $workOrders[$j]->ClientWorkOrderID])
+						->where(['WorkOrderID' => $workOrders[$j]->ID])
 						->andWhere(['AssignedUserID' => $data['data'][$i]['AssignedUserID']])
 						->andWhere(['WorkQueueStatus' => $assignedCode])
 						->one();
@@ -316,7 +315,7 @@ class DispatchController extends Controller
 						$responseData[] = [
 							'MapGrid' => $data['data'][$i]['MapGrid'],
 							'AssignedUserID' => $data['data'][$i]['AssignedUserID'],
-							'ClientWorkOrderID' => $workOrders[$j]->ClientWorkOrderID,
+							'WorkOrderID' => $workOrders[$j]->ID,
 							'SuccessFlag' => $successFlag
 						];
 					}
@@ -363,54 +362,66 @@ class DispatchController extends Controller
 		//loop work orders to assign
 		for($i = 0; $i < $workOrdersCount; $i++)
 		{
-			$successFlag = 0;
-			
-			//check for existing records
-			$assignedWork = WorkQueue::find()
-				->where(['ClientWorkOrderID' => $workOrders[$i]['ClientWorkOrderID']])
-				->andWhere(['AssignedUserID' => $userID])
-				->count();
-			//if no record exist create one
-			if($assignedWork < 1)
-			{				
-				$newAssignment = new WorkQueue;
-				$newAssignment->CreatedBy = $createdBy;
-				$newAssignment->CreatedDateTime = BaseActiveController::getDate();
-				$newAssignment->ClientWorkOrderID = $workOrders[$i]->ClientWorkOrderID;
-				$newAssignment->AssignedUserID = $userID;
-				$newAssignment->WorkQueueStatus = $assignedCode;
-				$newAssignment->SectionNumber = $section;
-				if($newAssignment->save())
-				{
-					$successFlag = 1;
+			try{
+				$successFlag = 0;
+				
+				//check for existing records
+				$assignedWork = WorkQueue::find()
+					->where(['WorkOrderID' => $workOrders[$i]['ID']])
+					->andWhere(['AssignedUserID' => $userID])
+					->count();
+				//if no record exist create one
+				if($assignedWork < 1)
+				{				
+					$newAssignment = new WorkQueue;
+					$newAssignment->CreatedBy = $createdBy;
+					$newAssignment->CreatedDate = BaseActiveController::getDate();
+					$newAssignment->WorkOrderID = $workOrders[$i]->ID;
+					$newAssignment->AssignedUserID = $userID;
+					$newAssignment->WorkQueueStatus = $assignedCode;
+					$newAssignment->SectionNumber = $section;
+					if($newAssignment->save())
+					{
+						$successFlag = 1;
+					}
+					else
+					{
+						throw BaseActiveController::modelValidationException($newAssignment);
+					}
 				}
 				else
 				{
-					//TODO model validation log
+					$successFlag = 1;
+				}
+				//add to results
+				if($section != null)
+				{
+					$results[] = [
+						'MapGrid' => $mapGrid,
+						'AssignedUserID' => $userID,
+						'SectionNumber' => $section,
+						'WorkOrderID' => $workOrders[$i]->ID,
+						'SuccessFlag' => $successFlag
+					];
+				}
+				else
+				{
+					$results[] = [
+						'MapGrid' => $mapGrid,
+						'AssignedUserID' => $userID,
+						'WorkOrderID' => $workOrders[$i]->ID,
+						'SuccessFlag' => $successFlag
+					];
 				}
 			}
-			else
+			catch(\Exception $e)
 			{
-				$successFlag = 1;
-			}
-			//add to results
-			if($section != null)
-			{
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
 				$results[] = [
-					'MapGrid' => $mapGrid,
-					'AssignedUserID' => $userID,
-					'SectionNumber' => $section,
-					'ClientWorkOrderID' => $workOrders[$i]->ClientWorkOrderID,
-					'SuccessFlag' => $successFlag
-				];
-			}
-			else
-			{
-				$results[] = [
-					'MapGrid' => $mapGrid,
-					'AssignedUserID' => $userID,
-					'ClientWorkOrderID' => $workOrders[$i]->ClientWorkOrderID,
-					'SuccessFlag' => $successFlag
+						'MapGrid' => $mapGrid,
+						'AssignedUserID' => $userID,
+						'WorkOrderID' => $workOrders[$i]->ID,
+						'SuccessFlag' => $successFlag
 				];
 			}
 		}
