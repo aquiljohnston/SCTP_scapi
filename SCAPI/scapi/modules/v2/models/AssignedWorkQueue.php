@@ -43,8 +43,10 @@ use Yii;
  * @property string $SectionNumber
  * @property string $Shape
  * @property integer $WorkQueueStatus
- * @property string $Assigned To
- * @property string $Assigned By
+ * @property string $AssignedTo
+ * @property string $AssignedBy
+ * @property integer $AssignedByID
+ * @property integer $AssignedToID
  */
 class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -57,14 +59,22 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
+     * @return \yii\db\Connection the database connection used by this AR class.
+     */
+    public static function getDb()
+    {
+        return Yii::$app->get('yorkDevDb');
+    }
+
+    /**
      * @inheritdoc
      */
     public function rules()
     {
         return [
             [['ID'], 'required'],
-            [['ID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus'], 'integer'],
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Assigned To', 'Assigned By'], 'string'],
+            [['ID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'AssignedTo', 'AssignedBy'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
         ];
@@ -112,8 +122,10 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
             'WorkQueueStatus' => 'Work Queue Status',
-            'Assigned To' => 'Assigned  To',
-            'Assigned By' => 'Assigned  By',
+            'AssignedTo' => 'Assigned To',
+            'AssignedBy' => 'Assigned By',
+            'AssignedByID' => 'Assigned By ID',
+            'AssignedToID' => 'Assigned To ID',
         ];
     }
 }
