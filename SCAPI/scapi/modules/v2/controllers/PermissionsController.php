@@ -30,7 +30,7 @@ class PermissionsController extends Controller {
         }
     }
 
-    public static function can($permissionName, $client = null, $token = null)
+    public static function can($permissionName, $token = null, $client = null)
     {
 		if($client == null)
 		{
