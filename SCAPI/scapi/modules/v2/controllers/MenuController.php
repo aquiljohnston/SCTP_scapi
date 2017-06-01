@@ -129,7 +129,7 @@ class MenuController extends Controller {
 				yii::trace("Modules Array: " . json_encode($modules));
 				
 				//if(PermissionsController::can($allNavMenus[$i]->ModuleMenuPermissionName) && $modules[$moduleName]["enabled"] == 1){
-				if(call_user_func_array($permissionsController.'::can', array_merge(array($allNavMenus[$i]->ModuleMenuPermissionName, $headers['X-Client']), $permissionCheckParmArray)) 
+				if(call_user_func_array($permissionsController.'::can', array_merge(array($allNavMenus[$i]->ModuleMenuPermissionName, null,$headers['X-Client']), $permissionCheckParmArray)) 
 					&& $modules[$moduleName]["enabled"] == 1)
 				{
 					$navigationArray["enabled"] = 1;
@@ -160,7 +160,7 @@ class MenuController extends Controller {
 						$subNavData["Url"] = $subNavs[$s]->ModuleSubMenusURL;
 						//check if user can see sub nav option
 						//if(PermissionsController::can($subNavs[$s]->ModuleSubMenusPermissionName) && $navigationArray["enabled"] == 1)
-						if(call_user_func_array($permissionsController.'::can', array_merge(array($subNavs[$s]->ModuleSubMenusPermissionName, $headers['X-Client']), $permissionCheckParmArray)) 
+						if(call_user_func_array($permissionsController.'::can', array_merge(array($subNavs[$s]->ModuleSubMenusPermissionName, null, $headers['X-Client']), $permissionCheckParmArray)) 
 							&& $navigationArray["enabled"] == 1)
 						{
 							$subNavData["enabled"] = 1;
