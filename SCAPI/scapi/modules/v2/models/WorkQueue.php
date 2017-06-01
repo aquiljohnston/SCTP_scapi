@@ -7,16 +7,20 @@ use Yii;
 /**
  * This is the model class for table "tWorkQueue".
  *
- * @property integer $tWorkQueueID
- * @property string $CreatedBy
- * @property string $ModifiedBy
- * @property string $CreatedDateTime
- * @property string $ModifiedDateTime
- * @property string $ClientWorkOrderID
- * @property string $AssignedUserID
+ * @property integer $ID
+ * @property integer $WorkOrderID
+ * @property integer $AssignedUserID
  * @property integer $WorkQueueStatus
  * @property string $SectionNumber
- * @property string $tAssetID
+ * @property integer $CreatedBy
+ * @property string $CreatedDate
+ * @property integer $ModifiedBy
+ * @property string $ModifiedDate
+ * @property integer $tAssetID
+ *
+ * @property UserTb $assignedUser
+ * @property UserTb $createdBy
+ * @property UserTb $modifiedBy
  */
 class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -34,9 +38,12 @@ class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['CreatedBy', 'ModifiedBy', 'ClientWorkOrderID', 'AssignedUserID', 'SectionNumber', 'tAssetID'], 'string'],
-            [['CreatedDateTime', 'ModifiedDateTime'], 'safe'],
-            [['WorkQueueStatus'], 'integer'],
+            [['WorkOrderID', 'AssignedUserID', 'WorkQueueStatus', 'CreatedBy', 'ModifiedBy', 'tAssetID'], 'integer'],
+            [['SectionNumber'], 'string'],
+            [['CreatedDate', 'ModifiedDate'], 'safe'],
+            [['AssignedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['AssignedUserID' => 'UserID']],
+            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
+            [['ModifiedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['ModifiedBy' => 'UserID']],
         ];
     }
 
@@ -46,16 +53,40 @@ class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'tWorkQueueID' => 'T Work Queue ID',
-            'CreatedBy' => 'Create By',
-            'ModifiedBy' => 'Modified By',
-            'CreatedDateTime' => 'Created Date Time',
-            'ModifiedDateTime' => 'Modified Date Time',
-            'ClientWorkOrderID' => 'Client Work Order ID',
+            'ID' => 'ID',
+            'WorkOrderID' => 'Work Order ID',
             'AssignedUserID' => 'Assigned User ID',
             'WorkQueueStatus' => 'Work Queue Status',
             'SectionNumber' => 'Section Number',
+            'CreatedBy' => 'Created By',
+            'CreatedDate' => 'Created Date',
+            'ModifiedBy' => 'Modified By',
+            'ModifiedDate' => 'Modified Date',
             'tAssetID' => 'T Asset ID',
         ];
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAssignedUser()
+    {
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'AssignedUserID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getCreatedBy()
+    {
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'CreatedBy']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getModifiedBy()
+    {
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'ModifiedBy']);
     }
 }
