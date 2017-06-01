@@ -3,8 +3,8 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use app\modules\v1\models\BaseUser;
-use app\rbac\BetaDbManager;
+use app\modules\v2\models\BaseUser;
+use app\rbac\ClientDbManager;
 
 /**
 * This Class establishes the rules of the RBAC system for the API
@@ -23,7 +23,7 @@ class BetaRbacController extends Controller
     {
 		BaseUser::setClient($client);
 		$db = BaseUser::getDb();
-		$auth = new BetaDbManager($db);
+		$auth = new ClientDbManager($db);
 		
 		try{
 			//reset all
@@ -607,8 +607,8 @@ class BetaRbacController extends Controller
 		$auth->addChild($admin, $userCreateAdmin);
 		$auth->addChild($admin, $userUpdateAdmin);
 		// menu permissions
-		//$auth->addChild($admin, $viewDispatchMenu);
-		//$auth->addChild($admin, $viewReportsMenu);
+		$auth->addChild($admin, $viewDispatchMenu);
+		$auth->addChild($admin, $viewReportsMenu);
 		// sub menu permissions
 		$auth->addChild($admin, $viewClientMgmt);
 		$auth->addChild($admin, $viewProjectMgmt);
@@ -617,8 +617,8 @@ class BetaRbacController extends Controller
 		//$auth->addChild($supervisor, $viewMapStampMgmt);
 		//$auth->addChild($supervisor, $viewMapStampDetail);
 		//$auth->addChild($supervisor, $viewAOC);
-		//$auth->addChild($supervisor, $viewDispatch);
-		//$auth->addChild($supervisor, $viewAssigned);
+		$auth->addChild($supervisor, $viewDispatch);
+		$auth->addChild($supervisor, $viewAssigned);
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = BaseUser::find()
