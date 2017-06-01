@@ -7,10 +7,10 @@ use Yii;
 /**
  * This is the model class for table "vAssignedWorkQueue".
  *
- * @property integer $tWorkOrderID
+ * @property integer $ID
  * @property string $ClientWorkOrderID
- * @property string $CreatedBy
- * @property string $ModifiedBy
+ * @property integer $CreatedBy
+ * @property integer $ModifiedBy
  * @property string $CreatedDateTime
  * @property string $ModifiedDateTime
  * @property string $InspectionType
@@ -42,7 +42,9 @@ use Yii;
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
+ * @property integer $WorkQueueStatus
  * @property string $Assigned To
+ * @property string $Assigned By
  */
 class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -60,9 +62,9 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['tWorkOrderID'], 'required'],
-            [['tWorkOrderID', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
-            [['ClientWorkOrderID', 'CreatedBy', 'ModifiedBy', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Assigned To'], 'string'],
+            [['ID'], 'required'],
+            [['ID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus'], 'integer'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Assigned To', 'Assigned By'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
         ];
@@ -74,7 +76,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'tWorkOrderID' => 'T Work Order ID',
+            'ID' => 'ID',
             'ClientWorkOrderID' => 'Client Work Order ID',
             'CreatedBy' => 'Created By',
             'ModifiedBy' => 'Modified By',
@@ -109,7 +111,9 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'SequenceNumber' => 'Sequence Number',
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
+            'WorkQueueStatus' => 'Work Queue Status',
             'Assigned To' => 'Assigned  To',
+            'Assigned By' => 'Assigned  By',
         ];
     }
 }
