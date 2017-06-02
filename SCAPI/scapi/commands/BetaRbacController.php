@@ -569,6 +569,8 @@ class BetaRbacController extends Controller
 		$auth->addChild($supervisor, $viewAdministrationMenu);
 		$auth->addChild($supervisor, $viewDashboardMenu);
 		$auth->addChild($supervisor, $viewHomeMenu);
+		$auth->addChild($supervisor, $viewDispatchMenu);
+		$auth->addChild($supervisor, $viewReportsMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
@@ -606,9 +608,6 @@ class BetaRbacController extends Controller
 		$auth->addChild($admin, $timeCardGetAllCards);
 		$auth->addChild($admin, $userCreateAdmin);
 		$auth->addChild($admin, $userUpdateAdmin);
-		// menu permissions
-		$auth->addChild($admin, $viewDispatchMenu);
-		$auth->addChild($admin, $viewReportsMenu);
 		// sub menu permissions
 		$auth->addChild($admin, $viewClientMgmt);
 		$auth->addChild($admin, $viewProjectMgmt);
