@@ -7,11 +7,10 @@ use Yii;
 /**
  * This is the model class for table "rReport".
  *
- * @property integer $ReportID
- * @property string $ReportUID
+ * @property string $ID
  * @property integer $ProjectID
- * @property string $CreatedUserUID
- * @property string $ModifiedUserUID
+ * @property string $CreatedUserID
+ * @property string $ModifiedUserID
  * @property string $CreateDTLT
  * @property string $ModifiedDTLT
  * @property string $InactiveDTLT
@@ -49,8 +48,8 @@ class Report extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ReportUID', 'ProjectID', 'CreatedUserUID', 'ModifiedUserUID', 'Revision', 'ActiveFlag'], 'required'],
-            [['ReportUID', 'CreatedUserUID', 'ModifiedUserUID', 'Comments', 'ReportDisplayName', 'ReportType', 'ReportSPName', 'ReportDescription', 'Parm'], 'string'],
+            [['ID', 'ProjectID', 'CreatedUserID', 'ModifiedUserID', 'Revision', 'ActiveFlag'], 'required'],
+            [['ID', 'CreatedUserID', 'ModifiedUserID', 'Comments', 'ReportDisplayName', 'ReportType', 'ReportSPName', 'ReportDescription', 'Parm'], 'string'],
             [['ProjectID', 'Revision', 'ActiveFlag', 'ReportSortSeq', 'ParmInspectorFlag', 'ParmDropDownFlag', 'ParmDateOverrideFlag', 'ParmBetweenDateFlag', 'ParmDateFlag', 'ExportFlag'], 'integer'],
             [['CreateDTLT', 'ModifiedDTLT', 'InactiveDTLT', 'ReportDate', 'ReportInactiveDate'], 'safe']
         ];
@@ -62,11 +61,10 @@ class Report extends BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'ReportID' => 'Report ID',
-            'ReportUID' => 'Report Uid',
+            'ID' => 'Report ID',
             'ProjectID' => 'Project ID',
-            'CreatedUserUID' => 'Created User Uid',
-            'ModifiedUserUID' => 'Modified User Uid',
+            'CreatedUserID' => 'Created User Uid',
+            'ModifiedUserID' => 'Modified User Uid',
             'CreateDTLT' => 'Create Dtlt',
             'ModifiedDTLT' => 'Modified Dtlt',
             'InactiveDTLT' => 'Inactive Dtlt',
