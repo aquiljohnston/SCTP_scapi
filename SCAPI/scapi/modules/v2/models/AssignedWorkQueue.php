@@ -7,6 +7,7 @@ use Yii;
 /**
  * This is the model class for table "vAssignedWorkQueue".
  *
+ * @property integer $WorkQueueID
  * @property integer $WorkOrderID
  * @property string $ClientWorkOrderID
  * @property integer $CreatedBy
@@ -64,8 +65,8 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['WorkOrderID'], 'required'],
-            [['WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
+            [['WorkQueueID', 'WorkOrderID'], 'required'],
+            [['WorkQueueID', 'WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
             [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'AssignedTo', 'AssignedBy'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
@@ -78,6 +79,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
+            'WorkQueueID' => 'Work Queue ID',
             'WorkOrderID' => 'Work Order ID',
             'ClientWorkOrderID' => 'Client Work Order ID',
             'CreatedBy' => 'Created By',
