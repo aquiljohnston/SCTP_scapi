@@ -33,32 +33,25 @@ class WorkQueueController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'accept' => ['put'],
+					//'accept' => ['put'],
                 ],
             ];
 		return $behaviors;	
 	}
 	
-	public function actionAccept()
+	public static function accept($data, $client, $modifiedBy)
 	{
 		//TODO add additional logging for incoming json and validation errors
 		try
 		{
-			//get headers
-			$headers = getallheaders();
-			//get modified by
-			$modifiedBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			
-			//get body data
-			$body = file_get_contents("php://input");
-			$data = json_decode($body, true);
 			//create response format
 			$responseData = [];
 			
 			//count number of items to unassign
-			$acceptedCount = count($data['workQueue']);
+			$acceptedCount = count($data);
 			
 			//code is sent in json, do we want to send text and lookup code isntead?
 			//get assinged status code
@@ -71,31 +64,28 @@ class WorkQueueController extends Controller
 			{
 				$successFlag = 0;
 				$workQueue = WorkQueue::find()
-					->where(['WorkOrderID' => $data['workQueue'][$i]['WorkOrderID']])
-					->andWhere(['AssignedUserID' => $data['workQueue'][$i]['AssignedUserID']])
+					->where(['WorkOrderID' => $data[$i]['WorkOrderID']])
+					->andWhere(['AssignedUserID' => $data[$i]['AssignedUserID']])
 					->andWhere(['not in', 'WorkQueueStatus', [101, 102]])
 					->one();
 				if($workQueue != null)
 				{
-					$workQueue->WorkQueueStatus = $data['workQueue'][$i]['WorkQueueStatus'];
+					$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
 					$workQueue->ModifiedBy = $modifiedBy;
-					$workQueue->ModifiedDate = BaseActiveController::getDate();
+					$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
+					//if work queue is already accepted and no change exist update will fail and return successFlag of 0
 					if($workQueue->update())
 					{
 						$successFlag = 1;
 					}
 				}
 				$responseData[] = [
-					'WorkOrderID' => $data['workQueue'][$i]['WorkOrderID'],
-					'AssignedUserID' => $data['workQueue'][$i]['AssignedUserID'],
+					'WorkOrderID' => $data[$i]['WorkOrderID'],
+					'AssignedUserID' => $data[$i]['AssignedUserID'],
 					'SuccessFlag' => $successFlag
 				];
 			}
-			//send response
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			$response->data = $responseData;
-			return $response;
+			return $responseData;
 		}
         catch(ForbiddenHttpException $e)
         {
