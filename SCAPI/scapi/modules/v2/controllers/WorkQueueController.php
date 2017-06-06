@@ -47,7 +47,7 @@ class WorkQueueController extends Controller
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			$responseArray = [];
-			$workQueues = AssignedWorkQueue::find()
+			$workQueue = AssignedWorkQueue::find()
 				->select('WorkOrderID
 				,InspectionType
 				,HouseNumber
@@ -79,7 +79,7 @@ class WorkQueueController extends Controller
 				->where(['AssignedToID' => $userID])
 				->all();
 			
-			$responseArray['workQueues'] = $workQueues;
+			$responseArray['WorkQueue'] = $workQueue;
 					
 			//create response object
 			$response = Yii::$app->response;

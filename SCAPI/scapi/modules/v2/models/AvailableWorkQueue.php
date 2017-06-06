@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "vAvailableWorkQueue".
  *
- * @property integer $ID
+ * @property integer $WorkOrderID
  * @property string $ClientWorkOrderID
  * @property integer $CreatedBy
  * @property integer $ModifiedBy
@@ -59,8 +59,8 @@ class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ID'], 'required'],
-            [['ID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
+            [['WorkOrderID'], 'required'],
+            [['WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
             [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
@@ -73,7 +73,7 @@ class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'ID' => 'ID',
+            'WorkOrderID' => 'Work Order ID',
             'ClientWorkOrderID' => 'Client Work Order ID',
             'CreatedBy' => 'Created By',
             'ModifiedBy' => 'Modified By',
