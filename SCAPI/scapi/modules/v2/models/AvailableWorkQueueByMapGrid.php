@@ -24,14 +24,6 @@ class AvailableWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecor
     }
 
     /**
-     * @return \yii\db\Connection the database connection used by this AR class.
-     */
-    public static function getDb()
-    {
-        return Yii::$app->get('yorkDevDb');
-    }
-
-    /**
      * @inheritdoc
      */
     public function rules()

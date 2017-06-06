@@ -10,7 +10,7 @@ use yii\data\Pagination;
 use app\authentication\TokenAuth;
 use app\modules\v2\models\BaseActiveRecord;
 //use app\modules\v2\models\AvailableWorkQueue;
-//use app\modules\v2\models\AssignedWorkQueue;
+use app\modules\v2\models\AssignedWorkQueue;
 //use app\modules\v2\models\WorkOrder;
 use app\modules\v2\models\WorkQueue;
 //use app\modules\v2\models\StatusLookup;
@@ -33,12 +33,71 @@ class WorkQueueController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					//'accept' => ['put'],
+					'get' => ['get'],
                 ],
             ];
 		return $behaviors;	
 	}
 	
+	public function actionGet($userID)
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			$responseArray = [];
+			$workQueues = AssignedWorkQueue::find()
+				->select('WorkOrderID
+				,InspectionType
+				,HouseNumber
+				,street
+				,AptSuite
+				,City
+				,State
+				,Zip
+				,MeterNumber
+				,MeterLocationDesc
+				,LocationType
+				,LocationLatitude
+				,LocationLongitude
+				,MapGrid
+				,ComplianceStart
+				,ComplianceEnd
+				,MapLatitudeBegin
+				,MapLongitudeBegin
+				,MapLatitudeEnd
+				,MapLongitudeEnd
+				,AccountNumber
+				,AccountName
+				,AccountTelephoneNumber
+				,Comments
+				,SequenceNumber
+				,SectionNumber
+				,WorkQueueStatus
+				,AssignedToID')
+				->where(['AssignedToID' => $userID])
+				->all();
+			
+			$responseArray['workQueues'] = $workQueues;
+					
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	//fuction called by activity to parse and accept work queues
 	public static function accept($data, $client, $modifiedBy)
 	{
 		//TODO add additional logging for incoming json and validation errors
