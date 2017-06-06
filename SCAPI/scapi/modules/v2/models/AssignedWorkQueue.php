@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "vAssignedWorkQueue".
  *
- * @property integer $ID
+ * @property integer $WorkOrderID
  * @property string $ClientWorkOrderID
  * @property integer $CreatedBy
  * @property integer $ModifiedBy
@@ -59,21 +59,13 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @return \yii\db\Connection the database connection used by this AR class.
-     */
-    public static function getDb()
-    {
-        return Yii::$app->get('yorkDevDb');
-    }
-
-    /**
      * @inheritdoc
      */
     public function rules()
     {
         return [
-            [['ID'], 'required'],
-            [['ID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
+            [['WorkOrderID'], 'required'],
+            [['WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
             [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'AssignedTo', 'AssignedBy'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
@@ -86,7 +78,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function attributeLabels()
     {
         return [
-            'ID' => 'ID',
+            'WorkOrderID' => 'Work Order ID',
             'ClientWorkOrderID' => 'Client Work Order ID',
             'CreatedBy' => 'Created By',
             'ModifiedBy' => 'Modified By',
