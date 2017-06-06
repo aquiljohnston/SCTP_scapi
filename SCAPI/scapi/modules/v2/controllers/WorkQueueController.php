@@ -48,7 +48,8 @@ class WorkQueueController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			$responseArray = [];
 			$workQueue = AssignedWorkQueue::find()
-				->select('WorkOrderID
+				->select('WorkQueueID
+				,WorkOrderID
 				,InspectionType
 				,HouseNumber
 				,street
@@ -123,8 +124,7 @@ class WorkQueueController extends Controller
 			{
 				$successFlag = 0;
 				$workQueue = WorkQueue::find()
-					->where(['WorkOrderID' => $data[$i]['WorkOrderID']])
-					->andWhere(['AssignedUserID' => $data[$i]['AssignedUserID']])
+					->where(['ID' => $data[$i]['WorkQueueID']])
 					->andWhere(['not in', 'WorkQueueStatus', [101, 102]])
 					->one();
 				if($workQueue != null)
@@ -139,7 +139,7 @@ class WorkQueueController extends Controller
 					}
 				}
 				$responseData[] = [
-					'WorkOrderID' => $data[$i]['WorkOrderID'],
+					'WorkQueueID' => $data[$i]['WorkQueueID'],
 					'AssignedUserID' => $data[$i]['AssignedUserID'],
 					'SuccessFlag' => $successFlag
 				];
