@@ -9,6 +9,7 @@ use app\modules\v2\models\TimeEntry;
 use app\modules\v2\models\MileageEntry;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\WorkQueueController;
 use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -102,14 +103,18 @@ class ActivityController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
+			//get id on client db of user making request
+			$clientCreatedBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
+			
 			Activity::setClient(BaseActiveController::urlPrefix());
+			//get uid of user making request
+			$pgeCreatedBy = Parent::getUserFromToken()->UserUID;
+			//get id of user making request
+			$createdBy = Parent::getUserFromToken()->UserID;
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
-			
-			//get uid of user making request
-			$createdBy = Parent::getUserFromToken()->UserUID;
-			
+
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
 			$data = json_decode(utf8_decode($post), true);
@@ -131,12 +136,19 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
+						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						{
+							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
+						}
+						else
+						{
+							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
+						}
 						
 						$activity = new Activity();
 						$clientActivity = new Activity();
 						$data['activity'][$i]['ActivityCreateDate'] = Parent::getDate();
-						$data['activity'][$i]['ActivityCreatedUserUID'] = $createdBy;
+						$data['activity'][$i]['ActivityCreatedUserUID'] = $pgeCreatedBy;
 						//handle app version from tablet TODO fix this later so it is consistent between web and tablet
 						if(array_key_exists('AppVersion', $data['activity'][$i]))
 						{
@@ -181,16 +193,23 @@ class ActivityController extends BaseActiveController
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 							}
 							
-							//set success flag for activity
-							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
-							
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
-							//check for pge headers
+							//check for pge headers, pge is handled uniquely compared to a standard client
 							if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
 							{
+								//set success flag for activity
+								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
 								//pge data parse
-								$clientData = PgeActivityController::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityUID);
+								$clientData = PgeActivityController::parseActivityData($data['activity'][$i], $headers['X-Client'],$pgeCreatedBy, $activity->ActivityUID);
+								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
+							}
+							else
+							{
+								//set success flag for activity
+								$responseData['activity'][$i] = ['ActivityTabletID'=>$data['activity'][$i]['ActivityTabletID'], 'SuccessFlag'=>1];
+								//client data parse
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $activity->ActivityID);
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 							}
 							
@@ -321,7 +340,14 @@ class ActivityController extends BaseActiveController
 						//log activity error
 						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 						//set success flag for activity
-						$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
+						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						{
+							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
+						}
+						else
+						{
+							$responseData['activity'][$i] = ['ActivityTabletID'=>$data['activity'][$i]['ActivityTabletID'], 'SuccessFlag'=>0];
+						}
 					}
 				}
 			}
@@ -334,5 +360,18 @@ class ActivityController extends BaseActiveController
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	//helper method, to parse activity data and send to appropriate controller.
+	public static function parseActivityData($activityData, $client, $clientCreatedBy, $activityID)
+	{	
+		//handle accepting work queue
+		if (array_key_exists('WorkQueue', $activityData))
+		{
+			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client, $clientCreatedBy);
+			$responseData['WorkQueue'] = $workQueueResponse;
+		}
+		
+		return $responseData;
 	}
 }
