@@ -10,6 +10,7 @@ use app\modules\v2\models\MileageEntry;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
+use app\modules\v2\controllers\EquipmentController;
 use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -209,7 +210,7 @@ class ActivityController extends BaseActiveController
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityTabletID'=>$data['activity'][$i]['ActivityTabletID'], 'SuccessFlag'=>1];
 								//client data parse
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $activity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $clientActivity->ActivityID);
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 							}
 							
@@ -363,13 +364,19 @@ class ActivityController extends BaseActiveController
 	}
 	
 	//helper method, to parse activity data and send to appropriate controller.
-	public static function parseActivityData($activityData, $client, $clientCreatedBy, $activityID)
+	public static function parseActivityData($activityData, $client, $clientCreatedBy, $clientActivityID)
 	{	
 		//handle accepting work queue
 		if (array_key_exists('WorkQueue', $activityData))
 		{
 			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client, $clientCreatedBy);
 			$responseData['WorkQueue'] = $workQueueResponse;
+		}
+		//handle creation of new calibration records
+		if (array_key_exists('Calibration', $activityData))
+		{
+			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientCreatedBy, $clientActivityID);
+			$responseData['Calibration'] = $calibrationResponse;
 		}
 		
 		return $responseData;
