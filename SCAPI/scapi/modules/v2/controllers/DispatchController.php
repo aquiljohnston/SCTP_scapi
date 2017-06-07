@@ -9,8 +9,9 @@ use yii\filters\VerbFilter;
 use yii\data\Pagination;
 use app\authentication\TokenAuth;
 use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\models\AvailableWorkQueue;
-use app\modules\v2\models\AvailableWorkQueueByMapGrid;
+use app\modules\v2\models\AvailableWorkOrder;
+use app\modules\v2\models\AvailableWorkOrderByMapGrid;
+use app\modules\v2\models\AvailableWorkOrderBySection;
 use app\modules\v2\models\AssignedWorkQueue;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\WorkOrder;
@@ -58,7 +59,7 @@ class DispatchController extends Controller
 			{
 				$orderBy = 'ComplianceEnd';
 				$envelope = 'assets';
-				$assetQuery = AvailableWorkQueue::find()
+				$assetQuery = AvailableWorkOrder::find()
 					->where(['MapGrid' => $mapGridSelected])
 					->andWhere(['SectionNumber' => $sectionNumberSelected]);
 				
@@ -76,13 +77,16 @@ class DispatchController extends Controller
 			}
 			elseif($mapGridSelected != null)
 			{
-				
+				$orderBy = 'SectionNumber';
+				$envelope = 'sections';
+				$assetQuery = AvailableWorkOrderBySection::find()
+					->where(['MapGrid' => $mapGridSelected]);
 			}
 			else
 			{
 				$orderBy = 'ComplianceEnd';
 				$envelope = 'mapGrids';
-				$assetQuery = AvailableWorkQueueByMapGrid::find();
+				$assetQuery = AvailableWorkOrderByMapGrid::find();
 				
 				if($filter != null)
 				{

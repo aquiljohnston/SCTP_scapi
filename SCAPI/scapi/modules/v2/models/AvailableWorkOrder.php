@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vAvailableWorkQueue".
+ * This is the model class for table "vAvailableWorkOrder".
  *
  * @property integer $WorkOrderID
  * @property string $ClientWorkOrderID
@@ -43,14 +43,14 @@ use Yii;
  * @property string $SectionNumber
  * @property string $Shape
  */
-class AvailableWorkQueue extends \app\modules\v2\models\BaseActiveRecord
+class AvailableWorkOrder extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vAvailableWorkQueue';
+        return 'vAvailableWorkOrder';
     }
 
     /**

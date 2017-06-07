@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vAvailableWorkQueueByMapGrid".
+ * This is the model class for table "vAvailableWorkOrderByMapGrid".
  *
  * @property string $MapGrid
  * @property string $ComplianceStart
@@ -13,14 +13,14 @@ use Yii;
  * @property integer $InspectionAttemptCounter
  * @property integer $AvailableWorkOrderCount
  */
-class AvailableWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
+class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vAvailableWorkQueueByMapGrid';
+        return 'vAvailableWorkOrderByMapGrid';
     }
 
     /**
