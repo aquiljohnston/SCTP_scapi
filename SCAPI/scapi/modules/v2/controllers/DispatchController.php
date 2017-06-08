@@ -202,6 +202,11 @@ class DispatchController extends Controller
 			{
 				$sectionCount = count($data['dispatchSection']);
 			}
+			//check if items exist to dispatch by asset, and get asset count
+			if(array_key_exists('dispatchAsset', $data))
+			{
+				$assetCount = count($data['dispatchAsset']);
+			}
 			
 			//process map dispatch
 			for($i = 0; $i < $mapCount; $i++)
@@ -225,6 +230,19 @@ class DispatchController extends Controller
 					$data['dispatchSection'][$i]['SectionNumber']
 				);
 				$responseData['dispatchSection'][] = $results;
+			}
+			//process asset dispatch
+			for($i = 0; $i < $assetCount; $i++)
+			{
+				//calls helper method to process assingments
+				$results = self::processDispatch(
+					$data['dispatchAsset'][$i]['AssignedUserID'],
+					$createdBy,
+					null,
+					null,
+					$data['dispatchAsset'][$i]['WorkOrderID']
+				);
+				$responseData['dispatchAsset'][] = $results;
 			}
 			
 			//send response
@@ -370,7 +388,7 @@ class DispatchController extends Controller
 	**Then checks for existing assigned work queue records and removes any from 
 	**results that already exist. Finally creates new records and returns results.
 	*/
-	private static function processDispatch($userID, $createdBy, $mapGrid, $section = null)
+	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null)
 	{
 		$results = [];
 		
@@ -378,17 +396,25 @@ class DispatchController extends Controller
 		$assignedCode = self::statusCodeLookup('Assigned');
 		
 		//build query to get work orders based on map grid and section(optional)
-		$workOrdersQuery = WorkOrder::find()
-			->where(['MapGrid' => $mapGrid]);
-		if($section != null)
+		if($workOrder == null)
 		{
-			$workOrdersQuery->andWhere(['SectionNumber' => $section]);
+			$workOrdersQuery = WorkOrder::find()
+				->where(['MapGrid' => $mapGrid]);
+			if($section != null)
+			{
+				$workOrdersQuery->andWhere(['SectionNumber' => $section]);
+			}
+		}
+		else
+		{
+			$workOrdersQuery = WorkOrder::find()
+				->where(['ID' => $workOrder]);
 		}
 		$workOrders = $workOrdersQuery->all();
 		
 		$workOrdersCount = count($workOrders);
 		
-		//loop work orders to assign
+		//loop work orders to assign 
 		for($i = 0; $i < $workOrdersCount; $i++)
 		{
 			try{
@@ -408,7 +434,7 @@ class DispatchController extends Controller
 					$newAssignment->WorkOrderID = $workOrders[$i]->ID;
 					$newAssignment->AssignedUserID = $userID;
 					$newAssignment->WorkQueueStatus = $assignedCode;
-					$newAssignment->SectionNumber = $section;
+					$newAssignment->SectionNumber = $workOrders[$i]->SectionNumber;
 					if($newAssignment->save())
 					{
 						$successFlag = 1;
@@ -422,26 +448,16 @@ class DispatchController extends Controller
 				{
 					$successFlag = 1;
 				}
+				//TODO review response structure
+				$resultsData = [
+					'MapGrid' => $workOrders[$i]->MapGrid,
+					'AssignedUserID' => $userID,
+					'SectionNumber' => $workOrders[$i]->SectionNumber,
+					'WorkOrderID' => $workOrders[$i]->ID,
+					'SuccessFlag' => $successFlag
+				];
 				//add to results
-				if($section != null)
-				{
-					$results[$userID][$mapGrid][$section][] = [
-						'MapGrid' => $mapGrid,
-						'AssignedUserID' => $userID,
-						'SectionNumber' => $section,
-						'WorkOrderID' => $workOrders[$i]->ID,
-						'SuccessFlag' => $successFlag
-					];
-				}
-				else
-				{
-					$results[$userID][$mapGrid][] = [
-						'MapGrid' => $mapGrid,
-						'AssignedUserID' => $userID,
-						'WorkOrderID' => $workOrders[$i]->ID,
-						'SuccessFlag' => $successFlag
-					];
-				}
+				$results[$userID][$workOrders[$i]->MapGrid][$workOrders[$i]->SectionNumber][] = $resultsData;
 			}
 			catch(\Exception $e)
 			{
