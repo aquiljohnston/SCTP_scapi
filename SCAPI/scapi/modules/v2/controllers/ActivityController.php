@@ -193,7 +193,6 @@ class ActivityController extends BaseActiveController
 								$e = BaseActiveController::modelValidationException($clientActivity);
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 							}
-							
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
 							//check for pge headers, pge is handled uniquely compared to a standard client
@@ -368,7 +367,7 @@ class ActivityController extends BaseActiveController
 		//handle creation of new calibration records
 		if (array_key_exists('Calibration', $activityData))
 		{
-			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientCreatedBy, $clientActivityID);
+			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientActivityID);
 			$responseData['Calibration'] = $calibrationResponse;
 		}
 		
