@@ -237,7 +237,7 @@ class ActivityController extends BaseActiveController
 										{
 											$response->setStatusCode(201);
 											//set success flag for time entry
-											$responseData['activity'][$i]['timeEntry'][$t] = [$timeEntry];
+											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
 										}
 										else
 										{
@@ -259,7 +259,7 @@ class ActivityController extends BaseActiveController
 										//if db exception is 2601, duplicate contraint then success
 										if(in_array($e->errorInfo[1], array(2601, 2627)))
 										{
-											$responseData['activity'][$i]['timeEntry'][$t] = [$timeEntry];
+											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
 										}
 										else //log other errors and retrun failure
 										{
@@ -291,7 +291,7 @@ class ActivityController extends BaseActiveController
 										{
 											$response->setStatusCode(201);
 											//set success flag for mileage entry
-											$responseData['activity'][$i]['mileageEntry'][$m] = [$mileageEntry];
+											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
 										else
 										{
@@ -313,7 +313,7 @@ class ActivityController extends BaseActiveController
 										//if db exception is 2601, duplicate contraint then success
 										if(in_array($e->errorInfo[1], array(2601, 2627)))
 										{
-											$responseData['activity'][$i]['mileageEntry'][$m] = [$mileageEntry];
+											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
 										else //log other errors and retrun failure
 										{
