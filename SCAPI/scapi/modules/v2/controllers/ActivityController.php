@@ -230,14 +230,14 @@ class ActivityController extends BaseActiveController
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
-									$timeEntry->TimeEntryCreatedBy = $createdBy;
+									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									$timeEntry->TimeEntryCreateDate = Parent::getDate();
 									try{
 										if($timeEntry->save())
 										{
 											$response->setStatusCode(201);
 											//set success flag for time entry
-											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['timeEntry'][$t] = [$timeEntry];
 										}
 										else
 										{
@@ -259,7 +259,7 @@ class ActivityController extends BaseActiveController
 										//if db exception is 2601, duplicate contraint then success
 										if(in_array($e->errorInfo[1], array(2601, 2627)))
 										{
-											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['timeEntry'][$t] = [$timeEntry];
 										}
 										else //log other errors and retrun failure
 										{
@@ -284,14 +284,14 @@ class ActivityController extends BaseActiveController
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
-									$mileageEntry->MileageEntryCreatedBy = $createdBy;
+									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
 									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 									try{
 										if($mileageEntry->save())
 										{
 											$response->setStatusCode(201);
 											//set success flag for mileage entry
-											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['mileageEntry'][$m] = [$mileageEntry];
 										}
 										else
 										{
@@ -313,7 +313,7 @@ class ActivityController extends BaseActiveController
 										//if db exception is 2601, duplicate contraint then success
 										if(in_array($e->errorInfo[1], array(2601, 2627)))
 										{
-											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['mileageEntry'][$m] = [$mileageEntry];
 										}
 										else //log other errors and retrun failure
 										{
