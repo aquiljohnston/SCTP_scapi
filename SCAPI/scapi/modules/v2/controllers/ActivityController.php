@@ -208,7 +208,7 @@ class ActivityController extends BaseActiveController
 							else
 							{
 								//set success flag for activity
-								$responseData['activity'][$i] = ['ActivityTabletID'=>$data['activity'][$i]['ActivityTabletID'], 'SuccessFlag'=>1];
+								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
 								//client data parse
 								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $clientActivity->ActivityID);
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
@@ -341,14 +341,7 @@ class ActivityController extends BaseActiveController
 						//log activity error
 						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 						//set success flag for activity
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
-						{
-							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
-						}
-						else
-						{
-							$responseData['activity'][$i] = ['ActivityTabletID'=>$data['activity'][$i]['ActivityTabletID'], 'SuccessFlag'=>0];
-						}
+						$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
 					}
 				}
 			}
