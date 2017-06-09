@@ -11,6 +11,7 @@ use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
 use app\modules\v2\controllers\EquipmentController;
+use app\modules\v2\controllers\InspectionController;
 use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -369,6 +370,12 @@ class ActivityController extends BaseActiveController
 		{
 			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientActivityID);
 			$responseData['Calibration'] = $calibrationResponse;
+		}
+		//handle creation of new calibration records
+		if (array_key_exists('Inspection', $activityData))
+		{
+			$inspectionResponse = InspectionController::processInspection($activityData['Inspection'], $client, $clientActivityID);
+			$responseData['Inspection'] = $inspectionResponse;
 		}
 		
 		return $responseData;
