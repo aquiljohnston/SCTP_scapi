@@ -11,6 +11,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Inspection;
 use app\modules\v2\models\Event;
+use app\modules\v2\models\Asset;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -52,13 +53,14 @@ class InspectionController extends Controller
 				{	
 					$inspectionSuccessFlag = 0;
 					$eventResponse = [];
+					$assetResponse = [];
 					$inspectionID = null;
 				
 					$newInspection = new Inspection;
 					$newInspection->attributes = $data[$i];
 					$newInspection->ActivityID = $activityID;
 					
-					//check if pge Inspection already exist.
+					//check if Inspection already exist.
 					$previousInspection = Inspection::find()
 						->where(['InspectionTabletID' => $newInspection->InspectionTabletID])
 						//->andWhere(['DeletedFlag' => 0]) no flag exist currently
@@ -84,14 +86,30 @@ class InspectionController extends Controller
 					//process event data if available
 					if(array_key_exists('Event', $data[$i]))
 					{
-						$eventResponse = self::processEvent($data[$i]['Event'], $client, $activityID, $inspectionID);
+						if($data[$i]['Event'] != null)
+							$eventResponse = self::processEvent($data[$i]['Event'], $client, $activityID, $inspectionID);
 					}
-					$responseArray[] = ['ID' => $inspectionID, 'InspectionTabletID' => $newInspection->InspectionTabletID, 'SuccessFlag' => $inspectionSuccessFlag, 'Event' => $eventResponse];
+					if(array_key_exists('Asset', $data[$i]))
+					{
+						if($data[$i]['Asset'] != null)
+							$assetResponse = self::processAsset($data[$i]['Asset'], $client, $activityID, $inspectionID);
+					}
+					$responseArray[] = [
+						'ID' => $inspectionID,
+						'InspectionTabletID' => $newInspection->InspectionTabletID,
+						'SuccessFlag' => $inspectionSuccessFlag,
+						'Event' => $eventResponse,
+						'Asset' => $assetResponse];
 				}
 				catch(\Exception $e)
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
-					$responseArray[] = ['ID' => $inspectionID,'InspectionTabletID' => $data[$i]['InspectionTabletID'],'SuccessFlag' => $inspectionSuccessFlag, 'Event' => $eventResponse];
+					$responseArray[] = [
+						'ID' => $inspectionID,
+						'InspectionTabletID' => $data[$i]['InspectionTabletID'],
+						'SuccessFlag' => $inspectionSuccessFlag,
+						'Event' => $eventResponse,
+						'Asset' => $assetResponse];
 				}
 			}
 			//return response data
@@ -128,7 +146,7 @@ class InspectionController extends Controller
 				$newEvent->attributes = $data[$i];
 				$newEvent->InspectionID = $inspectionID;
 				
-				//check if pge Inspection already exist.
+				//check if Event already exist.
 				$previousEvent = Event::find()
 					->where(['EventTabletID' => $newEvent->EventTabletID])
 					//->andWhere(['DeletedFlag' => 0]) no flag exist currently
@@ -147,7 +165,7 @@ class InspectionController extends Controller
 					//Handle updates if applicable.
 					//send success if Event record was already saved previously
 					$eventSuccessFlag = 1;
-					$eventID = $previousEvent-ID;
+					$eventID = $previousEvent->ID;
 				}
 				$eventResponse[] = ['ID' => $eventID, 'EventTabletID' => $data[$i]['EventTabletID'],'SuccessFlag' => $eventSuccessFlag];
 			}
@@ -156,12 +174,53 @@ class InspectionController extends Controller
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
 				$eventResponse[] = ['EventTabletID' => $data[$i]['EventTabletID'],'SuccessFlag' => $eventSuccessFlag];
 			}
-			return $eventResponse;
 		}
+		return $eventResponse;
 	}
 	
-	private static function processAsset()
-	{
+	private static function processAsset($data, $client, $activityID, $inspectionID)
+	{		
+		//try catch to log errors
+		try
+		{	
+			//set client header
+			BaseActiveRecord::setClient($client);
+			$assetResponse = [];
+			$assetSuccessFlag = 0;
+			$assetID = null;
 		
+			$newAsset = new Asset;
+			$newAsset->attributes = $data;
+			$newAsset->InspectionID = $inspectionID;
+			
+			//check if Asset already exist.
+			$previousAsset = Asset::find()
+				->where(['AssetTabletID' => $newAsset->AssetTabletID])
+				//->andWhere(['DeletedFlag' => 0]) no flag exist currently
+				->one();
+				
+			if ($previousAsset == null) {
+				if ($newAsset->save()) {
+					$assetSuccessFlag = 1;
+					$assetID = $newAsset->ID;
+				} else {
+					throw BaseActiveController::modelValidationException($newAsset);
+				}
+			}
+			else
+			{
+				//Handle updates if applicable.
+				//send success if Asset record was already saved previously
+				$assetSuccessFlag = 1;
+				$assetID = $previousAsset->ID;
+			}
+			$assetResponse[] = ['ID' => $assetID, 'AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
+		}
+		catch(\Exception $e)
+		{
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+			$assetResponse[] = ['AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
+		}
+		return $assetResponse;
 	}
 }
