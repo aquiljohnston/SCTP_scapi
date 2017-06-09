@@ -52,7 +52,7 @@ class WorkQueueController extends Controller
 				,WorkOrderID
 				,InspectionType
 				,HouseNumber
-				,street
+				,Street
 				,AptSuite
 				,City
 				,State
