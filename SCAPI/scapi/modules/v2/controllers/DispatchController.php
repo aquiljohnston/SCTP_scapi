@@ -191,6 +191,7 @@ class DispatchController extends Controller
 			$responseData['dispatchSection'] = [];
 			$mapCount = 0;
 			$sectionCount = 0;
+			$assetCount = 0;
 			
 			//check if items exist to dispatch by map, and get map count
 			if(array_key_exists('dispatchMap', $data))

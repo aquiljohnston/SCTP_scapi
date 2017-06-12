@@ -6,7 +6,7 @@ use Yii;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
 use app\modules\v2\models\TimeEntry;
-use app\modules\v2\models\MileageEntry;
+use app\modules\v2\models\MileageEntry;	
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
@@ -359,6 +359,8 @@ class ActivityController extends BaseActiveController
 	//helper method, to parse activity data and send to appropriate controller.
 	public static function parseActivityData($activityData, $client, $clientCreatedBy, $clientActivityID)
 	{	
+		$responseData = [];
+	
 		//handle accepting work queue
 		if (array_key_exists('WorkQueue', $activityData))
 		{
