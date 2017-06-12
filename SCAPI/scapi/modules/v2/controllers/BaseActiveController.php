@@ -229,7 +229,7 @@ class BaseActiveController extends ActiveController
         // set pagination
         $countAssetQuery = clone $assetQuery;
         $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-        $pages->pageSizeLimit = [1, 100];
+        $pages->pageSizeLimit = [1, 200];
         $offset = $listPerPage * ($page - 1);
         $pages->setPageSize($listPerPage);
         $pages->pageParam = 'userPage';
