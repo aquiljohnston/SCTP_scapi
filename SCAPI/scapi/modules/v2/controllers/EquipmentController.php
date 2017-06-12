@@ -49,13 +49,14 @@ class EquipmentController extends Controller
 				//try catch to log individual errors
 				try
 				{					
-					
+					$successFlag = 0;
+					$calibrationID = null;
 					$newCalibration = new Calibration;
 					$newCalibration->attributes = $data[$i];
 					$newCalibration->ActivityID = $activityID;
 					$date = Date('Y-m-d', strtotime($newCalibration->SrcDTLT));
 					
-					//check if pge breadcrumb already exist.
+					//check if Calibration already exist.
 					$previousCalibration = Calibration::find()
 						->where(['CreatedUserID' => $newCalibration->CreatedUserID])
 						->andWhere(['SerialNumber' => $newCalibration->SerialNumber])
@@ -65,22 +66,24 @@ class EquipmentController extends Controller
 
 					if ($previousCalibration == null) {
 						if ($newCalibration->save()) {
-							$responseArray[] = ['ID' => $newCalibration->ID, 'SerialNumber' => $newCalibration->SerialNumber, 'SuccessFlag' => 1];
+							$calibrationID = $newCalibration->ID;
+							$successFlag = 1;
 						} else {
-							$responseArray[] = ['ID' => $newCalibration->ID, 'SerialNumber' => $newCalibration->SerialNumber, 'SuccessFlag' => 0];
+							throw BaseActiveController::modelValidationException($newCalibration);
 						}
 					}
 					else
 					{
-						//TODO handle updates?
-						//send success if breadcrumb record was already saved previously
-						$responseArray[] = ['ID' => $previousCalibration->ID, 'SerialNumber' => $newCalibration->SerialNumber, 'SuccessFlag' => 1];
+						//send success if Calibration record was already saved previously
+						$calibrationID = $previousCalibration->ID;
+						$successFlag = 1;
 					}
+					$responseArray[] = ['ID' => $calibrationID, 'SerialNumber' => $data[$i]->SerialNumber, 'SuccessFlag' => $successFlag];
 				}
 				catch(\Exception $e)
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
-					$responseArray[] = ['SerialNumber' => $data[$i]['SerialNumber'],'SuccessFlag' => 0];
+					$responseArray[] = ['SerialNumber' => $data[$i]['SerialNumber'], 'SuccessFlag' => $successFlag];
 				}
 			}
 			//return response data
