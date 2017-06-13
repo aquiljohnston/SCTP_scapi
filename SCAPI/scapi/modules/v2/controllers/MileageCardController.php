@@ -341,7 +341,7 @@ class MileageCardController extends BaseActiveController
 				if($week == 'prior')
 				{
                     $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
-                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
                     $responseArray['pages'] = $paginationResponse['pages'];
@@ -349,7 +349,7 @@ class MileageCardController extends BaseActiveController
 				elseif($week == 'current') 
 				{
 					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
-                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
                     $responseArray['pages'] = $paginationResponse['pages'];
@@ -377,7 +377,7 @@ class MileageCardController extends BaseActiveController
 							$mileageCards->orWhere(['ProjectID'=>$projectID]);
 						}
 					}
-                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
                     $responseArray['pages'] = $paginationResponse['pages'];
@@ -393,7 +393,7 @@ class MileageCardController extends BaseActiveController
 							$mileageCards->orWhere(['ProjectID'=>$projectID]);
 						}
 					}
-                    $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
+                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
                     $responseArray['pages'] = $paginationResponse['pages'];
@@ -508,7 +508,8 @@ class MileageCardController extends BaseActiveController
         }
     }
 
-    public function paginationProcessor($assetQuery, $page, $listPerPage){
+    //todo: need to review and remove
+    /*public function paginationProcessor($assetQuery, $page, $listPerPage){
 
         if($page != null)
         {
@@ -529,7 +530,7 @@ class MileageCardController extends BaseActiveController
 
             return $asset;
         }
-    }
+    }*/
 
     // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){
