@@ -144,7 +144,7 @@ class ProjectController extends BaseActiveController
         }
 
         //pass query with pagination data to helper method
-        $paginationResponse = self::paginationProcessor($projects, $page, $listPerPage);
+        $paginationResponse = BaseActiveController::paginationProcessor($projects, $page, $listPerPage);
         //use updated query with pagination
         $projectArr = $paginationResponse['Query']->all();
         $responseArray['pages'] = $paginationResponse['pages'];
