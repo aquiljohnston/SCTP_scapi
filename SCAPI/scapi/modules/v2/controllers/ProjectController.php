@@ -299,10 +299,10 @@ class ProjectController extends BaseActiveController
 	* @returns json containing two user arrays
 	* @throws \yii\web\HttpException
     */	
-	public function actionGetUserRelationships($projectID)
+	public function actionGetUserRelationships($projectID, $filter = null)
 	{
-		try
-		{
+		/*try
+		{*/
 			//set db target
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			
@@ -311,23 +311,39 @@ class ProjectController extends BaseActiveController
 			
 			//get all users for the project
 			$project = Project::findOne($projectID);
-			$assignedUsers = $project->getUsers()
-								->orderBy('UserLastName')
-								->all();
+			$assignedUsers = $project->getUsers();
+            if ($filter != null){
+                $assignedUsers->andFilterWhere([
+                    'or',
+                    ['like', 'UserFirstName', $filter],
+                    ['like', 'UserLastName', $filter],
+                    ['like', 'UserName', $filter],
+                ]);
+            }
+            $assignedUsers = $assignedUsers->orderBy('UserLastName')
+								           ->all();
 			$assignedPairs = [];
 			$assignedSize = count($assignedUsers);
 			
 			//create array of included user id/name pairs
 			for($i=0; $i < $assignedSize; $i++)
 			{
-				$assignedPairs[$assignedUsers[$i]->UserID] = ['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName];
+				$assignedPairs[$assignedUsers[$i]->UserID] = ['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName . " (" . $assignedUsers[$i]->UserName . ")"];
 			}
 			
 			//get all users
 			$allUsers = SCUser::find()
-				->where(['UserActiveFlag' => 1])
-				->orderBy('UserLastName')
-				->all();
+				->where(['UserActiveFlag' => 1]);
+            if ($filter != null){
+                $allUsers->andFilterWhere([
+                    'or',
+                    ['like', 'UserFirstName', $filter],
+                    ['like', 'UserLastName', $filter],
+                    ['like', 'UserName', $filter],
+                ]);
+            }
+            $allUsers = $allUsers->orderBy('UserLastName')
+                                 ->all();
 			
 			$unassignedPairs = [];
 			$unassignedSize = count($allUsers);
@@ -335,7 +351,7 @@ class ProjectController extends BaseActiveController
 			//create array of all user id/name pairs
 			for($i=0; $i < $unassignedSize; $i++)
 			{
-				$unassignedPairs[$allUsers[$i]->UserID]=['content' => $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName];
+				$unassignedPairs[$allUsers[$i]->UserID]=['content' => $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName . " (" . $allUsers[$i]->UserName . ")"];
 			}
 			
 			//filter included pairs
@@ -357,11 +373,11 @@ class ProjectController extends BaseActiveController
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $data;
-		}
+		/*}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
-		}
+		}*/
 	}
 	
 	/**
