@@ -147,10 +147,6 @@ class ActivityController extends BaseActiveController
 							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
 						}
 						
-						$activity = new Activity();
-						$clientActivity = new Activity();
-						$data['activity'][$i]['ActivityCreateDate'] = Parent::getDate();
-						$data['activity'][$i]['ActivityCreatedUserUID'] = $pgeCreatedBy;
 						//handle app version from tablet TODO fix this later so it is consistent between web and tablet
 						if(array_key_exists('AppVersion', $data['activity'][$i]))
 						{
@@ -177,9 +173,26 @@ class ActivityController extends BaseActiveController
 							$mileageLength = count($mileageArray);
 						}
 						
+						$data['activity'][$i]['ActivityCreateDate'] = Parent::getDate();
+						
+						//create data models
+						$activity = new Activity();
+						$clientActivity = new Activity();
+						
 						//load attributes to model
 						$activity->attributes = $data['activity'][$i];
 						$clientActivity->attributes = $activity->attributes;
+						
+						//handle createdby
+						$activity->ActivityCreatedUserUID = (string)$createdBy;
+						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						{
+							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
+						}
+						else
+						{
+							$clientActivity->ActivityCreatedUserUID = (string)$clientCreatedBy;
+						}
 						
 						Activity::setClient(BaseActiveController::urlPrefix());
 						//save activity to ct
@@ -373,11 +386,17 @@ class ActivityController extends BaseActiveController
 			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientActivityID);
 			$responseData['Calibration'] = $calibrationResponse;
 		}
-		//handle creation of new calibration records
+		//handle creation of new inspection records
 		if (array_key_exists('Inspection', $activityData))
 		{
 			$inspectionResponse = InspectionController::processInspection($activityData['Inspection'], $client, $clientActivityID);
 			$responseData['Inspection'] = $inspectionResponse;
+		}
+		//handle creation of new task out records
+		if (array_key_exists('TaskOut', $activityData))
+		{
+			$taskOutResponse = TaskOutController::processTaskOut($activityData['TaskOut'], $client, $clientActivityID);
+			$responseData['TaskOut'] = $taskOutResponse;
 		}
 		
 		return $responseData;

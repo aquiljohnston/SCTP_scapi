@@ -180,7 +180,7 @@ class BaseActiveController extends ActiveController
 		TabletDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new TabletDataInsertArchive;
-		$archiveRecord->CreatedUserUID = $userUID;
+		$archiveRecord->CreatedUserUID = (string)$userUID;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
 		

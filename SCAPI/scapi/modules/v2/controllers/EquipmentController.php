@@ -78,7 +78,7 @@ class EquipmentController extends Controller
 						$calibrationID = $previousCalibration->ID;
 						$successFlag = 1;
 					}
-					$responseArray[] = ['ID' => $calibrationID, 'SerialNumber' => $data[$i]->SerialNumber, 'SuccessFlag' => $successFlag];
+					$responseArray[] = ['ID' => $calibrationID, 'SerialNumber' => $data[$i]['SerialNumber'], 'SuccessFlag' => $successFlag];
 				}
 				catch(\Exception $e)
 				{
