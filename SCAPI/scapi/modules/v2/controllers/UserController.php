@@ -614,7 +614,7 @@ class UserController extends BaseActiveController
 			if ($page != null) 
 			{
 				//pass query with pagination data to helper method
-				$paginationResponse = self::paginationProcessor($userQuery, $page, $listPerPage);
+				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
 				$usersArr = $paginationResponse['Query']->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
@@ -640,12 +640,13 @@ class UserController extends BaseActiveController
         }
     }
 
-    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    //todo: need to review and remove
+/*    public function paginationProcessor($assetQuery, $page, $listPerPage)
     {
 		// set pagination
 		$countAssetQuery = clone $assetQuery;
 		$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-		$pages->pageSizeLimit = [1, 100];
+		$pages->pageSizeLimit = [1, 200];
 		$offset = $listPerPage * ($page - 1);
 		$pages->setPageSize($listPerPage);
 		$pages->pageParam = 'userPage';
@@ -659,7 +660,7 @@ class UserController extends BaseActiveController
 		$asset['Query'] = $assetQuery;
 
 		return $asset;
-    }
+    }*/
 	
 	//creates a copy of the scuser $user
 	//in the project db $client
