@@ -27,7 +27,7 @@ class EquipmentController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					//'create' => ['post'],
+					'delete' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -88,6 +88,74 @@ class EquipmentController extends Controller
 			}
 			//return response data
 			return $responseArray;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionDeleteCalibration()
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true);
+			//create response format
+			$responseData = [];
+			
+			//count number of items to delete
+			$deletedRecords = $data['DeletedCalibration'];
+			$deletedCount = count($deletedRecords);
+			
+			//loop records to be marked deleted
+			for($i = 0; $i < $deletedCount; $i++)
+			{
+				//try catch to log individual errors
+				try
+				{	
+					$successFlag = 0;
+					$calibration = Calibration::find()
+						->where(['ID' => $deletedRecords[$i]['ID']])
+						->andWhere(['<>', 'DeletedFlag', 1])
+						->one();
+					if($calibration != null)
+					{
+						$calibration->DeletedFlag = $deletedRecords[$i]['DeletedFlag'];
+						if($calibration->update())
+						{
+							$successFlag = 1;
+						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($workQueue);
+						}
+					}
+					else{
+						$successFlag = 1;
+					}
+				}
+				catch(\Exception $e)
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
+				}
+				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+			}
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
 		}
         catch(ForbiddenHttpException $e)
         {
