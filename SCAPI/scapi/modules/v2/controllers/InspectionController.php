@@ -8,6 +8,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\WorkQueueController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Inspection;
 use app\modules\v2\models\Event;
@@ -54,6 +55,7 @@ class InspectionController extends Controller
 					$inspectionSuccessFlag = 0;
 					$eventResponse = [];
 					$assetResponse = [];
+					$workQueueResponse = [];
 					$inspectionID = null;
 				
 					$newInspection = new Inspection;
@@ -70,7 +72,8 @@ class InspectionController extends Controller
 						if ($newInspection->save()) {
 							$inspectionSuccessFlag = 1;
 							$inspectionID = $newInspection->ID;
-							//$responseArray[] = ['ID' => $newInspection->ID, 'InspectionTabletID' => $newInspection->InspectionTabletID, 'SuccessFlag' => 1];
+							//set associate work queue to completed (WorkQueueStatus  = 102)
+							$workQueueResponse = WorkQueueController::complete($data[$i]['WorkQueueID'], $data[$i]['WorkQueueStatus'], $client, $data[$i]['CreatedBy'], $data[$i]['CreatedDate']);
 						} else {
 							throw BaseActiveController::modelValidationException($newInspection);
 						}
@@ -81,7 +84,8 @@ class InspectionController extends Controller
 						//send success if Inspection record was already saved previously
 						$inspectionSuccessFlag = 1;
 						$inspectionID = $previousInspection->ID;
-						//$responseArray[] = ['ID' => $previousInspection->ID, 'InspectionTabletID' => $newInspection->InspectionTabletID, 'SuccessFlag' => 1];
+						//set associate work queue to completed (WorkQueueStatus  = 102)
+						$workQueueResponse = WorkQueueController::complete($data[$i]['WorkQueueID'], $data[$i]['WorkQueueStatus'], $client, $data[$i]['CreatedBy'], $data[$i]['CreatedDate']);
 					}
 					//process event data if available
 					if(array_key_exists('Event', $data[$i]))
@@ -98,6 +102,7 @@ class InspectionController extends Controller
 						'ID' => $inspectionID,
 						'InspectionTabletID' => $newInspection->InspectionTabletID,
 						'SuccessFlag' => $inspectionSuccessFlag,
+						'WorkQueue' => $workQueueResponse,
 						'Event' => $eventResponse,
 						'Asset' => $assetResponse];
 				}
@@ -108,6 +113,7 @@ class InspectionController extends Controller
 						'ID' => $inspectionID,
 						'InspectionTabletID' => $data[$i]['InspectionTabletID'],
 						'SuccessFlag' => $inspectionSuccessFlag,
+						'WorkQueue' => $workQueueResponse,
 						'Event' => $eventResponse,
 						'Asset' => $assetResponse];
 				}

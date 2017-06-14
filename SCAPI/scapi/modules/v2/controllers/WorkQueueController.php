@@ -21,7 +21,9 @@ use yii\db\Connection;
 
 class WorkQueueController extends Controller 
 {
-
+	private static $inProgress = 101;
+	private static $completed = 102;
+	
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -101,7 +103,6 @@ class WorkQueueController extends Controller
 	//fuction called by activity to parse and accept work queues
 	public static function accept($data, $client, $modifiedBy)
 	{
-		//TODO add additional logging for incoming json and validation errors
 		try
 		{
 			//set db
@@ -110,33 +111,41 @@ class WorkQueueController extends Controller
 			//create response format
 			$responseData = [];
 			
-			//count number of items to unassign
+			//count number of items to accept
 			$acceptedCount = count($data);
 			
-			//code is sent in json, do we want to send text and lookup code isntead?
-			//get assinged status code
-			//$assignedCode = self::statusCodeLookup('Assigned');
-			
 			//process accepted
-			//nested for loop needed because map grid does not exist in work queue
-			//planned to iterate on this design and change to work order id
 			for($i = 0; $i < $acceptedCount; $i++)
 			{
-				$successFlag = 0;
-				$workQueue = WorkQueue::find()
-					->where(['ID' => $data[$i]['WorkQueueID']])
-					->andWhere(['not in', 'WorkQueueStatus', [101, 102]])
-					->one();
-				if($workQueue != null)
+				//try catch to log individual errors
+				try
 				{
-					$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
-					$workQueue->ModifiedBy = $modifiedBy;
-					$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
-					//if work queue is already accepted and no change exist update will fail and return successFlag of 0
-					if($workQueue->update())
+					$successFlag = 0;
+					$workQueue = WorkQueue::find()
+						->where(['ID' => $data[$i]['WorkQueueID']])
+						->andWhere(['not in', 'WorkQueueStatus', [self::$inProgress, self::$completed]])
+						->one();
+					if($workQueue != null)
 					{
+						$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
+						$workQueue->ModifiedBy = $modifiedBy;
+						$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
+						if($workQueue->update())
+						{
+							$successFlag = 1;
+						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($workQueue);
+						}
+					}
+					else{
 						$successFlag = 1;
 					}
+				}
+				catch(\Exception $e)
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
 				}
 				$responseData[] = [
 					'WorkQueueID' => $data[$i]['WorkQueueID'],
@@ -144,6 +153,64 @@ class WorkQueueController extends Controller
 					'SuccessFlag' => $successFlag
 				];
 			}
+			return $responseData;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	//fuction called by activity to parse and accept work queues
+	public static function complete($workQueueID, $workQueueStatus, $client, $modifiedBy, $modifiedDate)
+	{
+		try
+		{
+			//set db
+			BaseActiveRecord::setClient($client);
+			
+			//create response format
+			$responseData = '';
+			
+			//try catch to log individual errors
+			try
+			{
+				$successFlag = 0;
+				$workQueue = WorkQueue::find()
+					->where(['ID' => $workQueueID])
+					->andWhere(['not in', 'WorkQueueStatus', [self::$completed]])
+					->one();
+				if($workQueue != null)
+				{
+					$workQueue->WorkQueueStatus = $workQueueStatus;
+					$workQueue->ModifiedBy = $modifiedBy;
+					$workQueue->ModifiedDate = $modifiedDate;
+					//if work queue is already accepted and no change exist update will fail and return successFlag of 0
+					if($workQueue->update())
+					{
+						$successFlag = 1;
+					}
+					else
+					{
+						throw BaseActiveController::modelValidationException($workQueue);
+					}
+				}
+				else{
+					$successFlag = 1;
+				}
+			}
+			catch(\Exception $e)
+			{
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueID);
+			}
+			$responseData = [
+				'WorkQueueID' => $workQueueID,
+				'SuccessFlag' => $successFlag
+			];
 			return $responseData;
 		}
         catch(ForbiddenHttpException $e)
