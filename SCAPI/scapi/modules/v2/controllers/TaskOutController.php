@@ -86,7 +86,7 @@ class TaskOutController extends Controller
 						$taskOutID = $previousTaskOut->ID;
 						$successFlag = 1;
 					}
-					$responseArray[] = ['ID' => $taskOutID, 'MapGrid' => $data[$i]->MapGrid, 'SuccessFlag' => $successFlag];
+					$responseArray[] = ['ID' => $taskOutID, 'MapGrid' => $data[$i]['MapGrid'], 'SuccessFlag' => $successFlag];
 				}
 				catch(\Exception $e)
 				{
