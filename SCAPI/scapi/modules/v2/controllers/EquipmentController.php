@@ -131,7 +131,7 @@ class EquipmentController extends Controller
 						->one();
 					if($calibration != null)
 					{
-						$calibration->DeletedFlag = $deletedRecords[$i]['DeletedFlag'];
+						$calibration->DeletedFlag = 1;
 						if($calibration->update())
 						{
 							$successFlag = 1;
