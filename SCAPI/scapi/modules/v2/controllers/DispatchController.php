@@ -13,6 +13,8 @@ use app\modules\v2\models\AvailableWorkOrder;
 use app\modules\v2\models\AvailableWorkOrderByMapGrid;
 use app\modules\v2\models\AvailableWorkOrderBySection;
 use app\modules\v2\models\AssignedWorkQueue;
+use app\modules\v2\models\AssignedWorkQueueByMapGrid;
+use app\modules\v2\models\AssignedWorkQueueBySection;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\WorkOrder;
 use app\modules\v2\models\WorkQueue;
@@ -63,17 +65,24 @@ class DispatchController extends Controller
 					->where(['MapGrid' => $mapGridSelected])
 					->andWhere(['SectionNumber' => $sectionNumberSelected]);
 				
-				/*if($filter != null)
+				if($filter != null)
 				{
 					$assetQuery->andFilterWhere([
 					'or',
+					['like', 'InspectionType', $filter],
+					['like', 'HouseNumber]', $filter],
+					['like', 'Street', $filter],
+					['like', 'AptSuite', $filter],
+					['like', 'City', $filter],
+					['like', 'State', $filter],
+					['like', 'Zip', $filter],
+					['like', 'MeterNumber', $filter],
 					['like', 'MapGrid', $filter],
 					['like', 'ComplianceStart', $filter],
 					['like', 'ComplianceEnd', $filter],
-					['like', 'InspectionAttemptCounter', $filter],
-					['like', 'AvailableWorkOrderCount', $filter]
+					['like', 'SectionNumber', $filter],
 					]);
-				}*/
+				}
 			}
 			elseif($mapGridSelected != null)
 			{
@@ -96,7 +105,7 @@ class DispatchController extends Controller
 					['like', 'ComplianceStart', $filter],
 					['like', 'ComplianceEnd', $filter],
 					['like', 'InspectionAttemptCounter', $filter],
-					['like', 'AvailableWorkOrderCount', $filter]
+					['like', 'AvailableWorkOrderCount', $filter],
 					]);
 				}
 			}
@@ -106,10 +115,10 @@ class DispatchController extends Controller
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
-				$assets = $paginationResponse['Query']->orderBy($orderBy)
+				$data = $paginationResponse['Query']->orderBy($orderBy)
 				->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray[$envelope] = $assets;
+				$responseArray[$envelope] = $data;
 			}
 			
 			//create response object
@@ -262,7 +271,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssigned($mapGridSelected = null, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -271,34 +280,70 @@ class DispatchController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-			
-			$assetQuery = AssignedWorkQueue::find()->where(['CompletedFlag' => 0]);
-			
-			// if($filter != null)
-			// {
-				// $assetQuery->andFilterWhere([
-				// 'or',
-				// ['like', 'Division', $filter],
-				// ['like', 'WorkCenter', $filter],
-				// ['like', 'SurveyType', $filter],
-				// ['like', 'FLOC', $filter],
-				// ['like', 'Notification ID', $filter],
-				// ['like', 'ComplianceDueDate', $filter],
-				// ['like', 'SAP Released', $filter],
-				// ['like', 'ComplianceYearMonth', $filter],
-				// ['like', 'PreviousServices', $filter],
-				// ]);
-			// }
+			if($mapGridSelected != null && $sectionNumberSelected !=null)
+			{
+				$orderBy = 'ComplianceEnd';
+				$envelope = 'assets';
+				$assetQuery = AssignedWorkQueue::find()
+					->where(['MapGrid' => $mapGridSelected])
+					->andWhere(['SectionNumber' => $sectionNumberSelected]);
+				
+				if($filter != null)
+				{
+					$assetQuery->andFilterWhere([
+					'or',
+					['like', 'InspectionType', $filter],
+					['like', 'HouseNumber', $filter],
+					['like', 'Street', $filter],
+					['like', 'AptSuite', $filter],
+					['like', 'City', $filter],
+					['like', 'State', $filter],
+					['like', 'Zip', $filter],
+					['like', 'MeterNumber', $filter],
+					['like', 'MapGrid', $filter],
+					['like', 'ComplianceStart', $filter],
+					['like', 'ComplianceEnd', $filter],
+					['like', 'SectionNumber', $filter],
+					['like', 'AssignedTo', $filter],
+					]);
+				}
+			}
+			elseif($mapGridSelected != null)
+			{
+				$orderBy = 'SectionNumber';
+				$envelope = 'sections';
+				$assetQuery = AssignedWorkQueueBySection::find()
+					->where(['MapGrid' => $mapGridSelected]);
+			}
+			else
+			{
+				$orderBy = 'ComplianceEnd';
+				$envelope = 'mapGrids';
+				$assetQuery = AssignedWorkQueueByMapGrid::find();
+				
+				if($filter != null)
+				{
+					$assetQuery->andFilterWhere([
+					'or',
+					['like', 'MapGrid', $filter],
+					['like', 'ComplianceStart', $filter],
+					['like', 'ComplianceEnd', $filter],
+					['like', 'InspectionAttemptCounter', $filter],
+					['like', 'AssignedWorkOrderCount', $filter],
+					['like', 'SearchString', $filter],
+					]);
+				}
+			}
 			
 			if($page != null)
 			{
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
-				$assets = $paginationResponse['Query']->orderBy('ComplianceEnd')
+				$data = $paginationResponse['Query']->orderBy($orderBy)
 				->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray['assets'] = $assets;
+				$responseArray[$envelope] = $data;
 			}
 			
 			//create response object
