@@ -399,7 +399,7 @@ class DispatchController extends Controller
 		//build query to get work orders based on map grid and section(optional)
 		if($workOrder == null)
 		{
-			$workOrdersQuery = WorkOrder::find()
+			$workOrdersQuery = AvailableWorkOrder::find()
 				->where(['MapGrid' => $mapGrid]);
 			if($section != null)
 			{
@@ -408,8 +408,8 @@ class DispatchController extends Controller
 		}
 		else
 		{
-			$workOrdersQuery = WorkOrder::find()
-				->where(['ID' => $workOrder]);
+			$workOrdersQuery = AvailableWorkOrder::find()
+				->where(['WorkOrderID' => $workOrder]);
 		}
 		$workOrders = $workOrdersQuery->all();
 		
@@ -423,8 +423,7 @@ class DispatchController extends Controller
 				
 				//check for existing records
 				$assignedWork = WorkQueue::find()
-					->where(['WorkOrderID' => $workOrders[$i]['ID']])
-					->andWhere(['AssignedUserID' => $userID])
+					->where(['WorkOrderID' => $workOrders[$i]->WorkOrderID])
 					->count();
 				//if no record exist create one
 				if($assignedWork < 1)
@@ -432,7 +431,7 @@ class DispatchController extends Controller
 					$newAssignment = new WorkQueue;
 					$newAssignment->CreatedBy = $createdBy;
 					$newAssignment->CreatedDate = BaseActiveController::getDate();
-					$newAssignment->WorkOrderID = $workOrders[$i]->ID;
+					$newAssignment->WorkOrderID = $workOrders[$i]->WorkOrderID;
 					$newAssignment->AssignedUserID = $userID;
 					$newAssignment->WorkQueueStatus = $assignedCode;
 					$newAssignment->SectionNumber = $workOrders[$i]->SectionNumber;
@@ -449,27 +448,28 @@ class DispatchController extends Controller
 				{
 					$successFlag = 1;
 				}
-				//TODO review response structure
-				$resultsData = [
-					'MapGrid' => $workOrders[$i]->MapGrid,
-					'AssignedUserID' => $userID,
-					'SectionNumber' => $workOrders[$i]->SectionNumber,
-					'WorkOrderID' => $workOrders[$i]->ID,
-					'SuccessFlag' => $successFlag
-				];
-				//add to results
-				$results[$userID][$workOrders[$i]->MapGrid][$workOrders[$i]->SectionNumber][] = $resultsData;
 			}
 			catch(\Exception $e)
 			{
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
-				$results[] = [
-						'MapGrid' => $mapGrid,
-						'AssignedUserID' => $userID,
-						'WorkOrderID' => $workOrders[$i]->ID,
-						'SuccessFlag' => $successFlag
-				];
 			}
+			$results[] = [
+				'MapGrid' => $workOrders[$i]->MapGrid,
+				'AssignedUserID' => $userID,
+				'SectionNumber' => $workOrders[$i]->SectionNumber,
+				'WorkOrderID' => $workOrders[$i]->WorkOrderID,
+				'SuccessFlag' => $successFlag
+			];
+		}
+		if($workOrdersCount == 0)
+		{
+			$results[] = [
+				'MapGrid' => $mapGrid,
+				'AssignedUserID' => $userID,
+				'SectionNumber' => $section,
+				'WorkOrderID' => $workOrder,
+				'SuccessFlag' => 1
+			];
 		}
 		
 		return $results;
