@@ -87,7 +87,10 @@ class ReportsController extends Controller {
 		{	
 			if($startDate == null && $endDate != null)
 			{
-				$queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
+			    if ($reportID != null)
+				    $queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
+                else
+                    $queryString = "EXEC " . $reportName ;
 				
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();
