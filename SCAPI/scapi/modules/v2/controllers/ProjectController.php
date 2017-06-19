@@ -299,8 +299,8 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionGetUserRelationships($projectID, $filter = null)
 	{
-		/*try
-		{*/
+		try
+		{
 			//set db target
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			
@@ -371,11 +371,11 @@ class ProjectController extends BaseActiveController
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $data;
-		/*}
+		}
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
-		}*/
+		}
 	}
 	
 	/**
