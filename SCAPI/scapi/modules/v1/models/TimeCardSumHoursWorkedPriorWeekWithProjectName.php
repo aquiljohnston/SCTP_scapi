@@ -5,7 +5,7 @@ namespace app\modules\v1\models;
 use Yii;
 
 /**
- * This is the model class for table "TimeCardSumHoursWorkedPriorWeekWithProjectNameNew_vw".
+ * This is the model class for table "TimeCardSumHoursWorkedPriorWeekWithProjectName_vw".
  *
  * @property integer $TimeCardID
  * @property integer $UserID
@@ -24,7 +24,7 @@ use Yii;
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardSupervisorName
  */
-class TimeCardSumHoursWorkedPriorWeekWithProjectNameNew extends BaseActiveRecord
+class TimeCardSumHoursWorkedPriorWeekWithProjectName extends BaseActiveRecord
 {
     /**
      * @inheritdoc

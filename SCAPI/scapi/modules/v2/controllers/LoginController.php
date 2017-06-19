@@ -3,9 +3,9 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\models\Auth;
-use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Auth;
+use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\CTUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
