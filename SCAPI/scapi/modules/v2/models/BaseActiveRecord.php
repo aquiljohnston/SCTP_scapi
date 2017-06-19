@@ -39,7 +39,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//york user model
 	const YORK_USER = self::BASE_USER;
 	//york auth manager
-	const YORK_AUTH = 'app\rbac\YorkDbManager';
+	const YORK_AUTH = 'app\rbac\ClientDbManager';
 	
 	//beta client database
 	const BETA_DEV = 'betadev';
