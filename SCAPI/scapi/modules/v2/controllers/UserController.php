@@ -2,19 +2,20 @@
 
 namespace app\modules\v2\controllers;
 
+use app\modules\v2\models\Auth;
 use Yii;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\models\Project;
-use app\modules\v1\models\Client;
-use app\modules\v1\models\ProjectUser;
-use app\modules\v1\models\ActivityCode;
-use app\modules\v1\models\Equipment;
-use app\modules\v1\models\PayCode;
-use app\modules\v1\models\AllTimeCardsCurrentWeek;
-use app\modules\v1\models\AllMileageCardsCurrentWeek;
-use app\modules\v1\models\BaseActiveRecord;
-use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\controllers\PermissionsController;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Project;
+use app\modules\v2\models\Client;
+use app\modules\v2\models\ProjectUser;
+use app\modules\v2\models\ActivityCode;
+use app\modules\v2\models\Equipment;
+use app\modules\v2\models\PayCode;
+use app\modules\v2\models\AllTimeCardsCurrentWeek;
+use app\modules\v2\models\AllMileageCardsCurrentWeek;
+use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\PermissionsController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -33,7 +34,7 @@ use yii\data\Pagination;
  */
 class UserController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v1\models\SCUser';
+    public $modelClass = 'app\modules\v2\models\SCUser';
 
     /**
      * sets verb filters for http request
@@ -342,7 +343,7 @@ class UserController extends BaseActiveController
     /**
      * Updates the active flag of a user to 0 for inactive
      * @param $userID id of the user record
-     * @returns json body of user data
+     * @returns Response json body of user data
      * @throws \yii\web\HttpException
      */
     public function actionDeactivate($userID)
@@ -372,6 +373,8 @@ class UserController extends BaseActiveController
                 $userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
                 $userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
                 $userDeactivateCommand->execute();
+                //Log out user so that they don't receive 403s if loggedin or deactivating self
+                Auth::findOne(["AuthUserID" => $userID])->delete();
                 $response->data = $user;
             } catch (Exception $e) {
                 $response->setStatusCode(400);
@@ -490,28 +493,36 @@ class UserController extends BaseActiveController
                 }, $payCodes);
                 for ($j = 0; $j < $activityCodesLength; $j++) {
                     //get payroll code
-                    $activityCodesArray[$j]["PayrollCode"] = "TODO";
+                    $activityCodesArray[$j]['PayrollCode'] = 'TODO';
                 }
-
+				
+				//get project
                 $projectModel = Project::findOne($projectID);
+				
+				//get user id for project
+				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
+				
+				//set client back to ct after external call
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
-                $projectData["ProjectID"] = $projectModel->ProjectID;
-                $projectData["ProjectName"] = $projectModel->ProjectName;
-                $projectData["ProjectClientID"] = $projectModel->ProjectClientID;
-                $projectData["ProjectClientPath"] = $clientModel->ClientFilesPath;
-                $projectData["TimeCard"] = $timeCardModel;
-                $projectData["MileageCard"] = $mileageCardModel;
-                $projectData["ActivityCodes"] = $activityCodesArray;
-                $projectData["PayCodes"] = $payCodesArray;
+                $projectData['ProjectID'] = $projectModel->ProjectID;
+                $projectData['ProjectName'] = $projectModel->ProjectName;
+                $projectData['ProjectClientID'] = $projectModel->ProjectClientID;
+                $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
+				$projectData['ProjectUserID'] = $projectUserID;
+                $projectData['TimeCard'] = $timeCardModel;
+                $projectData['MileageCard'] = $mileageCardModel;
+                $projectData['ActivityCodes'] = $activityCodesArray;
+                $projectData['PayCodes'] = $payCodesArray;
 
                 $projects[] = $projectData;
             }
 
             //load data into array
             $dataArray = [];
-            $dataArray["User"] = $user;
-            $dataArray["Projects"] = $projects;
-            $dataArray["Equipment"] = $equipment;
+            $dataArray['User'] = $user;
+            $dataArray['Projects'] = $projects;
+            $dataArray['Equipment'] = $equipment;
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -573,9 +584,10 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($filter = null, $listPerPage = null, $page = null)
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null)
     {
         try {
+
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -602,7 +614,7 @@ class UserController extends BaseActiveController
 			if ($page != null) 
 			{
 				//pass query with pagination data to helper method
-				$paginationResponse = self::paginationProcessor($userQuery, $page, $listPerPage);
+				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
 				$usersArr = $paginationResponse['Query']->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
@@ -628,12 +640,13 @@ class UserController extends BaseActiveController
         }
     }
 
-    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    //todo: need to review and remove
+/*    public function paginationProcessor($assetQuery, $page, $listPerPage)
     {
 		// set pagination
 		$countAssetQuery = clone $assetQuery;
 		$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-		$pages->pageSizeLimit = [1, 100];
+		$pages->pageSizeLimit = [1, 200];
 		$offset = $listPerPage * ($page - 1);
 		$pages->setPageSize($listPerPage);
 		$pages->pageParam = 'userPage';
@@ -647,7 +660,7 @@ class UserController extends BaseActiveController
 		$asset['Query'] = $assetQuery;
 
 		return $asset;
-    }
+    }*/
 	
 	//creates a copy of the scuser $user
 	//in the project db $client

@@ -290,6 +290,7 @@ class PgeRbacController extends Controller
 		
 		///////////////////////////assign roles to existing users////////////////////////////////////////
 		$users = PGEUser::find()
+				->where(['UserInActiveFlag' => 0])
 				->all();
 		
 		$userSize = count($users);
