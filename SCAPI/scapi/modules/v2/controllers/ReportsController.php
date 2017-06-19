@@ -87,10 +87,7 @@ class ReportsController extends Controller {
 		{	
 			if($startDate == null && $endDate != null)
 			{
-			    if ($reportID != null)
-				    $queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
-                else
-                    $queryString = "EXEC " . $reportName ;
+                $queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
 				
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();
@@ -104,7 +101,7 @@ class ReportsController extends Controller {
 			}
 			elseif($startDate == null && $endDate == null)
 			{
-				$queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'";
+				$queryString = "SET NOCOUNT ON; EXEC " . $reportName ;
 				
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();
