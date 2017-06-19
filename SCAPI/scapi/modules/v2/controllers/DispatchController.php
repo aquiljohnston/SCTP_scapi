@@ -198,6 +198,7 @@ class DispatchController extends Controller
 			$responseData = [];
 			$responseData['dispatchMap'] = [];
 			$responseData['dispatchSection'] = [];
+			$responseData['dispatchAsset'] = [];
 			$mapCount = 0;
 			$sectionCount = 0;
 			$assetCount = 0;
@@ -375,44 +376,63 @@ class DispatchController extends Controller
 			$data = json_decode($body, true);
 			//create response format
 			$responseData = [];
+			$responseData['unassignMap'] = [];
+			$responseData['unassignSection'] = [];
+			$responseData['unassignAsset'] = [];
+			$mapCount = 0;
+			$sectionCount = 0;
+			$assetCount = 0;
 			
-			//count number of items to unassign
-			$unassignCount = count($data['data']);
+			//check if items exist to unassign by map, and get map count
+			if(array_key_exists('unassignMap', $data))
+			{
+				$mapCount = count($data['unassignMap']);
+			}
+			//check if items exist to unassign by section, and get section count
+			if(array_key_exists('unassignSection', $data))
+			{
+				$sectionCount = count($data['unassignSection']);
+			}
+			//check if items exist to unassign by asset, and get asset count
+			if(array_key_exists('unassignAsset', $data))
+			{
+				$assetCount = count($data['unassignAsset']);
+			}
 			
 			//get assinged status code
 			$assignedCode = self::statusCodeLookup('Assigned');
 			
-			//process unassign
-			//nested for loop needed because map grid does not exist in work queue
-			//planned to iterate on this design and change to work order id
-			for($i = 0; $i < $unassignCount; $i++)
+			//process unassignMap
+			for($i = 0; $i < $mapCount; $i++)
 			{
-				$workOrders = WorkOrder::find()
-					->where(['MapGrid' => $data['data'][$i]['MapGrid']])
-					->all();
-				$workOrdersCount = count($workOrders);
-				for($j = 0; $j < $workOrdersCount; $j++)
-				{
-					$successFlag = 0;
-					$workQueue = WorkQueue::find()
-						->where(['WorkOrderID' => $workOrders[$j]->ID])
-						->andWhere(['AssignedUserID' => $data['data'][$i]['AssignedUserID']])
-						->andWhere(['WorkQueueStatus' => $assignedCode])
-						->one();
-					if($workQueue != null)
-					{
-						if($workQueue->delete())
-						{
-							$successFlag = 1;
-						}
-						$responseData[$data['data'][$i]['AssignedUserID']][$data['data'][$i]['MapGrid']] = [
-							'MapGrid' => $data['data'][$i]['MapGrid'],
-							'AssignedUserID' => $data['data'][$i]['AssignedUserID'],
-							'WorkOrderID' => $workOrders[$j]->ID,
-							'SuccessFlag' => $successFlag
-						];
-					}
-				}
+				$results = self::processUnassigned(
+					$data['unassignMap'][$i]['AssignedUserID'],
+					$data['unassignMap'][$i]['MapGrid']
+				);
+				$responseData['unassignMap'][] = $results;
+			}
+			
+			//process unassignSection
+			for($i = 0; $i < $sectionCount; $i++)
+			{
+				$results = self::processUnassigned(
+					$data['unassignSection'][$i]['AssignedUserID'],
+					$data['unassignSection'][$i]['MapGrid'],
+					$data['unassignSection'][$i]['SectionNumber']
+				);
+				$responseData['unassignSection'][] = $results;
+			}
+			
+			//process unassign unassignAsset
+			for($i = 0; $i < $assetCount; $i++)
+			{
+				$results = self::processUnassigned(
+					$data['unassignAsset'][$i]['AssignedUserID'],
+					null,
+					null,
+					$data['unassignAsset'][$i]['WorkOrderID']
+				);
+				$responseData['unassignAsset'][] = $results;
 			}
 			//send response
 			$response = Yii::$app->response;
@@ -518,6 +538,40 @@ class DispatchController extends Controller
 		}
 		
 		return $results;
+	}
+	
+	private static function processUnassigned($userID, $mapGrid = null, $section = null, $workOrder = null)
+	{
+		$successFlag = 0;
+		try{
+			$connection = BaseActiveRecord::getDb();
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :AssignedUseID,:MapGrid, :SectionNum , :WorkOrderID");
+			$processJSONCommand->bindParam(':AssignedUseID', $userID,  \PDO::PARAM_INT);
+			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
+			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
+			$processJSONCommand->execute();
+			$successFlag = 1;
+		}
+		catch(\Exception $e)
+		{
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
+			'AssignedUserID' => $userID,
+			'MapGrid' => $mapGrid,
+			'SectionNumber' => $section,
+			'WorkOrderID' => $workOrder,
+			'SuccessFlag' => $successFlag
+			]);
+		}
+		
+		//build response format
+		return [
+			'AssignedUserID' => $userID,
+			'MapGrid' => $mapGrid,
+			'SectionNumber' => $section,
+			'WorkOrderID' => $workOrder,
+			'SuccessFlag' => $successFlag
+		];
 	}
 	
 	//helper method gets status code based on StatusDescription
