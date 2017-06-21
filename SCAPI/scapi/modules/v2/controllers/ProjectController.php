@@ -8,6 +8,7 @@ use app\modules\v2\models\Project;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\MenusModuleMenu;
+use app\modules\v2\models\BaseActiveRecord;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
@@ -392,7 +393,7 @@ class ProjectController extends BaseActiveController
 		try
 		{
 			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			//RBAC permission check
 			PermissionsController::requirePermission('projectAddRemoveUsers');
@@ -425,54 +426,14 @@ class ProjectController extends BaseActiveController
 			//loop usersAdded and create relationships and cards
 			foreach($usersAdded as $i)
 			{
-				SCUser::setClient(BaseActiveController::urlPrefix());
+				//find user
 				$user = SCUser::findOne($i);
-				$user->link('projects',$project);
+				//create user in project db
 				UserController::createInProject($user, $project->ProjectUrlPrefix);
 				//reset target db after external call
-				Project::setClient(BaseActiveController::urlPrefix());
-				//call sps to create new time cards and mileage cards
-				try
-				{
-					$userID = $i;
-					$connection = SCUser::getDb();
-					$transaction = $connection-> beginTransaction();
-					$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
-					$timeCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
-					$timeCardCommand->execute();
-					$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
-					$mileageCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
-					$mileageCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
-					$mileageCardCommand->execute();
-					$transaction->commit();
-					
-				}
-				catch(Exception $e)
-				{
-					$transaction->rollBack();
-				}
-				//call sps to ensure time/mileage cards are active.
-				try
-				{
-					$userID = $i;
-					$connection = SCUser::getDb();
-					$transaction = $connection-> beginTransaction();
-					$timeCardCommand = $connection->createCommand("EXECUTE ActivateTimeCardByUserByProject_proc :UserParam,:ProjectParam");
-					$timeCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
-					$timeCardCommand->execute();
-					$mileageCardCommand = $connection->createCommand("EXECUTE ActivateMileageCardByUserByProject_proc :UserParam ,:ProjectParam");
-					$mileageCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
-					$mileageCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
-					$mileageCardCommand->execute();
-					$transaction->commit();
-					
-				}
-				catch(Exception $e)
-				{
-					$transaction->rollBack();
-				}
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				//fucntion call to add to project
+				self::addToProject($user, $project);
 			}
 			
 			//loop usersRemoved and delete relationships and deactivate cards
@@ -517,6 +478,62 @@ class ProjectController extends BaseActiveController
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public static function addToProject($user, $project = null)
+	{
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		if($project == null)
+		{
+			$headers = getallheaders();
+			$project = Project::find()
+				->where(['ProjectUrlPrefix' => $headers['X-Client']])
+				->one();
+		}
+		$userID = $user->UserID;
+		$projectID = $project->ProjectID;
+		//link user to project
+		$user->link('projects',$project);
+		//call sps to create new time cards and mileage cards
+		try
+		{
+			$connection = SCUser::getDb();
+			$transaction = $connection-> beginTransaction();
+			$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
+			$timeCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
+			$timeCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
+			$timeCardCommand->execute();
+			$mileageCardCommand = $connection->createCommand("EXECUTE PopulateMileageCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
+			$mileageCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
+			$mileageCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
+			$mileageCardCommand->execute();
+			$transaction->commit();
+			
+		}
+		catch(Exception $e)
+		{
+			$transaction->rollBack();
+		}
+		//call sps to ensure time/mileage cards are active.
+		try
+		{
+			$connection = SCUser::getDb();
+			$transaction = $connection-> beginTransaction();
+			$timeCardCommand = $connection->createCommand("EXECUTE ActivateTimeCardByUserByProject_proc :UserParam,:ProjectParam");
+			$timeCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
+			$timeCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
+			$timeCardCommand->execute();
+			$mileageCardCommand = $connection->createCommand("EXECUTE ActivateMileageCardByUserByProject_proc :UserParam ,:ProjectParam");
+			$mileageCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
+			$mileageCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
+			$mileageCardCommand->execute();
+			$transaction->commit();
+			
+		}
+		catch(Exception $e)
+		{
+			$transaction->rollBack();
 		}
 	}
 

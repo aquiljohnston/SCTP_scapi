@@ -16,6 +16,7 @@ use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
+use app\modules\v2\controllers\ProjectController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -78,13 +79,16 @@ class UserController extends BaseActiveController
 	//use DeleteMethodNotAllowed;
 
     /**
-     * Creates a new user record in the database and a corresponding key record
+     * Creates a new user record in the database
      * @returns json body of the user data
      * @throws \yii\web\HttpException
      */
     public function actionCreate()
     {
         try {
+			//set db
+			$headers = getallheaders();
+			$client = $headers['X-Client'];
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -145,6 +149,7 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
+				self::createInProject($user, $client);
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
                 $response->data = $user;
@@ -639,28 +644,6 @@ class UserController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
-
-    //todo: need to review and remove
-/*    public function paginationProcessor($assetQuery, $page, $listPerPage)
-    {
-		// set pagination
-		$countAssetQuery = clone $assetQuery;
-		$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-		$pages->pageSizeLimit = [1, 200];
-		$offset = $listPerPage * ($page - 1);
-		$pages->setPageSize($listPerPage);
-		$pages->pageParam = 'userPage';
-		$pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
-		
-		//append pagination clause to query
-		$assetQuery->offset($offset)
-			->limit($listPerPage);
-
-		$asset['pages'] = $pages;
-		$asset['Query'] = $assetQuery;
-
-		return $asset;
-    }*/
 	
 	//creates a copy of the scuser $user
 	//in the project db $client
@@ -684,8 +667,6 @@ class UserController extends BaseActiveController
 		//create a new user model based on project 
 		$projectUser = new $userModel();
 		
-		//set userid to null to allow auto increment on sql
-		$user->UserID = null;
 		//pass $user attributes into new model
 		$projectUser->attributes = $user->attributes;
 		//set comment created on addition to project
@@ -700,6 +681,8 @@ class UserController extends BaseActiveController
 			if ($userRole = $auth->getRole($projectUser['UserAppRoleType'])) {
 				$auth->assign($userRole, $projectUser['UserID']);
 			}
+			//add user to project to generate time/mileage cards
+			ProjectController::addToProject($user);
 		}
 		return;
 	}
