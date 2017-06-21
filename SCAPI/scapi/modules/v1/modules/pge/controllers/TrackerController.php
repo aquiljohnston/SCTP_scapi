@@ -231,54 +231,44 @@ class TrackerController extends Controller
                 if ($timeInterval>30) {
                     $timeInterval = 30;
                 }
-                if ($timeInterval>0){
-                    $query->from([
-                        'th'=>'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
-                    ]);
-                    $query->addParams([
-                        ':timeInterval' => $timeInterval,
-                        ':startDate' => $startDate,
-                        ':endDate' => $endDate
-                    ]);
-                } else {
-                    $query->from([
-                        'th'=>'['.WebManagementTrackerHistory::tableName().']',
-                    ]);
-                }
+                $query->from([
+                    'th' => 'fnWebManagementTrackerHistoryFilteredByTimeInterval(:timeInterval, :startDate, :endDate)',
+                ]);
+                $query->addParams([
+                    ':timeInterval' => $timeInterval,
+                    ':startDate' => $startDate,
+                    ':endDate' => $endDate
+                ]);
+
 
                 $query->select([
                     'th.UID',
-                    'tb.LanID as Inspector',
-                    'tb.SrcDTLT as Datetime',
+                    'th.Inspector as Inspector',
+                    'th.DateTime as Datetime',
                     'th.[Date]',
                     'th.[House No] as [House No]',
                     'th.Street',
                     'th.City',
                     'th.State',
-                    'tb.Latitude as Latitude',
-                    'tb.Longitude as Longitude',
-                    'tb.Speed as Speed',
-                    'tb.GPSAccuracy as Accuracy'
+                    'th.Latitude as Latitude',
+                    'th.Longitude as Longitude',
+                    'th.Speed as Speed',
+                    'th.Accuracy as Accuracy'
                 ]);
-
-                $query->innerJoin(
-                    ['tb'=>WebManagementTrackerBreadcrumbs::tableName()],
-                    '[th].[UID]=[tb].[UID]'
-                );
 
                 $query = $this->addTrackerHistoryTableViewFiltersToQuery($query, $division, $workCenter, $startDate, $endDate, $surveyors, $search);
 
                 if (null!=$minLat){
-                    $query->andWhere(['>=','tb.Latitude',$minLat]);
+                    $query->andWhere(['>=','th.Latitude',$minLat]);
                 }
                 if (null!=$maxLat){
-                    $query->andWhere(['<=','tb.Latitude',$maxLat]);
+                    $query->andWhere(['<=','th.Latitude',$maxLat]);
                 }
                 if (null!=$minLong){
-                    $query->andWhere(['>=','tb.Longitude',$minLong]);
+                    $query->andWhere(['>=','th.Longitude',$minLong]);
                 }
                 if (null!=$maxLong){
-                    $query->andWhere(['<=','tb.Longitude',$maxLong]);
+                    $query->andWhere(['<=','th.Longitude',$maxLong]);
                 }
 
                 $query->distinct();
@@ -287,8 +277,8 @@ class TrackerController extends Controller
                     //'th.UID' => SORT_ASC,
                     //'[th].[SurveyorLANID]' => SORT_ASC,
                     //'[th].[Date Time]' => SORT_ASC,
-                    'tb.LanID' => SORT_ASC,
-                    'tb.SrcDTLT' => SORT_ASC,
+                    'th.Inspector' => SORT_ASC,
+                    'th.DateTime' => SORT_ASC,
 
                 ]);
 
@@ -299,9 +289,6 @@ class TrackerController extends Controller
                 $queryCommand= $query->offset($offset)
                     ->limit($limit)
                     ->createCommand();
-                // $sqlString = $queryCommand->sql;
-                // $sqlString = $queryCommand->rawSql;
-                // Yii::trace(print_r($sqlString,true).PHP_EOL.PHP_EOL.PHP_EOL);
 
                 $reader = $queryCommand->query(); // creates a reader so that information can be processed one row at a time
 
