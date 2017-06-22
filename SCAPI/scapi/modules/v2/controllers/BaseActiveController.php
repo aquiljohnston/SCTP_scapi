@@ -244,4 +244,11 @@ class BaseActiveController extends ActiveController
 
         return $asset;
     }
+	
+	public static function isSCCT($client)
+	{
+		return ($client == BaseActiveRecord::SCCT_DEV ||
+		$client == BaseActiveRecord::SCCT_STAGE ||
+		$client == BaseActiveRecord::SCCT_PROD);
+	}
 }
