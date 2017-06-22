@@ -322,6 +322,11 @@ class MileageCardController extends BaseActiveController
 		// RBAC permission check is embedded in this action	
 		try
 		{
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
 			//set db target headers
 			MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 			
@@ -334,73 +339,101 @@ class MileageCardController extends BaseActiveController
             $mileageCardsArr = [];
             $responseArray = [];
 			
-			//rbac permission check
-			if (PermissionsController::can('mileageCardGetAllCards'))
+			//if is scct website get all or own
+			if(BaseActiveController::isSCCT($client))
 			{
+				//rbac permission check
+				if (PermissionsController::can('mileageCardGetAllCards'))
+				{
+					//check if week is prior or current to determine appropriate view
+					if($week == 'prior')
+					{
+						$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
+						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+						$responseArray['assets'] = $mileageCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+					} 
+					elseif($week == 'current') 
+					{
+						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
+						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+						$responseArray['assets'] = $mileageCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+					}
+				} 
+				//rbac permission check
+				elseif(PermissionsController::can('mileageCardGetOwnCards'))		
+				{
+					$userID = self::getUserFromToken()->UserID;
+					//get user project relations array
+					$projects = ProjectUser::find()
+						->where("ProjUserUserID = $userID")
+						->all();
+					$projectsSize = count($projects);
+					
+					//check if week is prior or current to determine appropriate view
+					if($week == 'prior' && $projectsSize > 0)
+					{
+						$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+						if($projectsSize > 1)
+						{
+							for($i=1; $i < $projectsSize; $i++)
+							{
+								$projectID = $projects[$i]->ProjUserProjectID;
+								$mileageCards->orWhere(['ProjectID'=>$projectID]);
+							}
+						}
+						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+						$responseArray['assets'] = $mileageCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+					} 
+					elseif($week == 'current' && $projectsSize > 0)
+					{
+						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+						if($projectsSize > 1)
+						{
+							for($i=1; $i < $projectsSize; $i++)
+							{
+								$projectID = $projects[$i]->ProjUserProjectID;
+								$mileageCards->orWhere(['ProjectID'=>$projectID]);
+							}
+						}
+						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+						$responseArray['assets'] = $mileageCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+					}
+				}
+				else{
+					throw new ForbiddenHttpException;
+				}
+			}
+			else // get only cards for the current project.
+			{
+				//get project based on client header
+				$project = Project::find()
+					->where(['ProjectUrlPrefix' => $client])
+					->one();
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
 				{
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
-                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-                    $responseArray['assets'] = $mileageCardsArr;
-                    $responseArray['pages'] = $paginationResponse['pages'];
+					$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
+					$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+					$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+					$responseArray['assets'] = $mileageCardsArr;
+					$responseArray['pages'] = $paginationResponse['pages'];
 				} 
-				elseif($week == 'current') 
+				elseif($week == 'current')
 				{
-					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
-                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-                    $responseArray['assets'] = $mileageCardsArr;
-                    $responseArray['pages'] = $paginationResponse['pages'];
+					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
+					$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+					$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+					$responseArray['assets'] = $mileageCardsArr;
+					$responseArray['pages'] = $paginationResponse['pages'];
 				}
-			} 
-			//rbac permission check
-			elseif(PermissionsController::can('mileageCardGetOwnCards'))		
-			{
-				$userID = self::getUserFromToken()->UserID;
-				//get user project relations array
-				$projects = ProjectUser::find()
-					->where("ProjUserUserID = $userID")
-					->all();
-				$projectsSize = count($projects);
-				
-				//check if week is prior or current to determine appropriate view
-				if($week == 'prior' && $projectsSize > 0)
-				{
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					if($projectsSize > 1)
-					{
-						for($i=1; $i < $projectsSize; $i++)
-						{
-							$projectID = $projects[$i]->ProjUserProjectID;
-							$mileageCards->orWhere(['ProjectID'=>$projectID]);
-						}
-					}
-                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-                    $responseArray['assets'] = $mileageCardsArr;
-                    $responseArray['pages'] = $paginationResponse['pages'];
-				} 
-				elseif($week == 'current' && $projectsSize > 0)
-				{
-                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					if($projectsSize > 1)
-					{
-						for($i=1; $i < $projectsSize; $i++)
-						{
-							$projectID = $projects[$i]->ProjUserProjectID;
-							$mileageCards->orWhere(['ProjectID'=>$projectID]);
-						}
-					}
-                    $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-                    $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-                    $responseArray['assets'] = $mileageCardsArr;
-                    $responseArray['pages'] = $paginationResponse['pages'];
-				}
-			}
-			else{
-				throw new ForbiddenHttpException;
 			}
 			if (!empty($responseArray['assets']))
 			{
