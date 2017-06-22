@@ -335,7 +335,6 @@ class MileageCardController extends BaseActiveController
 			$response-> format = Response::FORMAT_JSON;
 			
 			//response array of mileage cards
-			$mileageCardArray = [];
             $mileageCardsArr = [];
             $responseArray = [];
 			
