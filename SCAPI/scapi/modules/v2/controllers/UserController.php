@@ -687,6 +687,8 @@ class UserController extends BaseActiveController
 		$projectUser->attributes = $user->attributes;
 		//set comment created on addition to project
 		$projectUser->UserComments = 'User created on association to project.';
+		//set active flag, is null in user->attributes because it is set on db
+		$projectUser->UserActiveFlag = 1;
 		//save into project database
 		if($projectUser->save())
 		{
