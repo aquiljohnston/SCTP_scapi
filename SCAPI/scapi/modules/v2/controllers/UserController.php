@@ -14,6 +14,7 @@ use app\modules\v2\models\PayCode;
 use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\models\Users;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
@@ -592,9 +593,13 @@ class UserController extends BaseActiveController
     public function actionGetActive($listPerPage = null, $page = null, $filter = null)
     {
         try {
-
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userGetActive');
 			
@@ -602,8 +607,18 @@ class UserController extends BaseActiveController
 			$responseArray['assets'] = [];
 			$responseArray['pages'] = [];
 			
-			//create base of user query
-            $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			if(BaseActiveController::isSCCT($client))
+			{
+				//create base of user query
+				$userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			}
+			else
+			{
+				BaseActiveRecord::setClient($client);
+				//create base of user query
+				$userQuery = Users::find();
+			}
+			
 			//apply filter to query
 			if($filter != null)
 			{
