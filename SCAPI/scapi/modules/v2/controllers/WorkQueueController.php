@@ -208,6 +208,7 @@ class WorkQueueController extends Controller
 			}
 			$responseData = [
 				'WorkQueueID' => $workQueueID,
+				'WorkQueueStatus' => $workQueueStatus,
 				'SuccessFlag' => $successFlag
 			];
 			return $responseData;
