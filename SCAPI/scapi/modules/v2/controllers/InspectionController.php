@@ -90,7 +90,7 @@ class InspectionController extends Controller
 					if($data['Event'] != null)
 						$eventResponse = self::processEvent($data['Event'], $client, $activityID, $inspectionID);
 				}
-				if(array_key_exists('Asset', $data[$i]))
+				if(array_key_exists('Asset', $data))
 				{
 					if($data['Asset'] != null)
 						$assetResponse = self::processAsset($data['Asset'], $client, $activityID, $inspectionID);
