@@ -149,7 +149,6 @@ class WorkQueueController extends Controller
 				}
 				$responseData[] = [
 					'WorkQueueID' => $data[$i]['WorkQueueID'],
-					'AssignedUserID' => $data[$i]['AssignedUserID'],
 					'SuccessFlag' => $successFlag
 				];
 			}

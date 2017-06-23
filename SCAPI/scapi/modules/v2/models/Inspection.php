@@ -61,8 +61,8 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspectionTabletID', 'WorkQueueStatus', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['ActivityID', 'WorkQueueID', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
+            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
+            [['WorkQueueStatus', 'ActivityID', 'WorkQueueID', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
