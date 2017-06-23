@@ -317,7 +317,7 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($week, $listPerPage = 10, $page = 1)
+	public function actionGetCards($week, $listPerPage = 10, $page = 1, $filter = null)
 	{
 		// RBAC permission check is embedded in this action	
 		try
@@ -348,19 +348,13 @@ class MileageCardController extends BaseActiveController
 					if($week == 'prior')
 					{
 						$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
-						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-						$responseArray['assets'] = $mileageCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
+
 					} 
 					elseif($week == 'current') 
 					{
 						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
-						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-						$responseArray['assets'] = $mileageCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
 					}
+
 				} 
 				//rbac permission check
 				elseif(PermissionsController::can('mileageCardGetOwnCards'))		
@@ -376,35 +370,19 @@ class MileageCardController extends BaseActiveController
 					if($week == 'prior' && $projectsSize > 0)
 					{
 						$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-						if($projectsSize > 1)
-						{
-							for($i=1; $i < $projectsSize; $i++)
-							{
-								$projectID = $projects[$i]->ProjUserProjectID;
-								$mileageCards->orWhere(['ProjectID'=>$projectID]);
-							}
-						}
-						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-						$responseArray['assets'] = $mileageCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
-					} 
+					}
 					elseif($week == 'current' && $projectsSize > 0)
 					{
 						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-						if($projectsSize > 1)
-						{
-							for($i=1; $i < $projectsSize; $i++)
-							{
-								$projectID = $projects[$i]->ProjUserProjectID;
-								$mileageCards->orWhere(['ProjectID'=>$projectID]);
-							}
-						}
-						$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-						$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-						$responseArray['assets'] = $mileageCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
 					}
+                    if($projectsSize > 1)
+                    {
+                        for($i=1; $i < $projectsSize; $i++)
+                        {
+                            $projectID = $projects[$i]->ProjUserProjectID;
+                            $mileageCards->orWhere(['ProjectID'=>$projectID]);
+                        }
+                    }
 				}
 				else{
 					throw new ForbiddenHttpException;
@@ -420,21 +398,29 @@ class MileageCardController extends BaseActiveController
 				if($week == 'prior')
 				{
 					$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-					$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-					$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-					$responseArray['assets'] = $mileageCardsArr;
-					$responseArray['pages'] = $paginationResponse['pages'];
-				} 
+				}
 				elseif($week == 'current')
 				{
 					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-					$paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-					$mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-					$responseArray['assets'] = $mileageCardsArr;
-					$responseArray['pages'] = $paginationResponse['pages'];
 				}
 			}
-			if (!empty($responseArray['assets']))
+            if($filter != null && isset($mileageCards))
+            {
+                $mileageCards->andFilterWhere([
+                    'or',
+                    ['like', 'UserName', $filter],
+                    ['like', 'UserFirstName', $filter],
+                    ['like', 'UserLastName', $filter],
+                    ['like', 'ProjectName', $filter]
+                ]);
+            }
+            $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
+            $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
+            $responseArray['assets'] = $mileageCardsArr;
+            $responseArray['pages'] = $paginationResponse['pages'];
+
+
+            if (!empty($responseArray['assets']))
 			{
 				$response->data = $responseArray;
 				$response->setStatusCode(200);
