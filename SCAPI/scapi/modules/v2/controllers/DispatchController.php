@@ -122,7 +122,6 @@ class DispatchController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-			
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
 			$assetQuery = AvailableWorkOrder::find()
@@ -312,7 +311,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($mapGridSelected = null, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssigned($mapGridSelected = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -321,35 +320,7 @@ class DispatchController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-			if($mapGridSelected != null && $sectionNumberSelected !=null)
-			{
-				$orderBy = 'ComplianceEnd';
-				$envelope = 'assets';
-				$assetQuery = AssignedWorkQueue::find()
-					->where(['MapGrid' => $mapGridSelected])
-					->andWhere(['SectionNumber' => $sectionNumberSelected]);
-				
-				if($filter != null)
-				{
-					$assetQuery->andFilterWhere([
-					'or',
-					['like', 'InspectionType', $filter],
-					['like', 'HouseNumber', $filter],
-					['like', 'Street', $filter],
-					['like', 'AptSuite', $filter],
-					['like', 'City', $filter],
-					['like', 'State', $filter],
-					['like', 'Zip', $filter],
-					['like', 'MeterNumber', $filter],
-					['like', 'MapGrid', $filter],
-					['like', 'ComplianceStart', $filter],
-					['like', 'ComplianceEnd', $filter],
-					['like', 'SectionNumber', $filter],
-					['like', 'AssignedTo', $filter],
-					]);
-				}
-			}
-			elseif($mapGridSelected != null)
+			if($mapGridSelected != null)
 			{
 				$orderBy = 'SectionNumber';
 				$envelope = 'sections';
@@ -374,6 +345,70 @@ class DispatchController extends Controller
 					['like', 'SearchString', $filter],
 					]);
 				}
+			}
+			
+			if($page != null)
+			{
+				//pass query with pagination data to helper method
+				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//use updated query with pagination caluse to get data
+				$data = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray[$envelope] = $data;
+			}
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			$orderBy = 'ComplianceEnd';
+			$envelope = 'assets';
+			$assetQuery = AssignedWorkQueue::find()
+				->where(['MapGrid' => $mapGridSelected]);
+			if($sectionNumberSelected !=null)
+			{
+				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
+			}
+			if($filter != null)
+			{
+				$assetQuery->andFilterWhere([
+				'or',
+				['like', 'InspectionType', $filter],
+				['like', 'HouseNumber', $filter],
+				['like', 'Street', $filter],
+				['like', 'AptSuite', $filter],
+				['like', 'City', $filter],
+				['like', 'State', $filter],
+				['like', 'Zip', $filter],
+				['like', 'MeterNumber', $filter],
+				['like', 'MapGrid', $filter],
+				['like', 'ComplianceStart', $filter],
+				['like', 'ComplianceEnd', $filter],
+				['like', 'SectionNumber', $filter],
+				['like', 'AssignedTo', $filter],
+				]);
 			}
 			
 			if($page != null)
