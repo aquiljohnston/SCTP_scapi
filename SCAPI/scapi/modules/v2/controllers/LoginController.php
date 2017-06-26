@@ -5,6 +5,7 @@ namespace app\modules\v2\controllers;
 use Yii;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
+use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\CTUser;
 use yii\data\ActiveDataProvider;
@@ -23,6 +24,9 @@ class LoginController extends Controller
 	{
 		try
 		{
+			//get client header to find project landing page
+			$headers = getallheaders();
+			$client = $headers['X-Client'];
 			//set db target
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			
@@ -85,6 +89,7 @@ class LoginController extends Controller
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
 			$authArray['UserUID'] = $user->UserUID;
+			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
 			
 			//add auth token to response
 			$response->data = $authArray;
@@ -132,4 +137,13 @@ class LoginController extends Controller
 		}
 	}
 	
+	private static function getProjectLandingPage($client)
+	{
+		$projectLandingPage = Project::find()
+			->select('ProjectLandingPage')
+			->where(['ProjectUrlPrefix' => $client])
+			->one();
+		
+		return $projectLandingPage['ProjectLandingPage'];
+	}
 }

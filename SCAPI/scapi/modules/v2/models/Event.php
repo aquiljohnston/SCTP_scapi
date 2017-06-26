@@ -23,15 +23,7 @@ use Yii;
  * @property string $Photo1Path
  * @property string $Photo2Path
  * @property string $Photo3Path
- * @property integer $AOCGasOdor
- * @property integer $AOCPittedPiping
- * @property integer $AOCLockWingInaccessible_NotLockable
- * @property integer $AOCMeterOnGround
- * @property integer $AOCERTDamage
- * @property integer $AOCUndergroundHousePiping
- * @property integer $AOCType12MeterSet
- * @property integer $AOCMeterUnleveled
- * @property string $AOCOtherReason
+ * @property string $AOCReason
  * @property integer $CGEReason
  * @property string $LeakNumber
  * @property string $LeakReportedTo
@@ -97,8 +89,8 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCOtherReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterInspected', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['EventType', 'CreatedByUserID', 'AOCGasOdor', 'AOCPittedPiping', 'AOCLockWingInaccessible_NotLockable', 'AOCMeterOnGround', 'AOCERTDamage', 'AOCUndergroundHousePiping', 'AOCType12MeterSet', 'AOCMeterUnleveled', 'CGEReason', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID'], 'integer'],
+            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
+            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'CGEReason', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
@@ -128,15 +120,7 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
             'Photo1Path' => 'Photo1 Path',
             'Photo2Path' => 'Photo2 Path',
             'Photo3Path' => 'Photo3 Path',
-            'AOCGasOdor' => 'Aocgas Odor',
-            'AOCPittedPiping' => 'Aocpitted Piping',
-            'AOCLockWingInaccessible_NotLockable' => 'Aoclock Wing Inaccessible  Not Lockable',
-            'AOCMeterOnGround' => 'Aocmeter On Ground',
-            'AOCERTDamage' => 'Aocertdamage',
-            'AOCUndergroundHousePiping' => 'Aocunderground House Piping',
-            'AOCType12MeterSet' => 'Aoctype12 Meter Set',
-            'AOCMeterUnleveled' => 'Aocmeter Unleveled',
-            'AOCOtherReason' => 'Aocother Reason',
+            'AOCReason' => 'Aocreason',
             'CGEReason' => 'Cgereason',
             'LeakNumber' => 'Leak Number',
             'LeakReportedTo' => 'Leak Reported To',

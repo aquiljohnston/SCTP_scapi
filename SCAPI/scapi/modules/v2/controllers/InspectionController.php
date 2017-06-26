@@ -46,80 +46,75 @@ class InspectionController extends Controller
 			$inspectionCount = count($data);
 			$responseArray = [];
 			
-			//traverse Inspection array
-			for($i = 0; $i < $inspectionCount; $i++)
-			{
-				//try catch to log individual errors
-				try
-				{	
-					$inspectionSuccessFlag = 0;
-					$eventResponse = [];
-					$assetResponse = [];
-					$workQueueResponse = [];
-					$inspectionID = null;
+			//try catch to log individual errors
+			try
+			{	
+				$inspectionSuccessFlag = 0;
+				$eventResponse = [];
+				$assetResponse = [];
+				$workQueueResponse = [];
+				$inspectionID = null;
+			
+				$newInspection = new Inspection;
+				$newInspection->attributes = $data;
+				$newInspection->ActivityID = $activityID;
 				
-					$newInspection = new Inspection;
-					$newInspection->attributes = $data[$i];
-					$newInspection->ActivityID = $activityID;
-					
-					//check if Inspection already exist.
-					$previousInspection = Inspection::find()
-						->where(['InspectionTabletID' => $newInspection->InspectionTabletID])
-						//->andWhere(['DeletedFlag' => 0]) no flag exist currently
-						->one();
+				//check if Inspection already exist.
+				$previousInspection = Inspection::find()
+					->where(['InspectionTabletID' => $newInspection->InspectionTabletID])
+					//->andWhere(['DeletedFlag' => 0]) no flag exist currently
+					->one();
 
-					if ($previousInspection == null) {
-						if ($newInspection->save()) {
-							$inspectionSuccessFlag = 1;
-							$inspectionID = $newInspection->ID;
-							//set associate work queue to completed (WorkQueueStatus  = 102)
-							$workQueueResponse = WorkQueueController::complete($data[$i]['WorkQueueID'], $data[$i]['WorkQueueStatus'], $client, $data[$i]['CreatedBy'], $data[$i]['CreatedDate']);
-						} else {
-							throw BaseActiveController::modelValidationException($newInspection);
-						}
-					}
-					else
-					{
-						//Handle updates if applicable.
-						//send success if Inspection record was already saved previously
+				if ($previousInspection == null) {
+					if ($newInspection->save()) {
 						$inspectionSuccessFlag = 1;
-						$inspectionID = $previousInspection->ID;
+						$inspectionID = $newInspection->ID;
 						//set associate work queue to completed (WorkQueueStatus  = 102)
-						$workQueueResponse = WorkQueueController::complete($data[$i]['WorkQueueID'], $data[$i]['WorkQueueStatus'], $client, $data[$i]['CreatedBy'], $data[$i]['CreatedDate']);
+						$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
+					} else {
+						throw BaseActiveController::modelValidationException($newInspection);
 					}
-					//process event data if available
-					if(array_key_exists('Event', $data[$i]))
-					{
-						if($data[$i]['Event'] != null)
-							$eventResponse = self::processEvent($data[$i]['Event'], $client, $activityID, $inspectionID);
-					}
-					if(array_key_exists('Asset', $data[$i]))
-					{
-						if($data[$i]['Asset'] != null)
-							$assetResponse = self::processAsset($data[$i]['Asset'], $client, $activityID, $inspectionID);
-					}
-					$responseArray[] = [
-						'ID' => $inspectionID,
-						'InspectionTabletID' => $newInspection->InspectionTabletID,
-						'SuccessFlag' => $inspectionSuccessFlag,
-						'WorkQueue' => $workQueueResponse,
-						'Event' => $eventResponse,
-						'Asset' => $assetResponse];
 				}
-				catch(\Exception $e)
+				else
 				{
-					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
-					$responseArray[] = [
-						'ID' => $inspectionID,
-						'InspectionTabletID' => $data[$i]['InspectionTabletID'],
-						'SuccessFlag' => $inspectionSuccessFlag,
-						'WorkQueue' => $workQueueResponse,
-						'Event' => $eventResponse,
-						'Asset' => $assetResponse];
+					//Handle updates if applicable.
+					//send success if Inspection record was already saved previously
+					$inspectionSuccessFlag = 1;
+					$inspectionID = $previousInspection->ID;
+					//set associate work queue to completed (WorkQueueStatus  = 102)
+					$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
 				}
+				//process event data if available
+				if(array_key_exists('Event', $data))
+				{
+					if($data['Event'] != null)
+						$eventResponse = self::processEvent($data['Event'], $client, $activityID, $inspectionID);
+				}
+				if(array_key_exists('Asset', $data))
+				{
+					if($data['Asset'] != null)
+						$assetResponse = self::processAsset($data['Asset'], $client, $activityID, $inspectionID);
+				}
+				$responseArray[] = [
+					'ID' => $inspectionID,
+					'InspectionTabletID' => $newInspection->InspectionTabletID,
+					'SuccessFlag' => $inspectionSuccessFlag,
+					'WorkQueue' => $workQueueResponse,
+					'Event' => $eventResponse,
+					'Asset' => $assetResponse];
+			}
+			catch(\Exception $e)
+			{
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+				$responseArray[] = [
+					'ID' => $inspectionID,
+					'InspectionTabletID' => $data['InspectionTabletID'],
+					'SuccessFlag' => $inspectionSuccessFlag,
+					'WorkQueue' => $workQueueResponse,
+					'Event' => $eventResponse,
+					'Asset' => $assetResponse];
 			}
 			//return response data
-			
 			return $responseArray;
 		}
         catch(ForbiddenHttpException $e)
