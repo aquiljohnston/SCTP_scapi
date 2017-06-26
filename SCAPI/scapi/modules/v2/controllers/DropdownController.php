@@ -74,10 +74,10 @@ class DropdownController extends Controller
     public function actionGetTrackerMapGrids() {
         $headers = getallheaders();
         BaseActiveRecord::setClient($headers['X-Client']);
-        $sql =    "SELECT DISTINCT MapGrid FROM tWorkQueue "
-                . "JOIN tWorkOrder ON tWorkQueue.WorkOrderID = tWorkOrder.ID "
-                . "WHERE tWorkQueue.WorkQueueStatus = 101 OR tWorkQueue.WorkQueueStatus = 102";
-        //                                            101 = In Progress                   102 = Completed
+//        $sql =    "SELECT DISTINCT MapGrid FROM tWorkQueue "
+//                . "JOIN tWorkOrder ON tWorkQueue.WorkOrderID = tWorkOrder.ID "
+//                . "WHERE tWorkQueue.WorkQueueStatus = 101 OR tWorkQueue.WorkQueueStatus = 102";
+        $sql = "SELECT DISTINCT [Mapgrid] FROM [ScctTemplate].[dbo].[vRptCompletedWorkOrders]";
         $connection = BaseActiveRecord::getDb();
         $results = $connection->createCommand($sql)->queryAll();
 
