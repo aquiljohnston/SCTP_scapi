@@ -2,24 +2,19 @@
 
 namespace app\modules\v2\controllers;
 
-use app\modules\v2\controllers\CreateMethodNotAllowed;
-use app\modules\v2\controllers\DeleteMethodNotAllowed;
-use app\modules\v2\controllers\PermissionsController;
-use app\modules\v2\controllers\UpdateMethodNotAllowed;
 use Yii;
-use app\modules\v2\models\MileageCard;
-use app\modules\v2\models\MileageEntry;
+use app\modules\v2\models\TimeCard;
+use app\modules\v2\models\TimeEntry;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\ProjectUser;
-use app\modules\v2\models\AllMileageCardsCurrentWeek;
-use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
-use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
+use app\modules\v2\models\AllTimeCardsCurrentWeek;
+use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
+use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
 use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
-use yii\debug\components\search\matchers\Base;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -29,16 +24,16 @@ use \DateTime;
 use yii\data\Pagination;
 
 /**
- * MileageCardController implements the CRUD actions for MileageCard model.
+ * TimeCardController implements the CRUD actions for TimeCard model.
  */
-class MileageCardController extends BaseActiveController
+class TimeCardController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v2\models\MileageCard'; 
+	public $modelClass = 'app\modules\v2\models\TimeCard';
 	
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
-		//Implements Token Authentication to check for Auth Token in Json Header
+		//Implements Token Authentication to check for Auth Token in Json  Header
 		$behaviors['authenticator'] = 
 		[
 			'class' => TokenAuth::className(),
@@ -47,7 +42,7 @@ class MileageCardController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'create' => ['create'],
+					'create' => ['create'],
                     'delete' => ['delete'],
 					'update' => ['put'],
 					'view' => ['get'],
@@ -59,7 +54,7 @@ class MileageCardController extends BaseActiveController
             ];
 		return $behaviors;	
 	}
-	 
+	
 	public function actions()
 	{
 		$actions = parent::actions();
@@ -73,27 +68,27 @@ class MileageCardController extends BaseActiveController
 	use CreateMethodNotAllowed;
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
-	
-	 /**
-     * Displays a single MileageCard model.
-     * @param integer $id
-     * @return mixed
-     */
+
+	/**
+	 * Displays a single TimeCard model.
+	 * @param integer $id
+	 * @return mixed
+	 * @throws \yii\web\HttpException
+	 */
     public function actionView($id)
     {
 		try
-		{			
+		{
 			//set db target
-			$headers = getallheaders();
-			MileageCard::setClient(BaseActiveController::urlPrefix());
+			TimeCard::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardView');
+			PermissionsController::requirePermission('timeCardView');
 			
-			$mileageCard = MileageCard::findOne($id);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileageCard;
+			$timeCard = TimeCard::findOne($id);
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $timeCard;
 			
 			return $response;
 		}
@@ -101,18 +96,17 @@ class MileageCardController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
-    }
-	
+	}
 	
 	public function actionApproveCards()
-	{		
+	{
 		try
 		{
 			//set db target
-			MileageCard::setClient(BaseActiveController::urlPrefix());
+			TimeCard::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardApprove');
+			PermissionsController::requirePermission('timeCardApproveCards');
 			
 			//capture put body
 			$put = file_get_contents("php://input");
@@ -121,71 +115,48 @@ class MileageCardController extends BaseActiveController
 			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-
-			//get user id
+			
+			//get userid
 			$approvedBy = self::getUserFromToken()->UserID;
-
+			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
-			
+			$approvedCards = []; // Prevents empty array from causing crash
 			//get timecards
-			$approvedCards = []; //Prevent uninitialized error
 			foreach($cardIDs as $id)
 			{
-				$approvedCards[]= MileageCard::findOne($id);
+				$approvedCards[]= TimeCard::findOne($id);
 			}
 			
 			//try to approve time cards
-			try
-			{
+			try {
 				//create transaction
-                $connection = MileageCard::getDb();
-				$transaction = $connection->beginTransaction(); 
-			
-				foreach($approvedCards as $card)
-				{
-					$card-> MileageCardApprovedFlag = "Yes";
-					$card-> MileageCardApprovedBy = $approvedBy;
-					$card-> MileageCardModifiedDate = Parent::getDate();
-					//$card-> MileageCardModifiedBy = $approvedBy;
-					$card-> update();
+				$connection = TimeCard::getDb();
+				$transaction = $connection->beginTransaction();
+
+				foreach ($approvedCards as $card) {
+					$card->TimeCardApprovedFlag = "Yes";
+					$card->TimeCardApprovedBy = $approvedBy;
+					$card->update();
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
-				//Response format previously modified by Josh Patton for unknown reason
-				// $data = [];
-                // $data['cards'] = $approvedCards;
-                // $data['success'] = true;
-                // $response->data = $data;
-				$response->data = $approvedCards; 
+				$response->data = $approvedCards;
 				return $response;
+			} catch (ForbiddenHttpException $e) {
+				throw new ForbiddenHttpException;
 			}
-			//if transaction fails rollback changes and send error
-			catch(Exception $e)
+			catch(\Exception $e) //if transaction fails rollback changes and send error
 			{
 				$transaction->rollBack();
 				$response->setStatusCode(400);
-				//Response format previously modified by Josh Patton for unknown reason
-				// $data = [];
-                // $data['cards'] = null;
-                // $data['status'] = "400 Bad Request";
-                // $data['success'] = false;
-                // $response->data = $data;
 				$response->data = "Http:400 Bad Request";
 				return $response;
+				
 			}
 		}
-		catch(\Exception $e) 
+		catch(\Exception $e)  
 		{
-			//Response format previously modified by Josh Patton for unknown reason
-			// throw $e;
-            // $response->setStatusCode(400);
-            // $data = [];
-            // $data['cards'] = null;
-            // $data['status'] = "400 Bad Request";
-            // $data['success'] = false;
-            // $response->data = $data;
-            // return $response;
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -195,76 +166,76 @@ class MileageCardController extends BaseActiveController
 		try
 		{
 			//set db target
-			MileageCard::setClient(BaseActiveController::urlPrefix());
+			TimeCard::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardGetEntries');
+			PermissionsController::requirePermission('timeCardGetEntries');
 			
 			$response = Yii::$app ->response;
 			$dataArray = [];
-			$mileageCard = MileageCard::findOne($cardID);
-			$date = new DateTime($mileageCard-> MileageStartDate);
+			$timeCard = TimeCard::findOne($cardID);
+			$date = new DateTime($timeCard-> TimeCardStartDate);
 			
 			//get all time entries for Sunday
 			$sundayDate = $date;
-			$sundayStr = $sundayDate->format(BaseActiveController::DATE_FORMAT);
-			$sundayEntries = MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$sundayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
+			$sundayEntries = TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$sundayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 			
 			//get all time entries for Monday
 			$mondayDate = $date->modify('+1 day');	
 			$mondayStr = $mondayDate->format(BaseActiveController::DATE_FORMAT);
-			$mondayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$mondayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$mondayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$mondayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//get all time entries for Tuesday	
 			$tuesdayDate = $date->modify('+1 day');
 			$tuesdayStr = $tuesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$tuesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$tuesdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//get all time entries for Wednesday	
 			$wednesdayDate = $date->modify('+1 day');
 			$wednesdayStr = $wednesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$wednesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$wednesdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//get all time entries for Thursday
 			$thursdayDate = $date->modify('+1 day');
 			$thursdayStr = $thursdayDate->format(BaseActiveController::DATE_FORMAT);
-			$thursdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$thursdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$thursdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//get all time entries for Friday
 			$fridayDate = $date->modify('+1 day');
 			$fridayStr = $fridayDate->format(BaseActiveController::DATE_FORMAT);
-			$fridayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$fridayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$fridayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$fridayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//get all time entries for Saturday
-			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format(BaseActiveController::DATE_FORMAT);
-			$saturdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$satudayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
+			$saturdayDate = $date->modify('1 day');
+			$saturdayStr = $saturdayDate->format(BaseActiveController::DATE_FORMAT);
+			$saturdayEntries =TimeEntry::find()
+				->where("TimeEntryDate ="."'"."$saturdayStr". "'")
+				->andWhere("TimeEntryTimeCardID = $cardID")
 				->all();
 				
 			//load data into array
-			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
-			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
-			$dataArray["ApprovedFlag"] = $mileageCard-> MileageCardApprovedFlag;
+			$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
+			$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
+			$dataArray["ApprovedFlag"] = $timeCard-> TimeCardApprovedFlag;
 			$dayArray =
 			[
 				"Sunday" => $sundayEntries,
@@ -275,34 +246,50 @@ class MileageCardController extends BaseActiveController
 				"Friday" => $fridayEntries,
 				"Saturday" => $saturdayEntries,
 			];
-			$dataArray["MileageEntries"] = [$dayArray];
+			$dataArray["TimeEntries"] = [$dayArray];
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(\Exception $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
-	}
+	}	
 	
 	public function actionGetCard($userID)
 	{		
 		try
 		{
+			//get http headers
+			$headers = getallheaders();
 			//set db target
-			AllMileageCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
+			AllTimeCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardGetCard');
+			PermissionsController::requirePermission('timeCardGetCard');
 			
-			$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$userID]);
+			//get project based on header
+			$project = Project::find()
+				->where(['ProjectUrlPrefix'=>$headers['X-Client']])
+				->one();
+			
+			//get time card
+			$timeCardQuery = AllTimeCardsCurrentWeek::find()
+				->where(['UserID'=>$userID]);
+			if($project != null)
+			{
+				$timeCardQuery->andwhere(['TimeCardProjectID'=>$project->ProjectID]);
+			}
+			$timeCard = $timeCardQuery->one();
+			
+			//handle response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			if ($mileageCard != null)
+			if ($timeCard != null)
 			{
 				$response->setStatusCode(200);
-				$response->data = $mileageCard;
+				$response->data = $timeCard;
 				return $response;
 			}
 			else
@@ -311,13 +298,13 @@ class MileageCardController extends BaseActiveController
 				return $response;
 			}
 		}
-		catch(\Exception $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
 	}
 	
-	public function actionGetCards($week, $listPerPage = 10, $page = 1, $filter = null)
+	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
 		// RBAC permission check is embedded in this action	
 		try
@@ -328,36 +315,45 @@ class MileageCardController extends BaseActiveController
 			$client = $headers['X-Client'];
 			
 			//set db target headers
-			MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+			$headers = getallheaders();
+			TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 			
 			//format response
 			$response = Yii::$app->response;
 			$response-> format = Response::FORMAT_JSON;
 			
-			//response array of mileage cards
-            $mileageCardsArr = [];
+			//response array of time cards
+            $timeCardsArr = [];
             $responseArray = [];
 			
 			//if is scct website get all or own
 			if(BaseActiveController::isSCCT($client))
 			{
 				//rbac permission check
-				if (PermissionsController::can('mileageCardGetAllCards'))
+				if (PermissionsController::can('timeCardGetAllCards'))
 				{
 					//check if week is prior or current to determine appropriate view
 					if($week == 'prior')
 					{
-						$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
-
-					} 
-					elseif($week == 'current') 
-					{
-						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
+						$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find();
+						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+						$responseArray['assets'] = $timeCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+						//$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
 					}
-
-				} 
-				//rbac permission check
-				elseif(PermissionsController::can('mileageCardGetOwnCards'))		
+				elseif($week == 'current')
+					{
+						$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find();
+						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+						$responseArray['assets'] = $timeCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+						//$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
+					}
+				}
+				//rbac permission check	
+				elseif (PermissionsController::can('timeCardGetOwnCards'))
 				{
 					$userID = self::getUserFromToken()->UserID;
 					//get user project relations array
@@ -365,24 +361,41 @@ class MileageCardController extends BaseActiveController
 						->where("ProjUserUserID = $userID")
 						->all();
 					$projectsSize = count($projects);
-					
+
 					//check if week is prior or current to determine appropriate view
 					if($week == 'prior' && $projectsSize > 0)
 					{
-						$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-					}
+						$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+						if($projectsSize > 1)
+						{
+							for($i=1; $i < $projectsSize; $i++)
+							{
+								$projectID = $projects[$i]->ProjUserProjectID;
+								$timeCards->orWhere(['ProjectID'=>$projectID]);
+							}
+						}
+						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+						$responseArray['assets'] = $timeCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
+
+					} 
 					elseif($week == 'current' && $projectsSize > 0)
 					{
-						$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+						$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+						if($projectsSize > 1)
+						{
+							for($i=1; $i < $projectsSize; $i++)
+							{
+								$projectID = $projects[$i]->ProjUserProjectID;
+								$timeCards->orWhere(['ProjectID'=>$projectID]);
+							}
+						}
+						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+						$responseArray['assets'] = $timeCardsArr;
+						$responseArray['pages'] = $paginationResponse['pages'];
 					}
-                    if($projectsSize > 1)
-                    {
-                        for($i=1; $i < $projectsSize; $i++)
-                        {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $mileageCards->orWhere(['ProjectID'=>$projectID]);
-                        }
-                    }
 				}
 				else{
 					throw new ForbiddenHttpException;
@@ -397,30 +410,22 @@ class MileageCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
 				{
-					$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-				}
+					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
+					$paginationResponse = BaseActiveController::paginationProcessor($timeCards, $page, $listPerPage);
+					$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+					$responseArray['assets'] = $timeCardsArr;
+					$responseArray['pages'] = $paginationResponse['pages'];
+				} 
 				elseif($week == 'current')
 				{
-					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
+					$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
+					$paginationResponse = BaseActiveController::paginationProcessor($timeCards, $page, $listPerPage);
+					$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+					$responseArray['assets'] = $timeCardsArr;
+					$responseArray['pages'] = $paginationResponse['pages'];
 				}
 			}
-            if($filter != null && isset($mileageCards))
-            {
-                $mileageCards->andFilterWhere([
-                    'or',
-                    ['like', 'UserName', $filter],
-                    ['like', 'UserFirstName', $filter],
-                    ['like', 'UserLastName', $filter],
-                    ['like', 'ProjectName', $filter]
-                ]);
-            }
-            $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-            $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
-            $responseArray['assets'] = $mileageCardsArr;
-            $responseArray['pages'] = $paginationResponse['pages'];
-
-
-            if (!empty($responseArray['assets']))
+			if (!empty($responseArray['assets']))
 			{
 				$response->data = $responseArray;
 				$response->setStatusCode(200);
@@ -431,46 +436,52 @@ class MileageCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		} catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)  
+		{
 			throw new \yii\web\HttpException(400);
 		}
 	}
 
-    public function actionGetMileageCardsHistoryData($week)
+    public function actionGetTimeCardsHistoryData($week)
     {
         // RBAC permission check is embedded in this action
         try
         {
             //set db target headers
-            MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+            $headers = getallheaders();
+            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
             //format response
             $response = Yii::$app->response;
             $response-> format = Response::FORMAT_JSON;
 
-            //response array of mileage cards
-            $mileageCardArray = [];
-            $mileageCardsArr = [];
+            //response array of time cards
+            $timeCardsArr = [];
+            //$responseArray = [];
 
             //rbac permission check
-            if (PermissionsController::can('mileageCardGetAllCards'))
+            if (PermissionsController::can('timeCardGetAllCards'))
             {
                 //check if week is prior or current to determine appropriate view
                 if($week == 'prior')
                 {
-                    $responseArray = MileageCardSumMilesPriorWeekWithProjectName::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                    //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
                 }
                 elseif($week == 'current')
                 {
-                    $responseArray = MileageCardSumMilesCurrentWeekWithProjectName::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                    //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
                 }
             }
             //rbac permission check
-            elseif(PermissionsController::can('mileageCardGetOwnCards'))
+            elseif (PermissionsController::can('timeCardGetOwnCards'))
             {
                 $userID = self::getUserFromToken()->UserID;
                 //get user project relations array
@@ -482,26 +493,26 @@ class MileageCardController extends BaseActiveController
                 //check if week is prior or current to determine appropriate view
                 if($week == 'prior' && $projectsSize > 0)
                 {
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+
                     for($i=0; $i < $projectsSize; $i++)
                     {
                         $projectID = $projects[$i]->ProjUserProjectID;
-                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
-                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+                        $timeCards->andWhere(['ProjectID'=>$projectID]);
                     }
-                    $responseArray = $mileageCards->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+
                 }
                 elseif($week == 'current' && $projectsSize > 0)
                 {
-                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
                     for($i=0; $i < $projectsSize; $i++)
                     {
                         $projectID = $projects[$i]->ProjUserProjectID;
-                        $mileageCards->andWhere(['ProjectID'=>$projectID]);
-                        //$mileageCardArray = array_merge($mileageCardArray, $mileageCards);
+                        $timeCards->andWhere(['ProjectID'=>$projectID]);
                     }
-                    $responseArray = $mileageCards->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                 }
             }
@@ -526,8 +537,7 @@ class MileageCardController extends BaseActiveController
         }
     }
 
-    //todo: need to review and remove
-    /*public function paginationProcessor($assetQuery, $page, $listPerPage){
+	public function paginationProcessor($assetQuery, $page, $listPerPage){
 
         if($page != null)
         {
@@ -537,8 +547,8 @@ class MileageCardController extends BaseActiveController
             $pages->pageSizeLimit = [1,100];
             $offset = $listPerPage*($page-1);
             $pages->setPageSize($listPerPage);
-            $pages->pageParam = 'mileageCardPage';
-            $pages->params = ['per-page' => $listPerPage, 'mileageCardPage' => $page];
+            $pages->pageParam = 'timeCardPage';
+            $pages->params = ['per-page' => $listPerPage, 'timeCardPage' => $page];
 
             $assetQuery->offset($offset)
                 ->limit($listPerPage);
@@ -548,7 +558,7 @@ class MileageCardController extends BaseActiveController
 
             return $asset;
         }
-    }*/
+    }
 
     // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){

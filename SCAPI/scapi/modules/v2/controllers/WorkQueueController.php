@@ -149,7 +149,6 @@ class WorkQueueController extends Controller
 				}
 				$responseData[] = [
 					'WorkQueueID' => $data[$i]['WorkQueueID'],
-					'AssignedUserID' => $data[$i]['AssignedUserID'],
 					'SuccessFlag' => $successFlag
 				];
 			}
@@ -209,6 +208,7 @@ class WorkQueueController extends Controller
 			}
 			$responseData = [
 				'WorkQueueID' => $workQueueID,
+				'WorkQueueStatus' => $workQueueStatus,
 				'SuccessFlag' => $successFlag
 			];
 			return $responseData;

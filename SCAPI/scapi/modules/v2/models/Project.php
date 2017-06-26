@@ -28,12 +28,13 @@ use Yii;
  * @property integer $ProjectSurveyGPSMinDistance
  * @property string $ProjectMinimumAppVersion
  * @property string $ProjectAppVersionDate
+ * @property string $ProjectLandingPage 
  *
  * @property ProjectUserTb[] $projectUserTbs
  * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
  * @property ClientTb $projectClient
  */
-class Project extends BaseActiveRecord
+class Project extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -49,7 +50,7 @@ class Project extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectArchiveFlag', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion'], 'string'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectArchiveFlag', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion', 'ProjectLandingPage'], 'string'],
             [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectAppVersionDate'], 'safe'],
 			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
@@ -84,7 +85,7 @@ class Project extends BaseActiveRecord
 			'ProjectSurveyGPSMinDistance' => 'Project Survey GPS Min Distance',
 			'ProjectMinimumAppVersion' => 'Project Minimum App Version',
 			'ProjectAppVersionDate' => 'Project App Version Date',
-			
+			'ProjectLandingPage' => 'Project Landing Page',
         ];
     }
 

@@ -14,8 +14,10 @@ use app\modules\v2\models\PayCode;
 use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\models\Users;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
+use app\modules\v2\controllers\ProjectController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -78,13 +80,16 @@ class UserController extends BaseActiveController
 	//use DeleteMethodNotAllowed;
 
     /**
-     * Creates a new user record in the database and a corresponding key record
+     * Creates a new user record in the database
      * @returns json body of the user data
      * @throws \yii\web\HttpException
      */
     public function actionCreate()
     {
         try {
+			//set db
+			$headers = getallheaders();
+			$client = $headers['X-Client'];
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -145,6 +150,7 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
+				self::createInProject($user, $client);
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
                 $response->data = $user;
@@ -319,19 +325,43 @@ class UserController extends BaseActiveController
     public function actionView($id)
     {
         try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
+			//create response object
+			$response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userView');
+			
+			if(BaseActiveController::isSCCT($client))
+			{
+				$user = SCUser::findOne($id);
+			}
+			else
+			{
+				BaseActiveRecord::setClient($client);
+				$userModel = BaseActiveRecord::getUserModel($client);
+				$user = $userModel::findOne($id);
+			}
 
-            //$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-            $user = SCUser::findOne($id);
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
+			if($user == null)
+			{
+				$user = 'User Not Found.';
+				$response->statusCode = 404;
+			}
+			else
+			{
+				$user->UserPassword = '';
+			}
+			
+			//pass data to response
             $response->data = $user;
-
-            $user->UserPassword = '';
-
             return $response;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
@@ -393,7 +423,9 @@ class UserController extends BaseActiveController
      * Creates an associative array of user id/lastname, firstname pairs
      * @returns json body id name pairs
      * @throws \yii\web\HttpException
-     */
+     *
+	 //according to Tao this route is never called by the web\ForbiddenHttpException
+	 //I'm commenting for now if no one complains after its on the server for a bit I will remove
     public function actionGetUserDropdowns()
     {
         try {
@@ -425,7 +457,7 @@ class UserController extends BaseActiveController
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
-    }
+    }*/
 
     /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
@@ -587,9 +619,13 @@ class UserController extends BaseActiveController
     public function actionGetActive($listPerPage = null, $page = null, $filter = null)
     {
         try {
-
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userGetActive');
 			
@@ -597,8 +633,18 @@ class UserController extends BaseActiveController
 			$responseArray['assets'] = [];
 			$responseArray['pages'] = [];
 			
-			//create base of user query
-            $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			if(BaseActiveController::isSCCT($client))
+			{
+				//create base of user query
+				$userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			}
+			else
+			{
+				BaseActiveRecord::setClient($client);
+				//create base of user query
+				$userQuery = Users::find();
+			}
+			
 			//apply filter to query
 			if($filter != null)
 			{
@@ -607,6 +653,7 @@ class UserController extends BaseActiveController
 				['like', 'UserName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLastName', $filter],
+				['like', 'UserEmployeeType', $filter],
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
@@ -639,28 +686,6 @@ class UserController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
-
-    //todo: need to review and remove
-/*    public function paginationProcessor($assetQuery, $page, $listPerPage)
-    {
-		// set pagination
-		$countAssetQuery = clone $assetQuery;
-		$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-		$pages->pageSizeLimit = [1, 200];
-		$offset = $listPerPage * ($page - 1);
-		$pages->setPageSize($listPerPage);
-		$pages->pageParam = 'userPage';
-		$pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
-		
-		//append pagination clause to query
-		$assetQuery->offset($offset)
-			->limit($listPerPage);
-
-		$asset['pages'] = $pages;
-		$asset['Query'] = $assetQuery;
-
-		return $asset;
-    }*/
 	
 	//creates a copy of the scuser $user
 	//in the project db $client
@@ -684,12 +709,12 @@ class UserController extends BaseActiveController
 		//create a new user model based on project 
 		$projectUser = new $userModel();
 		
-		//set userid to null to allow auto increment on sql
-		$user->UserID = null;
 		//pass $user attributes into new model
 		$projectUser->attributes = $user->attributes;
 		//set comment created on addition to project
 		$projectUser->UserComments = 'User created on association to project.';
+		//set active flag, is null in user->attributes because it is set on db
+		$projectUser->UserActiveFlag = 1;
 		//save into project database
 		if($projectUser->save())
 		{
@@ -700,6 +725,8 @@ class UserController extends BaseActiveController
 			if ($userRole = $auth->getRole($projectUser['UserAppRoleType'])) {
 				$auth->assign($userRole, $projectUser['UserID']);
 			}
+			//add user to project to generate time/mileage cards
+			ProjectController::addToProject($user);
 		}
 		return;
 	}

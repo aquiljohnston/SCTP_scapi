@@ -21,6 +21,8 @@ use Yii;
  * @property string $StartDTLT
  * @property string $EndDTLT
  * @property integer $DeletedFlag
+ * @property string $Comments
+ * @property double $TotalMapTime
  *
  * @property UserTb $createdUser
  */
@@ -35,6 +37,14 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
+     * @return \yii\db\Connection the database connection used by this AR class.
+     */
+    public static function getDb()
+    {
+        return Yii::$app->get('yorkDevDb');
+    }
+
+    /**
      * @inheritdoc
      */
     public function rules()
@@ -43,7 +53,8 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             [['ActivityID', 'CreatedUserID'], 'required'],
             [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
-            [['MapGrid'], 'string'],
+            [['MapGrid', 'Comments'], 'string'],
+            [['TotalMapTime'], 'number'],
             [['CreatedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedUserID' => 'UserID']],
         ];
     }
@@ -68,6 +79,8 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             'StartDTLT' => 'Start Dtlt',
             'EndDTLT' => 'End Dtlt',
             'DeletedFlag' => 'Deleted Flag',
+            'Comments' => 'Comments',
+            'TotalMapTime' => 'Total Map Time',
         ];
     }
 
