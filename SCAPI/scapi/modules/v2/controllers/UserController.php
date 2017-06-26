@@ -325,19 +325,43 @@ class UserController extends BaseActiveController
     public function actionView($id)
     {
         try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
+			//create response object
+			$response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userView');
+			
+			if(BaseActiveController::isSCCT($client))
+			{
+				$user = SCUser::findOne($id);
+			}
+			else
+			{
+				BaseActiveRecord::setClient($client);
+				$userModel = BaseActiveRecord::getUserModel($client);
+				$user = $userModel::findOne($id);
+			}
 
-            //$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-            $user = SCUser::findOne($id);
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
+			if($user == null)
+			{
+				$user = 'User Not Found.';
+				$response->statusCode = 404;
+			}
+			else
+			{
+				$user->UserPassword = '';
+			}
+			
+			//pass data to response
             $response->data = $user;
-
-            $user->UserPassword = '';
-
             return $response;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
@@ -399,7 +423,9 @@ class UserController extends BaseActiveController
      * Creates an associative array of user id/lastname, firstname pairs
      * @returns json body id name pairs
      * @throws \yii\web\HttpException
-     */
+     *
+	 //according to Tao this route is never called by the web\ForbiddenHttpException
+	 //I'm commenting for now if no one complains after its on the server for a bit I will remove
     public function actionGetUserDropdowns()
     {
         try {
@@ -431,7 +457,7 @@ class UserController extends BaseActiveController
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
-    }
+    }*/
 
     /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
