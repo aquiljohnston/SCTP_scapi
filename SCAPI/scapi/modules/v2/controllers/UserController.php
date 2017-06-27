@@ -81,7 +81,7 @@ class UserController extends BaseActiveController
 
     /**
      * Creates a new user record in the database
-     * @returns json body of the user data
+     * @returns Response json body of the user data
      * @throws \yii\web\HttpException
      */
     public function actionCreate()
@@ -150,10 +150,17 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
-				self::createInProject($user, $client);
+				$projectUser = self::createInProject($user, $client);
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
-                $response->data = $user;
+                $responseData = [];
+                if($projectUser) {
+                    $responseData['projectUser'] = $projectUser; // Nulls are okay. Empty object.
+                } else {
+                    $responseData['projectUser'] = false;
+                }
+                $responseData['scctUser'] = $user;
+                $response->data = $responseData;
             } else {
                 throw new \yii\web\HttpException(400);
             }
@@ -728,6 +735,6 @@ class UserController extends BaseActiveController
 			//add user to project to generate time/mileage cards
 			ProjectController::addToProject($user);
 		}
-		return;
+		return $projectUser;
 	}
 }
