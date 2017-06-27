@@ -15,6 +15,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
+use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -304,55 +305,50 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($week, $listPerPage = 10, $page = 1)
+	public function actionGetCards($week, $listPerPage = 10, $page = 1, $filter = null)
 	{
-		// RBAC permission check is embedded in this action	
+        $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
+		// RBAC permission check is embedded in this action
 		try
 		{
 			//get headers
 			$headers = getallheaders();
 			//get client header
 			$client = $headers['X-Client'];
-			
+
 			//set db target headers
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
-			
+
 			//format response
 			$response = Yii::$app->response;
 			$response-> format = Response::FORMAT_JSON;
-			
+
 			//response array of time cards
             $timeCardsArr = [];
             $responseArray = [];
-			
+
 			//if is scct website get all or own
 			if(BaseActiveController::isSCCT($client))
 			{
-				//rbac permission check
+				/*
+				 * Check if user can get all cards
+				 */
 				if (PermissionsController::can('timeCardGetAllCards'))
 				{
 					//check if week is prior or current to determine appropriate view
-					if($week == 'prior')
-					{
-						$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find();
-						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-						$responseArray['assets'] = $timeCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
-						//$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
-					}
-				elseif($week == 'current')
-					{
-						$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find();
-						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-						$responseArray['assets'] = $timeCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
-						//$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
-					}
+                    if ($week == 'prior') {
+                        $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find();
+                    } elseif ($week == 'current') {
+                        $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find();
+                    } else {
+                        // The request is bad
+                        throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
+                    }
 				}
-				//rbac permission check	
+				/*
+				 * Check if user can get their own cards
+				 */
 				elseif (PermissionsController::can('timeCardGetOwnCards'))
 				{
 					$userID = self::getUserFromToken()->UserID;
@@ -374,12 +370,8 @@ class TimeCardController extends BaseActiveController
 								$timeCards->orWhere(['ProjectID'=>$projectID]);
 							}
 						}
-						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-						$responseArray['assets'] = $timeCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
 
-					} 
+					}
 					elseif($week == 'current' && $projectsSize > 0)
 					{
 						$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
@@ -391,11 +383,9 @@ class TimeCardController extends BaseActiveController
 								$timeCards->orWhere(['ProjectID'=>$projectID]);
 							}
 						}
-						$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-						$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-						$responseArray['assets'] = $timeCardsArr;
-						$responseArray['pages'] = $paginationResponse['pages'];
-					}
+					} else {
+                        throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
+                    }
 				}
 				else{
 					throw new ForbiddenHttpException;
@@ -411,20 +401,31 @@ class TimeCardController extends BaseActiveController
 				if($week == 'prior')
 				{
 					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-					$paginationResponse = BaseActiveController::paginationProcessor($timeCards, $page, $listPerPage);
-					$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-					$responseArray['assets'] = $timeCardsArr;
-					$responseArray['pages'] = $paginationResponse['pages'];
-				} 
+				}
 				elseif($week == 'current')
 				{
 					$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-					$paginationResponse = BaseActiveController::paginationProcessor($timeCards, $page, $listPerPage);
-					$timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
-					$responseArray['assets'] = $timeCardsArr;
-					$responseArray['pages'] = $paginationResponse['pages'];
-				}
+				} else {
+                    throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
+                }
 			}
+			// One code segment to rule them all (Don't Repeat Yourself -- DRY)
+            $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+            $timeCardsQuery = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID');
+            if($filter!= null) { //Empty strings or nulls will result in false
+                $timeCardsQuery->andFilterWhere([
+                    'or',
+                    ['like', 'UserName', $filter],
+                    ['like', 'UserFirstName', $filter],
+                    ['like', 'UserLastName', $filter],
+                    ['like', 'ProjectName', $filter]
+                    // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
+                ]);
+            }
+            $timeCardsArr = $timeCardsQuery->all();
+            $responseArray['assets'] = $timeCardsArr;
+            $responseArray['pages'] = $paginationResponse['pages'];
+
 			if (!empty($responseArray['assets']))
 			{
 				$response->data = $responseArray;
@@ -440,7 +441,7 @@ class TimeCardController extends BaseActiveController
 		catch(ForbiddenHttpException $e) {
 			throw $e;
 		}
-		catch(\Exception $e)  
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
