@@ -36,6 +36,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	
 	//york databases
 	const YORK_DEV = 'yorkdev';
+	const YORK_STAGE = 'yorkstage';
 	//york user model
 	const YORK_USER = self::BASE_USER;
 	//york auth manager
@@ -91,6 +92,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkDevDb;
 		}
+		if (self::$CLIENT_ID == self::YORK_STAGE)
+		{
+			return Yii::$app->yorkStageDb;
+		}
 		//beta
 		if (self::$CLIENT_ID == self::BETA_DEV)
 		{
@@ -112,7 +117,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			return self::CT_USER;
 		}
 		//York
-		if($client == self::YORK_DEV)
+		if($client == self::YORK_DEV
+		||$client == self::YORK_STAGE)
 		{
 			return self::YORK_USER;
 		}
@@ -145,7 +151,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			return self::CT_AUTH;
 		}
 		//York
-		if($client == self::YORK_DEV)
+		if($client == self::YORK_DEV
+		|| $client == self::YORK_STAGE)
 		{
 			return self::YORK_AUTH;
 		}
