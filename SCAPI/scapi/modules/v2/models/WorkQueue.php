@@ -17,6 +17,7 @@ use Yii;
  * @property integer $ModifiedBy
  * @property string $ModifiedDate
  * @property integer $tAssetID
+ * @property integer $TaskedOut 
  *
  * @property UserTb $assignedUser
  * @property UserTb $createdBy
@@ -38,7 +39,7 @@ class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['WorkOrderID', 'AssignedUserID', 'WorkQueueStatus', 'CreatedBy', 'ModifiedBy', 'tAssetID'], 'integer'],
+            [['WorkOrderID', 'AssignedUserID', 'WorkQueueStatus', 'CreatedBy', 'ModifiedBy', 'tAssetID', 'TaskedOut'], 'integer'],
             [['SectionNumber'], 'string'],
             [['CreatedDate', 'ModifiedDate'], 'safe'],
             [['AssignedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['AssignedUserID' => 'UserID']],
@@ -63,6 +64,7 @@ class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'ModifiedBy' => 'Modified By',
             'ModifiedDate' => 'Modified Date',
             'tAssetID' => 'T Asset ID',
+            'TaskedOut' => 'Tasked Out',
         ];
     }
 
