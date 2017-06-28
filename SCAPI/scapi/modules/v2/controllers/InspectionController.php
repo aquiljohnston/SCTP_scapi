@@ -13,6 +13,8 @@ use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Inspection;
 use app\modules\v2\models\Event;
 use app\modules\v2\models\Asset;
+use app\modules\v2\models\WorkOrder;
+use app\modules\v2\models\WorkQueue;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -71,6 +73,7 @@ class InspectionController extends Controller
 						$inspectionID = $newInspection->ID;
 						//set associate work queue to completed (WorkQueueStatus  = 102)
 						$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
+						$workOrderResponse = self::completeWorkOrder($data);
 					} else {
 						throw BaseActiveController::modelValidationException($newInspection);
 					}
@@ -83,6 +86,7 @@ class InspectionController extends Controller
 					$inspectionID = $previousInspection->ID;
 					//set associate work queue to completed (WorkQueueStatus  = 102)
 					$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
+					$workOrderResponse = self::completeWorkOrder($data);
 				}
 				//process event data if available
 				if(array_key_exists('Event', $data))
@@ -95,11 +99,12 @@ class InspectionController extends Controller
 					if($data['Asset'] != null)
 						$assetResponse = self::processAsset($data['Asset'], $client, $activityID, $inspectionID);
 				}
-				$responseArray[] = [
+				$responseArray = [
 					'ID' => $inspectionID,
 					'InspectionTabletID' => $newInspection->InspectionTabletID,
 					'SuccessFlag' => $inspectionSuccessFlag,
 					'WorkQueue' => $workQueueResponse,
+					'WorkOrder' => $workOrderResponse,
 					'Event' => $eventResponse,
 					'Asset' => $assetResponse];
 			}
@@ -223,5 +228,104 @@ class InspectionController extends Controller
 			$assetResponse[] = ['AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
 		}
 		return $assetResponse;
+	}
+	
+	private static function completeWorkOrder($inspectionData)
+	{
+		try
+		{
+			//create response format
+			$responseData = [];
+			//try catch to log individual errors
+			try
+			{
+				$successFlag = 0;
+				$workOrderID = '';
+				$workQueue = WorkQueue::find()
+					->where(['ID' => $inspectionData['WorkQueueID']])
+					->andWhere(['WorkQueueStatus' => WorkQueueController::$completed])
+					->one();
+				if($workQueue != null)
+				{
+					$workOrderID = $workQueue->WorkOrderID;
+					$workOrder = WorkOrder::find()
+						->where(['ID' => $workQueue->WorkOrderID])
+						->one();
+					if($workOrder != null)
+					{
+						//record error if record was already completed
+						if($workOrder->CompletedFlag == 1)
+						{
+							BaseActiveController::archiveErrorJson(file_get_contents("php://input"), new \yii\web\HttpException(500), getallheaders()['X-Client'], $workOrderID);
+						}
+						else
+						{
+							if($inspectionData['IsCGEFlag'] != 1)
+							{
+								//handle appropriate updates to work order record
+								$completedData = $inspectionData['CreatedDate'];
+								$eventIndicator = 0;
+								$completedFlag = 0;
+								$inspectionAttemptCounter = $workOrder->InspectionAttemptCounter + 1; 
+								if($inspectionData['IsAOCFlag'] == 1 || $inspectionData['IsAdHocFlag'] == 1 || $inspectionData['IsIndicationFlag'] == 1)
+								{
+									if($inspectionData['IsAdHocFlag'])
+									{
+										$eventIndicator = 3;
+										$completedFlag = 1;
+									}
+									else
+									{
+										$eventIndicator = 1;
+										$completedFlag = 1;
+									}
+								}
+								else
+								{
+									$eventIndicator = 0;
+									$completedFlag = 1;
+								}
+								//assign new data
+								$workOrder->EventIndicator = $eventIndicator;
+								$workOrder->CompletedFlag = $completedFlag;
+								$workOrder->CompletedDate = $completedData;
+								$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
+								$workOrder->ModifiedDateTime = $completedData;
+								//update
+								if($workOrder->update())
+								{
+									$successFlag = 1;
+								}
+								else
+								{
+									throw BaseActiveController::modelValidationException($workOrder);
+								}
+							}
+							else
+							{
+								$successFlag = 1;
+							}
+						}
+					}	
+				}
+			}
+			catch(\Exception $e)
+			{
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueID);//update this inserted data value
+			}
+			$responseData = [
+				'WorkOrderID' => $workOrderID,
+				'SuccessFlag' => $successFlag
+			];
+			return $responseData;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }
