@@ -67,11 +67,13 @@ class TaskOutController extends Controller
 						if ($newTaskOut->save()) {
 							$createdUserID = $newTaskOut->CreatedUserID;
 							$mapGrid = $newTaskOut->MapGrid;
+							$taskOutDateTime = $newTaskOut->SrcDTLT;
 							//Call Task Out SP
 							$connection = BaseActiveRecord::getDb();
-							$processJSONCommand = $connection->createCommand("EXECUTE spTaskOut :UserID,:MapGrid");
+							$processJSONCommand = $connection->createCommand("EXECUTE spTaskOut :UserID,:MapGrid,:TaskOutDateTime");
 							$processJSONCommand->bindParam(':UserID', $createdUserID,  \PDO::PARAM_INT);
 							$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
+							$processJSONCommand->bindParam(':TaskOutDateTime', $taskOutDateTime,  \PDO::PARAM_STR);
 							$processJSONCommand->execute();
 							$taskOutID = $newTaskOut->ID;
 							$successFlag = 1;
