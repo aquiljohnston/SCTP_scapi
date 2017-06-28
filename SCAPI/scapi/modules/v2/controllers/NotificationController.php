@@ -160,4 +160,66 @@ class NotificationController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+
+    public function actionGetNotificationLanding($filter = null, $listPerPage = 50, $page = 1)
+    {
+        try {
+            //set db target
+            SCUser::setClient(BaseActiveController::urlPrefix());
+
+            //get user
+            $userID = BaseActiveController::getUserFromToken()->UserID;
+            $user = SCUser::findOne($userID);
+
+            // check if login user is Engineer
+            if ($user->UserAppRoleType != "Engineer") {
+
+                PermissionsController::requirePermission('notificationsGet');
+
+                //load data into array
+                $notifications = [];
+                $notifications["firstName"] = $user->UserFirstName;
+                $notifications["lastName"] = $user->UserLastName;
+                $notifications["notification"] = [];
+
+                //set db
+                $headers = getallheaders();
+                BaseActiveRecord::setClient($headers['X-Client']);
+
+                //get notification for project
+                $notificationData = Notification::find();
+
+                if($filter != null)
+                {
+                    $notificationData->andFilterWhere([
+                        'or',
+                        ['like', 'NotificationType', $filter],
+                        ['like', 'SrvDTLT', $filter],
+                    ]);
+                }
+
+                if($page != null)
+                {
+                    $orderBy = 'SrvDTLT';
+                    //pass query with pagination data to helper method
+                    $paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
+                    //use updated query with pagination caluse to get data
+                    $data = $paginationResponse['Query']->orderBy($orderBy)
+                        ->all();
+                    $responseArray['pages'] = $paginationResponse['pages'];
+                    $responseArray['notification'] = $data;
+                }
+
+                //send response
+                $response = Yii::$app->response;
+                $response->format = Response::FORMAT_JSON;
+                $response->data = $responseArray;
+                return $response;
+            }
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
 }
