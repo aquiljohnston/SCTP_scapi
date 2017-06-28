@@ -104,23 +104,19 @@ class DropdownController extends Controller
 			//set db target
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
-
+			
+			$tabletDropdowns = DropDown::find()
+				->select('FilterName')
+				->distinct()
+				->where(['DropDownType' => 'Tablet'])
+				->all();
+				
 			$responseData['SurveyDropdowns'] = [];
-			$responseData['SurveyDropdowns']['Collecting']= DropdownController::tabletSurveyQuery('Collecting');
-			$responseData['SurveyDropdowns']['CustomerType']= DropdownController::tabletSurveyQuery('CustomerType');
-			$responseData['SurveyDropdowns']['DetectedByEquipment']= DropdownController::tabletSurveyQuery('DetectedByEquipment');
-			$responseData['SurveyDropdowns']['LeakAboveOrBelow']= DropdownController::tabletSurveyQuery('LeakAboveOrBelow');
-			$responseData['SurveyDropdowns']['LeakGrade']= DropdownController::tabletSurveyQuery('LeakGrade');
-			$responseData['SurveyDropdowns']['LeakMeterLeakLocation']= DropdownController::tabletSurveyQuery('LeakMeterLeakLocation');
-			$responseData['SurveyDropdowns']['LeakPipelineSystemInvestigated']= DropdownController::tabletSurveyQuery('LeakPipelineSystemInvestigated');
-			$responseData['SurveyDropdowns']['PartOfSystem']= DropdownController::tabletSurveyQuery('PartOfSystem');
-			$responseData['SurveyDropdowns']['PipeCondition']= DropdownController::tabletSurveyQuery('PipeCondition');
-			$responseData['SurveyDropdowns']['PipeType']= DropdownController::tabletSurveyQuery('PipeType');
-			$responseData['SurveyDropdowns']['Pressure']= DropdownController::tabletSurveyQuery('Pressure');
-			$responseData['SurveyDropdowns']['ProbableCause']= DropdownController::tabletSurveyQuery('ProbableCause');
-			$responseData['SurveyDropdowns']['Soil']= DropdownController::tabletSurveyQuery('Soil');
-			$responseData['SurveyDropdowns']['Surface']= DropdownController::tabletSurveyQuery('Surface');
-			$responseData['SurveyDropdowns']['SurfaceCondition']= DropdownController::tabletSurveyQuery('SurfaceCondition');
+			
+			for($i = 0; $i < count($tabletDropdowns); $i++)
+			{
+				$responseData['SurveyDropdowns'][$tabletDropdowns[$i]['FilterName']]= DropdownController::tabletSurveyQuery($tabletDropdowns[$i]['FilterName']);
+			}
 
 			//send response
 			$response = Yii::$app->response;
