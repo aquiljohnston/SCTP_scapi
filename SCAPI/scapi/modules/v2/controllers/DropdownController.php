@@ -8,6 +8,7 @@ use app\authentication\TokenAuth;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
 use app\modules\v2\models\EmployeeType;
+use app\modules\v2\models\DropDown;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\Response;
 use \DateTime;
@@ -31,6 +32,7 @@ class DropdownController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-employee-type-dropdown' => ['get'],
+                    'get-tablet-survey-dropdowns' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -92,4 +94,60 @@ class DropdownController extends Controller
         $response -> format = Response::FORMAT_JSON;
         $response -> data = $processedResults;
     }
+	
+	/////////////////////TABLET DROPDOWNS BEGIN////////////////////////
+	//route to provide data for all survey dropdowns on the tablet
+	public function actionGetTabletSurveyDropdowns()
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+
+			$responseData['SurveyDropdowns'] = [];
+			$responseData['SurveyDropdowns']['Collecting']= DropdownController::tabletSurveyQuery('Collecting');
+			$responseData['SurveyDropdowns']['CustomerType']= DropdownController::tabletSurveyQuery('CustomerType');
+			$responseData['SurveyDropdowns']['DetectedByEquipment']= DropdownController::tabletSurveyQuery('DetectedByEquipment');
+			$responseData['SurveyDropdowns']['LeakAboveOrBelow']= DropdownController::tabletSurveyQuery('LeakAboveOrBelow');
+			$responseData['SurveyDropdowns']['LeakGrade']= DropdownController::tabletSurveyQuery('LeakGrade');
+			$responseData['SurveyDropdowns']['LeakMeterLeakLocation']= DropdownController::tabletSurveyQuery('LeakMeterLeakLocation');
+			$responseData['SurveyDropdowns']['LeakPipelineSystemInvestigated']= DropdownController::tabletSurveyQuery('LeakPipelineSystemInvestigated');
+			$responseData['SurveyDropdowns']['PartOfSystem']= DropdownController::tabletSurveyQuery('PartOfSystem');
+			$responseData['SurveyDropdowns']['PipeCondition']= DropdownController::tabletSurveyQuery('PipeCondition');
+			$responseData['SurveyDropdowns']['PipeType']= DropdownController::tabletSurveyQuery('PipeType');
+			$responseData['SurveyDropdowns']['Pressure']= DropdownController::tabletSurveyQuery('Pressure');
+			$responseData['SurveyDropdowns']['ProbableCause']= DropdownController::tabletSurveyQuery('ProbableCause');
+			$responseData['SurveyDropdowns']['Soil']= DropdownController::tabletSurveyQuery('Soil');
+			$responseData['SurveyDropdowns']['Surface']= DropdownController::tabletSurveyQuery('Surface');
+			$responseData['SurveyDropdowns']['SurfaceCondition']= DropdownController::tabletSurveyQuery('SurfaceCondition');
+
+			//send response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+
+	//helper method for standard tablet survey query
+	public static function tabletSurveyQuery($filter)
+	{
+		return DropDown::find()
+				->select(['FilterName', 'SortSeq', 'FieldDisplayValue'])
+				->where(['FilterName'=>$filter])
+				//no active flag present may be used later.
+				//->andWhere(['ActiveFlag'=>1])
+				->orderBy('SortSeq')
+				->all();
+	}
+	/////////////////////TABLET DROPDOWNS END////////////////////////
 }
