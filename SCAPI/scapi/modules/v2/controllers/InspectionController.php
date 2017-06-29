@@ -55,6 +55,7 @@ class InspectionController extends Controller
 				$eventResponse = [];
 				$assetResponse = [];
 				$workQueueResponse = [];
+				$workOrderResponse = [];
 				$inspectionID = null;
 			
 				$newInspection = new Inspection;
@@ -111,7 +112,7 @@ class InspectionController extends Controller
 			catch(\Exception $e)
 			{
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
-				$responseArray[] = [
+				$responseArray = [
 					'ID' => $inspectionID,
 					'InspectionTabletID' => $data['InspectionTabletID'],
 					'SuccessFlag' => $inspectionSuccessFlag,
@@ -220,12 +221,12 @@ class InspectionController extends Controller
 				$assetSuccessFlag = 1;
 				$assetID = $previousAsset->ID;
 			}
-			$assetResponse[] = ['ID' => $assetID, 'AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
+			$assetResponse = ['ID' => $assetID, 'AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
 		}
 		catch(\Exception $e)
 		{
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
-			$assetResponse[] = ['AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
+			$assetResponse = ['AssetTabletID' => $data['AssetTabletID'],'SuccessFlag' => $assetSuccessFlag];
 		}
 		return $assetResponse;
 	}
