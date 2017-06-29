@@ -419,51 +419,50 @@ class ProjectController extends BaseActiveController
 				//set failure response
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
-				
+
 				return $response;
 			}
 			
 			//loop usersAdded and create relationships and cards
-			foreach($usersAdded as $i)
-			{
-				//find user
-				$user = SCUser::findOne($i);
-				//create user in project db
-				UserController::createInProject($user, $project->ProjectUrlPrefix);
-				//reset target db after external call
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				//fucntion call to add to project
-				self::addToProject($user, $project);
-			}
+            if (count($usersAdded) > 0 && $usersAdded[0] != null) {
+                foreach ($usersAdded as $i) {
+                    //find user
+                    $user = SCUser::findOne($i);
+                    //create user in project db
+                    UserController::createInProject($user, $project->ProjectUrlPrefix);
+                    //reset target db after external call
+                    BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+                    //fucntion call to add to project
+                    self::addToProject($user, $project);
+                }
+            }
 			
 			//loop usersRemoved and delete relationships and deactivate cards
-			foreach($usersRemoved as $i)
-			{
-				$projUser = ProjectUser::find()
-				->where(['and', "ProjUserUserID = $i","ProjUserProjectID = $projectID"])
-				->one();
-				$projUser->delete();
-				//call sps to deactivate time cards and mileage cards
-				try
-				{
-					$userID = $i;
-					$connection = SCUser::getDb();
-					$transaction = $connection-> beginTransaction();
-					$timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
-					$timeCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
-					$timeCardCommand->execute();
-					$mileageCardCommand = $connection->createCommand("EXECUTE DeactivateMileageCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
-					$mileageCardCommand->bindParam(':PARAMETER1', $userID,  \PDO::PARAM_INT);
-					$mileageCardCommand->bindParam(':PARAMETER2', $projectID,  \PDO::PARAM_INT);
-					$mileageCardCommand->execute();
-					$transaction->commit();
-				}
-				catch(Exception $e)
-				{
-					$transaction->rollBack();
-				}		
-			}
+            if (count($usersRemoved) > 0 && $usersRemoved[0] != null) {
+                foreach ($usersRemoved as $i) {
+                    $projUser = ProjectUser::find()
+                        ->where(['and', "ProjUserUserID = $i", "ProjUserProjectID = $projectID"])
+                        ->one();
+                    $projUser->delete();
+                    //call sps to deactivate time cards and mileage cards
+                    try {
+                        $userID = $i;
+                        $connection = SCUser::getDb();
+                        $transaction = $connection->beginTransaction();
+                        $timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
+                        $timeCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
+                        $timeCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
+                        $timeCardCommand->execute();
+                        $mileageCardCommand = $connection->createCommand("EXECUTE DeactivateMileageCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
+                        $mileageCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
+                        $mileageCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
+                        $mileageCardCommand->execute();
+                        $transaction->commit();
+                    } catch (Exception $e) {
+                        $transaction->rollBack();
+                    }
+                }
+            }
 			
 			//set success response 
 			$response->setStatusCode(200);
