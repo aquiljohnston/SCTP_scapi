@@ -87,9 +87,8 @@ class UserController extends BaseActiveController
     public function actionCreate()
     {
         try {
-			//set db
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			//get client header
+			$client = getallheaders()['X-Client'];
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -181,12 +180,15 @@ class UserController extends BaseActiveController
     public function actionUpdate($id = null, $jsonData = null, $client = null, $username = null)
     {
         try {
+			//get client header
+			//not sure if I can call this client because of the param above
+			$clientHeader = getallheaders()['X-Client'];
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userUpdate');
 			
-            if ($jsonData != null) {
+            if ($jsonData != null) { 	
 				$data = json_decode(utf8_decode($jsonData), true);
             } else {
                 $put = file_get_contents("php://input");
@@ -197,6 +199,16 @@ class UserController extends BaseActiveController
             $response->format = Response::FORMAT_JSON;
             $responseArray = [];
 
+			if(!BaseActiveController::isSCCT($clientHeader))
+			{
+				BaseActiveRecord::setClient($clientHeader);
+				$userModel = BaseActiveRecord::getUserModel($clientHeader);
+				$clientUser = $userModel::findOne($id);
+				$username = $clientUser->UserName;
+				$id = null;
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			}
+			
             //get user model to be updated
             //check params
             if ($id != null) {
@@ -208,8 +220,9 @@ class UserController extends BaseActiveController
                     ->where(['UserName' => $username])
                     ->one();
             } else {
-                return 'no id or username';
-                throw new \yii\web\HttpException(400);
+				//no ID or username avaliable
+                return 'Invalid Parameters.';
+                //throw new \yii\web\HttpException(400);
             }
 			
             $currentRole = $user['UserAppRoleType'];
@@ -311,8 +324,8 @@ class UserController extends BaseActiveController
                     }
                 }
             } else {
-                return 'failed to update base user';
-                throw new \yii\web\HttpException(400);
+                return 'Failed to update base user.';
+                //throw new \yii\web\HttpException(400);
             }
             $response->data = $responseArray;
             return $response;
@@ -332,10 +345,8 @@ class UserController extends BaseActiveController
     public function actionView($id)
     {
         try {
-			//get headers
-			$headers = getallheaders();
 			//get client header
-			$client = $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			
 			//create response object
 			$response = Yii::$app->response;
@@ -385,7 +396,14 @@ class UserController extends BaseActiveController
      */
     public function actionDeactivate($userID)
     {
+		//not sure how we want to handle deactivating users within the client
+		//currently for scct we use an sp that is supposed to cscade delete. 
+		//no such sp exist for client dbs, so do we simply set the user flag to inactive?
+		//or do we want to do more? does it matter?
         try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -573,49 +591,6 @@ class UserController extends BaseActiveController
         }
     }
 
-    /* Route getAllProjects
-    * @Param userID
-    * Client clientID
-    * @Returns JSON of: Project Name, Project ID, Client ID
-    * @throws \yii\web\HttpException
-    */
-    public function actionGetProjects($userID)
-    {
-        // TODO: remove. Replaced by ProjectController::actionGetAll()
-        try {
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userGetProjects');
-
-            //get users relationship to projects
-            $projectUser = ProjectUser::find()
-                ->where("ProjUserUserID = $userID")
-                ->all();
-
-            //get projects based on relationship
-            $projectUserLength = count($projectUser);
-            $projects = [];
-            for ($i = 0; $i < $projectUserLength; $i++) {
-                $projectID = $projectUser[$i]->ProjUserProjectID;
-                $projectModel = Project::findOne($projectID);
-                $projectData["ProjectID"] = $projectModel->ProjectID;
-                $projectData["ProjectName"] = $projectModel->ProjectName;
-                $projectData["ProjectClientID"] = $projectModel->ProjectClientID;
-
-                $projects[] = $projectData;
-            }
-
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $projects;
-        } catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch (\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
     /**
      * Gets a users data for all users with an active flag of 1 for active
      * @param $listPerPage
@@ -694,12 +669,12 @@ class UserController extends BaseActiveController
         }
     }
 	
-	//creates a copy of the scuser $user
+	/*creates a copy of the scuser $user
 	//in the project db $client
 	//Params
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
-	//returns ???
+	returns ???*/
 	public static function createInProject($user, $client)
 	{
 		//get user model based on project 
