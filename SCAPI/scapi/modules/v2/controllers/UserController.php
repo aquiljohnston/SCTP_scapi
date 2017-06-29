@@ -181,8 +181,11 @@ class UserController extends BaseActiveController
     {
         try {
 			//get client header
-			//not sure if I can call this client because of the param above
-			$clientHeader = getallheaders()['X-Client'];
+			//checks to see if request was sent directly to this route or call internally from another api controller.
+			if($client == null)
+			{
+				$clientHeader = getallheaders()['X-Client'];
+			}
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
