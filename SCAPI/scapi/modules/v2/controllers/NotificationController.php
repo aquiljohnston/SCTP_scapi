@@ -78,6 +78,8 @@ class NotificationController extends Controller
                 $notificationTotal = 0;
                 $timeCardTotal = 0;
                 $mileageCardTotal = 0;
+                $projectHasNotification = false;
+                $projectNameHasNotification = null;
 
                 //loop projects to get data
                 for ($i = 0; $i < $projectSize; $i++) {
@@ -111,24 +113,32 @@ class NotificationController extends Controller
                     //increment total counts
                     $timeCardTotal += $timeCardCount;
                     $mileageCardTotal += $mileageCardCount;
+
+                    //check if the user associated with yorkDev
+                    if ($projectName == "York Dev") {
+                        $projectHasNotification = true;
+                        $projectNameHasNotification = $projectName;
+                    }
                 }
 
-                //set db
-                $headers = getallheaders();
-                BaseActiveRecord::setClient($headers['X-Client']);
+                if ($projectHasNotification){
 
-                //get notification for project
-                $notificationData = Notification::find()
-                    ->all();
-                $notificationCount = count($notificationData);
+                    //set db
+                    $headers = getallheaders();
+                    BaseActiveRecord::setClient($headers['X-Client']);
 
-                //pass notification data for project
-                $notificationReturnData["Project"] = $projectName;
-                $notificationReturnData["Number of Items"] = $notificationCount;
-                //appened data to response array
-                $notifications["notification"][] = $notificationReturnData;
-                //increment total counts
-                $notificationTotal += $notificationCount;
+                    //get notification for project
+                    $notificationData = Notification::find()
+                        ->all();
+                    $notificationTotal = count($notificationData);
+
+                    //pass notification data for project;
+                    $notificationReturnData["Project"] = $projectNameHasNotification;
+                    $notificationReturnData["Number of Items"] = $notificationTotal;
+
+                    //appened data to response array
+                    $notifications["notification"][] = $notificationReturnData;
+                }
 
                 //pass notification data for total
                 $notificationReturnData["Project"] = "Total";
