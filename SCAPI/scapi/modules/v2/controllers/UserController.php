@@ -54,11 +54,9 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
-                    'get-user-dropdowns' => ['get'],
+                    //'get-user-dropdowns' => ['get'],
                     'get-me' => ['get'],
-                    'get-projects' => ['get'],
                     'get-active' => ['get'],
-                    'add-user-to-project' => ['post'],
                 ],
             ];
         return $behaviors;
@@ -201,15 +199,16 @@ class UserController extends BaseActiveController
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $responseArray = [];
-
+			
+			//if client header is not scct get client username to pull sc user 
 			if(!BaseActiveController::isSCCT($clientHeader))
 			{
 				BaseActiveRecord::setClient($clientHeader);
 				$userModel = BaseActiveRecord::getUserModel($clientHeader);
 				$clientUser = $userModel::findOne($id);
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 				$username = $clientUser->UserName;
 				$id = null;
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			}
 			
             //get user model to be updated
@@ -292,6 +291,8 @@ class UserController extends BaseActiveController
 
                 //loop projects
                 for ($i = 0; $i < $projectCount; $i++) {
+					//reset db to Comet Tracker
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
                     //get project information
                     $project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
 
@@ -399,10 +400,7 @@ class UserController extends BaseActiveController
      */
     public function actionDeactivate($userID)
     {
-		//not sure how we want to handle deactivating users within the client
-		//currently for scct we use an sp that is supposed to cscade delete. 
-		//no such sp exist for client dbs, so do we simply set the user flag to inactive?
-		//or do we want to do more? does it matter?
+		//for non-scct user we're just changing the active flag to 0 no cascade for now
         try {
 			//get client header
 			$client = getallheaders()['X-Client'];
@@ -412,28 +410,48 @@ class UserController extends BaseActiveController
 
             PermissionsController::requirePermission('userDeactivate');
 
-            //get user to be deactivated
-            $user = SCUser::findOne($userID);
+			//get user to be deactivated
+			if(BaseActiveController::isSCCT($client))
+			{
+				//if ct user pull directly
+				$user = SCUser::findOne($userID);
+			}
+			else
+			{
+				//if client user use helper method to get ct user from client id
+				$user = self::getUserByClientUser($userID, $client);
+				//set user id to comet tracker id
+				$userID = $user->UserID;
+			}
 
-            $currentRole = $user["UserAppRoleType"];
+            $currentRole = $user['UserAppRoleType'];
 
             PermissionsController::requirePermission('userUpdate' . $currentRole);
-
-            //pass new data to user model
-            //$user->UserActiveFlag = 0;
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-            //call stored procedure to for cascading deactivation of a user
             try {
+				//process user deactivation in client dbs
+				$deactivatedProjects = self::deactivateInProjects($user);
+				
+				 //call stored procedure to for cascading deactivation of a user
                 $connection = SCUser::getDb();
                 $userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
                 $userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
                 $userDeactivateCommand->execute();
-                //Log out user so that they don't receive 403s if loggedin or deactivating self
-                Auth::findOne(["AuthUserID" => $userID])->delete();
-                $response->data = $user;
+				
+                //Log out user so that they don't receive 403s if logged in or deactivating self
+                $auth = Auth::findOne(["AuthUserID" => $userID]);
+				if($auth != null) $auth->delete();
+				
+				//build response data
+				//requery user after deactivation
+				$user = SCUser::findOne($userID);
+				$user->UserPassword = '';
+				$userData[] = $user->attributes;
+				$userData['DeactivatedProjects'] = $deactivatedProjects;
+                $response->data = $userData;
             } catch (Exception $e) {
                 $response->setStatusCode(400);
                 $response->data = "Http:400 Bad Request";
@@ -714,5 +732,65 @@ class UserController extends BaseActiveController
 			ProjectController::addToProject($user);
 		}
 		return $projectUser;
+	}
+
+	//get comet tracker user from client user id
+	private static function getUserByClientUser($userID, $client)
+	{
+		BaseActiveRecord::setClient($client);
+		$userModel = BaseActiveRecord::getUserModel($client);
+		//get client user
+		$clientUser = $userModel::findOne($userID);
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		//get ct user
+		$user = SCUser::find()
+			->where(['UserName' => $clientUser->UserName])
+			->one();
+		return $user;
+	}
+	
+	//deactivate user in all accociated non PG&E clients
+	private static function deactivateInProjects($user)
+	{
+		$response = [];
+		
+		//find all projects
+		$projectUser = ProjectUser::find()
+			->select('ProjUserProjectID')
+			->where(['ProjUserUserID' => $user->UserID])
+			->all();
+		$projectCount = count($projectUser);
+		
+		 //loop projects
+		for ($i = 0; $i < $projectCount; $i++) {
+			//get project information
+			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+
+			//get model from base active record based on urlPrefix in project
+			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+			if($userModel == null) continue;
+			$userModel::setClient($project->ProjectUrlPrefix);
+			$projectUser = $userModel::find()
+				->where(['UserName' => $user->UserName])
+				->andWhere(['UserActiveFlag' => 1])
+				->one();
+
+			$projectUser->UserActiveFlag = 0;
+
+			if ($projectUser->update()) {
+				 //remove rbac role
+				$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+				if($projectAuthClass != null){
+					$projectAuth = new $projectAuthClass($userModel::getDb());
+					if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+						$projectAuth->revokeAll($projectUser['UserID']);
+					}
+				}	
+				$response[] = $project->ProjectUrlPrefix;
+			}
+			//reset db to Comet Tracker
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		}
+		return $response;
 	}
 }
