@@ -181,6 +181,17 @@ class NotificationController extends Controller
             $userID = BaseActiveController::getUserFromToken()->UserID;
             $user = SCUser::findOne($userID);
 
+            $projectHasNotification = false;
+            $projectNameHasNotification = null;
+            $notificationData = [];
+
+            //get projects the user belongs to
+            $projectData = $user->projects;
+            $projectArray = array_map(function ($model) {
+                return $model->attributes;
+            }, $projectData);
+            $projectSize = count($projectArray);
+
             // check if login user is Engineer
             if ($user->UserAppRoleType != "Engineer") {
 
@@ -191,33 +202,43 @@ class NotificationController extends Controller
                 $notifications["firstName"] = $user->UserFirstName;
                 $notifications["lastName"] = $user->UserLastName;
                 $notifications["notification"] = [];
+                $responseArray = [];
 
-                //set db
-                $headers = getallheaders();
-                BaseActiveRecord::setClient($headers['X-Client']);
+                //loop projects to get data
+                for ($i = 0; $i < $projectSize; $i++) {
+                    $projectName = $projectArray[$i]["ProjectName"];
 
-                //get notification for project
-                $notificationData = Notification::find();
-
-                if($filter != null)
-                {
-                    $notificationData->andFilterWhere([
-                        'or',
-                        ['like', 'NotificationType', $filter],
-                        ['like', 'SrvDTLT', $filter],
-                    ]);
+                    //check if the user associated with yorkDev
+                    if ($projectName == "York Dev") {
+                        $projectHasNotification = true;
+                    }
                 }
 
-                if($page != null)
-                {
-                    $orderBy = 'SrvDTLT';
-                    //pass query with pagination data to helper method
-                    $paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
-                    //use updated query with pagination caluse to get data
-                    $data = $paginationResponse['Query']->orderBy($orderBy)
-                        ->all();
-                    $responseArray['pages'] = $paginationResponse['pages'];
-                    $responseArray['notification'] = $data;
+                if ($projectHasNotification) {
+                    //set db
+                    $headers = getallheaders();
+                    BaseActiveRecord::setClient($headers['X-Client']);
+
+                    //get notification for project
+                    $notificationData = Notification::find();
+
+                    if ($filter != null) {
+                        $notificationData->andFilterWhere([
+                            'or',
+                            ['like', 'NotificationType', $filter],
+                            ['like', 'SrvDTLT', $filter],
+                        ]);
+                    }
+                    if ($page != null) {
+                        $orderBy = 'SrvDTLT';
+                        //pass query with pagination data to helper method
+                        $paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
+                        //use updated query with pagination caluse to get data
+                        $data = $paginationResponse['Query']->orderBy($orderBy)
+                            ->all();
+                        $responseArray['pages'] = $paginationResponse['pages'];
+                        $responseArray['notification'] = $data;
+                    }
                 }
 
                 //send response
