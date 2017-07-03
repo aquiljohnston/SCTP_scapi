@@ -72,7 +72,7 @@ class ReportsController extends Controller {
         }
      */
 	 //TODO inspector filter for views
-    public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null)
+    public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null, $ParmInspector = null)
 	{
 		$headers = getallheaders();
         BaseActiveRecord::setClient($headers['X-Client']);
@@ -94,10 +94,17 @@ class ReportsController extends Controller {
 			}
 			elseif ($startDate != null && $endDate != null)
 			{
-				$queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
-				
-				$queryResults = $connection->createCommand($queryString)
-				->queryAll();
+			    if ($ParmInspector != null) {
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
+
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }else{
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . ", " . "'" . $ParmInspector . "'";
+
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }
 			}
 			elseif($startDate == null && $endDate == null)
 			{
@@ -194,31 +201,39 @@ class ReportsController extends Controller {
     }
 
     /**
-     * @param $spName
-     * @param $parm
+     * @param $viewName
      * @param $startDate
      * @param $endDate
      * @return mixed
      */
-    public function actionGetInspectorDropdown($spName, $parm, $startDate, $endDate)
+    public function actionGetInspectorDropdown($viewName = null, $startDate = null, $endDate = null)
 	{
 		try
 		{
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
-			
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			
-			$connection = BaseActiveRecord::getDb();
-			
-			$queryResults = $connection->createCommand("EXEC " . $spName . " " . $parm . ", null," . "'" . $startDate . "'" . "," . "'" . $endDate . "'")
-			->queryAll();
-			
-			$responseData['inspectors'] = self::formatDropdowns($queryResults);
-			
-			$response->data = $responseData;
-			return $response;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+		    if ($viewName != null) {
+                $headers = getallheaders();
+                BaseActiveRecord::setClient($headers['X-Client']);
+
+                $connection = BaseActiveRecord::getDb();
+
+                $queryString = "SELECT * FROM " . $viewName;
+
+                $queryResults = $connection->createCommand($queryString)
+                    ->queryAll();
+
+                $responseData['inspectors'] = self::formatInspectorDropdowns($queryResults);
+
+                $response->data = $responseData;
+                return $response;
+            }else{
+                $responseData['inspectors'] = [];
+
+                $response->data = $responseData;
+                return $response;
+            }
 		}
 		catch(ForbiddenHttpException $e)
 		{
@@ -229,8 +244,12 @@ class ReportsController extends Controller {
 			throw new \yii\web\HttpException(400);
 		}
     }
-	
-	private static function formatDropdowns($data)
+
+    /**
+     * @param $data
+     * @return array
+     */
+    private static function formatDropdowns($data)
 	{
 		$formatedData = [];
 		
@@ -243,4 +262,16 @@ class ReportsController extends Controller {
 		
 		return $formatedData;
 	}
+
+	private static function formatInspectorDropdowns($data){
+	    $formatedData = [];
+        $dataCount = count($data);
+
+        for ($i = 0; $i < $dataCount; $i++)
+        {
+            $formatedData[] = $data[$i]['UserName'];
+        }
+
+        return $formatedData;
+    }
 }
