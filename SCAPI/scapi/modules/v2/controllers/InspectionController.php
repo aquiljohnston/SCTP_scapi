@@ -99,6 +99,21 @@ class InspectionController extends Controller
 				{
 					if($data['Asset'] != null)
 						$assetResponse = self::processAsset($data['Asset'], $client, $activityID, $inspectionID);
+					if (array_key_exists('ID', $assetResponse))
+					{
+						//create ad hoc work queue
+						if($data['IsAdHocFlag'] == 1)
+						{
+							$workQueueResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
+							//add new work queue id to inspection record.
+							$newInspection->WorkQueueID = $workQueueResponse['ID'];
+						}
+						//add asset ID to inspection record
+						$newInspection->AssetID = $assetResponse['ID'];
+						if(!$newInspection->update())
+							throw BaseActiveController::modelValidationException($newInspection);
+						
+					}
 				}
 				$responseArray = [
 					'ID' => $inspectionID,
