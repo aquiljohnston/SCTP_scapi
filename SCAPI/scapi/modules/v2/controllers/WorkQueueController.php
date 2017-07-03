@@ -208,7 +208,7 @@ class WorkQueueController extends Controller
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueID);
 			}
 			$responseData = [
-				'ID' => $workQueueID,
+				'WorkQueueID' => $workQueueID,
 				'WorkQueueStatus' => $workQueueStatus,
 				'SuccessFlag' => $successFlag
 			];
@@ -257,7 +257,7 @@ class WorkQueueController extends Controller
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $assetID);
 			}
 			$responseData = [
-				'ID' => $workQueue->ID,
+				'WorkQueueID' => $workQueue->ID,
 				'WorkQueueStatus' => $workQueue->WorkQueueStatus,
 				'SuccessFlag' => $successFlag
 			];

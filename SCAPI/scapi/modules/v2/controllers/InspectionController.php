@@ -106,7 +106,7 @@ class InspectionController extends Controller
 						{
 							$workQueueResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
 							//add new work queue id to inspection record.
-							$newInspection->WorkQueueID = $workQueueResponse['ID'];
+							$newInspection->WorkQueueID = $workQueueResponse['WorkQueueID'];
 						}
 						//add asset ID to inspection record
 						$newInspection->AssetID = $assetResponse['ID'];
