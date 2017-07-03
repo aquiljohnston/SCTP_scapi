@@ -94,7 +94,7 @@ class ReportsController extends Controller {
 			}
 			elseif ($startDate != null && $endDate != null)
 			{
-			    if ($ParmInspector != null) {
+			    if ($ParmInspector == null) {
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
 
                     $queryResults = $connection->createCommand($queryString)
