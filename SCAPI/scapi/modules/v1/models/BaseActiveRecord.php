@@ -34,6 +34,13 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//pg&e auth manager
 	const PGE_AUTH = 'app\rbac\PgeDbManager';
 	
+	//york databases
+	const YORK_DEV = 'yorkdev';
+	//york user model
+	const YORK_USER = self::BASE_USER;
+	//york auth manager
+	const YORK_AUTH = 'app\rbac\YorkDbManager';
+	
 	//beta client database
 	const BETA_DEV = 'betadev';
 	//beta user model
@@ -79,6 +86,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->pgeProdDb;
 		}
+		//york
+		if (self::$CLIENT_ID == self::YORK_DEV)
+		{
+			return Yii::$app->yorkDevDb;
+		}
 		//beta
 		if (self::$CLIENT_ID == self::BETA_DEV)
 		{
@@ -98,6 +110,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		|| $client == self::SCCT_PROD)
 		{
 			return self::CT_USER;
+		}
+		//York
+		if($client == self::YORK_DEV)
+		{
+			return self::YORK_USER;
 		}
 		//Beta
 		if($client == self::BETA_DEV)
@@ -126,6 +143,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		|| $client == self::SCCT_PROD)
 		{
 			return self::CT_AUTH;
+		}
+		//York
+		if($client == self::YORK_DEV)
+		{
+			return self::YORK_AUTH;
 		}
 		//Beta
 		if($client == self::BETA_DEV)

@@ -49,6 +49,7 @@ use Yii;
  * @property integer $ActivityNumberOfGPSAttempts
  * @property string $ActivityAppVersion
  * @property string $ActivityAppVersionName
+ * @property string $srvUTCDatetime
  */
 class Activity extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -66,10 +67,10 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT'], 'safe'],
+            [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT', 'srvUTCDatetime'], 'safe'],
             [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName'], 'string'],
             [['ActivityCode', 'ActivityPayCode', 'ActivityArchiveFlag', 'ActivityProjectID', 'ActivityElapsedSec', 'ActivityFixQuality', 'ActivityNumberOfSatellites', 'ActivityNumberOfGPSAttempts'], 'integer'],
-            [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed'], 'number']
+            [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed'], 'number'],
         ];
     }
 
@@ -121,6 +122,7 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
             'ActivityNumberOfGPSAttempts' => 'Activity Number Of Gpsattempts',
             'ActivityAppVersion' => 'Activity App Version',
             'ActivityAppVersionName' => 'Activity App Version Name',
+            'srvUTCDatetime' => 'Srv Utcdatetime',
         ];
     }
 }

@@ -2,19 +2,22 @@
 
 namespace app\modules\v2\controllers;
 
+use app\modules\v2\models\Auth;
 use Yii;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\models\Project;
-use app\modules\v1\models\Client;
-use app\modules\v1\models\ProjectUser;
-use app\modules\v1\models\ActivityCode;
-use app\modules\v1\models\Equipment;
-use app\modules\v1\models\PayCode;
-use app\modules\v1\models\AllTimeCardsCurrentWeek;
-use app\modules\v1\models\AllMileageCardsCurrentWeek;
-use app\modules\v1\models\BaseActiveRecord;
-use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\controllers\PermissionsController;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Project;
+use app\modules\v2\models\Client;
+use app\modules\v2\models\ProjectUser;
+use app\modules\v2\models\ActivityCode;
+use app\modules\v2\models\Equipment;
+use app\modules\v2\models\PayCode;
+use app\modules\v2\models\AllTimeCardsCurrentWeek;
+use app\modules\v2\models\AllMileageCardsCurrentWeek;
+use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\models\Users;
+use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\PermissionsController;
+use app\modules\v2\controllers\ProjectController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -33,7 +36,7 @@ use yii\data\Pagination;
  */
 class UserController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v1\models\SCUser';
+    public $modelClass = 'app\modules\v2\models\SCUser';
 
     /**
      * sets verb filters for http request
@@ -51,11 +54,9 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
-                    'get-user-dropdowns' => ['get'],
+                    //'get-user-dropdowns' => ['get'],
                     'get-me' => ['get'],
-                    'get-projects' => ['get'],
                     'get-active' => ['get'],
-                    'add-user-to-project' => ['post'],
                 ],
             ];
         return $behaviors;
@@ -77,13 +78,15 @@ class UserController extends BaseActiveController
 	//use DeleteMethodNotAllowed;
 
     /**
-     * Creates a new user record in the database and a corresponding key record
-     * @returns json body of the user data
+     * Creates a new user record in the database
+     * @returns Response json body of the user data
      * @throws \yii\web\HttpException
      */
     public function actionCreate()
     {
         try {
+			//get client header
+			$client = getallheaders()['X-Client'];
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -144,9 +147,17 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
+				$projectUser = self::createInProject($user, $client);
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
-                $response->data = $user;
+                $responseData = [];
+                if($projectUser) {
+                    $responseData['projectUser'] = $projectUser; // Nulls are okay. Empty object.
+                } else {
+                    $responseData['projectUser'] = false;
+                }
+                $responseData['scctUser'] = $user;
+                $response->data = $responseData;
             } else {
                 throw new \yii\web\HttpException(400);
             }
@@ -167,12 +178,18 @@ class UserController extends BaseActiveController
     public function actionUpdate($id = null, $jsonData = null, $client = null, $username = null)
     {
         try {
+			//get client header
+			//checks to see if request was sent directly to this route or call internally from another api controller.
+			if($client == null)
+			{
+				$clientHeader = getallheaders()['X-Client'];
+			}
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userUpdate');
 			
-            if ($jsonData != null) {
+            if ($jsonData != null) { 	
 				$data = json_decode(utf8_decode($jsonData), true);
             } else {
                 $put = file_get_contents("php://input");
@@ -182,7 +199,18 @@ class UserController extends BaseActiveController
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $responseArray = [];
-
+			
+			//if client header is not scct get client username to pull sc user 
+			if(!BaseActiveController::isSCCT($clientHeader))
+			{
+				BaseActiveRecord::setClient($clientHeader);
+				$userModel = BaseActiveRecord::getUserModel($clientHeader);
+				$clientUser = $userModel::findOne($id);
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				$username = $clientUser->UserName;
+				$id = null;
+			}
+			
             //get user model to be updated
             //check params
             if ($id != null) {
@@ -194,8 +222,9 @@ class UserController extends BaseActiveController
                     ->where(['UserName' => $username])
                     ->one();
             } else {
-                return 'no id or username';
-                throw new \yii\web\HttpException(400);
+				//no ID or username avaliable
+                return 'Invalid Parameters.';
+                //throw new \yii\web\HttpException(400);
             }
 			
             $currentRole = $user['UserAppRoleType'];
@@ -262,6 +291,8 @@ class UserController extends BaseActiveController
 
                 //loop projects
                 for ($i = 0; $i < $projectCount; $i++) {
+					//reset db to Comet Tracker
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
                     //get project information
                     $project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
 
@@ -297,8 +328,8 @@ class UserController extends BaseActiveController
                     }
                 }
             } else {
-                return 'failed to update base user';
-                throw new \yii\web\HttpException(400);
+                return 'Failed to update base user.';
+                //throw new \yii\web\HttpException(400);
             }
             $response->data = $responseArray;
             return $response;
@@ -318,19 +349,41 @@ class UserController extends BaseActiveController
     public function actionView($id)
     {
         try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+			
+			//create response object
+			$response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userView');
+			
+			if(BaseActiveController::isSCCT($client))
+			{
+				$user = SCUser::findOne($id);
+			}
+			else
+			{
+				BaseActiveRecord::setClient($client);
+				$userModel = BaseActiveRecord::getUserModel($client);
+				$user = $userModel::findOne($id);
+			}
 
-            //$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-            $user = SCUser::findOne($id);
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
+			if($user == null)
+			{
+				$user = 'User Not Found.';
+				$response->statusCode = 404;
+			}
+			else
+			{
+				$user->UserPassword = '';
+			}
+			
+			//pass data to response
             $response->data = $user;
-
-            $user->UserPassword = '';
-
             return $response;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
@@ -342,37 +395,63 @@ class UserController extends BaseActiveController
     /**
      * Updates the active flag of a user to 0 for inactive
      * @param $userID id of the user record
-     * @returns json body of user data
+     * @returns Response json body of user data
      * @throws \yii\web\HttpException
      */
     public function actionDeactivate($userID)
     {
+		//for non-scct user we're just changing the active flag to 0 no cascade for now
         try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userDeactivate');
 
-            //get user to be deactivated
-            $user = SCUser::findOne($userID);
+			//get user to be deactivated
+			if(BaseActiveController::isSCCT($client))
+			{
+				//if ct user pull directly
+				$user = SCUser::findOne($userID);
+			}
+			else
+			{
+				//if client user use helper method to get ct user from client id
+				$user = self::getUserByClientUser($userID, $client);
+				//set user id to comet tracker id
+				$userID = $user->UserID;
+			}
 
-            $currentRole = $user["UserAppRoleType"];
+            $currentRole = $user['UserAppRoleType'];
 
             PermissionsController::requirePermission('userUpdate' . $currentRole);
-
-            //pass new data to user model
-            //$user->UserActiveFlag = 0;
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-            //call stored procedure to for cascading deactivation of a user
             try {
+				//process user deactivation in client dbs
+				$deactivatedProjects = self::deactivateInProjects($user);
+				
+				 //call stored procedure to for cascading deactivation of a user
                 $connection = SCUser::getDb();
                 $userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
                 $userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
                 $userDeactivateCommand->execute();
-                $response->data = $user;
+				
+                //Log out user so that they don't receive 403s if logged in or deactivating self
+                $auth = Auth::findOne(["AuthUserID" => $userID]);
+				if($auth != null) $auth->delete();
+				
+				//build response data
+				//requery user after deactivation
+				$user = SCUser::findOne($userID);
+				$user->UserPassword = '';
+				$userData[] = $user->attributes;
+				$userData['DeactivatedProjects'] = $deactivatedProjects;
+                $response->data = $userData;
             } catch (Exception $e) {
                 $response->setStatusCode(400);
                 $response->data = "Http:400 Bad Request";
@@ -390,7 +469,9 @@ class UserController extends BaseActiveController
      * Creates an associative array of user id/lastname, firstname pairs
      * @returns json body id name pairs
      * @throws \yii\web\HttpException
-     */
+     *
+	 //according to Tao this route is never called by the web\ForbiddenHttpException
+	 //I'm commenting for now if no one complains after its on the server for a bit I will remove
     public function actionGetUserDropdowns()
     {
         try {
@@ -422,7 +503,7 @@ class UserController extends BaseActiveController
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
-    }
+    }*/
 
     /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
@@ -490,75 +571,40 @@ class UserController extends BaseActiveController
                 }, $payCodes);
                 for ($j = 0; $j < $activityCodesLength; $j++) {
                     //get payroll code
-                    $activityCodesArray[$j]["PayrollCode"] = "TODO";
+                    $activityCodesArray[$j]['PayrollCode'] = 'TODO';
                 }
-
+				
+				//get project
                 $projectModel = Project::findOne($projectID);
+				
+				//get user id for project
+				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
+				
+				//set client back to ct after external call
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
-                $projectData["ProjectID"] = $projectModel->ProjectID;
-                $projectData["ProjectName"] = $projectModel->ProjectName;
-                $projectData["ProjectClientID"] = $projectModel->ProjectClientID;
-                $projectData["ProjectClientPath"] = $clientModel->ClientFilesPath;
-                $projectData["TimeCard"] = $timeCardModel;
-                $projectData["MileageCard"] = $mileageCardModel;
-                $projectData["ActivityCodes"] = $activityCodesArray;
-                $projectData["PayCodes"] = $payCodesArray;
+                $projectData['ProjectID'] = $projectModel->ProjectID;
+                $projectData['ProjectName'] = $projectModel->ProjectName;
+                $projectData['ProjectClientID'] = $projectModel->ProjectClientID;
+                $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
+				$projectData['ProjectUserID'] = $projectUserID;
+                $projectData['TimeCard'] = $timeCardModel;
+                $projectData['MileageCard'] = $mileageCardModel;
+                $projectData['ActivityCodes'] = $activityCodesArray;
+                $projectData['PayCodes'] = $payCodesArray;
 
                 $projects[] = $projectData;
             }
 
             //load data into array
             $dataArray = [];
-            $dataArray["User"] = $user;
-            $dataArray["Projects"] = $projects;
-            $dataArray["Equipment"] = $equipment;
+            $dataArray['User'] = $user;
+            $dataArray['Projects'] = $projects;
+            $dataArray['Equipment'] = $equipment;
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $response->data = $dataArray;
-        } catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch (\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-    /* Route getAllProjects
-    * @Param userID
-    * Client clientID
-    * @Returns JSON of: Project Name, Project ID, Client ID
-    * @throws \yii\web\HttpException
-    */
-    public function actionGetProjects($userID)
-    {
-        // TODO: remove. Replaced by ProjectController::actionGetAll()
-        try {
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userGetProjects');
-
-            //get users relationship to projects
-            $projectUser = ProjectUser::find()
-                ->where("ProjUserUserID = $userID")
-                ->all();
-
-            //get projects based on relationship
-            $projectUserLength = count($projectUser);
-            $projects = [];
-            for ($i = 0; $i < $projectUserLength; $i++) {
-                $projectID = $projectUser[$i]->ProjUserProjectID;
-                $projectModel = Project::findOne($projectID);
-                $projectData["ProjectID"] = $projectModel->ProjectID;
-                $projectData["ProjectName"] = $projectModel->ProjectName;
-                $projectData["ProjectClientID"] = $projectModel->ProjectClientID;
-
-                $projects[] = $projectData;
-            }
-
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $projects;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
@@ -573,11 +619,16 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($filter = null, $listPerPage = null, $page = null)
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null)
     {
         try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userGetActive');
 			
@@ -585,8 +636,18 @@ class UserController extends BaseActiveController
 			$responseArray['assets'] = [];
 			$responseArray['pages'] = [];
 			
-			//create base of user query
-            $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			if(BaseActiveController::isSCCT($client))
+			{
+				//create base of user query
+				$userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+			}
+			else
+			{
+				BaseActiveRecord::setClient($client);
+				//create base of user query
+				$userQuery = Users::find();
+			}
+			
 			//apply filter to query
 			if($filter != null)
 			{
@@ -595,6 +656,7 @@ class UserController extends BaseActiveController
 				['like', 'UserName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLastName', $filter],
+				['like', 'UserEmployeeType', $filter],
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
@@ -602,7 +664,7 @@ class UserController extends BaseActiveController
 			if ($page != null) 
 			{
 				//pass query with pagination data to helper method
-				$paginationResponse = self::paginationProcessor($userQuery, $page, $listPerPage);
+				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
 				$usersArr = $paginationResponse['Query']->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
@@ -627,34 +689,13 @@ class UserController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
-
-    public function paginationProcessor($assetQuery, $page, $listPerPage)
-    {
-		// set pagination
-		$countAssetQuery = clone $assetQuery;
-		$pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-		$pages->pageSizeLimit = [1, 100];
-		$offset = $listPerPage * ($page - 1);
-		$pages->setPageSize($listPerPage);
-		$pages->pageParam = 'userPage';
-		$pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
-		
-		//append pagination clause to query
-		$assetQuery->offset($offset)
-			->limit($listPerPage);
-
-		$asset['pages'] = $pages;
-		$asset['Query'] = $assetQuery;
-
-		return $asset;
-    }
 	
-	//creates a copy of the scuser $user
+	/*creates a copy of the scuser $user
 	//in the project db $client
 	//Params
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
-	//returns ???
+	returns ???*/
 	public static function createInProject($user, $client)
 	{
 		//get user model based on project 
@@ -671,12 +712,12 @@ class UserController extends BaseActiveController
 		//create a new user model based on project 
 		$projectUser = new $userModel();
 		
-		//set userid to null to allow auto increment on sql
-		$user->UserID = null;
 		//pass $user attributes into new model
 		$projectUser->attributes = $user->attributes;
 		//set comment created on addition to project
 		$projectUser->UserComments = 'User created on association to project.';
+		//set active flag, is null in user->attributes because it is set on db
+		$projectUser->UserActiveFlag = 1;
 		//save into project database
 		if($projectUser->save())
 		{
@@ -687,7 +728,69 @@ class UserController extends BaseActiveController
 			if ($userRole = $auth->getRole($projectUser['UserAppRoleType'])) {
 				$auth->assign($userRole, $projectUser['UserID']);
 			}
+			//add user to project to generate time/mileage cards
+			ProjectController::addToProject($user);
 		}
-		return;
+		return $projectUser;
+	}
+
+	//get comet tracker user from client user id
+	private static function getUserByClientUser($userID, $client)
+	{
+		BaseActiveRecord::setClient($client);
+		$userModel = BaseActiveRecord::getUserModel($client);
+		//get client user
+		$clientUser = $userModel::findOne($userID);
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		//get ct user
+		$user = SCUser::find()
+			->where(['UserName' => $clientUser->UserName])
+			->one();
+		return $user;
+	}
+	
+	//deactivate user in all accociated non PG&E clients
+	private static function deactivateInProjects($user)
+	{
+		$response = [];
+		
+		//find all projects
+		$projectUser = ProjectUser::find()
+			->select('ProjUserProjectID')
+			->where(['ProjUserUserID' => $user->UserID])
+			->all();
+		$projectCount = count($projectUser);
+		
+		 //loop projects
+		for ($i = 0; $i < $projectCount; $i++) {
+			//get project information
+			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+
+			//get model from base active record based on urlPrefix in project
+			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+			if($userModel == null) continue;
+			$userModel::setClient($project->ProjectUrlPrefix);
+			$projectUser = $userModel::find()
+				->where(['UserName' => $user->UserName])
+				->andWhere(['UserActiveFlag' => 1])
+				->one();
+
+			$projectUser->UserActiveFlag = 0;
+
+			if ($projectUser->update()) {
+				 //remove rbac role
+				$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+				if($projectAuthClass != null){
+					$projectAuth = new $projectAuthClass($userModel::getDb());
+					if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+						$projectAuth->revokeAll($projectUser['UserID']);
+					}
+				}	
+				$response[] = $project->ProjectUrlPrefix;
+			}
+			//reset db to Comet Tracker
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		}
+		return $response;
 	}
 }

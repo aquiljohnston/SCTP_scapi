@@ -8,8 +8,8 @@ use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Project;
 use app\modules\v1\models\ProjectUser;
 use app\modules\v1\models\GetEquipmentByClientProjectVw;
-use app\modules\v1\models\TimeCardSumHoursWorkedPriorWeekWithProjectNameNew;
-use app\modules\v1\models\MileageCardSumMilesPriorWeekWithProjectNameNew;
+use app\modules\v1\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
+use app\modules\v1\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\modules\v1\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -93,13 +93,13 @@ class NotificationController extends Controller
 					$equipmentCount = count($equipment);
 					
 					//get unapproved time cards from last week for project
-					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectNameNew::find()
+					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
 						->where(['and', "TimeCardProjectID = $projectID","TimeCardApprovedFlag = 'No'"])
 						->all();
 					$timeCardCount = count($timeCards);
 					
 					//get unapproved mileage cards from last week for project
-					$mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()
+					$mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()
 						->where(['and', "MileageCardProjectID = $projectID","MileageCardApprovedFlag = 'No'"])
 						->all();	
 					$mileageCardCount = count($mileageCards);

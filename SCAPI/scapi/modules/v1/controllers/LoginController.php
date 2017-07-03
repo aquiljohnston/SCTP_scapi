@@ -106,7 +106,7 @@ class LoginController extends Controller
 			
 			$logoutString = "Logout Successful!";
 			$response = Yii::$app->response;
-			Yii::$app->user->logout($destroySession = true, $userID);
+			Yii::$app->user->logout($destroySession = true);
 			$response->data = $logoutString;
 			return $response;
 		}

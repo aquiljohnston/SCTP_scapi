@@ -6,9 +6,12 @@ use Yii;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
 use app\modules\v2\models\TimeEntry;
-use app\modules\v2\models\MileageEntry;
+use app\modules\v2\models\MileageEntry;	
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\WorkQueueController;
+use app\modules\v2\controllers\EquipmentController;
+use app\modules\v2\controllers\InspectionController;
 use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -102,14 +105,19 @@ class ActivityController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
+
+			//get id on client db of user making request
+			$clientCreatedBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
+			
 			Activity::setClient(BaseActiveController::urlPrefix());
+			//get uid of user making request
+			$pgeCreatedBy = Parent::getUserFromToken()->UserUID;
+			//get id of user making request
+			$createdBy = Parent::getUserFromToken()->UserID;
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
-			
-			//get uid of user making request
-			$createdBy = Parent::getUserFromToken()->UserUID;
-			
+
 			//capture and decode the input json
 			$post = file_get_contents("php://input");
 			$data = json_decode(utf8_decode($post), true);
@@ -131,12 +139,15 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
-						
-						$activity = new Activity();
-						$clientActivity = new Activity();
-						$data['activity'][$i]['ActivityCreateDate'] = Parent::getDate();
-						$data['activity'][$i]['ActivityCreatedUserUID'] = $createdBy;
+						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						{
+							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
+						}
+						else
+						{
+							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
+						}
+
 						//handle app version from tablet TODO fix this later so it is consistent between web and tablet
 						if(array_key_exists('AppVersion', $data['activity'][$i]))
 						{
@@ -163,10 +174,27 @@ class ActivityController extends BaseActiveController
 							$mileageLength = count($mileageArray);
 						}
 						
+						$data['activity'][$i]['ActivityCreateDate'] = Parent::getDate();
+						
+						//create data models
+						$activity = new Activity();
+						$clientActivity = new Activity();
+
 						//load attributes to model
 						$activity->attributes = $data['activity'][$i];
 						$clientActivity->attributes = $activity->attributes;
-						
+
+						//handle createdby
+						$activity->ActivityCreatedUserUID = (string)$createdBy;
+						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						{
+							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
+						}
+						else
+						{
+							$clientActivity->ActivityCreatedUserUID = (string)$clientCreatedBy;
+						}
+
 						Activity::setClient(BaseActiveController::urlPrefix());
 						//save activity to ct
 						if($activity->save())
@@ -180,17 +208,24 @@ class ActivityController extends BaseActiveController
 								$e = BaseActiveController::modelValidationException($clientActivity);
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 							}
-							
-							//set success flag for activity
-							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
-							
+
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
-							//check for pge headers
+							//check for pge headers, pge is handled uniquely compared to a standard client
 							if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
 							{
+								//set success flag for activity
+								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
 								//pge data parse
-								$clientData = PgeActivityController::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityUID);
+								$clientData = PgeActivityController::parseActivityData($data['activity'][$i], $headers['X-Client'],$pgeCreatedBy, $activity->ActivityUID);
+								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
+							}
+							else
+							{
+								//set success flag for activity
+								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
+								//client data parse
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $clientActivity->ActivityID);
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 							}
 							
@@ -210,14 +245,14 @@ class ActivityController extends BaseActiveController
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
-									$timeEntry->TimeEntryCreatedBy = $createdBy;
+									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									$timeEntry->TimeEntryCreateDate = Parent::getDate();
 									try{
 										if($timeEntry->save())
 										{
 											$response->setStatusCode(201);
 											//set success flag for time entry
-											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
 										}
 										else
 										{
@@ -239,7 +274,7 @@ class ActivityController extends BaseActiveController
 										//if db exception is 2601, duplicate contraint then success
 										if(in_array($e->errorInfo[1], array(2601, 2627)))
 										{
-											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
 										}
 										else //log other errors and retrun failure
 										{
@@ -264,14 +299,14 @@ class ActivityController extends BaseActiveController
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
-									$mileageEntry->MileageEntryCreatedBy = $createdBy;
+									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
 									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 									try{
 										if($mileageEntry->save())
 										{
 											$response->setStatusCode(201);
 											//set success flag for mileage entry
-											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
 										else
 										{
@@ -293,7 +328,7 @@ class ActivityController extends BaseActiveController
 										//if db exception is 2601, duplicate contraint then success
 										if(in_array($e->errorInfo[1], array(2601, 2627)))
 										{
-											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>1];
+											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
 										else //log other errors and retrun failure
 										{
@@ -334,5 +369,38 @@ class ActivityController extends BaseActiveController
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	//helper method, to parse activity data and send to appropriate controller.
+	public static function parseActivityData($activityData, $client, $clientCreatedBy, $clientActivityID)
+	{	
+		$responseData = [];
+	
+		//handle accepting work queue
+		if (array_key_exists('WorkQueue', $activityData))
+		{
+			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client, $clientCreatedBy);
+			$responseData['WorkQueue'] = $workQueueResponse;
+		}
+		//handle creation of new calibration records
+		if (array_key_exists('Calibration', $activityData))
+		{
+			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientActivityID);
+			$responseData['Calibration'] = $calibrationResponse;
+		}
+		//handle creation of new inspection records
+		if (array_key_exists('Inspection', $activityData))
+		{
+			$inspectionResponse = InspectionController::processInspection($activityData['Inspection'], $client, $clientActivityID);
+			$responseData['Inspection'] = $inspectionResponse;
+		}
+		//handle creation of new task out records
+		if (array_key_exists('TaskOut', $activityData))
+		{
+			$taskOutResponse = TaskOutController::processTaskOut($activityData['TaskOut'], $client, $clientActivityID);
+			$responseData['TaskOut'] = $taskOutResponse;
+		}
+		
+		return $responseData;
 	}
 }

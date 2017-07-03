@@ -42,6 +42,20 @@ return [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
+		'yorkDevDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=ScctTemplate',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'yorkStageDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_YORK_GIS_STAGE',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
 		'ctStageDb' => [
 			'class' => 'yii\db\Connection',
 			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker_Stage',
