@@ -5,18 +5,16 @@ namespace app\modules\v2\controllers;
 use Yii;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\SCUser;
+use app\modules\v2\models\BaseUser;
 use app\modules\v2\models\TabletDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\authentication\TokenAuth;
-use yii\db\ActiveRecord;
 use yii\rest\ActiveController;
-use yii\web\ForbiddenHttpException;
-use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\base\ErrorException;
-use yii\db\Exception;
+use yii\data\Pagination;
 
 class BaseActiveController extends ActiveController
 {	
@@ -113,6 +111,18 @@ class BaseActiveController extends ActiveController
 		return SCUser::findIdentityByAccessToken($token);
 	}
 
+	//function gets user from client table based on token and client header
+	public static function getClientUser($client)
+	{
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		$ctUser = self::getUserFromToken();
+		
+		BaseActiveRecord::setClient($client);
+		$clientUser = BaseUser::find()
+			->where(['UserName' => $ctUser->UserName])
+			->one();
+		return $clientUser;
+	}
 	
     public static function inDateRange($day, $startDate, $endDate) {
         //$day .= " 12:00:00pm";
@@ -170,7 +180,7 @@ class BaseActiveController extends ActiveController
 		TabletDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new TabletDataInsertArchive;
-		$archiveRecord->CreatedUserUID = $userUID;
+		$archiveRecord->CreatedUserUID = (string)$userUID;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
 		
@@ -212,5 +222,33 @@ class BaseActiveController extends ActiveController
 	{
 		$e = new ErrorException(get_class($model) . ' Validation Exception: ' . json_encode($model->errors), 42, 2);
 		return $e;
+	}
+	
+    public function paginationProcessor($assetQuery, $page, $listPerPage)
+    {
+        // set pagination
+        $countAssetQuery = clone $assetQuery;
+        $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+        $pages->pageSizeLimit = [1, 200];
+        $offset = $listPerPage * ($page - 1);
+        $pages->setPageSize($listPerPage);
+        $pages->pageParam = 'userPage';
+        $pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
+
+        //append pagination clause to query
+        $assetQuery->offset($offset)
+            ->limit($listPerPage);
+
+        $asset['pages'] = $pages;
+        $asset['Query'] = $assetQuery;
+
+        return $asset;
+    }
+	
+	public static function isSCCT($client)
+	{
+		return ($client == BaseActiveRecord::SCCT_DEV ||
+		$client == BaseActiveRecord::SCCT_STAGE ||
+		$client == BaseActiveRecord::SCCT_PROD);
 	}
 }

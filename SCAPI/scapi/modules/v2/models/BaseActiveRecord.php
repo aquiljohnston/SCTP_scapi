@@ -9,7 +9,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	private static $CLIENT_ID = '';
 	
 	//base user
-	const BASE_USER = 'app\modules\v1\models\BaseUser';
+	const BASE_USER = 'app\modules\v2\models\BaseUser';
 	
 	//scct databases
 	const SCCT_DEV = 'scctdev';
@@ -21,7 +21,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
 	//comet tracker user
-	const CT_USER = 'app\modules\v1\models\SCUser';
+	const CT_USER = 'app\modules\v2\models\SCUser';
 	//comet tracker auth manager
 	const CT_AUTH = 'app\rbac\ScDbManager';
 	
@@ -30,9 +30,17 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const PGE_STAGE = 'pgestage';
 	const PGE_PROD = 'pge';
 	//pg&e user model
-	const PGE_USER = 'app\modules\v1\modules\pge\models\PGEUser';
+	const PGE_USER = 'app\modules\v2\modules\pge\models\PGEUser';
 	//pg&e auth manager
 	const PGE_AUTH = 'app\rbac\PgeDbManager';
+	
+	//york databases
+	const YORK_DEV = 'yorkdev';
+	const YORK_STAGE = 'yorkstage';
+	//york user model
+	const YORK_USER = self::BASE_USER;
+	//york auth manager
+	const YORK_AUTH = 'app\rbac\ClientDbManager';
 	
 	//beta client database
 	const BETA_DEV = 'betadev';
@@ -79,6 +87,15 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->pgeProdDb;
 		}
+		//york
+		if (self::$CLIENT_ID == self::YORK_DEV)
+		{
+			return Yii::$app->yorkDevDb;
+		}
+		if (self::$CLIENT_ID == self::YORK_STAGE)
+		{
+			return Yii::$app->yorkStageDb;
+		}
 		//beta
 		if (self::$CLIENT_ID == self::BETA_DEV)
 		{
@@ -98,6 +115,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		|| $client == self::SCCT_PROD)
 		{
 			return self::CT_USER;
+		}
+		//York
+		if($client == self::YORK_DEV
+		||$client == self::YORK_STAGE)
+		{
+			return self::YORK_USER;
 		}
 		//Beta
 		if($client == self::BETA_DEV)
@@ -126,6 +149,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		|| $client == self::SCCT_PROD)
 		{
 			return self::CT_AUTH;
+		}
+		//York
+		if($client == self::YORK_DEV
+		|| $client == self::YORK_STAGE)
+		{
+			return self::YORK_AUTH;
 		}
 		//Beta
 		if($client == self::BETA_DEV)

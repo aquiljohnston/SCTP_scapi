@@ -4,8 +4,6 @@ namespace app\rbac;
 
 use Yii;
 use yii\rbac\DbManager;
-use app\modules\v1\models\BaseActiveRecord;
-use app\modules\v1\controllers\BaseActiveController;
 
 class BetaDbManager extends DbManager
 {

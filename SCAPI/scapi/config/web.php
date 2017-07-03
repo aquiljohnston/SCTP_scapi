@@ -55,7 +55,10 @@ $config = [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning','trace'],
-                    'except' => ['yii\web\HttpException:401'],
+                    'except' => [
+                        'yii\web\HttpException:401',
+                        'yii\web\HttpException:403'
+                    ],
                 ],
             ],
         ],
@@ -69,6 +72,20 @@ $config = [
 		'pgeDevDb' => [
 			'class' => 'yii\db\Connection',
 			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_PGE_GIS_DEV',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'yorkDevDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=ScctTemplate',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
+		'yorkStageDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_YORK_GIS_STAGE',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',

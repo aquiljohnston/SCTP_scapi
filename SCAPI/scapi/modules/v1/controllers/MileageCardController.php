@@ -9,13 +9,14 @@ use app\modules\v1\models\SCUser;
 use app\modules\v1\models\Project;
 use app\modules\v1\models\ProjectUser;
 use app\modules\v1\models\AllMileageCardsCurrentWeek;
-use app\modules\v1\models\MileageCardSumMilesCurrentWeekWithProjectNameNew;
-use app\modules\v1\models\MileageCardSumMilesPriorWeekWithProjectNameNew;
+use app\modules\v1\models\MileageCardSumMilesCurrentWeekWithProjectName;
+use app\modules\v1\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\modules\v1\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -294,11 +295,11 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionGetCards($week, $listPerPage = 10, $page = 1)
 	{
-		// RBAC permission check is embedded in this action	
+		//RBAC permission check is embedded in this action	
 		try
 		{
 			//set db target headers
-			MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+			MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 			
 			//format response
 			$response = Yii::$app->response;
@@ -315,7 +316,7 @@ class MileageCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior')
 				{
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find();
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find();
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
@@ -323,7 +324,7 @@ class MileageCardController extends BaseActiveController
 				} 
 				elseif($week == 'current') 
 				{
-					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find();
+					$mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find();
                     $paginationResponse = self::paginationProcessor($mileageCards, $page, $listPerPage);
                     $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
                     $responseArray['assets'] = $mileageCardsArr;
@@ -343,7 +344,7 @@ class MileageCardController extends BaseActiveController
 				//check if week is prior or current to determine appropriate view
 				if($week == 'prior' && $projectsSize > 0)
 				{
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 					if($projectsSize > 1)
 					{
 						for($i=1; $i < $projectsSize; $i++)
@@ -359,7 +360,7 @@ class MileageCardController extends BaseActiveController
 				} 
 				elseif($week == 'current' && $projectsSize > 0)
 				{
-                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 					if($projectsSize > 1)
 					{
 						for($i=1; $i < $projectsSize; $i++)
@@ -388,9 +389,9 @@ class MileageCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -401,7 +402,7 @@ class MileageCardController extends BaseActiveController
         try
         {
             //set db target headers
-            MileageCardSumMilesCurrentWeekWithProjectNameNew::setClient(BaseActiveController::urlPrefix());
+            MileageCardSumMilesCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
             //format response
             $response = Yii::$app->response;
@@ -417,12 +418,12 @@ class MileageCardController extends BaseActiveController
                 //check if week is prior or current to determine appropriate view
                 if($week == 'prior')
                 {
-                    $responseArray = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = MileageCardSumMilesPriorWeekWithProjectName::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                 }
                 elseif($week == 'current')
                 {
-                    $responseArray = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
+                    $responseArray = MileageCardSumMilesCurrentWeekWithProjectName::find()->orderBy('UserID,MileageStartDate,ProjectID')->createCommand();//->all();
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                 }
             }
@@ -439,7 +440,7 @@ class MileageCardController extends BaseActiveController
                 //check if week is prior or current to determine appropriate view
                 if($week == 'prior' && $projectsSize > 0)
                 {
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
                     for($i=0; $i < $projectsSize; $i++)
                     {
                         $projectID = $projects[$i]->ProjUserProjectID;
@@ -451,7 +452,7 @@ class MileageCardController extends BaseActiveController
                 }
                 elseif($week == 'current' && $projectsSize > 0)
                 {
-                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectNameNew::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                    $mileageCards = MileageCardSumMilesCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
                     for($i=0; $i < $projectsSize; $i++)
                     {
                         $projectID = $projects[$i]->ProjUserProjectID;
