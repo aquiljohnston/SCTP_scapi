@@ -54,11 +54,9 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
-                    'get-user-dropdowns' => ['get'],
+                    //'get-user-dropdowns' => ['get'],
                     'get-me' => ['get'],
-                    'get-projects' => ['get'],
                     'get-active' => ['get'],
-                    'add-user-to-project' => ['post'],
                 ],
             ];
         return $behaviors;
@@ -81,15 +79,14 @@ class UserController extends BaseActiveController
 
     /**
      * Creates a new user record in the database
-     * @returns json body of the user data
+     * @returns Response json body of the user data
      * @throws \yii\web\HttpException
      */
     public function actionCreate()
     {
         try {
-			//set db
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			//get client header
+			$client = getallheaders()['X-Client'];
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
@@ -150,10 +147,17 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
-				self::createInProject($user, $client);
+				$projectUser = self::createInProject($user, $client);
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
-                $response->data = $user;
+                $responseData = [];
+                if($projectUser) {
+                    $responseData['projectUser'] = $projectUser; // Nulls are okay. Empty object.
+                } else {
+                    $responseData['projectUser'] = false;
+                }
+                $responseData['scctUser'] = $user;
+                $response->data = $responseData;
             } else {
                 throw new \yii\web\HttpException(400);
             }
@@ -174,12 +178,18 @@ class UserController extends BaseActiveController
     public function actionUpdate($id = null, $jsonData = null, $client = null, $username = null)
     {
         try {
+			//get client header
+			//checks to see if request was sent directly to this route or call internally from another api controller.
+			if($client == null)
+			{
+				$clientHeader = getallheaders()['X-Client'];
+			}
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userUpdate');
 			
-            if ($jsonData != null) {
+            if ($jsonData != null) { 	
 				$data = json_decode(utf8_decode($jsonData), true);
             } else {
                 $put = file_get_contents("php://input");
@@ -189,7 +199,18 @@ class UserController extends BaseActiveController
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $responseArray = [];
-
+			
+			//if client header is not scct get client username to pull sc user 
+			if(!BaseActiveController::isSCCT($clientHeader))
+			{
+				BaseActiveRecord::setClient($clientHeader);
+				$userModel = BaseActiveRecord::getUserModel($clientHeader);
+				$clientUser = $userModel::findOne($id);
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				$username = $clientUser->UserName;
+				$id = null;
+			}
+			
             //get user model to be updated
             //check params
             if ($id != null) {
@@ -201,8 +222,9 @@ class UserController extends BaseActiveController
                     ->where(['UserName' => $username])
                     ->one();
             } else {
-                return 'no id or username';
-                throw new \yii\web\HttpException(400);
+				//no ID or username avaliable
+                return 'Invalid Parameters.';
+                //throw new \yii\web\HttpException(400);
             }
 			
             $currentRole = $user['UserAppRoleType'];
@@ -269,6 +291,8 @@ class UserController extends BaseActiveController
 
                 //loop projects
                 for ($i = 0; $i < $projectCount; $i++) {
+					//reset db to Comet Tracker
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
                     //get project information
                     $project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
 
@@ -304,8 +328,8 @@ class UserController extends BaseActiveController
                     }
                 }
             } else {
-                return 'failed to update base user';
-                throw new \yii\web\HttpException(400);
+                return 'Failed to update base user.';
+                //throw new \yii\web\HttpException(400);
             }
             $response->data = $responseArray;
             return $response;
@@ -325,10 +349,8 @@ class UserController extends BaseActiveController
     public function actionView($id)
     {
         try {
-			//get headers
-			$headers = getallheaders();
 			//get client header
-			$client = $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			
 			//create response object
 			$response = Yii::$app->response;
@@ -378,34 +400,58 @@ class UserController extends BaseActiveController
      */
     public function actionDeactivate($userID)
     {
+		//for non-scct user we're just changing the active flag to 0 no cascade for now
         try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userDeactivate');
 
-            //get user to be deactivated
-            $user = SCUser::findOne($userID);
+			//get user to be deactivated
+			if(BaseActiveController::isSCCT($client))
+			{
+				//if ct user pull directly
+				$user = SCUser::findOne($userID);
+			}
+			else
+			{
+				//if client user use helper method to get ct user from client id
+				$user = self::getUserByClientUser($userID, $client);
+				//set user id to comet tracker id
+				$userID = $user->UserID;
+			}
 
-            $currentRole = $user["UserAppRoleType"];
+            $currentRole = $user['UserAppRoleType'];
 
             PermissionsController::requirePermission('userUpdate' . $currentRole);
-
-            //pass new data to user model
-            //$user->UserActiveFlag = 0;
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-            //call stored procedure to for cascading deactivation of a user
             try {
+				//process user deactivation in client dbs
+				$deactivatedProjects = self::deactivateInProjects($user);
+				
+				 //call stored procedure to for cascading deactivation of a user
                 $connection = SCUser::getDb();
                 $userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
                 $userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
                 $userDeactivateCommand->execute();
-                //Log out user so that they don't receive 403s if loggedin or deactivating self
-                Auth::findOne(["AuthUserID" => $userID])->delete();
-                $response->data = $user;
+				
+                //Log out user so that they don't receive 403s if logged in or deactivating self
+                $auth = Auth::findOne(["AuthUserID" => $userID]);
+				if($auth != null) $auth->delete();
+				
+				//build response data
+				//requery user after deactivation
+				$user = SCUser::findOne($userID);
+				$user->UserPassword = '';
+				$userData[] = $user->attributes;
+				$userData['DeactivatedProjects'] = $deactivatedProjects;
+                $response->data = $userData;
             } catch (Exception $e) {
                 $response->setStatusCode(400);
                 $response->data = "Http:400 Bad Request";
@@ -566,49 +612,6 @@ class UserController extends BaseActiveController
         }
     }
 
-    /* Route getAllProjects
-    * @Param userID
-    * Client clientID
-    * @Returns JSON of: Project Name, Project ID, Client ID
-    * @throws \yii\web\HttpException
-    */
-    public function actionGetProjects($userID)
-    {
-        // TODO: remove. Replaced by ProjectController::actionGetAll()
-        try {
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userGetProjects');
-
-            //get users relationship to projects
-            $projectUser = ProjectUser::find()
-                ->where("ProjUserUserID = $userID")
-                ->all();
-
-            //get projects based on relationship
-            $projectUserLength = count($projectUser);
-            $projects = [];
-            for ($i = 0; $i < $projectUserLength; $i++) {
-                $projectID = $projectUser[$i]->ProjUserProjectID;
-                $projectModel = Project::findOne($projectID);
-                $projectData["ProjectID"] = $projectModel->ProjectID;
-                $projectData["ProjectName"] = $projectModel->ProjectName;
-                $projectData["ProjectClientID"] = $projectModel->ProjectClientID;
-
-                $projects[] = $projectData;
-            }
-
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $projects;
-        } catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch (\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
     /**
      * Gets a users data for all users with an active flag of 1 for active
      * @param $listPerPage
@@ -687,12 +690,12 @@ class UserController extends BaseActiveController
         }
     }
 	
-	//creates a copy of the scuser $user
+	/*creates a copy of the scuser $user
 	//in the project db $client
 	//Params
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
-	//returns ???
+	returns ???*/
 	public static function createInProject($user, $client)
 	{
 		//get user model based on project 
@@ -728,6 +731,66 @@ class UserController extends BaseActiveController
 			//add user to project to generate time/mileage cards
 			ProjectController::addToProject($user);
 		}
-		return;
+		return $projectUser;
+	}
+
+	//get comet tracker user from client user id
+	private static function getUserByClientUser($userID, $client)
+	{
+		BaseActiveRecord::setClient($client);
+		$userModel = BaseActiveRecord::getUserModel($client);
+		//get client user
+		$clientUser = $userModel::findOne($userID);
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		//get ct user
+		$user = SCUser::find()
+			->where(['UserName' => $clientUser->UserName])
+			->one();
+		return $user;
+	}
+	
+	//deactivate user in all accociated non PG&E clients
+	private static function deactivateInProjects($user)
+	{
+		$response = [];
+		
+		//find all projects
+		$projectUser = ProjectUser::find()
+			->select('ProjUserProjectID')
+			->where(['ProjUserUserID' => $user->UserID])
+			->all();
+		$projectCount = count($projectUser);
+		
+		 //loop projects
+		for ($i = 0; $i < $projectCount; $i++) {
+			//get project information
+			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+
+			//get model from base active record based on urlPrefix in project
+			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+			if($userModel == null) continue;
+			$userModel::setClient($project->ProjectUrlPrefix);
+			$projectUser = $userModel::find()
+				->where(['UserName' => $user->UserName])
+				->andWhere(['UserActiveFlag' => 1])
+				->one();
+
+			$projectUser->UserActiveFlag = 0;
+
+			if ($projectUser->update()) {
+				 //remove rbac role
+				$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+				if($projectAuthClass != null){
+					$projectAuth = new $projectAuthClass($userModel::getDb());
+					if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+						$projectAuth->revokeAll($projectUser['UserID']);
+					}
+				}	
+				$response[] = $project->ProjectUrlPrefix;
+			}
+			//reset db to Comet Tracker
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		}
+		return $response;
 	}
 }
