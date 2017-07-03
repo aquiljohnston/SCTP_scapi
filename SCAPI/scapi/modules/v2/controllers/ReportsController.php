@@ -269,7 +269,9 @@ class ReportsController extends Controller {
 
         for ($i = 0; $i < $dataCount; $i++)
         {
-            $formatedData[] = $data[$i]['UserName'];
+            //$formatedData['DisplayName'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
+            $formatedData[$i]['userNameData'] = $data[$i]['UserName'];
+            $formatedData[$i]['displayNameData'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
         }
 
         return $formatedData;
