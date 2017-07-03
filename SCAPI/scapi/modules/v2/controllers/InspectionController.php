@@ -292,6 +292,7 @@ class InspectionController extends Controller
 								$workOrder->CompletedDate = $completedData;
 								$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
 								$workOrder->ModifiedDateTime = $completedData;
+								$workOrder->InspectionAttemptCounter = $inspectionAttemptCounter;
 								//update
 								if($workOrder->update())
 								{
