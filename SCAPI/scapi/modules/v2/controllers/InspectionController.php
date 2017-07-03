@@ -53,9 +53,9 @@ class InspectionController extends Controller
 			{	
 				$inspectionSuccessFlag = 0;
 				$eventResponse = [];
-				$assetResponse = [];
-				$workQueueResponse = [];
-				$workOrderResponse = [];
+				$assetResponse = (object)[];
+				$workQueueResponse = (object)[];
+				$workOrderResponse = (object)[];
 				$inspectionID = null;
 			
 				$newInspection = new Inspection;
@@ -256,7 +256,7 @@ class InspectionController extends Controller
 			try
 			{
 				$successFlag = 0;
-				$workOrderID = '';
+				$workOrderID = null;
 				$workQueue = WorkQueue::find()
 					->where(['ID' => $inspectionData['WorkQueueID']])
 					->andWhere(['WorkQueueStatus' => WorkQueueController::$completed])
