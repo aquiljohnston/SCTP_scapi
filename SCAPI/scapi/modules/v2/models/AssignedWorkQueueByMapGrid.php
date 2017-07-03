@@ -10,7 +10,6 @@ use Yii;
  * @property string $MapGrid
  * @property string $ComplianceStart
  * @property string $ComplianceEnd
- * @property integer $InspectionAttemptCounter
  * @property integer $SectionFlag
  * @property integer $AssignedWorkOrderCount
  * @property string $AssignedCount
@@ -35,7 +34,7 @@ class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['MapGrid', 'AssignedCount', 'UIDList', 'SearchString'], 'string'],
             [['ComplianceStart', 'ComplianceEnd'], 'safe'],
-            [['InspectionAttemptCounter', 'SectionFlag', 'AssignedWorkOrderCount'], 'integer'],
+            [['SectionFlag', 'AssignedWorkOrderCount'], 'integer'],
             [['SectionFlag', 'AssignedCount'], 'required'],
         ];
     }
@@ -49,7 +48,6 @@ class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
             'MapGrid' => 'Map Grid',
             'ComplianceStart' => 'Compliance Start',
             'ComplianceEnd' => 'Compliance End',
-            'InspectionAttemptCounter' => 'Inspection Attempt Counter',
             'SectionFlag' => 'Section Flag',
             'AssignedWorkOrderCount' => 'Assigned Work Order Count',
             'AssignedCount' => 'Assigned Count',

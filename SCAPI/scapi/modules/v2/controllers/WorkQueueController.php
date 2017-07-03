@@ -21,8 +21,8 @@ use yii\db\Connection;
 
 class WorkQueueController extends Controller 
 {
-	private static $inProgress = 101;
-	private static $completed = 102;
+	public static $inProgress = 101;
+	public static $completed = 102;
 	
 	public function behaviors()
 	{
@@ -173,7 +173,7 @@ class WorkQueueController extends Controller
 			BaseActiveRecord::setClient($client);
 			
 			//create response format
-			$responseData = '';
+			$responseData = [];
 			
 			//try catch to log individual errors
 			try
@@ -181,25 +181,26 @@ class WorkQueueController extends Controller
 				$successFlag = 0;
 				$workQueue = WorkQueue::find()
 					->where(['ID' => $workQueueID])
-					->andWhere(['not in', 'WorkQueueStatus', [self::$completed]])
 					->one();
 				if($workQueue != null)
 				{
-					$workQueue->WorkQueueStatus = $workQueueStatus;
-					$workQueue->ModifiedBy = $modifiedBy;
-					$workQueue->ModifiedDate = $modifiedDate;
-					//if work queue is already accepted and no change exist update will fail and return successFlag of 0
-					if($workQueue->update())
+					if($workQueue->WorkQueueStatus != self::$completed)
 					{
+						$workQueue->WorkQueueStatus = $workQueueStatus;
+						$workQueue->ModifiedBy = $modifiedBy;
+						$workQueue->ModifiedDate = $modifiedDate;
+						if($workQueue->update())
+						{
+							$successFlag = 1;
+						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($workQueue);
+						}
+					}
+					else{
 						$successFlag = 1;
 					}
-					else
-					{
-						throw BaseActiveController::modelValidationException($workQueue);
-					}
-				}
-				else{
-					$successFlag = 1;
 				}
 			}
 			catch(\Exception $e)
