@@ -14,6 +14,7 @@ use yii\web\Response;
 use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use app\modules\v2\models\StateCode;
 
 
 class DropdownController extends Controller
@@ -33,9 +34,45 @@ class DropdownController extends Controller
                 'actions' => [
                     'get-employee-type-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
+                    'get-state-codes-dropdown' => ['get']
                 ],
             ];
         return $behaviors;
+    }
+
+    //return a json containing pairs of EquipmentTypes
+    public function actionGetStateCodesDropdown()
+    {
+        try
+        {
+            //set db target
+            StateCode::setClient(BaseActiveController::urlPrefix());
+
+            // RBAC permission check
+            PermissionsController::requirePermission('stateCodeGetDropdown');
+
+            $codes = StateCode::find()
+                ->all();
+            $namePairs = [null => "None"];
+            $tempPairs = [];
+            $codesSize = count($codes);
+
+            for($i=0; $i < $codesSize; $i++)
+            {
+                $namePairs[$codes[$i]->StateNames]= $codes[$i]->StateNumber . ": " . $codes[$i]->StateNames ;
+            }
+            $namePairs = $namePairs + $tempPairs;
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $namePairs;
+
+            return $response;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
     }
 
     //return a json containing pairs of EmployeeTypes
