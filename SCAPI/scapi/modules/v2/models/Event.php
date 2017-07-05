@@ -70,6 +70,7 @@ use Yii;
  * @property double $Speed
  * @property integer $NumberOfGPSAttempts
  * @property integer $InspectionID
+ * @property integer $DeletedFlag
  *
  * @property UserTb $createdByUser
  */
@@ -90,7 +91,7 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'CGEReason', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID'], 'integer'],
+            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'CGEReason', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
@@ -167,6 +168,7 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
             'Speed' => 'Speed',
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
             'InspectionID' => 'Inspection ID',
+            'DeletedFlag' => 'Deleted Flag',
         ];
     }
 
