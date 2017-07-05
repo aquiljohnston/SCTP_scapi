@@ -223,4 +223,53 @@ class WorkQueueController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+	
+	//creates a new work queue record for an add hoc inspection
+	public function createAdHocWorkQueue($assetID, $createdBy, $createdDate, $client)
+	{
+		try
+		{
+			//set db
+			BaseActiveRecord::setClient($client);
+			
+			//create response format
+			$responseData = [];
+			try
+			{
+				$successFlag = 0;
+				$workQueue = new WorkQueue;
+				$workQueue->AssignedUserID = $createdBy;
+				$workQueue->WorkQueueStatus = self::$completed;
+				$workQueue->CreatedBy = $createdBy;
+				$workQueue->CreatedDate = $createdDate;
+				$workQueue->tAssetID = $assetID;
+				if($workQueue->save())
+				{
+					$successFlag = 1;
+				}
+				else
+				{
+					throw BaseActiveController::modelValidationException($workQueue);
+				}
+			}
+			catch(\Exception $e)
+			{
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $assetID);
+			}
+			$responseData = [
+				'WorkQueueID' => $workQueue->ID,
+				'WorkQueueStatus' => $workQueue->WorkQueueStatus,
+				'SuccessFlag' => $successFlag
+			];
+			return $responseData;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 }
