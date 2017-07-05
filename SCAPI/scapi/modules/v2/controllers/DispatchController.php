@@ -58,9 +58,6 @@ class DispatchController extends Controller
 			//get headers
 			$headers = getallheaders();
 			
-			//permission check
-			PermissionsController::requirePermission('viewDispatch', $headers['X-Client']);
-			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
