@@ -73,8 +73,8 @@ class PermissionsController extends Controller {
         return $access;
     }
 
-    public static function requirePermission($permission) {
-        if(!self::can($permission)) throw new ForbiddenHttpException;
+    public static function requirePermission($permission, $client = null) {
+        if(!self::can($permission, null, $client)) throw new ForbiddenHttpException;
         else return true;
     }
 

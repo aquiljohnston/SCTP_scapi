@@ -20,6 +20,7 @@ use app\modules\v2\models\WorkOrder;
 use app\modules\v2\models\WorkQueue;
 use app\modules\v2\models\StatusLookup;
 use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\PermissionsController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
@@ -54,8 +55,10 @@ class DispatchController extends Controller
 	{
 		try
 		{
-			//set db
+			//get headers
 			$headers = getallheaders();
+			
+			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
