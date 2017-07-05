@@ -44,6 +44,7 @@ use Yii;
  * @property double $Bearing
  * @property double $Speed
  * @property integer $NumberOfGPSAttempts
+ * @property integer $Zip
  *
  * @property UserTb $createdUser
  */
@@ -63,7 +64,7 @@ class Asset extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetTabletID', 'MapGrid', 'HouseNo', 'Street', 'Apt', 'City', 'State', 'ReverseGeoLocationString', 'MeterID', 'PipelineType', 'Grade1ReleaseReasonType', 'Comments', 'Photo1Path', 'Inspection', 'GPSType', 'GPSSentence', 'GPSTime', 'CheckSumData'], 'string'],
+            [['AssetTabletID', 'MapGrid', 'HouseNo', 'Street', 'Apt', 'City', 'State', 'ReverseGeoLocationString', 'MeterID', 'PipelineType', 'Grade1ReleaseReasonType', 'Comments', 'Photo1Path', 'Inspection', 'GPSType', 'GPSSentence', 'GPSTime', 'CheckSumData', 'Zip'], 'string'],
             [['InspectionID', 'CreatedUserID', 'AOCs', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
             [['Grade1ReleaseDateTime', 'SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
@@ -114,6 +115,7 @@ class Asset extends \app\modules\v2\models\BaseActiveRecord
             'Bearing' => 'Bearing',
             'Speed' => 'Speed',
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
+            'Zip' => 'Zip',
         ];
     }
 

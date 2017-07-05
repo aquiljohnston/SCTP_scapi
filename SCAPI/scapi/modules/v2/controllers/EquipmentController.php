@@ -138,7 +138,7 @@ class EquipmentController extends Controller
 						}
 						else
 						{
-							throw BaseActiveController::modelValidationException($workQueue);
+							throw BaseActiveController::modelValidationException($calibration);
 						}
 					}
 					else{

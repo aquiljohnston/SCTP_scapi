@@ -32,7 +32,7 @@ class InspectionController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					//'create' => ['post'],
+					'clear-event' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -53,9 +53,9 @@ class InspectionController extends Controller
 			{	
 				$inspectionSuccessFlag = 0;
 				$eventResponse = [];
-				$assetResponse = [];
-				$workQueueResponse = [];
-				$workOrderResponse = [];
+				$assetResponse = (object)[];
+				$workQueueResponse = (object)[];
+				$workOrderResponse = (object)[];
 				$inspectionID = null;
 			
 				$newInspection = new Inspection;
@@ -99,6 +99,21 @@ class InspectionController extends Controller
 				{
 					if($data['Asset'] != null)
 						$assetResponse = self::processAsset($data['Asset'], $client, $activityID, $inspectionID);
+					if (array_key_exists('ID', $assetResponse))
+					{
+						//create ad hoc work queue
+						if($data['IsAdHocFlag'] == 1)
+						{
+							$workQueueResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
+							//add new work queue id to inspection record.
+							$newInspection->WorkQueueID = $workQueueResponse['WorkQueueID'];
+						}
+						//add asset ID to inspection record
+						$newInspection->AssetID = $assetResponse['ID'];
+						if(!$newInspection->update())
+							throw BaseActiveController::modelValidationException($newInspection);
+						
+					}
 				}
 				$responseArray = [
 					'ID' => $inspectionID,
@@ -241,7 +256,7 @@ class InspectionController extends Controller
 			try
 			{
 				$successFlag = 0;
-				$workOrderID = '';
+				$workOrderID = null;
 				$workQueue = WorkQueue::find()
 					->where(['ID' => $inspectionData['WorkQueueID']])
 					->andWhere(['WorkQueueStatus' => WorkQueueController::$completed])
@@ -292,6 +307,7 @@ class InspectionController extends Controller
 								$workOrder->CompletedDate = $completedData;
 								$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
 								$workOrder->ModifiedDateTime = $completedData;
+								$workOrder->InspectionAttemptCounter = $inspectionAttemptCounter;
 								//update
 								if($workOrder->update())
 								{
@@ -326,6 +342,73 @@ class InspectionController extends Controller
         }
         catch(\Exception $e)
         {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	public function actionClearEvent()
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true);
+			//create response format
+			$responseData = [];
+			
+			//count number of items to delete
+			$deletedRecords = $data['Event'];
+			$deletedCount = count($deletedRecords);
+			
+			//loop records to be marked deleted
+			for($i = 0; $i < $deletedCount; $i++)
+			{
+				//try catch to log individual errors
+				try
+				{	
+					$successFlag = 0;
+					$event = Event::find()
+						->where(['ID' => $deletedRecords[$i]['ID']])
+						->andWhere(['<>', 'DeletedFlag', 1])
+						->one();
+					if($event != null)
+					{
+						$event->DeletedFlag = 1;
+						if($event->update())
+						{
+							$successFlag = 1;
+						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($event);
+						}
+					}
+					else{
+						$successFlag = 1;
+					}
+				}
+				catch(\Exception $e)
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
+				}
+				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+			}
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
