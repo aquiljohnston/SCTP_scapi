@@ -566,6 +566,7 @@ class DispatchController extends Controller
 				//check for existing records
 				$assignedWork = WorkQueue::find()
 					->where(['WorkOrderID' => $workOrders[$i]->WorkOrderID])
+					->andWhere(['<>', 'WorkQueueStatus', 102])
 					->count();
 				//if no record exist create one
 				if($assignedWork < 1)
