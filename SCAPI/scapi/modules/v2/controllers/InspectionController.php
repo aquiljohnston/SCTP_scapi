@@ -394,7 +394,7 @@ class InspectionController extends Controller
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
 				}
-				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+				$responseData['Event'][] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
 			}
 			//send response
 			$response = Yii::$app->response;

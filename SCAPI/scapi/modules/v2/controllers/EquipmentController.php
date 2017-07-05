@@ -149,7 +149,7 @@ class EquipmentController extends Controller
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
 				}
-				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+				$responseData['DeletedCalibration'][] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
 			}
 			//send response
 			$response = Yii::$app->response;
