@@ -32,7 +32,7 @@ class InspectionController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					//'create' => ['post'],
+					'clear-event' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -342,6 +342,73 @@ class InspectionController extends Controller
         }
         catch(\Exception $e)
         {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	public function actionClearEvent()
+	{
+		try
+		{
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true);
+			//create response format
+			$responseData = [];
+			
+			//count number of items to delete
+			$deletedRecords = $data['Event'];
+			$deletedCount = count($deletedRecords);
+			
+			//loop records to be marked deleted
+			for($i = 0; $i < $deletedCount; $i++)
+			{
+				//try catch to log individual errors
+				try
+				{	
+					$successFlag = 0;
+					$event = Event::find()
+						->where(['ID' => $deletedRecords[$i]['ID']])
+						->andWhere(['<>', 'DeletedFlag', 1])
+						->one();
+					if($event != null)
+					{
+						$event->DeletedFlag = 1;
+						if($event->update())
+						{
+							$successFlag = 1;
+						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($event);
+						}
+					}
+					else{
+						$successFlag = 1;
+					}
+				}
+				catch(\Exception $e)
+				{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
+				}
+				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+			}
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
