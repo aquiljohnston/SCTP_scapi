@@ -94,10 +94,23 @@ class ReportsController extends Controller {
 			}
 			elseif ($startDate != null && $endDate != null)
 			{
-                $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . ", " . "'" . $ParmInspector . "'";
+			    if ($ParmInspector == "none") {
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
 
-                $queryResults = $connection->createCommand($queryString)
-                    ->queryAll();
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }elseif ($ParmInspector == null){
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . " " . $ParmInspector;
+
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }else{
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . ", " . "'" . $ParmInspector . "'";
+                    Yii::trace("DB QUERY: ".$queryString);
+
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }
 			}
 			elseif($startDate == null && $endDate == null)
 			{
