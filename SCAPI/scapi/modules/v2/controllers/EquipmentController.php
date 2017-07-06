@@ -114,6 +114,8 @@ class EquipmentController extends Controller
 			//create response format
 			$responseData = [];
 			
+			BaseActiveController::archiveJson($body, 'DeletedCalibration', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			
 			//count number of items to delete
 			$deletedRecords = $data['DeletedCalibration'];
 			$deletedCount = count($deletedRecords);
