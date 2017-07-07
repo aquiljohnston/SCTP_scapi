@@ -37,7 +37,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//york databases
 	const YORK_DEV = 'yorkdev';
 	const YORK_STAGE = 'yorkstage';
-	const YORK_PROD = 'yorkprod';
+	const YORK_PROD = 'york';
 	//york user model
 	const YORK_USER = self::BASE_USER;
 	//york auth manager
