@@ -20,9 +20,11 @@ use app\rbac\ClientDbManager;
 class PermissionsController extends Controller {
 
     public static function actionCheckPermission($permission) {
+		//get client
+		$client = getallheaders()['X-Client'];
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
-        if(self::can($permission)) {
+        if(self::can($permission, null, $client)) {
             $response->data = [
                 "userHasPermission" => true
             ];

@@ -94,13 +94,19 @@ class ReportsController extends Controller {
 			}
 			elseif ($startDate != null && $endDate != null)
 			{
-			    if ($ParmInspector == null) {
+			    if ($ParmInspector == "none") {
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
+
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }elseif ($ParmInspector == null){
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . " " . $ParmInspector;
 
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
                 }else{
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . ", " . "'" . $ParmInspector . "'";
+                    Yii::trace("DB QUERY: ".$queryString);
 
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
@@ -271,7 +277,7 @@ class ReportsController extends Controller {
         {
             //$formatedData['DisplayName'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
             $formatedData[$i]['userNameData'] = $data[$i]['UserName'];
-            $formatedData[$i]['displayNameData'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
+            $formatedData[$i]['displayNameData'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'] . " (" . $data[$i]['UserName'] . ")";
         }
 
         return $formatedData;

@@ -114,6 +114,8 @@ class EquipmentController extends Controller
 			//create response format
 			$responseData = [];
 			
+			BaseActiveController::archiveJson($body, 'DeletedCalibration', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			
 			//count number of items to delete
 			$deletedRecords = $data['DeletedCalibration'];
 			$deletedCount = count($deletedRecords);
@@ -149,7 +151,7 @@ class EquipmentController extends Controller
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
 				}
-				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+				$responseData['DeletedCalibration'][] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
 			}
 			//send response
 			$response = Yii::$app->response;
