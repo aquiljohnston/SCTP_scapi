@@ -115,7 +115,7 @@ class NotificationController extends Controller
                     $mileageCardTotal += $mileageCardCount;
 
                     //check if the user associated with yorkDev
-                    if ($projectName == "York Dev") {
+                    if ($projectName == "York Stage") {
                         $projectHasNotification = true;
                         $projectNameHasNotification = $projectName;
                     }
