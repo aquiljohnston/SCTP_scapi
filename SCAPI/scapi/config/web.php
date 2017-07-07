@@ -90,6 +90,13 @@ $config = [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
+		'yorkProdDb' => [
+			'class' => 'yii\db\Connection',
+			'dsn' => 'sqlsrv:Server=10.0.0.51;Database=vCAT_YORK_GIS_PROD',
+			'username' => 'ApplicationCometTracker',
+			'password' => '321cba',
+			'charset' => 'utf8',
+		],
 		'ctStageDb' => [
 			'class' => 'yii\db\Connection',
 			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker_Stage',
