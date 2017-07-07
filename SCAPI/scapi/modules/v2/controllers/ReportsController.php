@@ -277,7 +277,7 @@ class ReportsController extends Controller {
         {
             //$formatedData['DisplayName'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
             $formatedData[$i]['userNameData'] = $data[$i]['UserName'];
-            $formatedData[$i]['displayNameData'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
+            $formatedData[$i]['displayNameData'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'] . " (" . $data[$i]['UserName'] . ")";
         }
 
         return $formatedData;
