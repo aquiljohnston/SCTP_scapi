@@ -26,7 +26,11 @@ class LoginController extends Controller
 		{
 			//get client header to find project landing page
 			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			$client = '';
+			if(array_key_exists('X-Client', $headers))
+			{
+				$client = $headers['X-Client'];
+			}
 			//set db target
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			
