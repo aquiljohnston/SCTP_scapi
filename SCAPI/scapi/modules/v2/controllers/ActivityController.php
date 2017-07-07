@@ -99,7 +99,7 @@ class ActivityController extends BaseActiveController
 	 * @return \yii\console\Response|Response
 	 * @throws \yii\web\HttpException
 	 */
-	public function actionCreate()
+	public function actionCreate($data = null)
 	{		
 		try
 		{
@@ -116,10 +116,13 @@ class ActivityController extends BaseActiveController
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
-
-			//capture and decode the input json
-			$post = file_get_contents("php://input");
-			$data = json_decode(utf8_decode($post), true);
+			
+			if($data == null)
+			{
+				//capture and decode the input json
+				$post = file_get_contents("php://input");
+				$data = json_decode(utf8_decode($post), true);
+			}
 			
 			//create and format response json
 			$response = Yii::$app->response;
