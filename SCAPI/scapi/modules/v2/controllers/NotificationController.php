@@ -52,6 +52,16 @@ class NotificationController extends Controller
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
+            //check current environment for york
+            $headers = getallheaders();
+            if ($headers['X-Client'] == BaseActiveRecord::YORK_DEV){
+                $CURRENT_PROJECT = "York Dev";
+            }elseif ($headers['X-Client'] == BaseActiveRecord::YORK_STAGE){
+                $CURRENT_PROJECT = "York Stage";
+            }else{
+                $CURRENT_PROJECT = "York";
+            }
+
             //get user
             $userID = BaseActiveController::getUserFromToken()->UserID;
             $user = SCUser::findOne($userID);
@@ -115,7 +125,7 @@ class NotificationController extends Controller
                     $mileageCardTotal += $mileageCardCount;
 
                     //check if the user associated with yorkDev
-                    if ($projectName == "York Dev") {
+                    if ($projectName == $CURRENT_PROJECT) {
                         $projectHasNotification = true;
                         $projectNameHasNotification = $projectName;
                     }
