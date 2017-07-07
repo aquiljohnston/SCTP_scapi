@@ -24,14 +24,14 @@ use Yii;
  * @property string $Photo2Path
  * @property string $Photo3Path
  * @property string $AOCReason
- * @property integer $CGEReason
+ * @property string $CGEReason
  * @property string $LeakNumber
  * @property string $LeakReportedTo
  * @property string $LeakPipelineSystemInvestigated
  * @property string $LeakDetectType
  * @property string $LeakGrade
  * @property string $LeakAboveOrBelow
- * @property string $LeakMeterInspected
+ * @property integer $LeakMeterInspected
  * @property string $LeakMeterNumber
  * @property string $LeakMeterLeakLocation
  * @property integer $RiserOnly
@@ -90,8 +90,8 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'CGEReason', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
+            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'CGEReason', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
+            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
