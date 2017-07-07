@@ -579,6 +579,7 @@ class UserController extends BaseActiveController
 				
 				//get user id for project
 				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
+				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
 				//set client back to ct after external call
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -588,6 +589,7 @@ class UserController extends BaseActiveController
                 $projectData['ProjectClientID'] = $projectModel->ProjectClientID;
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
+				$projectData['ProjectUserName'] = $projectUserName;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
                 $projectData['ActivityCodes'] = $activityCodesArray;

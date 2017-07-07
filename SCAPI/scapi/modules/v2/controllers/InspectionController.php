@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
+use app\modules\v2\controllers\ActivityController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Inspection;
 use app\modules\v2\models\Event;
@@ -33,6 +34,7 @@ class InspectionController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'clear-event' => ['put'],
+					'update' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -93,12 +95,12 @@ class InspectionController extends Controller
 				if(array_key_exists('Event', $data))
 				{
 					if($data['Event'] != null)
-						$eventResponse = self::processEvent($data['Event'], $client, $activityID, $inspectionID);
+						$eventResponse = self::processEvent($data['Event'], $client, $inspectionID);
 				}
 				if(array_key_exists('Asset', $data))
 				{
 					if($data['Asset'] != null)
-						$assetResponse = self::processAsset($data['Asset'], $client, $activityID, $inspectionID);
+						$assetResponse = self::processAsset($data['Asset'], $client, $inspectionID);
 					if (array_key_exists('ID', $assetResponse))
 					{
 						//create ad hoc work queue
@@ -149,7 +151,7 @@ class InspectionController extends Controller
         }
 	}
 	
-	private static function processEvent($data, $client, $activityID, $inspectionID)
+	private static function processEvent($data, $client, $inspectionID)
 	{
 		//set client header
 		BaseActiveRecord::setClient($client);
@@ -200,7 +202,7 @@ class InspectionController extends Controller
 		return $eventResponse;
 	}
 	
-	private static function processAsset($data, $client, $activityID, $inspectionID)
+	private static function processAsset($data, $client, $inspectionID)
 	{		
 		//try catch to log errors
 		try
@@ -345,6 +347,93 @@ class InspectionController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+	
+	public function actionUpdate()
+	{
+		try
+		{
+			//set db
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true);
+			
+			$inspectionData = $data['activity'][0]['Inspection'];
+			
+			//create response format
+			$responseData = [];
+			
+			//try catch to log individual errors
+			try
+			{	
+				$successFlag = 0;
+				if(array_key_exists('ID' ,$inspectionData))
+				{
+					$inspectionID = $inspectionData['ID'];
+					$inspection = Inspection::find()
+						->where(['ID' => $inspectionID])
+						->one();
+					if($inspection != null)
+					{
+						$inspection->attributes = $inspectionData;
+						if($inspection->update())
+						{
+							$successFlag = 1;
+							unset($data['activity'][0]['Inspection']);
+							$responseData = ActivityController::actionCreate($data)->data;
+							
+							//process event data if available
+							if(array_key_exists('Event', $inspectionData))
+							{
+								if($inspectionData['Event'] != null)
+									//TODO: make sure I get all of the params for this call
+									$eventResponse = self::processEvent($inspectionData['Event'], $client, $inspectionID);
+							}
+							
+							$responseData['activity'][0]['Inspection'] = [
+								'ID' => $inspection->ID,
+								'InspectionTabletID' => $inspection->InspectionTabletID,
+								'SuccessFlag' => $successFlag
+							];
+							$responseData['activity'][0]['Inspection']['Event'] = $eventResponse;
+						}
+						else
+						{
+							throw BaseActiveController::modelValidationException($inspection);
+						}
+					}
+					else{
+						$responseData = ActivityController::actionCreate($data)->data;
+					}
+				}
+				else
+				{
+					$responseData = ActivityController::actionCreate($data)->data;
+				}
+			}
+			catch(\Exception $e)
+			{
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $inspectionData);
+			}			
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
 	public function actionClearEvent()
 	{
 		try
@@ -394,7 +483,7 @@ class InspectionController extends Controller
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $deletedRecords[$i]);
 				}
-				$responseData[] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
+				$responseData['Event'][] = ['ID' => $deletedRecords[$i]['ID'], 'SuccessFlag' => $successFlag];
 			}
 			//send response
 			$response = Yii::$app->response;
