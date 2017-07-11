@@ -310,7 +310,8 @@ class ProjectController extends BaseActiveController
 			
 			//get all users for the project
 			$project = Project::findOne($projectID);
-			$assignedUsers = $project->getUsers();
+			$assignedUsers = $project->getUsers()
+				->where(['UserActiveFlag' => 1]);
             if ($filter != null){
                 $assignedUsers->andFilterWhere([
                     'or',
