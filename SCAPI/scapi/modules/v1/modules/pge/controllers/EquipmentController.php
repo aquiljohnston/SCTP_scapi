@@ -106,7 +106,11 @@ class EquipmentController extends Controller
 							$calibrationModel->ActivityUID = $activityUID;
 							$calibrationModel->CreatedUserUID = $userUID;
 							$calibrationModel->ModifiedUserUID = $userUID;
-							
+							if($equipmentCalibrationArray[$i]['UpdateFlag'] == 1)
+							{
+								$calibrationModel->StatusType = $equipmentCalibrationArray[$i]['EquipmentStatus'];
+							}
+								
 							try{
 								//save model
 								if($calibrationModel->save())
