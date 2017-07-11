@@ -16,6 +16,10 @@ use app\modules\v2\models\Event;
 use app\modules\v2\models\Asset;
 use app\modules\v2\models\WorkOrder;
 use app\modules\v2\models\WorkQueue;
+use app\modules\v2\models\WebManagementInspectionsByMapGrid;
+use app\modules\v2\models\WebManagementInspectionsByMapGridSectionNumber;
+use app\modules\v2\models\WebManagementInspectionsInspections;
+use app\modules\v2\models\WebManagementInspectionsEvents;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -33,6 +37,8 @@ class InspectionController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'get-map-grids' => ['get'],
+					'get-inspections' => ['get'],
 					'clear-event' => ['put'],
 					'update' => ['put'],
                 ],  
@@ -498,6 +504,71 @@ class InspectionController extends Controller
         catch(\Exception $e)
         {
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetMapGrids($mapGridSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			
+			if($mapGridSelected != null)
+			{
+				$orderBy = 'SectionNumber';
+				$envelope = 'sections';
+				$assetQuery = WebManagementInspectionsByMapGridSectionNumber::find()
+					->where(['MapGrid' => $mapGridSelected]);
+			}
+			else
+			{
+				$orderBy = 'ComplianceEnd';
+				$envelope = 'mapGrids';
+				$assetQuery = WebManagementInspectionsByMapGrid::find();
+				
+				if($filter != null)
+				{
+					$assetQuery->andFilterWhere([
+					'or',
+					['like', 'MapGrid', $filter],
+					['like', 'ComplianceStart', $filter],
+					['like', 'ComplianceEnd', $filter],
+					['like', 'TotalInspections', $filter],
+					['like', 'PercentageComplete', $filter],
+					]);
+				}
+			}
+			
+			if($page != null)
+			{
+				//pass query with pagination data to helper method
+				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//use updated query with pagination caluse to get data
+				$data = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray[$envelope] = $data;
+			}
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
             throw new \yii\web\HttpException(400);
         }
 	}
