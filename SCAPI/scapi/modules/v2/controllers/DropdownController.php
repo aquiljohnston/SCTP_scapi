@@ -124,7 +124,7 @@ class DropdownController extends Controller
         //[{"MapGrid": "XX-YYY"},...] to {"XX-YYY": "XX-YYY",...}
         $processedResults = [];
         foreach($results as $result) {
-            $processedResults[$result['MapGrid']] = $result['MapGrid'];
+            $processedResults[$result['Mapgrid']] = $result['Mapgrid'];
         }
 
         $response = Yii::$app ->response;
