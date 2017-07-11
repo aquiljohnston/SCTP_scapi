@@ -572,4 +572,80 @@ class InspectionController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+	
+	public function actionGetInspections($mapGridSelected = null, $sectionNumberSelected = null, $inspectionID = null, $filter = null, $listPerPage = 10, $page = 1)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			$assetQuery = '';
+			
+			if($inspectionID != null)
+			{
+				$orderBy = 'StatusDescription';
+				$envelope = 'events';
+				$assetQuery = WebManagementInspectionsEvents::find()
+					->where(['InspectionID' => $inspectionID]);
+			}
+			else
+			{
+				if($sectionNumberSelected)
+				{
+					$assetQuery = WebManagementInspectionsInspections::find()
+						->where(['MapGrid' => $mapGridSelected])
+						->where(['SectionNumber' => $sectionNumberSelected]);
+				}
+				else
+				{
+					$assetQuery = WebManagementInspectionsInspections::find()
+					->where(['MapGrid' => $mapGridSelected]);
+				}
+				$orderBy = 'InspectionDateTime';
+				$envelope = 'inspections';
+				if($filter != null)
+				{
+					$assetQuery->andFilterWhere([
+					'or',
+					['like', 'MapGrid', $filter],
+					['like', 'SectionNumber', $filter],
+					['like', 'Inspector', $filter],
+					['like', 'InspectionDateTime', $filter],
+					['like', 'InspectionLatutude', $filter],
+					['like', 'InspectionLongitude', $filter],
+					]);
+				}
+			}
+			
+			if($page != null && $assetQuery != '')
+			{
+				//pass query with pagination data to helper method
+				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//use updated query with pagination caluse to get data
+				$data = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray[$envelope] = $data;
+			}
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 }
