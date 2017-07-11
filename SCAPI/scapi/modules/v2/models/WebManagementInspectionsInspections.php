@@ -18,6 +18,7 @@ use Yii;
  * @property integer $CGE
  * @property integer $IsIndicationFlag
  * @property integer $HasEvents
+ * @property integer $InspectionID
  */
 class WebManagementInspectionsInspections extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -39,7 +40,7 @@ class WebManagementInspectionsInspections extends \app\modules\v2\models\BaseAct
             [['SectionNumber', 'HasEvents'], 'required'],
             [['InspectionDateTime'], 'safe'],
             [['InspectionLatutude', 'InspectionLongitude'], 'number'],
-            [['Adhoc', 'AOC', 'CGE', 'IsIndicationFlag', 'HasEvents'], 'integer'],
+            [['Adhoc', 'AOC', 'CGE', 'IsIndicationFlag', 'HasEvents', 'InspectionID'], 'integer'],
         ];
     }
 
@@ -60,6 +61,7 @@ class WebManagementInspectionsInspections extends \app\modules\v2\models\BaseAct
             'CGE' => 'Cge',
             'IsIndicationFlag' => 'Is Indication Flag',
             'HasEvents' => 'Has Events',
+            'InspectionID' => 'Inspection ID',
         ];
     }
 }
