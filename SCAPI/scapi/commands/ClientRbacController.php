@@ -10,7 +10,7 @@ use app\rbac\ClientDbManager;
 * This Class establishes the rules of the RBAC system for the API
 * Permissions are created and assigned and the role hierarchy is established
 */
-class BetaRbacController extends Controller
+class ClientRbacController extends Controller
 {
 	/**
 	* Removes all RBAC settings that are currently in place and rebuilds the rule set
@@ -421,6 +421,10 @@ class BetaRbacController extends Controller
         $viewHomeMenu->description = 'View Home Menu';
         $auth->add($viewHomeMenu);
 		
+		$viewInspectionsMenu = $auth->createPermission('viewInspectionsMenu');
+        $viewInspectionsMenu->description = 'View Inspections Menu';
+        $auth->add($viewInspectionsMenu);
+		
         ////// Module Sub Menu Permissions //////
 
 
@@ -571,6 +575,7 @@ class BetaRbacController extends Controller
 		$auth->addChild($supervisor, $viewHomeMenu);
 		$auth->addChild($supervisor, $viewDispatchMenu);
 		$auth->addChild($supervisor, $viewReportsMenu);
+		$auth->addChild($supervisor, $viewInspectionsMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
