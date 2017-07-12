@@ -573,7 +573,7 @@ class InspectionController extends Controller
         }
 	}
 	
-	public function actionGetInspections($mapGridSelected = null, $sectionNumberSelected = null, $inspectionID = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetInspections($mapGridSelected = null, $sectionNumberSelected = null, $inspectionID = null, $workOrderID = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -586,51 +586,62 @@ class InspectionController extends Controller
 			$responseArray = [];
 			$assetQuery = '';
 			
-			if($inspectionID != null)
+			if($workOrderID != null)
 			{
-				$orderBy = 'StatusDescription';
-				$envelope = 'events';
-				$assetQuery = WebManagementInspectionsEvents::find()
-					->where(['InspectionID' => $inspectionID]);
+				$inspections = WebManagementInspectionsInspections::find()
+					->where(['WorkOrderID' => $workOrderID])
+					->orderBy('InspectionDateTime')
+					->all();
+				$responseArray['inspections'] = $inspections;
 			}
 			else
 			{
-				if($sectionNumberSelected)
+				if($inspectionID != null)
 				{
-					$assetQuery = WebManagementInspectionsInspections::find()
-						->where(['MapGrid' => $mapGridSelected])
-						->where(['SectionNumber' => $sectionNumberSelected]);
+					$orderBy = 'StatusDescription';
+					$envelope = 'events';
+					$assetQuery = WebManagementInspectionsEvents::find()
+						->where(['InspectionID' => $inspectionID]);
 				}
 				else
 				{
-					$assetQuery = WebManagementInspectionsInspections::find()
-					->where(['MapGrid' => $mapGridSelected]);
+					if($sectionNumberSelected)
+					{
+						$assetQuery = WebManagementInspectionsInspections::find()
+							->where(['MapGrid' => $mapGridSelected])
+							->where(['SectionNumber' => $sectionNumberSelected]);
+					}
+					else
+					{
+						$assetQuery = WebManagementInspectionsInspections::find()
+						->where(['MapGrid' => $mapGridSelected]);
+					}
+					$orderBy = 'InspectionDateTime';
+					$envelope = 'inspections';
+					if($filter != null)
+					{
+						$assetQuery->andFilterWhere([
+						'or',
+						['like', 'MapGrid', $filter],
+						['like', 'SectionNumber', $filter],
+						['like', 'Inspector', $filter],
+						['like', 'InspectionDateTime', $filter],
+						['like', 'InspectionLatutude', $filter],
+						['like', 'InspectionLongitude', $filter],
+						]);
+					}
 				}
-				$orderBy = 'InspectionDateTime';
-				$envelope = 'inspections';
-				if($filter != null)
+				
+				if($page != null && $assetQuery != '')
 				{
-					$assetQuery->andFilterWhere([
-					'or',
-					['like', 'MapGrid', $filter],
-					['like', 'SectionNumber', $filter],
-					['like', 'Inspector', $filter],
-					['like', 'InspectionDateTime', $filter],
-					['like', 'InspectionLatutude', $filter],
-					['like', 'InspectionLongitude', $filter],
-					]);
+					//pass query with pagination data to helper method
+					$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+					//use updated query with pagination caluse to get data
+					$data = $paginationResponse['Query']->orderBy($orderBy)
+					->all();
+					$responseArray['pages'] = $paginationResponse['pages'];
+					$responseArray[$envelope] = $data;
 				}
-			}
-			
-			if($page != null && $assetQuery != '')
-			{
-				//pass query with pagination data to helper method
-				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
-				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray[$envelope] = $data;
 			}
 			
 			//create response object
@@ -648,4 +659,5 @@ class InspectionController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+	
 }

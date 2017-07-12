@@ -9,6 +9,7 @@ use Yii;
  *
  * @property string $MapGrid
  * @property string $SectionNumber
+ * @property integer $WorkOrderID
  * @property string $Inspector
  * @property string $InspectionDateTime
  * @property double $InspectionLatutude
@@ -40,7 +41,7 @@ class WebManagementInspectionsInspections extends \app\modules\v2\models\BaseAct
             [['SectionNumber', 'HasEvents'], 'required'],
             [['InspectionDateTime'], 'safe'],
             [['InspectionLatutude', 'InspectionLongitude'], 'number'],
-            [['Adhoc', 'AOC', 'CGE', 'IsIndicationFlag', 'HasEvents', 'InspectionID'], 'integer'],
+            [['Adhoc', 'AOC', 'CGE', 'IsIndicationFlag', 'HasEvents', 'InspectionID', 'WorkOrderID'], 'integer'],
         ];
     }
 
@@ -52,6 +53,7 @@ class WebManagementInspectionsInspections extends \app\modules\v2\models\BaseAct
         return [
             'MapGrid' => 'Map Grid',
             'SectionNumber' => 'Section Number',
+			'WorkOrderID' => 'Work Order ID',
             'Inspector' => 'Inspector',
             'InspectionDateTime' => 'Inspection Date Time',
             'InspectionLatutude' => 'Inspection Latutude',

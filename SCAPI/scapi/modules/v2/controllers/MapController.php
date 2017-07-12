@@ -48,7 +48,7 @@ class MapController extends Controller
 				->where(['MapGrid' => $mapgrid])
 				->orderBy('MapGrid')
 				->all();
-			$responseData = $assets;
+			$responseData['assets'] = $assets;
 			
 			//send response
 			$response = Yii::$app->response;
