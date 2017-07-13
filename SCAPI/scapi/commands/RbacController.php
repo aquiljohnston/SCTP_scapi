@@ -421,10 +421,6 @@ class RbacController extends Controller
         $viewHomeMenu->description = 'View Home Menu';
         $auth->add($viewHomeMenu);
 		
-		$viewInspectionsMenu = $auth->createPermission('viewInspectionsMenu');
-        $viewInspectionsMenu->description = 'View Inspections Menu';
-        $auth->add($viewInspectionsMenu);
-		
         ////// Module Sub Menu Permissions //////
 
 
@@ -484,6 +480,9 @@ class RbacController extends Controller
         $viewAssigned->description = 'View assigned menu item';
         $auth->add($viewAssigned);
         
+		$viewInspections = $auth->createPermission('viewInspections');
+        $viewInspections->description = 'View Inspections';
+        $auth->add($viewInspections);
 
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
@@ -573,13 +572,13 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $viewAdministrationMenu);
 		$auth->addChild($supervisor, $viewDashboardMenu);
 		$auth->addChild($supervisor, $viewHomeMenu);
-		$auth->addChild($supervisor, $viewInspectionsMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
 		$auth->addChild($supervisor, $viewTracker);
+		$auth->addChild($supervisor, $viewInspections);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
