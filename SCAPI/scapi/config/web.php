@@ -125,9 +125,9 @@ $config = [
 			'password' => '321cba',
 			'charset' => 'utf8',
 		],
-		'betaDb' => [
+		'demoDb' => [
 			'class' => 'yii\db\Connection',
-			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=ScctTemplate',
+			'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_DEMO_GIS_DEV',
 			'username' => 'ApplicationCometTracker',
 			'password' => '321cba',
 			'charset' => 'utf8',
