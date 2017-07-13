@@ -336,16 +336,31 @@ class WorkQueueController extends Controller
 				{
 					$sudoIR->InspectionFrequencyType = $frequencyType->FieldValue;
 				}
-				//save sudo IR
-				if($sudoIR->save())
+				try
 				{
-					$sudoIRSaved = true;
+					//save sudo IR
+					if($sudoIR->save())
+					{
+						$sudoIRSaved = true;
+					}
+					else
+					{
+						$e = BaseActiveController::modelValidationException($sudoIR);
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
+						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
+					}
 				}
-				else
+				catch(yii\db\Exception $e)
 				{
-					$e = BaseActiveController::modelValidationException($sudoIR);
-					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueue);
-					return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$sudoIRSaved = true;
+					}
+					else
+					{
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $workQueue);
+						return ['AssignedInspectionRequestUID'=>$workQueue['AssignedInspectionRequestUID'], 'AssignedWorkQueueUID'=>$workQueue['AssignedWorkQueueUID'], 'SuccessFlag'=>0];
+					}
 				}
 			}
 			else
