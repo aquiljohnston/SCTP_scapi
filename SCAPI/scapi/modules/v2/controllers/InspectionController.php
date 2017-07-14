@@ -16,6 +16,10 @@ use app\modules\v2\models\Event;
 use app\modules\v2\models\Asset;
 use app\modules\v2\models\WorkOrder;
 use app\modules\v2\models\WorkQueue;
+use app\modules\v2\models\WebManagementInspectionsByMapGrid;
+use app\modules\v2\models\WebManagementInspectionsByMapGridSectionNumber;
+use app\modules\v2\models\WebManagementInspectionsInspections;
+use app\modules\v2\models\WebManagementInspectionsEvents;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -33,8 +37,11 @@ class InspectionController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'clear-event' => ['put'],
 					'update' => ['put'],
+					'clear-event' => ['put'],
+					'get-map-grids' => ['get'],
+					'get-inspections' => ['get'],
+					'get-inspection-events' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -501,4 +508,189 @@ class InspectionController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+	
+	public function actionGetMapGrids($mapGridSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			
+			if($mapGridSelected != null)
+			{
+				$orderBy = 'SectionNumber';
+				$envelope = 'sections';
+				$assetQuery = WebManagementInspectionsByMapGridSectionNumber::find()
+					->where(['MapGrid' => $mapGridSelected]);
+			}
+			else
+			{
+				$orderBy = 'ComplianceEnd';
+				$envelope = 'mapGrids';
+				$assetQuery = WebManagementInspectionsByMapGrid::find();
+				
+				if($filter != null)
+				{
+					$assetQuery->andFilterWhere([
+					'or',
+					['like', 'MapGrid', $filter],
+					['like', 'ComplianceStart', $filter],
+					['like', 'ComplianceEnd', $filter],
+					['like', 'TotalInspections', $filter],
+					['like', 'PercentageComplete', $filter],
+					]);
+				}
+			}
+			
+			if($page != null)
+			{
+				//pass query with pagination data to helper method
+				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//use updated query with pagination caluse to get data
+				$data = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray[$envelope] = $data;
+			}
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetInspections($mapGridSelected = null, $sectionNumberSelected = null, $inspectionID = null, $workOrderID = null, $filter = null, $listPerPage = 10, $page = 1)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			$assetQuery = '';
+			
+			if($workOrderID != null)
+			{
+				$inspections = WebManagementInspectionsInspections::find()
+					->where(['WorkOrderID' => $workOrderID])
+					->orderBy('InspectionDateTime')
+					->all();
+				$responseArray['inspections'] = $inspections;
+			}
+			else
+			{
+				if($inspectionID != null)
+				{
+					$orderBy = 'StatusDescription';
+					$envelope = 'events';
+					$assetQuery = WebManagementInspectionsEvents::find()
+						->where(['InspectionID' => $inspectionID]);
+				}
+				else
+				{
+					if($sectionNumberSelected)
+					{
+						$assetQuery = WebManagementInspectionsInspections::find()
+							->where(['MapGrid' => $mapGridSelected])
+							->andWhere(['SectionNumber' => $sectionNumberSelected]);
+					}
+					else
+					{
+						$assetQuery = WebManagementInspectionsInspections::find()
+						->where(['MapGrid' => $mapGridSelected]);
+					}
+					$orderBy = 'InspectionDateTime';
+					$envelope = 'inspections';
+					if($filter != null)
+					{
+						$assetQuery->andFilterWhere([
+						'or',
+						['like', 'MapGrid', $filter],
+						['like', 'SectionNumber', $filter],
+						['like', 'Inspector', $filter],
+						['like', 'InspectionDateTime', $filter],
+						['like', 'InspectionLatutude', $filter],
+						['like', 'InspectionLongitude', $filter],
+						]);
+					}
+				}
+				
+				if($page != null && $assetQuery != '')
+				{
+					//pass query with pagination data to helper method
+					$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+					//use updated query with pagination caluse to get data
+					$data = $paginationResponse['Query']->orderBy($orderBy)
+					->all();
+					$responseArray['pages'] = $paginationResponse['pages'];
+					$responseArray[$envelope] = $data;
+				}
+			}
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetInspectionEvents($workOrderID, $inspectionID)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$connection = BaseActiveRecord::getDb();
+			$getEventsCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMapViewDetails :WorkOrderID,:InspectionID");
+			$getEventsCommand->bindParam(':WorkOrderID', $workOrderID,  \PDO::PARAM_INT);
+			$getEventsCommand->bindParam(':InspectionID', $inspectionID,  \PDO::PARAM_INT);
+			$results['events'] = $getEventsCommand->query();
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $results;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
 }

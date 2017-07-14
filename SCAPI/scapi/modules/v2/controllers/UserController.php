@@ -18,6 +18,7 @@ use app\modules\v2\models\Users;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
+use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -45,6 +46,11 @@ class UserController extends BaseActiveController
     public function behaviors()
     {
         $behaviors = parent::behaviors();
+		$behaviors['authenticator'] =
+		[
+			'class' => TokenAuth::className(),
+			'except' => ['reset-password'],
+		];
         $behaviors['verbs'] =
             [
                 'class' => VerbFilter::className(),
@@ -57,6 +63,7 @@ class UserController extends BaseActiveController
                     //'get-user-dropdowns' => ['get'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
+                    'reset-password' => ['put'],
                 ],
             ];
         return $behaviors;
@@ -282,51 +289,8 @@ class UserController extends BaseActiveController
                 $responseArray = $user->attributes;
 
                 //propagate update to all associated projects
-                //find all projects
-                $projectUser = ProjectUser::find()
-                    ->select('ProjUserProjectID')
-                    ->where(['ProjUserUserID' => $user->UserID])
-                    ->all();
-                $projectCount = count($projectUser);
-
-                //loop projects
-                for ($i = 0; $i < $projectCount; $i++) {
-					//reset db to Comet Tracker
-					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-                    //get project information
-                    $project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
-
-                    //if client is populated than original call was to a client controller in which the record has already been updated
-                    //so an update does not need to be preformed for that project again
-                    if ($project->ProjectUrlPrefix == $client) {
-						$responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
-                        continue;
-                    }
-						
-                    //get model from base active record based on urlPrefix in project
-                    $userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
-					if($userModel == null) continue;
-                    $userModel::setClient($project->ProjectUrlPrefix);
-                    $projectUser = $userModel::find()
-                        ->where(['UserName' => $username])
-                        ->andWhere(['UserActiveFlag' => 1])
-                        ->one();
-
-                    $projectUser->attributes = $data;
-
-                    if ($projectUser->update()) {
-						 //handle potential role change
-						$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
-						if($projectAuthClass != null){
-							$projectAuth = new $projectAuthClass($userModel::getDb());
-							if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
-								$projectAuth->revokeAll($projectUser['UserID']);
-								$projectAuth->assign($userRole, $projectUser['UserID']);
-							}
-						}	
-                        $responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
-                    }
-                }
+				$updateInProjectResponse = self::updateInProject($user, $username, $client);
+                $responseArray['UpdatedProjects'] = $updateInProjectResponse;
             } else {
                 return 'Failed to update base user.';
                 //throw new \yii\web\HttpException(400);
@@ -735,6 +699,58 @@ class UserController extends BaseActiveController
 		}
 		return $projectUser;
 	}
+	
+	public static function updateInProject($user, $username, $client = null)
+	{
+		$responseArray = [];
+		
+		//find all projects
+		$projectUser = ProjectUser::find()
+			->select('ProjUserProjectID')
+			->where(['ProjUserUserID' => $user->UserID])
+			->all();
+		$projectCount = count($projectUser);
+
+		//loop projects
+		for ($i = 0; $i < $projectCount; $i++) {
+			//reset db to Comet Tracker
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//get project information
+			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+
+			//if client is populated than original call was to a client controller in which the record has already been updated
+			//so an update does not need to be preformed for that project again
+			if ($project->ProjectUrlPrefix == $client) {
+				$responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
+				continue;
+			}
+				
+			//get model from base active record based on urlPrefix in project
+			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+			if($userModel == null) continue;
+			$userModel::setClient($project->ProjectUrlPrefix);
+			$projectUser = $userModel::find()
+				->where(['UserName' => $username])
+				->andWhere(['UserActiveFlag' => 1])
+				->one();
+
+			$projectUser->attributes = $user->attributes;
+
+			if ($projectUser->update()) {
+				 //handle potential role change
+				$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+				if($projectAuthClass != null){
+					$projectAuth = new $projectAuthClass($userModel::getDb());
+					if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+						$projectAuth->revokeAll($projectUser['UserID']);
+						$projectAuth->assign($userRole, $projectUser['UserID']);
+					}
+				}	
+				$responseArray[] = $project->ProjectUrlPrefix;
+			}
+		}
+		return $responseArray;
+	}
 
 	//get comet tracker user from client user id
 	private static function getUserByClientUser($userID, $client)
@@ -794,5 +810,78 @@ class UserController extends BaseActiveController
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		}
 		return $response;
+	}
+	
+	//public route that will allow techs to reset their passwords. In progress
+	public function actionResetPassword()
+	{
+		try{
+			//options for bcrypt
+			$options = [
+				'cost' => 12,
+			];
+			
+			$headers = getallheaders();
+			
+			$put = file_get_contents('php://input');
+			$data = json_decode(utf8_decode($put), true);
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//find user
+			if($scUser = SCUser::findOne(['UserName'=>$data['UserName'], 'UserActiveFlag'=>1]))
+			{
+				$securedPass = $data['Password'];
+				
+				//decrypt password
+				$decryptedPass = BaseActiveController::decrypt($securedPass);
+
+				$previousHash = $scUser->UserPassword;
+				//Check the Hash
+				if (password_verify($decryptedPass, $previousHash)) 
+				{
+					//set new password
+					$securedPassNew = $data['NewPassword'];
+					$decryptedPassNew = BaseActiveController::decrypt($securedPassNew);
+					$hashNew = password_hash($decryptedPassNew, PASSWORD_BCRYPT,$options);
+					
+					$scUser->UserPassword = $hashNew;
+					
+					if ($scUser->update())
+					{
+						//update password in associated projects
+						self::updateInProject($scUser, $scUser->UserName);
+						
+						$response->data = 'Password updated successfully.';
+						$response->setStatusCode(200);
+						return $response;
+					}
+					else
+					{
+						$response->data = 'Password failed to update.';
+						$response->setStatusCode(400);
+						return $response;
+					}
+				}
+				else
+				{
+					$response->data = 'Password is invalid.';
+					$response->setStatusCode(401);
+					return $response;
+				}
+			}
+			else
+			{
+				$response->data = 'User not found or inactive.';
+				$response->setStatusCode(401);
+				return $response;
+			}
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }

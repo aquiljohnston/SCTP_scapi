@@ -10,6 +10,7 @@ use Yii;
  * @property string $MapGrid
  * @property string $SectionNumber
  * @property integer $AvailableWorkOrderCount
+ * @property integer $LocationType
  */
 class AvailableWorkOrderBySection extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -35,7 +36,7 @@ class AvailableWorkOrderBySection extends \app\modules\v2\models\BaseActiveRecor
     public function rules()
     {
         return [
-            [['MapGrid', 'SectionNumber'], 'string'],
+            [['MapGrid', 'SectionNumber', 'Location Type'], 'string'],
             [['AvailableWorkOrderCount'], 'integer'],
         ];
     }
@@ -49,6 +50,7 @@ class AvailableWorkOrderBySection extends \app\modules\v2\models\BaseActiveRecor
             'MapGrid' => 'Map Grid',
             'SectionNumber' => 'Section Number',
             'AvailableWorkOrderCount' => 'Available Work Order Count',
+            'LocationType' => 'Location Type',
         ];
     }
 }

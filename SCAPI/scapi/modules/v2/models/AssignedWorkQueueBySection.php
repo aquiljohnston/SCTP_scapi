@@ -13,6 +13,7 @@ use Yii;
  * @property string $AssignedCount
  * @property string $UIDList
  * @property string $SearchString
+ * @property string $LocationType
  */
 class AssignedWorkQueueBySection extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -30,7 +31,7 @@ class AssignedWorkQueueBySection extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['MapGrid', 'SectionNumber', 'AssignedCount', 'UIDList', 'SearchString'], 'string'],
+            [['MapGrid', 'SectionNumber', 'AssignedCount', 'UIDList', 'SearchString', 'Location Type'], 'string'],
             [['AssignedWorkQueueCount'], 'integer'],
             [['AssignedCount'], 'required'],
         ];
@@ -48,6 +49,7 @@ class AssignedWorkQueueBySection extends \app\modules\v2\models\BaseActiveRecord
             'AssignedCount' => 'Assigned Count',
             'UIDList' => 'Uidlist',
             'SearchString' => 'Search String',
+            'LocationType' => 'Location Type',
         ];
     }
 }

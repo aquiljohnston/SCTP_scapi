@@ -310,7 +310,8 @@ class ProjectController extends BaseActiveController
 			
 			//get all users for the project
 			$project = Project::findOne($projectID);
-			$assignedUsers = $project->getUsers();
+			$assignedUsers = $project->getUsers()
+				->where(['UserActiveFlag' => 1]);
             if ($filter != null){
                 $assignedUsers->andFilterWhere([
                     'or',
@@ -429,17 +430,20 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    UserController::createInProject($user, $project->ProjectUrlPrefix);
-                    //reset target db after external call
-                    BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-                    //fucntion call to add to project
-                    self::addToProject($user, $project);
+                    if(UserController::createInProject($user, $project->ProjectUrlPrefix) == null)
+					{
+						//reset target db after external call
+						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+						//fucntion call to add to project
+						self::addToProject($user, $project);
+					}
                 }
             }
 			
 			//loop usersRemoved and delete relationships and deactivate cards
             if (count($usersRemoved) > 0 && $usersRemoved[0] != null) {
                 foreach ($usersRemoved as $i) {
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
                     $projUser = ProjectUser::find()
                         ->where(['and', "ProjUserUserID = $i", "ProjUserProjectID = $projectID"])
                         ->one();
