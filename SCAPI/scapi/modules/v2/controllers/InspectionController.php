@@ -37,10 +37,11 @@ class InspectionController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'update' => ['put'],
+					'clear-event' => ['put'],
 					'get-map-grids' => ['get'],
 					'get-inspections' => ['get'],
-					'clear-event' => ['put'],
-					'update' => ['put'],
+					'get-inspection-events' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -648,6 +649,38 @@ class InspectionController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetInspectionEvents($workOrderID, $inspectionID)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$connection = BaseActiveRecord::getDb();
+			$getEventsCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMapViewDetails :WorkOrderID,:InspectionID");
+			$getEventsCommand->bindParam(':WorkOrderID', $workOrderID,  \PDO::PARAM_INT);
+			$getEventsCommand->bindParam(':InspectionID', $inspectionID,  \PDO::PARAM_INT);
+			$results['events'] = $getEventsCommand->query();
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $results;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
