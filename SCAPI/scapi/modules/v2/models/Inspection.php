@@ -42,6 +42,7 @@ use Yii;
  * @property integer $NumberOfGPSAttempts
  * @property string $SrvDTLT
  * @property string $SrvDTLTOffset
+ * @property integer $IsWorkOrderUpdated
  *
  * @property UserTb $createdBy
  */
@@ -62,7 +63,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['WorkQueueStatus', 'ActivityID', 'WorkQueueID', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
+            [['WorkQueueStatus', 'ActivityID', 'WorkQueueID', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
@@ -110,6 +111,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
             'SrvDTLT' => 'Srv Dtlt',
             'SrvDTLTOffset' => 'Srv Dtltoffset',
+            'IsWorkOrderUpdated' => 'Is Work Order Updated',
         ];
     }
 

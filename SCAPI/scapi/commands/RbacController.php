@@ -480,6 +480,9 @@ class RbacController extends Controller
         $viewAssigned->description = 'View assigned menu item';
         $auth->add($viewAssigned);
         
+		$viewInspections = $auth->createPermission('viewInspections');
+        $viewInspections->description = 'View Inspections';
+        $auth->add($viewInspections);
 
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
@@ -575,6 +578,7 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
 		$auth->addChild($supervisor, $viewTracker);
+		$auth->addChild($supervisor, $viewInspections);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
