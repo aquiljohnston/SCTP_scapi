@@ -610,7 +610,7 @@ class InspectionController extends Controller
 					{
 						$assetQuery = WebManagementInspectionsInspections::find()
 							->where(['MapGrid' => $mapGridSelected])
-							->where(['SectionNumber' => $sectionNumberSelected]);
+							->andWhere(['SectionNumber' => $sectionNumberSelected]);
 					}
 					else
 					{
