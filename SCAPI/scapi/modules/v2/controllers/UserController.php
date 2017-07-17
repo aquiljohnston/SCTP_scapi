@@ -60,7 +60,6 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
-                    //'get-user-dropdowns' => ['get'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
                     'reset-password' => ['put'],
@@ -430,46 +429,6 @@ class UserController extends BaseActiveController
     }
 
     /**
-     * Creates an associative array of user id/lastname, firstname pairs
-     * @returns json body id name pairs
-     * @throws \yii\web\HttpException
-     *
-	 //according to Tao this route is never called by the web\ForbiddenHttpException
-	 //I'm commenting for now if no one complains after its on the server for a bit I will remove
-    public function actionGetUserDropdowns()
-    {
-        try {
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userGetDropdown');
-
-            $users = SCUser::find()
-                ->where("UserActiveFlag = 1")
-                ->orderBy("UserLastName")
-                ->all();
-            $namePairs = [null => "Unassigned"];
-            $tempPairs = [];
-            $userSize = count($users);
-
-            for ($i = 0; $i < $userSize; $i++) {
-                $tempPairs[$users[$i]->UserID] = $users[$i]->UserLastName . ", " . $users[$i]->UserFirstName;
-            }
-            $namePairs = $namePairs + $tempPairs;
-
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-            $response->data = $namePairs;
-
-            return $response;
-        } catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch (\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }*/
-
-    /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
      * @param $userID
      * @returns json body containing userdata, equipment, and projects
@@ -680,6 +639,12 @@ class UserController extends BaseActiveController
 		
 		//pass $user attributes into new model
 		$projectUser->attributes = $user->attributes;
+		//get user id for created by in project db
+		$createdByInProject = BaseActiveController::getClientUser($client);
+		if($createdByInProject != null)
+		{
+			$projectUser->UserCreatedUID = $createdByInProject->UserID;
+		}
 		//set comment created on addition to project
 		$projectUser->UserComments = 'User created on association to project.';
 		//set active flag, is null in user->attributes because it is set on db
@@ -735,7 +700,17 @@ class UserController extends BaseActiveController
 				->one();
 
 			$projectUser->attributes = $user->attributes;
-
+			//get user id for created by in project db
+			$updatedByInProject = BaseActiveController::getClientUser($project->ProjectUrlPrefix);
+			if($updatedByInProject != null)
+			{
+				$projectUser->UserModifiedUID = $updatedByInProject->UserID;
+			}
+			//can't update this value
+            if (isset($projectUser['UserCreatedUID'])) {
+                unset($projectUser['UserCreatedUID']);
+            }
+			
 			if ($projectUser->update()) {
 				 //handle potential role change
 				$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
