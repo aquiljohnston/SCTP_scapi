@@ -599,7 +599,7 @@ class InspectionController extends Controller
 			{
 				if($inspectionID != null)
 				{
-					$orderBy = 'StatusDescription';
+					$orderBy = 'EventType';
 					$envelope = 'events';
 					$assetQuery = WebManagementInspectionsEvents::find()
 						->where(['InspectionID' => $inspectionID]);
