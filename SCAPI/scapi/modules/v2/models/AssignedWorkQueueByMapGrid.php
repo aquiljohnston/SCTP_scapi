@@ -10,11 +10,15 @@ use Yii;
  * @property string $MapGrid
  * @property string $ComplianceStart
  * @property string $ComplianceEnd
+ * @property integer $InspectionAttemptcounter
  * @property integer $SectionFlag
  * @property integer $AssignedWorkOrderCount
  * @property string $AssignedCount
  * @property string $UIDList
  * @property string $SearchString
+ * @property string $Percent Completed
+ * @property integer $Total
+ * @property integer $Remaining
  */
 class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -34,8 +38,9 @@ class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['MapGrid', 'AssignedCount', 'UIDList', 'SearchString'], 'string'],
             [['ComplianceStart', 'ComplianceEnd'], 'safe'],
-            [['SectionFlag', 'AssignedWorkOrderCount'], 'integer'],
+            [['InspectionAttemptcounter', 'SectionFlag', 'AssignedWorkOrderCount', 'Total', 'Remaining'], 'integer'],
             [['SectionFlag', 'AssignedCount'], 'required'],
+            [['Percent Completed'], 'number'],
         ];
     }
 
@@ -48,11 +53,15 @@ class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
             'MapGrid' => 'Map Grid',
             'ComplianceStart' => 'Compliance Start',
             'ComplianceEnd' => 'Compliance End',
+            'InspectionAttemptcounter' => 'Inspection Attemptcounter',
             'SectionFlag' => 'Section Flag',
             'AssignedWorkOrderCount' => 'Assigned Work Order Count',
             'AssignedCount' => 'Assigned Count',
             'UIDList' => 'Uidlist',
             'SearchString' => 'Search String',
+            'Percent Completed' => 'Percent  Completed',
+            'Total' => 'Total',
+            'Remaining' => 'Remaining',
         ];
     }
 }
