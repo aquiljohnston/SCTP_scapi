@@ -7,20 +7,10 @@ use Yii;
 /**
  * This is the model class for table "vWebManagementInspectionsEvents".
  *
- * @property string $StatusDescription
+ * @property string $EventType
+ * @property string $Reason
  * @property string $Photo
- * @property string $AOCReason
- * @property string $CGEReason
- * @property string $LeakNumber
- * @property string $LeakPipelineSystemInvestigated
- * @property string $LeakDetectType
- * @property string $LeakGrade
- * @property string $LeakAboveOrBelow
- * @property integer $LeakMeterInspected
- * @property string $LeakMeterNumber
- * @property string $LeakMeterLeakLocation
- * @property integer $RiserOnly
- * @property integer $MultiMeter
+ * @property string $Comments
  * @property integer $InspectionID
  */
 class WebManagementInspectionsEvents extends \app\modules\v2\models\BaseActiveRecord
@@ -39,9 +29,9 @@ class WebManagementInspectionsEvents extends \app\modules\v2\models\BaseActiveRe
     public function rules()
     {
         return [
-            [['StatusDescription', 'Photo', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation'], 'string'],
-            [['LeakMeterInspected', 'RiserOnly', 'MultiMeter', 'InspectionID'], 'integer'],
+            [['EventType', 'Reason', 'Photo', 'Comments'], 'string'],
             [['InspectionID'], 'required'],
+            [['InspectionID'], 'integer'],
         ];
     }
 
@@ -51,20 +41,10 @@ class WebManagementInspectionsEvents extends \app\modules\v2\models\BaseActiveRe
     public function attributeLabels()
     {
         return [
-            'StatusDescription' => 'Status Description',
+            'EventType' => 'Event Type',
+            'Reason' => 'Reason',
             'Photo' => 'Photo',
-            'AOCReason' => 'Aocreason',
-            'CGEReason' => 'Cgereason',
-            'LeakNumber' => 'Leak Number',
-            'LeakPipelineSystemInvestigated' => 'Leak Pipeline System Investigated',
-            'LeakDetectType' => 'Leak Detect Type',
-            'LeakGrade' => 'Leak Grade',
-            'LeakAboveOrBelow' => 'Leak Above Or Below',
-            'LeakMeterInspected' => 'Leak Meter Inspected',
-            'LeakMeterNumber' => 'Leak Meter Number',
-            'LeakMeterLeakLocation' => 'Leak Meter Leak Location',
-            'RiserOnly' => 'Riser Only',
-            'MultiMeter' => 'Multi Meter',
+            'Comments' => 'Comments',
             'InspectionID' => 'Inspection ID',
         ];
     }
