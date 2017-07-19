@@ -8,12 +8,15 @@ use Yii;
  * This is the model class for table "vAssignedWorkQueueBySection".
  *
  * @property string $MapGrid
+ * @property string $LocationType
  * @property string $SectionNumber
  * @property integer $AssignedWorkQueueCount
  * @property string $AssignedCount
  * @property string $UIDList
  * @property string $SearchString
- * @property string $LocationType
+ * @property string $Percent Completed
+ * @property integer $Total
+ * @property integer $Remaining
  */
 class AssignedWorkQueueBySection extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -24,16 +27,17 @@ class AssignedWorkQueueBySection extends \app\modules\v2\models\BaseActiveRecord
     {
         return 'vAssignedWorkQueueBySection';
     }
-
+	
     /**
      * @inheritdoc
      */
     public function rules()
     {
         return [
-            [['MapGrid', 'SectionNumber', 'AssignedCount', 'UIDList', 'SearchString', 'Location Type'], 'string'],
-            [['AssignedWorkQueueCount'], 'integer'],
+            [['MapGrid', 'LocationType', 'SectionNumber', 'AssignedCount', 'UIDList', 'SearchString'], 'string'],
+            [['AssignedWorkQueueCount', 'Total', 'Remaining'], 'integer'],
             [['AssignedCount'], 'required'],
+            [['Percent Completed'], 'number'],
         ];
     }
 
@@ -44,12 +48,15 @@ class AssignedWorkQueueBySection extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             'MapGrid' => 'Map Grid',
+            'LocationType' => 'Location Type',
             'SectionNumber' => 'Section Number',
             'AssignedWorkQueueCount' => 'Assigned Work Queue Count',
             'AssignedCount' => 'Assigned Count',
             'UIDList' => 'Uidlist',
             'SearchString' => 'Search String',
-            'LocationType' => 'Location Type',
+            'Percent Completed' => 'Percent  Completed',
+            'Total' => 'Total',
+            'Remaining' => 'Remaining',
         ];
     }
 }
