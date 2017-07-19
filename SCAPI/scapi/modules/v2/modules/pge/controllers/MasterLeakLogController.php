@@ -11,6 +11,7 @@ use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\modules\pge\models\MasterLeakLog;
 use app\modules\v2\modules\pge\models\InspectionService;
+use app\modules\v2\modules\pge\models\TabletMapGrids;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
@@ -70,6 +71,12 @@ class MasterLeakLogController extends Controller
 				//try catch to log individual MLL errors
 				try
 				{
+					$adHocIR = null;
+					//check if AdHocIR if so check if IR exist and create if it is missing
+					if(array_key_exists('AssetInspectionUID', $logArray[$i]))
+					{
+						$adHocIR = self::createIR($headers['X-Client'], $UserUID, $logArray[$i]);
+					}
 					//reset new master leak log flag
 					$newMLL = false;
 					//get count of current active records with matching master leak log uid
@@ -148,13 +155,12 @@ class MasterLeakLogController extends Controller
 									'SuccessFlag' => 0];
 							}
 						}
-						
-						$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'SuccessFlag'=>1, 'Services' => $services];
+						$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'SuccessFlag'=>1, 'Services' => $services, 'InspectionRequest' => $adHocIR];
 					}
 					else
 					{
-						$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'SuccessFlag'=>0, 'Services' => $services];
-					}	
+						$responseData[] = ['MasterLeakLogUID'=>$logArray[$i]['MasterLeakLogUID'], 'SuccessFlag'=>0, 'Services' => $services, 'InspectionRequest' => $adHocIR];
+					}					
 				}
 				catch(\Exception $e)
 				{
@@ -303,5 +309,37 @@ class MasterLeakLogController extends Controller
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
+	}
+	
+	//function to create ad hoc inspection request when record is missing or broken
+	private static function createIR($client, $userUID, $data)
+	{
+		//get map data based on mapGridUID
+		$mapGrid  = TabletMapGrids::find()
+			->where(['MapGridsUID'=> $data['MapGridUID']])
+			->one();
+		
+		//create array
+		$adHocArray = [];
+		//populate array
+		$adHocArray['MapPlat'] = "$mapGrid->FuncLocMap\/$mapGrid->FuncLocPlat";
+		$adHocArray['PlatPrefix'] = $mapGrid->FuncLocPlatChar2;
+		$adHocArray['Plat'] = $mapGrid->FuncLocPlat;
+		//remove possible "." from assignedWorkQueueUID
+		$adHocArray['AssignedWorkQueueUID'] = WorkQueueController::replacePeriod($data['AssignedWorkQueueUID']);
+		$adHocArray['AssignedUserUID'] = $userUID;
+		$adHocArray['AssignedInspectionRequestUID'] = $data['InspectionRequestLogUID'];
+		$adHocArray['MapGridUID'] = $data['MapGridUID'];
+		$adHocArray['SurveyType'] = $data['SurveyType'];
+		$adHocArray['WorkCenter'] = $mapGrid->WorkCenter;
+		$adHocArray['DispatchMethod'] = 'Ad Hoc';
+		$adHocArray['MasterLeakLogUID'] = $data['MasterLeakLogUID'];
+		$adHocArray['AssignedDate'] = date("Y-m-d");
+		$adHocArray['SourceID'] = $data['SourceID'];
+		$adHocArray['SrcDTLT'] = $data['SrcDTLT'];
+		$adHocArray['AssetInspectionUID'] = $data['AssetInspectionUID'];
+
+		//pass to adhoc function
+		return WorkQueueController::lockAdHoc($adHocArray, $client, $userUID);
 	}
 }

@@ -320,10 +320,24 @@ class WorkQueueController extends Controller
 				{
 					$sudoIR->InspectionFrequencyType = $frequencyType->FieldValue;
 				}
-				//save sudo IR
-				if($sudoIR->save())
+				try
 				{
-					$sudoIRSaved = true;
+					//save sudo IR
+					if($sudoIR->save())
+					{
+						$sudoIRSaved = true;
+					}
+				}
+				catch(yii\db\Exception $e)
+				{
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$sudoIRSaved = true;
+					}
+					else
+					{
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $workQueue);
+					}
 				}
 			}
 			else
