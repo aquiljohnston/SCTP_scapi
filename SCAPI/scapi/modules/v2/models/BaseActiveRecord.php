@@ -43,12 +43,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//york auth manager
 	const YORK_AUTH = 'app\rbac\ClientDbManager';
 	
-	//beta client database
-	const BETA_DEV = 'betadev';
+	//demo client database
+	const DEMO_DEV = 'demo';
 	//beta user model
-	const BETA_USER = self::BASE_USER;
+	const DEMO_USER = self::BASE_USER;
 	//beta auth manager
-	const BETA_AUTH = 'app\rbac\BetaDbManager';
+	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 	
 	public static function getClient()
 	{
@@ -101,10 +101,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkProdDb;
 		}
-		//beta
-		if (self::$CLIENT_ID == self::BETA_DEV)
+		//demo
+		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{
-			return Yii::$app->betaDb;
+			return Yii::$app->demoDb;
 		}
 	}
 	
@@ -128,10 +128,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::YORK_USER;
 		}
-		//Beta
-		if($client == self::BETA_DEV)
+		//demo
+		if($client == self::DEMO_DEV)
 		{
-			return self::BETA_USER;
+			return self::DEMO_USER;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 
@@ -163,10 +163,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::YORK_AUTH;
 		}
-		//Beta
-		if($client == self::BETA_DEV)
+		//demo
+		if($client == self::DEMO_DEV)
 		{
-			return self::BETA_AUTH;
+			return self::DEMO_AUTH;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 

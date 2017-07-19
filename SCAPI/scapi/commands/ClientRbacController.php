@@ -6,11 +6,13 @@ use yii\console\Controller;
 use app\modules\v2\models\BaseUser;
 use app\rbac\ClientDbManager;
 
+//Cmd yii client-rbac/init demo
+
 /**
 * This Class establishes the rules of the RBAC system for the API
 * Permissions are created and assigned and the role hierarchy is established
 */
-class BetaRbacController extends Controller
+class ClientRbacController extends Controller
 {
 	/**
 	* Removes all RBAC settings that are currently in place and rebuilds the rule set
@@ -405,9 +407,10 @@ class BetaRbacController extends Controller
         $viewAdministrationMenu->description = 'View Administration Menu';
         $auth->add($viewAdministrationMenu);
 		
-		$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
-        $viewDashboardMenu->description = 'View Dashboard Menu';
-        $auth->add($viewDashboardMenu);
+		//currently only avaliable in pge
+		//$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
+        //$viewDashboardMenu->description = 'View Dashboard Menu';
+        //$auth->add($viewDashboardMenu);
 		
 		$viewDispatchMenu = $auth->createPermission('viewDispatchMenu');
         $viewDispatchMenu->description = 'View Dispatch Menu';
@@ -420,6 +423,10 @@ class BetaRbacController extends Controller
 		$viewHomeMenu = $auth->createPermission('viewHomeMenu');
         $viewHomeMenu->description = 'View Home Menu';
         $auth->add($viewHomeMenu);
+		
+		$viewTrackerMenu = $auth->createPermission('viewTrackerMenu');
+        $viewTrackerMenu->description = 'View Tracker Menu';
+        $auth->add($viewTrackerMenu);
 		
         ////// Module Sub Menu Permissions //////
 
@@ -448,9 +455,10 @@ class BetaRbacController extends Controller
         $viewMileageCardMgmt->description = 'View mileage card management menu item';
         $auth->add($viewMileageCardMgmt);
 
-        $viewTracker = $auth->createPermission('viewTracker');
-        $viewTracker->description = 'View tracker menu item';
-        $auth->add($viewTracker);
+		//currently only avaliable in pge
+        //$viewTracker = $auth->createPermission('viewTracker');
+        //$viewTracker->description = 'View tracker menu item';
+        //$auth->add($viewTracker);
         
         $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
         $viewLeakLogMgmt->description = 'View leak log management menu item';
@@ -480,7 +488,10 @@ class BetaRbacController extends Controller
         $viewAssigned->description = 'View assigned menu item';
         $auth->add($viewAssigned);
         
-
+		$viewInspections = $auth->createPermission('viewInspections');
+        $viewInspections->description = 'View Inspections';
+        $auth->add($viewInspections);
+		
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
 		// add "Technician" role and give this role CRUD permissions
@@ -567,16 +578,18 @@ class BetaRbacController extends Controller
 		$auth->addChild($supervisor, $userGetActive);
 		// menu permissions
 		$auth->addChild($supervisor, $viewAdministrationMenu);
-		$auth->addChild($supervisor, $viewDashboardMenu);
+		//$auth->addChild($supervisor, $viewDashboardMenu);
 		$auth->addChild($supervisor, $viewHomeMenu);
 		$auth->addChild($supervisor, $viewDispatchMenu);
 		$auth->addChild($supervisor, $viewReportsMenu);
+		$auth->addChild($supervisor, $viewTrackerMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
-		$auth->addChild($supervisor, $viewTracker);
+		//$auth->addChild($supervisor, $viewTracker);
+		$auth->addChild($supervisor, $viewInspections);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
