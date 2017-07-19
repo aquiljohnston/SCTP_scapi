@@ -37,14 +37,6 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @return \yii\db\Connection the database connection used by this AR class.
-     */
-    public static function getDb()
-    {
-        return Yii::$app->get('yorkDevDb');
-    }
-
-    /**
      * @inheritdoc
      */
     public function rules()
