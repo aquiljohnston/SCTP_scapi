@@ -16,7 +16,7 @@ use Yii;
  * @property integer $LineID
  * @property integer $SegmentID
  * @property integer $VerticeID
- * @property double $Latutide
+ * @property double $Latitude
  * @property double $Longitude
  * @property integer $InspectionID
  * @property double $Distance
@@ -41,7 +41,7 @@ class WebManagementMapView extends \app\modules\v2\models\BaseActiveRecord
             [['ID', 'Verified'], 'required'],
             [['ID', 'CompletedFlag', 'LineID', 'SegmentID', 'VerticeID', 'InspectionID'], 'integer'],
             [['ClientWorkOrderID', 'AssetType', 'Address', 'MapGrid', 'Verified'], 'string'],
-            [['Latutide', 'Longitude', 'Distance'], 'number'],
+            [['Latitude', 'Longitude', 'Distance'], 'number'],
         ];
     }
 
@@ -60,7 +60,7 @@ class WebManagementMapView extends \app\modules\v2\models\BaseActiveRecord
             'LineID' => 'Line ID',
             'SegmentID' => 'Segment ID',
             'VerticeID' => 'Vertice ID',
-            'Latutide' => 'Latutide',
+            'Latitude' => 'Latitude',
             'Longitude' => 'Longitude',
             'InspectionID' => 'Inspection ID',
             'Distance' => 'Distance',
