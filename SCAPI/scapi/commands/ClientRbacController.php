@@ -428,6 +428,10 @@ class ClientRbacController extends Controller
         $viewTrackerMenu->description = 'View Tracker Menu';
         $auth->add($viewTrackerMenu);
 		
+		$viewTrainingMenu = $auth->createPermission('viewTrainingMenu');
+        $viewTrainingMenu->description = 'View Training Menu';
+        $auth->add($viewTrainingMenu);
+		
         ////// Module Sub Menu Permissions //////
 
 
@@ -583,6 +587,7 @@ class ClientRbacController extends Controller
 		$auth->addChild($supervisor, $viewDispatchMenu);
 		$auth->addChild($supervisor, $viewReportsMenu);
 		$auth->addChild($supervisor, $viewTrackerMenu);
+		$auth->addChild($supervisor, $viewTrainingMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
