@@ -421,6 +421,10 @@ class RbacController extends Controller
         $viewHomeMenu->description = 'View Home Menu';
         $auth->add($viewHomeMenu);
 		
+		$viewTrainingMenu = $auth->createPermission('viewTrainingMenu');
+        $viewTrainingMenu->description = 'View Training Menu';
+        $auth->add($viewTrainingMenu);
+		
         ////// Module Sub Menu Permissions //////
 
 
@@ -572,6 +576,7 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $viewAdministrationMenu);
 		$auth->addChild($supervisor, $viewDashboardMenu);
 		$auth->addChild($supervisor, $viewHomeMenu);
+		$auth->addChild($supervisor, $viewTrainingMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
