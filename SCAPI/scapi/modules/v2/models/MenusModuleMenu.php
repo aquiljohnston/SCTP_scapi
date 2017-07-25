@@ -15,6 +15,8 @@ use Yii;
  * @property int $ModuleMenuCreatedBy
  * @property string $ModuleMenuModifiedDate
  * @property int $ModuleMenuModifiedBy
+ * @property string $ModuleMenuPermissionName
+ * @property int $SortSequence
  */
 class MenusModuleMenu extends BaseActiveRecord
 {
@@ -32,8 +34,8 @@ class MenusModuleMenu extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ModuleMenuName', 'ModuleMenuNavMenuName'], 'string'],
-            [['ModuleMenuNavMenuID', 'ModuleMenuCreatedBy', 'ModuleMenuModifiedBy'], 'integer'],
+            [['ModuleMenuName', 'ModuleMenuNavMenuName', 'ModuleMenuPermissionName'], 'string'],
+            [['ModuleMenuNavMenuID', 'ModuleMenuCreatedBy', 'ModuleMenuModifiedBy', 'SortSequence'], 'integer'],
             [['ModuleMenuCreateDate', 'ModuleMenuModifiedDate'], 'safe']
         ];
     }
@@ -52,6 +54,8 @@ class MenusModuleMenu extends BaseActiveRecord
             'ModuleMenuCreatedBy' => 'Module Menu Created By',
             'ModuleMenuModifiedDate' => 'Module Menu Modified Date',
             'ModuleMenuModifiedBy' => 'Module Menu Modified By',
+            'ModuleMenuPermissionName' => 'Module Menu Permission Name',
+            'SortSequence' => 'Sort Sequence',
         ];
     }
 	
