@@ -43,6 +43,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//york auth manager
 	const YORK_AUTH = 'app\rbac\ClientDbManager';
 	
+	//dominion databases
+	const DOMINION_STAGE = 'deostage';
+	const DOMINION_PROD = 'deo';
+	//dominion user model
+	const DOMINION_USER = self::BASE_USER;
+	//dominion auth manager
+	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
+	
 	//demo client database
 	const DEMO_DEV = 'demo';
 	//beta user model
@@ -101,6 +109,15 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkProdDb;
 		}
+		//dominion
+		if (self::$CLIENT_ID == self::DOMINION_STAGE)
+		{
+			return Yii::$app->dominionStageDb;
+		}
+		// if (self::$CLIENT_ID == self::DOMINION_PROD)
+		// {
+			// return Yii::$app->dominionProdDb;
+		// }
 		//demo
 		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{
@@ -127,6 +144,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		||$client == self::YORK_STAGE)
 		{
 			return self::YORK_USER;
+		}
+		//Dominion
+		if($client == self::DOMINION_PROD
+		||$client == self::DOMINION_STAGE)
+		{
+			return self::DOMINION_USER;
 		}
 		//demo
 		if($client == self::DEMO_DEV)
@@ -162,6 +185,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		|| $client == self::YORK_STAGE)
 		{
 			return self::YORK_AUTH;
+		}
+		//Dominion
+		if($client == self::DOMINION_PROD
+		|| $client == self::DOMINION_STAGE)
+		{
+			return self::DOMINION_AUTH;
 		}
 		//demo
 		if($client == self::DEMO_DEV)

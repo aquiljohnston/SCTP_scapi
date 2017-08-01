@@ -43,6 +43,13 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
+	'dominionStageDb' => [
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_DOMINION_GIS_STAGE',
+		'username' => 'ApplicationCometTracker',
+		'password' => '321cba',
+		'charset' => 'utf8',
+	],
 	'ctProdDb' => [
 		'class' => 'yii\db\Connection',
 		'dsn' => 'sqlsrv:Server=10.0.0.51;Database=CometTracker_PROD',

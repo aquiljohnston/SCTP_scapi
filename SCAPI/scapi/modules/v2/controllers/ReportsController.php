@@ -176,25 +176,31 @@ class ReportsController extends Controller {
      * todo: get Parm Drop Down list
      * @return Json format
      */
-    public function actionGetParmDropdown($spName)
+    public function actionGetParmDropdown($viewName)
 	{
 		try
 		{
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
-			
-			$response = Yii::$app->response;
-			$response->format = Response::FORMAT_JSON;
-			
-			$connection = BaseActiveRecord::getDb();
-			
-			$queryResults = $connection->createCommand("EXEC " . $spName)
-			->queryAll();
-			
-			$responseData['options'] = self::formatDropdowns($queryResults);
-			
-			$response->data = $responseData;
-			return $response;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+            if ($viewName != null) {
+                $headers = getallheaders();
+                BaseActiveRecord::setClient($headers['X-Client']);
+
+                $connection = BaseActiveRecord::getDb();
+
+                $queryString = "SELECT * FROM " . $viewName . " order by 'mapgrid'";
+
+                $queryResults = $connection->createCommand($queryString)
+                    ->queryAll();
+
+                $responseData['options'] = $queryResults;
+            }else{
+                $responseData['options'] = [];
+            }
+
+            $response->data = $responseData;
+            return $response;
 		}
 		catch(ForbiddenHttpException $e)
 		{
@@ -277,7 +283,7 @@ class ReportsController extends Controller {
         {
             //$formatedData['DisplayName'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'];
             $formatedData[$i]['userNameData'] = $data[$i]['UserName'];
-            $formatedData[$i]['displayNameData'] = $data[$i]['UserFirstName'] .", ". $data[$i]['UserLastName'] . " (" . $data[$i]['UserName'] . ")";
+            $formatedData[$i]['displayNameData'] = $data[$i]['UserLastName'] .", ". $data[$i]['UserFirstName'] . " (" . $data[$i]['UserName'] . ")";
         }
 
         return $formatedData;
