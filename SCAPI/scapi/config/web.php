@@ -1,5 +1,5 @@
 <?php
-//pew
+//"I promise you it's gonna work." - Andre 08/01/17
 use app\authentication\CTUser;
 
 $params = require(__DIR__ . '/params.php');
