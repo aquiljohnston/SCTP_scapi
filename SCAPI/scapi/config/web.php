@@ -70,6 +70,7 @@ $config = [
         'ctStageDb' => $db['ctStageDb'],
         'pgeStageDb' => $db['pgeStageDb'],
 		'yorkStageDb' => $db['yorkStageDb'],
+		'dominionStageDb' => $db['dominionStageDb'],
         'ctProdDb' => $db['ctProdDb'],
         'pgeProdDb' => $db['pgeProdDb'],
 		'yorkProdDb' => $db['yorkProdDb'],

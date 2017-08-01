@@ -125,6 +125,7 @@ class MenuController extends Controller {
 				//get nav menu name, url, and enableFlag
 				$navigationArray["NavigationName"] = $allNavMenus[$i]->ModuleMenuNavMenuName;
 				$navigationArray["Url"] = $allNavMenus[$i]->ModuleMenuUrl;
+				$navigationArray["SortSequence"] = $allNavMenus[$i]->SortSequence;
 				
 				yii::trace("Modules Array: " . json_encode($modules));
 				
