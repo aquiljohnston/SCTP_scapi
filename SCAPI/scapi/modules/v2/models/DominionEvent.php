@@ -97,7 +97,7 @@ class DominionEvent extends \app\modules\v2\models\BaseActiveRecord
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
-            [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => UserTb::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
+            [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
         ];
     }
 
@@ -181,6 +181,6 @@ class DominionEvent extends \app\modules\v2\models\BaseActiveRecord
      */
     public function getCreatedByUser()
     {
-        return $this->hasOne(UserTb::className(), ['UserID' => 'CreatedByUserID']);
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'CreatedByUserID']);
     }
 }
