@@ -172,13 +172,14 @@ class InspectionController extends Controller
 			{	
 				$eventSuccessFlag = 0;
 				$eventID = null;
-			
-				$newEvent = new Event;
+				//get dynamic event model
+				$eventModel = BaseActiveRecord::getEventModel($client);
+				$newEvent = new $eventModel;
 				$newEvent->attributes = $data[$i];
 				$newEvent->InspectionID = $inspectionID;
 				
 				//check if Event already exist.
-				$previousEvent = Event::find()
+				$previousEvent = $eventModel::find()
 					->where(['EventTabletID' => $newEvent->EventTabletID])
 					//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 					->one();
@@ -473,7 +474,9 @@ class InspectionController extends Controller
 				try
 				{	
 					$successFlag = 0;
-					$event = Event::find()
+					//get dynamic event model
+					$eventModel = BaseActiveRecord::getEventModel($client);
+					$event = $eventModel::find()
 						->where(['ID' => $deletedRecords[$i]['ID']])
 						->andWhere(['<>', 'DeletedFlag', 1])
 						->one();
