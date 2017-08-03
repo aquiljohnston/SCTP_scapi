@@ -367,6 +367,9 @@ class InspectionController extends Controller
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
 			
+			//archive json data
+			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			
 			$inspectionData = $data['activity'][0]['Inspection'];
 			
 			//create response format
@@ -452,6 +455,10 @@ class InspectionController extends Controller
 			//get body data
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
+			
+			//archive json data
+			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			
 			//create response format
 			$responseData = [];
 			
