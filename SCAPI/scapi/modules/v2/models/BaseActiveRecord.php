@@ -122,10 +122,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionStageDb;
 		}
-		// if (self::$CLIENT_ID == self::DOMINION_PROD)
-		// {
-			// return Yii::$app->dominionProdDb;
-		// }
+		if (self::$CLIENT_ID == self::DOMINION_PROD)
+		{
+			return Yii::$app->dominionProdDb;
+		}
 		//demo
 		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{
