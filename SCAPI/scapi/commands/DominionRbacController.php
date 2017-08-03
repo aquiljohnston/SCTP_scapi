@@ -12,7 +12,7 @@ use app\rbac\ClientDbManager;
 * This Class establishes the rules of the RBAC system for the API
 * Permissions are created and assigned and the role hierarchy is established
 */
-class ClientRbacController extends Controller
+class DominionRbacController extends Controller
 {
 	/**
 	* Removes all RBAC settings that are currently in place and rebuilds the rule set
@@ -428,6 +428,10 @@ class ClientRbacController extends Controller
         $viewTrackerMenu->description = 'View Tracker Menu';
         $auth->add($viewTrackerMenu);
 		
+		$viewTrainingMenu = $auth->createPermission('viewTrainingMenu');
+        $viewTrainingMenu->description = 'View Training Menu';
+        $auth->add($viewTrainingMenu);
+		
         ////// Module Sub Menu Permissions //////
 
 
@@ -447,13 +451,13 @@ class ClientRbacController extends Controller
         $viewEquipmentMgmt->description = 'View equipment management menu item';
         $auth->add($viewEquipmentMgmt);
 
-        $viewTimeCardMgmt = $auth->createPermission('viewTimeCardMgmt');
-        $viewTimeCardMgmt->description = 'View time card management menu item';
-        $auth->add($viewTimeCardMgmt);
+        // $viewTimeCardMgmt = $auth->createPermission('viewTimeCardMgmt');
+        // $viewTimeCardMgmt->description = 'View time card management menu item';
+        // $auth->add($viewTimeCardMgmt);
 
-        $viewMileageCardMgmt = $auth->createPermission('viewMileageCardMgmt');
-        $viewMileageCardMgmt->description = 'View mileage card management menu item';
-        $auth->add($viewMileageCardMgmt);
+        // $viewMileageCardMgmt = $auth->createPermission('viewMileageCardMgmt');
+        // $viewMileageCardMgmt->description = 'View mileage card management menu item';
+        // $auth->add($viewMileageCardMgmt);
 
 		//currently only avaliable in pge
         //$viewTracker = $auth->createPermission('viewTracker');
@@ -488,9 +492,9 @@ class ClientRbacController extends Controller
         $viewAssigned->description = 'View assigned menu item';
         $auth->add($viewAssigned);
         
-		$viewInspections = $auth->createPermission('viewInspections');
-        $viewInspections->description = 'View Inspections';
-        $auth->add($viewInspections);
+		// $viewInspections = $auth->createPermission('viewInspections');
+        // $viewInspections->description = 'View Inspections';
+        // $auth->add($viewInspections);
 		
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
@@ -583,13 +587,14 @@ class ClientRbacController extends Controller
 		$auth->addChild($supervisor, $viewDispatchMenu);
 		$auth->addChild($supervisor, $viewReportsMenu);
 		$auth->addChild($supervisor, $viewTrackerMenu);
+		$auth->addChild($supervisor, $viewTrainingMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
-		$auth->addChild($supervisor, $viewTimeCardMgmt);
-		$auth->addChild($supervisor, $viewMileageCardMgmt);
+		//$auth->addChild($supervisor, $viewTimeCardMgmt);
+		//$auth->addChild($supervisor, $viewMileageCardMgmt);
 		//$auth->addChild($supervisor, $viewTracker);
-		$auth->addChild($supervisor, $viewInspections);
+		//$auth->addChild($supervisor, $viewInspections);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');

@@ -3,14 +3,16 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use app\modules\v1\models\SCUser;
-use app\rbac\ScDbManager;
+use app\modules\v2\models\BaseUser;
+use app\rbac\ClientDbManager;
+
+//Cmd yii client-rbac/init demo
 
 /**
 * This Class establishes the rules of the RBAC system for the API
 * Permissions are created and assigned and the role hierarchy is established
 */
-class RbacController extends Controller
+class ClientRbacController extends Controller
 {
 	/**
 	* Removes all RBAC settings that are currently in place and rebuilds the rule set
@@ -21,9 +23,9 @@ class RbacController extends Controller
 	*/
     public function actionInit($client)
     {
-		SCUser::setClient($client);
-		$db = SCUser::getDb();
-		$auth = new ScDbManager($db);
+		BaseUser::setClient($client);
+		$db = BaseUser::getDb();
+		$auth = new ClientDbManager($db);
 		
 		try{
 			//reset all
@@ -33,10 +35,10 @@ class RbacController extends Controller
 			//start transaction
 			$transaction = $connection-> beginTransaction();
 			//create commands
-			$deleteAssignmentCommand = $connection->createCommand("DELETE FROM rbac.auth_assignment");
-			$deleteItemChildCommand = $connection->createCommand("DELETE FROM rbac.auth_item_child");
-			$deleteItemCommand = $connection->createCommand("DELETE FROM rbac.auth_item");
-			$deleteRuleCommand = $connection->createCommand("DELETE FROM rbac.auth_rule");
+			$deleteAssignmentCommand = $connection->createCommand("DELETE FROM auth_assignment");
+			$deleteItemChildCommand = $connection->createCommand("DELETE FROM auth_item_child");
+			$deleteItemCommand = $connection->createCommand("DELETE FROM auth_item");
+			$deleteRuleCommand = $connection->createCommand("DELETE FROM auth_rule");
 			//execute commands
 			$deleteAssignmentCommand->execute();
 			$deleteItemChildCommand->execute();
@@ -405,9 +407,10 @@ class RbacController extends Controller
         $viewAdministrationMenu->description = 'View Administration Menu';
         $auth->add($viewAdministrationMenu);
 		
-		$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
-        $viewDashboardMenu->description = 'View Dashboard Menu';
-        $auth->add($viewDashboardMenu);
+		//currently only avaliable in pge
+		//$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
+        //$viewDashboardMenu->description = 'View Dashboard Menu';
+        //$auth->add($viewDashboardMenu);
 		
 		$viewDispatchMenu = $auth->createPermission('viewDispatchMenu');
         $viewDispatchMenu->description = 'View Dispatch Menu';
@@ -420,6 +423,10 @@ class RbacController extends Controller
 		$viewHomeMenu = $auth->createPermission('viewHomeMenu');
         $viewHomeMenu->description = 'View Home Menu';
         $auth->add($viewHomeMenu);
+		
+		$viewTrackerMenu = $auth->createPermission('viewTrackerMenu');
+        $viewTrackerMenu->description = 'View Tracker Menu';
+        $auth->add($viewTrackerMenu);
 		
 		$viewTrainingMenu = $auth->createPermission('viewTrainingMenu');
         $viewTrainingMenu->description = 'View Training Menu';
@@ -452,9 +459,10 @@ class RbacController extends Controller
         $viewMileageCardMgmt->description = 'View mileage card management menu item';
         $auth->add($viewMileageCardMgmt);
 
-        $viewTracker = $auth->createPermission('viewTracker');
-        $viewTracker->description = 'View tracker menu item';
-        $auth->add($viewTracker);
+		//currently only avaliable in pge
+        //$viewTracker = $auth->createPermission('viewTracker');
+        //$viewTracker->description = 'View tracker menu item';
+        //$auth->add($viewTracker);
         
         $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
         $viewLeakLogMgmt->description = 'View leak log management menu item';
@@ -487,7 +495,7 @@ class RbacController extends Controller
 		$viewInspections = $auth->createPermission('viewInspections');
         $viewInspections->description = 'View Inspections';
         $auth->add($viewInspections);
-
+		
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
 		// add "Technician" role and give this role CRUD permissions
@@ -574,15 +582,18 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $userGetActive);
 		// menu permissions
 		$auth->addChild($supervisor, $viewAdministrationMenu);
-		$auth->addChild($supervisor, $viewDashboardMenu);
+		//$auth->addChild($supervisor, $viewDashboardMenu);
 		$auth->addChild($supervisor, $viewHomeMenu);
+		$auth->addChild($supervisor, $viewDispatchMenu);
+		$auth->addChild($supervisor, $viewReportsMenu);
+		$auth->addChild($supervisor, $viewTrackerMenu);
 		$auth->addChild($supervisor, $viewTrainingMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
-		$auth->addChild($supervisor, $viewTracker);
+		//$auth->addChild($supervisor, $viewTracker);
 		$auth->addChild($supervisor, $viewInspections);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
@@ -615,9 +626,6 @@ class RbacController extends Controller
 		$auth->addChild($admin, $timeCardGetAllCards);
 		$auth->addChild($admin, $userCreateAdmin);
 		$auth->addChild($admin, $userUpdateAdmin);
-		// menu permissions
-		//$auth->addChild($admin, $viewDispatchMenu);
-		//$auth->addChild($admin, $viewReportsMenu);
 		// sub menu permissions
 		$auth->addChild($admin, $viewClientMgmt);
 		$auth->addChild($admin, $viewProjectMgmt);
@@ -626,11 +634,11 @@ class RbacController extends Controller
 		//$auth->addChild($supervisor, $viewMapStampMgmt);
 		//$auth->addChild($supervisor, $viewMapStampDetail);
 		//$auth->addChild($supervisor, $viewAOC);
-		//$auth->addChild($supervisor, $viewDispatch);
-		//$auth->addChild($supervisor, $viewAssigned);
+		$auth->addChild($supervisor, $viewDispatch);
+		$auth->addChild($supervisor, $viewAssigned);
 		
 		//assign roles to existing users////////////////////////////////////////
-		$users = SCUser::find()
+		$users = BaseUser::find()
 				->where(['UserActiveFlag' => 1])
 				->all();
 		
