@@ -71,6 +71,13 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
+	'dominionProdDb' => [
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=10.0.0.51;Database=vCAT_DOMINION_GIS_PROD',
+		'username' => 'ApplicationCometTracker',
+		'password' => '321cba',
+		'charset' => 'utf8',
+	],
 	'demoDb' => [
 		'class' => 'yii\db\Connection',
 		'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_DEMO_GIS_DEV',

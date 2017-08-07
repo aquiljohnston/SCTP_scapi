@@ -1,5 +1,5 @@
 <?php
-
+//"I promise you it's gonna work." - Andre 08/01/17
 use app\authentication\CTUser;
 
 $params = require(__DIR__ . '/params.php');
@@ -74,6 +74,7 @@ $config = [
         'ctProdDb' => $db['ctProdDb'],
         'pgeProdDb' => $db['pgeProdDb'],
 		'yorkProdDb' => $db['yorkProdDb'],
+		'dominionProdDb' => $db['dominionProdDb'],
         'demoDb' => $db['demoDb'],
 		// // clean up the Url
 		// 'urlManager' => [
