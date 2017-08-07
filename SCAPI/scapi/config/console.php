@@ -39,6 +39,7 @@ return [
         'ctProdDb' => $db['ctProdDb'],
         'pgeProdDb' => $db['pgeProdDb'],
 		'yorkProdDb' => $db['yorkProdDb'],
+		'dominionProdDb' => $db['dominionProdDb'],
         'demoDb' => $db['demoDb'],
     ],
     'params' => $params,
