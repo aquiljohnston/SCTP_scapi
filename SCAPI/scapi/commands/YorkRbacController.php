@@ -12,7 +12,7 @@ use app\rbac\ClientDbManager;
 * This Class establishes the rules of the RBAC system for the API
 * Permissions are created and assigned and the role hierarchy is established
 */
-class ClientRbacController extends Controller
+class YorkRbacController extends Controller
 {
 	/**
 	* Removes all RBAC settings that are currently in place and rebuilds the rule set
