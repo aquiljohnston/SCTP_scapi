@@ -83,7 +83,6 @@ class DispatchController extends Controller
 					['like', 'MapGrid', $filter],
 					['like', 'ComplianceStart', $filter],
 					['like', 'ComplianceEnd', $filter],
-					['like', 'InspectionAttemptCounter', $filter],
 					['like', 'AvailableWorkOrderCount', $filter],
 					]);
 				}
