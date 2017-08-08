@@ -362,7 +362,7 @@ class UserController extends BaseActiveController
      * @throws \yii\web\HttpException
      */
     public function actionDeactivate($userID)
-    {
+		{
 		//for non-scct user we're just changing the active flag to 0 no cascade for now
         try {
 			//get client header
@@ -670,18 +670,19 @@ class UserController extends BaseActiveController
 		$responseArray = [];
 		
 		//find all projects
-		$projectUser = ProjectUser::find()
+		$userProjects = ProjectUser::find()
 			->select('ProjUserProjectID')
 			->where(['ProjUserUserID' => $user->UserID])
+			->asArray()
 			->all();
-		$projectCount = count($projectUser);
+		$projectCount = count($userProjects);
 
 		//loop projects
 		for ($i = 0; $i < $projectCount; $i++) {
 			//reset db to Comet Tracker
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//get project information
-			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+			$project = Project::findOne($userProjects[$i]['ProjUserProjectID']);
 
 			//if client is populated than original call was to a client controller in which the record has already been updated
 			//so an update does not need to be preformed for that project again
