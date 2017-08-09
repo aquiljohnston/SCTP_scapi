@@ -643,7 +643,7 @@ class ProjectController extends BaseActiveController
 			{
 				$modules = MenusProjectModule::find()
 					->where("ProjectModulesProjectID = $projectID")
-					->where("ProjectModulesName = '$i'")
+					->andwhere("ProjectModulesName = '$i'")
 					->all();
 				foreach($modules as $module) {
 					$module->delete();
