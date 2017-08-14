@@ -152,6 +152,19 @@ class ActivityController extends BaseActiveController
 						//Get first and last time entry from timeArray and pass to ActivityStartTime and ActivityEndTime
 						$timeLength = count($timeArray);
 						$activityArray[$i]['ActivityStartTime'] = $timeArray[0]['TimeEntryStartTime'];
+						if(!array_key_exist('TimeEntryEndTime', $timeArray[$timeLength-1])
+						{
+							$endTime = '';
+							if(array_key_exist('ActivitySrcDTLT', $activityArray[$i])
+							{
+								//strtotime($stop_date . ' +1 day')
+								if($activityArray[$i]['ActivitySrcDTLT'] != null && strtotime($activityArray[$i]['ActivitySrcDTLT']) < strtotime($timeArray[0]['TimeEntryStartTime'] . '+1 day'))
+								{
+									$timeArray[$timeLength-1]['TimeEntryEndTime'] = $activityArray[$i]['ActivitySrcDTLT'];
+								}
+							}
+							$timeArray[$timeLength-1]['TimeEntryEndTime'] = $endTime;
+						}
 						$activityArray[$i]['ActivityEndTime'] = $timeArray[$timeLength-1]['TimeEntryEndTime'];
 					}
 					if ($activityArray[$i]['mileageEntry'] != null)
