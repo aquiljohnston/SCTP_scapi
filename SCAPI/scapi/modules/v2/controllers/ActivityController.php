@@ -191,7 +191,7 @@ class ActivityController extends BaseActiveController
 
 						//load attributes to model
 						$activity->attributes = $data['activity'][$i];
-						$clientActivity->attributes = $activity->attributes;
+						$clientActivity->attributes = $data['activity'][$i];
 
 						//handle createdby
 						$activity->ActivityCreatedUserUID = (string)$createdBy;

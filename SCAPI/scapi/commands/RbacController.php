@@ -405,9 +405,10 @@ class RbacController extends Controller
         $viewAdministrationMenu->description = 'View Administration Menu';
         $auth->add($viewAdministrationMenu);
 		
-		$viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
-        $viewDashboardMenu->description = 'View Dashboard Menu';
-        $auth->add($viewDashboardMenu);
+		//currently only avaliable in pge
+		// $viewDashboardMenu = $auth->createPermission('viewDashboardMenu');
+        // $viewDashboardMenu->description = 'View Dashboard Menu';
+        // $auth->add($viewDashboardMenu);
 		
 		$viewDispatchMenu = $auth->createPermission('viewDispatchMenu');
         $viewDispatchMenu->description = 'View Dispatch Menu';
@@ -420,6 +421,10 @@ class RbacController extends Controller
 		$viewHomeMenu = $auth->createPermission('viewHomeMenu');
         $viewHomeMenu->description = 'View Home Menu';
         $auth->add($viewHomeMenu);
+		
+		$viewTrackerMenu = $auth->createPermission('viewTrackerMenu');
+        $viewTrackerMenu->description = 'View Tracker Menu';
+        $auth->add($viewTrackerMenu);
 		
 		$viewTrainingMenu = $auth->createPermission('viewTrainingMenu');
         $viewTrainingMenu->description = 'View Training Menu';
@@ -452,9 +457,10 @@ class RbacController extends Controller
         $viewMileageCardMgmt->description = 'View mileage card management menu item';
         $auth->add($viewMileageCardMgmt);
 
-        $viewTracker = $auth->createPermission('viewTracker');
-        $viewTracker->description = 'View tracker menu item';
-        $auth->add($viewTracker);
+		//currently only avaliable in pge
+        // $viewTracker = $auth->createPermission('viewTracker');
+        // $viewTracker->description = 'View tracker menu item';
+        // $auth->add($viewTracker);
         
         $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
         $viewLeakLogMgmt->description = 'View leak log management menu item';
@@ -574,15 +580,18 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $userGetActive);
 		// menu permissions
 		$auth->addChild($supervisor, $viewAdministrationMenu);
-		$auth->addChild($supervisor, $viewDashboardMenu);
+		//$auth->addChild($supervisor, $viewDashboardMenu);
 		$auth->addChild($supervisor, $viewHomeMenu);
+		$auth->addChild($supervisor, $viewDispatchMenu);
+		$auth->addChild($supervisor, $viewReportsMenu);
+		$auth->addChild($supervisor, $viewTrackerMenu);
 		$auth->addChild($supervisor, $viewTrainingMenu);
 		// sub menu permissions
 		$auth->addChild($supervisor, $viewUserMgmt);
 		$auth->addChild($supervisor, $viewEquipmentMgmt);
 		$auth->addChild($supervisor, $viewTimeCardMgmt);
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
-		$auth->addChild($supervisor, $viewTracker);
+		//$auth->addChild($supervisor, $viewTracker);
 		$auth->addChild($supervisor, $viewInspections);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
@@ -615,9 +624,6 @@ class RbacController extends Controller
 		$auth->addChild($admin, $timeCardGetAllCards);
 		$auth->addChild($admin, $userCreateAdmin);
 		$auth->addChild($admin, $userUpdateAdmin);
-		// menu permissions
-		//$auth->addChild($admin, $viewDispatchMenu);
-		//$auth->addChild($admin, $viewReportsMenu);
 		// sub menu permissions
 		$auth->addChild($admin, $viewClientMgmt);
 		$auth->addChild($admin, $viewProjectMgmt);
@@ -626,8 +632,8 @@ class RbacController extends Controller
 		//$auth->addChild($supervisor, $viewMapStampMgmt);
 		//$auth->addChild($supervisor, $viewMapStampDetail);
 		//$auth->addChild($supervisor, $viewAOC);
-		//$auth->addChild($supervisor, $viewDispatch);
-		//$auth->addChild($supervisor, $viewAssigned);
+		$auth->addChild($supervisor, $viewDispatch);
+		$auth->addChild($supervisor, $viewAssigned);
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
