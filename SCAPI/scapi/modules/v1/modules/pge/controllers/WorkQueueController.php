@@ -374,9 +374,24 @@ class WorkQueueController extends Controller
 					$assetInspection->CreatedUserUID = $userUID;
 					$assetInspection->ModifiedUserUID = $userUID;
 					
-					if($assetInspection->save())
+					//try catch for sql constraints 
+					try
 					{
-						$assetInspectionSaved = true;
+						if($assetInspection->save())
+						{
+							$assetInspectionSaved = true;
+						}
+					}
+					catch(yii\db\Exception $e)
+					{
+						if(in_array($e->errorInfo[1], array(2601, 2627)))
+						{
+							$assetInspectionSaved = true;
+						}
+						else
+						{
+							BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $workQueue);
+						}
 					}
 				}
 				else{
@@ -405,10 +420,22 @@ class WorkQueueController extends Controller
 						$assignedWorkQueue->ModifiedUserUID = $userUID;
 						$assignedWorkQueue->LockedFlag = 1;
 						$assignedWorkQueue->AssignedUserUID = $userUID;
-						
-						if($assignedWorkQueue->save())
+						try{
+							if($assignedWorkQueue->save())
+							{
+								$newAssignedWorkQueueSaved = true;
+							}
+						}
+						catch(yii\db\Exception $e)
 						{
-							$newAssignedWorkQueueSaved = true;
+							if(in_array($e->errorInfo[1], array(2601, 2627)))
+							{
+								$newAssignedWorkQueueSaved = true;
+							}
+							else
+							{
+								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $workQueue);
+							}
 						}
 					}
 					else{
