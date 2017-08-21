@@ -93,9 +93,23 @@ class MasterLeakLogController extends Controller
 						$masterLeakLog->CreatedUserUID = $UserUID;
 						$masterLeakLog->ModifiedUserUID = $UserUID;
 						//if new record saves set new record flag to true
-						if ($masterLeakLog->save()) 
+						//try/catch for SQL contraints
+						try{
+							if ($masterLeakLog->save()) 
+							{
+								$newMLL = true;
+							}
+						}
+						catch(yii\db\Exception $e)
 						{
-							$newMLL = true;
+							if(in_array($e->errorInfo[1], array(2601, 2627)))
+							{
+								$newMLL = true;
+							}
+							else
+							{
+								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], null, $logArray[$i]);
+							}
 						}
 					}
 					
