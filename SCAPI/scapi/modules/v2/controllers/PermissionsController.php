@@ -58,7 +58,7 @@ class PermissionsController extends Controller {
 		BaseActiveRecord::setClient($client);
 		$db = BaseActiveRecord::getDb();
 		
-		if($nullClient)
+		if($nullClient || BaseActiveController::isSCCT($client))
 		{
 			if (($manager = new ScDbManager()) === null) {
 				return false;
