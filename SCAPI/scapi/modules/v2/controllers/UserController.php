@@ -15,6 +15,7 @@ use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Users;
+use app\modules\v2\models\InActiveUsers;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
@@ -581,7 +582,6 @@ class UserController extends BaseActiveController
 				['like', 'UserName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLastName', $filter],
-				['like', 'UserEmployeeType', $filter],
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
@@ -608,6 +608,58 @@ class UserController extends BaseActiveController
                 $response->setStatusCode(200);
                 $response->data = $responseArray;
             }
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	/**
+     * Gets users data for all users with an active flag of 0 for inactive
+     * @param $filter
+     * @returns json body of users
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetInactive($filter = null)
+    {
+        try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//TODO create new permission
+            PermissionsController::requirePermission('userGetActive');
+			
+			//initialize response array
+			$responseArray['users'] = [];
+			
+			//set db connection to client db
+			BaseActiveRecord::setClient($client);
+			$userQuery = InActiveUsers::find();
+			
+			//apply filter to query
+			if($filter != null)
+			{
+				$userQuery->andFilterWhere([
+				'or',
+				['like', 'UserName', $filter],
+				['like', 'Name', $filter],
+				['like', 'UserAppRoleType', $filter],
+				]);
+			}
+			$usersArr = $userQuery->all();
+			
+			//populate response array
+            $responseArray['users'] = $usersArr;
+            
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $responseArray;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
@@ -749,16 +801,16 @@ class UserController extends BaseActiveController
 		$response = [];
 		
 		//find all projects
-		$projectUser = ProjectUser::find()
+		$userProjects = ProjectUser::find()
 			->select('ProjUserProjectID')
 			->where(['ProjUserUserID' => $user->UserID])
 			->all();
-		$projectCount = count($projectUser);
+		$projectCount = count($userProjects);
 		
 		 //loop projects
 		for ($i = 0; $i < $projectCount; $i++) {
 			//get project information
-			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+			$project = Project::findOne($userProjects[$i]['ProjUserProjectID']);
 
 			//get model from base active record based on urlPrefix in project
 			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
