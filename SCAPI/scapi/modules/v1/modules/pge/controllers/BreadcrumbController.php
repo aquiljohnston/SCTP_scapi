@@ -77,32 +77,31 @@ class BreadcrumbController extends Controller
 					$pgeBreadcrumb->attributes = $breadcrumbs[$i];
 					$pgeBreadcrumb->BreadcrumbCreatedUserUID = $userUID;
 					$pgeBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
-					
-					//check if pge breadcrumb already exist.
-					$previousBreadcrumb = PGEBreadcrumb::find()
-						->where(['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID])
-						->one();
 
-					if ($previousBreadcrumb == null) {
+					BaseActiveRecord::setClient($headers['X-Client']);
+					if ($pgeBreadcrumb->save()) {
 						//point at ct db
 						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 						if ($scBreadcrumb->save()) {
-							//point at client db
-							BaseActiveRecord::setClient($headers['X-Client']);
-							if ($pgeBreadcrumb->save()) {
-								$response->setStatusCode(201);
-								$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
-							} else {
-								$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
-							}
+							$response->setStatusCode(201);
+							$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
 						} else {
 							$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
 						}
+					} else {
+						$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 0];
+					}
+				}
+				catch(yii\db\Exception $e)
+				{
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
 					}
 					else
 					{
-						//send success if breadcrumb record was already saved previously
-						$responseArray[] = ['BreadcrumbUID' => $pgeBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
+						$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 					}
 				}
 				catch(\Exception $e)
