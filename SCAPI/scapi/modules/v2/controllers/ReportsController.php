@@ -176,25 +176,23 @@ class ReportsController extends Controller {
      * todo: get Parm Drop Down list
      * @return Json format
      */
-    public function actionGetParmDropdown($viewName)
+    public function actionGetParmDropdown($spName = null,$startDate = null, $endDate = null)
 	{
 		try
 		{
+            $headers = getallheaders();
+            BaseActiveRecord::setClient($headers['X-Client']);
+            $connection = BaseActiveRecord::getDb();
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-            if ($viewName != null) {
-                $headers = getallheaders();
-                BaseActiveRecord::setClient($headers['X-Client']);
-
-                $connection = BaseActiveRecord::getDb();
-
-                $queryString = "SELECT * FROM " . $viewName . " order by 'mapgrid'";
+            if ($spName != null){
+                $queryString = "EXEC " . $spName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
 
                 $queryResults = $connection->createCommand($queryString)
                     ->queryAll();
 
-                $responseData['options'] = $queryResults;
+                $responseData['options'] = self::formatDropdowns($queryResults);
             }else{
                 $responseData['options'] = [];
             }
@@ -213,30 +211,31 @@ class ReportsController extends Controller {
     }
 
     /**
-     * @param $viewName
+     * @param $spName
      * @param $startDate
      * @param $endDate
      * @return mixed
      */
-    public function actionGetInspectorDropdown($viewName = null, $startDate = null, $endDate = null)
+    public function actionGetInspectorDropdown($spName = null, $startDate = null, $endDate = null)
 	{
 		try
 		{
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-		    if ($viewName != null) {
-                $headers = getallheaders();
-                BaseActiveRecord::setClient($headers['X-Client']);
+            $headers = getallheaders();
+            BaseActiveRecord::setClient($headers['X-Client']);
+            $connection = BaseActiveRecord::getDb();
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
 
-                $connection = BaseActiveRecord::getDb();
-
-                $queryString = "SELECT * FROM " . $viewName;
+            if ($spName != null){
+                $queryString = "EXEC " . $spName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
 
                 $queryResults = $connection->createCommand($queryString)
                     ->queryAll();
 
-                $responseData['inspectors'] = self::formatInspectorDropdowns($queryResults);
+                $responseData['inspectors'] = self::formatDropdowns($queryResults);
 
                 $response->data = $responseData;
                 return $response;
