@@ -61,6 +61,7 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
+                    'reactivate' => ['put'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
                     'reset-password' => ['put'],
@@ -428,6 +429,90 @@ class UserController extends BaseActiveController
         }
 
     }
+	
+	/**
+     * Calls Sp on to reactivate a user
+     * Expect Json body or userids and client targer
+     * @returns Response of success per user?
+     * @throws \yii\web\HttpException
+     */
+	public function actionReactivate()
+	{
+		// try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+            //set db target for permission check
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//TODO update permissions
+            PermissionsController::requirePermission('userDeactivate');
+			
+            //read the post input
+            $put = file_get_contents("php://input");
+            //decode json post input as php array:
+            $data = json_decode(utf8_decode($put), true);
+
+            //create response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			//get client from json
+			$projectPrefix = $data['ProjectUrlPrefix'];
+			//get user array from json
+			$users = $data['Usernames'];
+			
+			//get user to be deactivated
+			if(BaseActiveController::isSCCT($client))
+			{
+				//ger count in user array
+				$userCount = count($users);
+				//array of users that errored during sp execution
+				$failedUsers= [];
+				
+				//set up connection
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				$ctConnection = BaseActiveRecord::getDb();
+				//loop users for sp execution
+				for($i = 0; $i < $userCount; $i++)
+				{
+					try
+					{
+						//execute CTSP for cascade reactivation
+						$ctUserReactivateCommand = $ctConnection->createCommand("EXECUTE spCTReactivateUser :UserName,:Project");
+						$ctUserReactivateCommand->bindParam(':UserName', $users[$i], \PDO::PARAM_STR);
+						$ctUserReactivateCommand->bindParam(':Project', $projectPrefix, \PDO::PARAM_STR);
+						$ctUserReactivateCommand->execute();
+					}
+					catch(\Exception $e)
+					{
+						$failedUsers['Failed Users'] = $users[$i];
+					}
+				}
+			}
+			else
+			{
+				try
+				{
+					//set up db connection
+					BaseActiveRecord::setClient($projectPrefix);
+					$connection = SCUser::getDb();
+					//execute client SP for reactivation(will call CTSP to determine if reactivation is needed within base aswell)
+					$userReactivateCommand = $connection->createCommand("EXECUTE spReactivateUser :JSON_Str");
+					$userReactivateCommand->bindParam(':JSON_Str', $put, \PDO::PARAM_STR);
+					$userReactivateCommand->execute();
+				}
+				catch(\Exception $e)
+				{
+					$failedUsers['FailedUsers'] = $users;
+				}
+			}
+			$response->data = $failedUsers;
+			return $response;
+		// } catch (ForbiddenHttpException $e) {
+            // throw new ForbiddenHttpException;
+        // } catch (\Exception $e) {
+            // throw new \yii\web\HttpException(400);
+        // }
+	}
 
     /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
