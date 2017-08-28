@@ -36,6 +36,8 @@ class BreadcrumbController extends Controller
 	
 	public function actionCreate()
 	{
+		//TODO handle SCCT as client header and avoid double save
+		//Consider implementing constraints similar to pge and reworking format as such
 		try
 		{
 			//get http headers
@@ -79,33 +81,33 @@ class BreadcrumbController extends Controller
 					$clientBreadcrumb->BreadcrumbCreatedUserUID = $userName;
 					$clientBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
 					
-					//check if breadcrumb already exist.
-					$previousBreadcrumb = Breadcrumb::find()
-						->where(['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID])
-						->one();
-
-					if ($previousBreadcrumb == null) {
-						//point at ct db
-						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+					//point at ct db
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+					if ($clientBreadcrumb->save()) {
+						//point at client db
+						BaseActiveRecord::setClient($headers['X-Client']);
 						if ($breadcrumb->save()) {
-							//point at client db
-							BaseActiveRecord::setClient($headers['X-Client']);
-							if ($clientBreadcrumb->save()) {
-								$response->setStatusCode(201);
-								$successFlag = 1;
-							} else {
-								throw BaseActiveController::modelValidationException($clientBreadcrumb);
-							}
+							$response->setStatusCode(201);
+							$successFlag = 1;
 						} else {
 							throw BaseActiveController::modelValidationException($breadcrumb);
 						}
+					} else {
+						throw BaseActiveController::modelValidationException($clientBreadcrumb);
+					}
+					$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => $successFlag];
+				}
+				catch(yii\db\Exception $e)
+				{
+					if(in_array($e->errorInfo[1], array(2601, 2627)))
+					{
+						$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
 					}
 					else
 					{
-						//send success if breadcrumb record was already saved previously
-						$successFlag = 1;
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
+						$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 					}
-					$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => $successFlag];
 				}
 				catch(\Exception $e)
 				{
