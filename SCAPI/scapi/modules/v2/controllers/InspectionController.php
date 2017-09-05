@@ -279,21 +279,19 @@ class InspectionController extends Controller
 						->one();
 					if($workOrder != null)
 					{
-						//record error if record was already completed
-						if($workOrder->CompletedFlag == 1)
+						//mark work order completed if not already done
+						if(!$workOrder->CompletedFlag == 1)
 						{
-							BaseActiveController::archiveErrorJson(file_get_contents("php://input"), new \yii\web\HttpException(500), getallheaders()['X-Client'], $workOrderID);
-						}
-						else
-						{
-							if($inspectionData['IsCGEFlag'] != 1)
+							if( !array_key_exists('IsCGEFlag', $inspectionData) || $inspectionData['IsCGEFlag'] != 1)
 							{
 								//handle appropriate updates to work order record
-								$completedData = $inspectionData['CreatedDate'];
+								$completedDate = $inspectionData['CreatedDate'];
 								$eventIndicator = 0;
 								$completedFlag = 0;
-								$inspectionAttemptCounter = $workOrder->InspectionAttemptCounter + 1; 
-								if($inspectionData['IsAOCFlag'] == 1 || $inspectionData['IsAdHocFlag'] == 1 || $inspectionData['IsIndicationFlag'] == 1)
+								$inspectionAttemptCounter = $workOrder->InspectionAttemptCounter + 1;
+								if((array_key_exists('IsAOCFlag', $inspectionData) && $inspectionData['IsAOCFlag'] == 1)
+									|| ( array_key_exists('IsAdHocFlag', $inspectionData) && $inspectionData['IsAdHocFlag'] == 1) 
+									|| ( array_key_exists('IsIndicationFlag', $inspectionData) && $inspectionData['IsIndicationFlag'] == 1))
 								{
 									if($inspectionData['IsAdHocFlag'])
 									{
@@ -314,9 +312,9 @@ class InspectionController extends Controller
 								//assign new data
 								$workOrder->EventIndicator = $eventIndicator;
 								$workOrder->CompletedFlag = $completedFlag;
-								$workOrder->CompletedDate = $completedData;
+								$workOrder->CompletedDate = $completedDate;
 								$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
-								$workOrder->ModifiedDateTime = $completedData;
+								$workOrder->ModifiedDateTime = $completedDate;
 								$workOrder->InspectionAttemptCounter = $inspectionAttemptCounter;
 								//update
 								if($workOrder->update())
@@ -338,7 +336,7 @@ class InspectionController extends Controller
 			}
 			catch(\Exception $e)
 			{
-				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueID);//update this inserted data value
+				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $inspectionData);//update this inserted data value
 			}
 			$responseData = [
 				'WorkOrderID' => $workOrderID,
