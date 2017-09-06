@@ -45,11 +45,12 @@ class WorkQueueController extends Controller
 	{
 		try
 		{
+			ini_set('memory_limit', '-1');
 			//set db
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			$responseArray = [];
-			$workQueue = AssignedWorkQueue::find()
+			$responseArray['WorkQueue'] = AssignedWorkQueue::find()
 				->select('WorkQueueID
 				,WorkOrderID
 				,InspectionType
@@ -81,8 +82,6 @@ class WorkQueueController extends Controller
 				,AssignedToID')
 				->where(['AssignedToID' => $userID])
 				->all();
-			
-			$responseArray['WorkQueue'] = $workQueue;
 					
 			//create response object
 			$response = Yii::$app->response;
