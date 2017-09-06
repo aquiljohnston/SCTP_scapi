@@ -58,6 +58,16 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//dominion auth manager
 	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
 	
+	//scana databases
+	const SCANA_DEV = 'scanadev';
+	const SCANA_STAGE = 'scanastage';
+	const SCANA_PROD = 'scana';
+	//york models
+	const SCANA_USER = self::BASE_USER;
+	const SCANA_EVENT = self::BASE_EVENT;
+	//york auth manager
+	const SCANA_AUTH = 'app\rbac\ClientDbManager';
+	
 	//demo client database
 	const DEMO_DEV = 'demo';
 	//beta models
@@ -126,6 +136,19 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionProdDb;
 		}
+		//scana
+		if (self::$CLIENT_ID == self::SCANA_DEV)
+		{
+			return Yii::$app->scanaDevDb;
+		}
+		// if (self::$CLIENT_ID == self::SCANA_STAGE)
+		// {
+			// return Yii::$app->scanaStageDb;
+		// }
+		// if (self::$CLIENT_ID == self::SCANA_PROD)
+		// {
+			// return Yii::$app->scanaProdDb;
+		// }
 		//demo
 		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{
@@ -158,6 +181,13 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		||$client == self::DOMINION_STAGE)
 		{
 			return self::DOMINION_USER;
+		}
+		//Scana
+		if($client == self::SCANA_DEV
+		||$client == self::SCANA_PROD
+		||$client == self::SCANA_STAGE)
+		{
+			return self::SCANA_USER;
 		}
 		//demo
 		if($client == self::DEMO_DEV)
@@ -200,6 +230,13 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::DOMINION_AUTH;
 		}
+		//Scana
+		if($client == self::SCANA_DEV
+		|| $client == self::SCANA_PROD
+		|| $client == self::SCANA_STAGE)
+		{
+			return self::SCANA_AUTH;
+		}
 		//demo
 		if($client == self::DEMO_DEV)
 		{
@@ -240,6 +277,13 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		|| $client == self::DOMINION_STAGE)
 		{
 			return self::DOMINION_EVENT;
+		}
+		//Scana
+		if($client == self::SCANA_DEV
+		|| $client == self::SCANA_PROD
+		|| $client == self::SCANA_STAGE)
+		{
+			return self::SCANA_EVENT;
 		}
 		//demo
 		if($client == self::DEMO_DEV)
