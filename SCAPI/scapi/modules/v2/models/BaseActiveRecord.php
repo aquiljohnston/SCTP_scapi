@@ -76,6 +76,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//beta auth manager
 	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 	
+	//azure test database
+	const AZURE_TEST = 'azure';
+	//beta models
+	const AZURE_USER = self::BASE_USER;
+	const AZURE_EVENT = self::BASE_EVENT;
+	//beta auth manager
+	const AZURE_AUTH = 'app\rbac\ClientDbManager';
+	
 	public static function getClient()
 	{
 		return self::$CLIENT_ID;
@@ -154,6 +162,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->demoDb;
 		}
+		//azure test
+		if (self::$CLIENT_ID == self::AZURE_TEST)
+		{
+			return Yii::$app->azureDb;
+		}
 	}
 	
 	//reutrns the file path for the user model associated to a project based on the client header
@@ -193,6 +206,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_USER;
+		}
+		//azure test
+		if($client == self::AZURE_DEV)
+		{
+			return self::AZURE_USER;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 
@@ -242,6 +260,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::DEMO_AUTH;
 		}
+		//azure test
+		if($client == self::AZURE_DEV)
+		{
+			return self::AZURE_AUTH;
+		}
 		//PGE - Deos not use standard Auth
 		// if($client == self::PGE_DEV 
 		// || $client == self::PGE_STAGE
@@ -290,7 +313,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::DEMO_EVENT;
 		}
-		//PGE - Deos not use standard Events
+		//azure test
+		if($client == self::AZURE_DEV)
+		{
+			return self::AZURE_EVENT;
+		}
+		//PGE - Does not use standard Events
 		return null;
 	}
 }

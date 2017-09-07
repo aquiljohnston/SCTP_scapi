@@ -50,6 +50,8 @@ return [
 		//'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
+		//Azure tests
+		'azureDb' => $db['azureDb'],
     ],
     'params' => $params,
 ];
