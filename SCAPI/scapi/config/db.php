@@ -112,5 +112,14 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
+//Azure Test
+	'azureDb' =>[
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=10.101.3.4;Database=AzureScctTemplate',
+		'username' => 'testuser',
+		'password' => 'testuser20170823',
+		'charset' => 'utf8',
+	],
+	
 ];
 
