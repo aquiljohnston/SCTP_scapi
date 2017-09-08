@@ -15,6 +15,7 @@ use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Users;
+use app\modules\v2\models\InActiveUsers;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
@@ -60,6 +61,7 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
+                    'reactivate' => ['put'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
                     'reset-password' => ['put'],
@@ -427,6 +429,90 @@ class UserController extends BaseActiveController
         }
 
     }
+	
+	/**
+     * Calls Sp on to reactivate a user
+     * Expect Json body or userids and client targer
+     * @returns Response of success per user?
+     * @throws \yii\web\HttpException
+     */
+	public function actionReactivate()
+	{
+		// try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+            //set db target for permission check
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//TODO update permissions
+            PermissionsController::requirePermission('userDeactivate');
+			
+            //read the post input
+            $put = file_get_contents("php://input");
+            //decode json post input as php array:
+            $data = json_decode(utf8_decode($put), true);
+
+            //create response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			//get client from json
+			$projectPrefix = $data['ProjectUrlPrefix'];
+			//get user array from json
+			$users = $data['Usernames'];
+			
+			//get user to be deactivated
+			if(BaseActiveController::isSCCT($client))
+			{
+				//ger count in user array
+				$userCount = count($users);
+				//array of users that errored during sp execution
+				$failedUsers= [];
+				
+				//set up connection
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				$ctConnection = BaseActiveRecord::getDb();
+				//loop users for sp execution
+				for($i = 0; $i < $userCount; $i++)
+				{
+					try
+					{
+						//execute CTSP for cascade reactivation
+						$ctUserReactivateCommand = $ctConnection->createCommand("EXECUTE spCTReactivateUser :UserName,:Project");
+						$ctUserReactivateCommand->bindParam(':UserName', $users[$i], \PDO::PARAM_STR);
+						$ctUserReactivateCommand->bindParam(':Project', $projectPrefix, \PDO::PARAM_STR);
+						$ctUserReactivateCommand->execute();
+					}
+					catch(\Exception $e)
+					{
+						$failedUsers['Failed Users'] = $users[$i];
+					}
+				}
+			}
+			else
+			{
+				try
+				{
+					//set up db connection
+					BaseActiveRecord::setClient($projectPrefix);
+					$connection = SCUser::getDb();
+					//execute client SP for reactivation(will call CTSP to determine if reactivation is needed within base aswell)
+					$userReactivateCommand = $connection->createCommand("EXECUTE spReactivateUser :JSON_Str");
+					$userReactivateCommand->bindParam(':JSON_Str', $put, \PDO::PARAM_STR);
+					$userReactivateCommand->execute();
+				}
+				catch(\Exception $e)
+				{
+					$failedUsers['FailedUsers'] = $users;
+				}
+			}
+			$response->data = $failedUsers;
+			return $response;
+		// } catch (ForbiddenHttpException $e) {
+            // throw new ForbiddenHttpException;
+        // } catch (\Exception $e) {
+            // throw new \yii\web\HttpException(400);
+        // }
+	}
 
     /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
@@ -581,7 +667,6 @@ class UserController extends BaseActiveController
 				['like', 'UserName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLastName', $filter],
-				['like', 'UserEmployeeType', $filter],
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
@@ -608,6 +693,58 @@ class UserController extends BaseActiveController
                 $response->setStatusCode(200);
                 $response->data = $responseArray;
             }
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	/**
+     * Gets users data for all users with an active flag of 0 for inactive
+     * @param $filter
+     * @returns json body of users
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetInactive($filter = null)
+    {
+        try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//TODO create new permission
+            PermissionsController::requirePermission('userGetActive');
+			
+			//initialize response array
+			$responseArray['users'] = [];
+			
+			//set db connection to client db
+			BaseActiveRecord::setClient($client);
+			$userQuery = InActiveUsers::find();
+			
+			//apply filter to query
+			if($filter != null)
+			{
+				$userQuery->andFilterWhere([
+				'or',
+				['like', 'UserName', $filter],
+				['like', 'Name', $filter],
+				['like', 'UserAppRoleType', $filter],
+				]);
+			}
+			$usersArr = $userQuery->all();
+			
+			//populate response array
+            $responseArray['users'] = $usersArr;
+            
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $responseArray;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
@@ -749,16 +886,16 @@ class UserController extends BaseActiveController
 		$response = [];
 		
 		//find all projects
-		$projectUser = ProjectUser::find()
+		$userProjects = ProjectUser::find()
 			->select('ProjUserProjectID')
 			->where(['ProjUserUserID' => $user->UserID])
 			->all();
-		$projectCount = count($projectUser);
+		$projectCount = count($userProjects);
 		
 		 //loop projects
 		for ($i = 0; $i < $projectCount; $i++) {
 			//get project information
-			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
+			$project = Project::findOne($userProjects[$i]['ProjUserProjectID']);
 
 			//get model from base active record based on urlPrefix in project
 			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
