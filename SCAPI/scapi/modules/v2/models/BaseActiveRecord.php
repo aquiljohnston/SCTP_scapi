@@ -208,7 +208,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			return self::DEMO_USER;
 		}
 		//azure test
-		if($client == self::AZURE_DEV)
+		if($client == self::AZURE_TEST)
 		{
 			return self::AZURE_USER;
 		}
@@ -261,7 +261,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			return self::DEMO_AUTH;
 		}
 		//azure test
-		if($client == self::AZURE_DEV)
+		if($client == self::AZURE_TEST)
 		{
 			return self::AZURE_AUTH;
 		}
@@ -314,7 +314,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			return self::DEMO_EVENT;
 		}
 		//azure test
-		if($client == self::AZURE_DEV)
+		if($client == self::AZURE_TEST)
 		{
 			return self::AZURE_EVENT;
 		}
