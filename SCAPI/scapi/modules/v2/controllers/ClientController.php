@@ -169,14 +169,14 @@ class ClientController extends BaseActiveController
 			PermissionsController::requirePermission('clientView');
 			
             if($joinNames) {
-                $sql = "IF EXISTS (SELECT * FROM CometTracker.dbo.ClientTb WHERE ClientTb.ClientModifiedBy != 0 AND ClientTb.ClientId = :id1 )"
+                $sql = "IF EXISTS (SELECT * FROM ClientTb WHERE ClientTb.ClientModifiedBy != 0 AND ClientTb.ClientId = :id1 )"
                 . " BEGIN SELECT ModifiedUser.UserName as ModifiedUserName, ModifiedUser.UserID as ModifiedUserID, CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ClientTb.*"
-			    . " FROM CometTracker.dbo.ClientTb JOIN [UserTb] ModifiedUser ON ClientTb.ClientModifiedBy = ModifiedUser.UserID"
+			    . " FROM dbo.ClientTb JOIN [UserTb] ModifiedUser ON ClientTb.ClientModifiedBy = ModifiedUser.UserID"
                 . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserID"
                 . " WHERE ClientTb.ClientId = :id2 END ELSE"
                 . " SELECT CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ClientTb.*,"
                 . " 'Not Modified' as ModifiedUserName, 0 as ModifiedUserID"
-				. " FROM CometTracker.dbo.ClientTb"
+				. " FROM dbo.ClientTb"
                 . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserID"
                 . " WHERE ClientTb.ClientId = :id3";
                 $client = Client::getDb()->createCommand($sql)->bindValue(':id1', $id)->bindValue(':id2', $id)->bindValue(':id3', $id);
