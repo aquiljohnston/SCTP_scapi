@@ -1,6 +1,6 @@
 <?php
 
-namespace app\models;
+namespace app\modules\v2\models;
 
 use Yii;
 
@@ -90,7 +90,7 @@ use Yii;
  * @property UserTb $createdByUser
  * @property RStatusLookup $eventType
  */
-class ScanaEvent extends \yii\db\ActiveRecord
+class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -98,14 +98,6 @@ class ScanaEvent extends \yii\db\ActiveRecord
     public static function tableName()
     {
         return 'tEvent';
-    }
-
-    /**
-     * @return \yii\db\Connection the database connection used by this AR class.
-     */
-    public static function getDb()
-    {
-        return Yii::$app->get('scanaDevDb');
     }
 
     /**
@@ -119,8 +111,8 @@ class ScanaEvent extends \yii\db\ActiveRecord
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
-            [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => UserTb::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
-            [['EventType'], 'exist', 'skipOnError' => true, 'targetClass' => RStatusLookup::className(), 'targetAttribute' => ['EventType' => 'StatusCode']],
+            [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
+            //[['EventType'], 'exist', 'skipOnError' => true, 'targetClass' => RStatusLookup::className(), 'targetAttribute' => ['EventType' => 'StatusCode']],
         ];
     }
 
@@ -217,14 +209,14 @@ class ScanaEvent extends \yii\db\ActiveRecord
      */
     public function getCreatedByUser()
     {
-        return $this->hasOne(UserTb::className(), ['UserID' => 'CreatedByUserID']);
+        return $this->hasOne(BaseUser::className(), ['UserID' => 'CreatedByUserID']);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getEventType()
-    {
-        return $this->hasOne(RStatusLookup::className(), ['StatusCode' => 'EventType']);
-    }
+    // /**
+     // * @return \yii\db\ActiveQuery
+     // */
+    // public function getEventType()
+    // {
+        // return $this->hasOne(RStatusLookup::className(), ['StatusCode' => 'EventType']);
+    // }
 }
