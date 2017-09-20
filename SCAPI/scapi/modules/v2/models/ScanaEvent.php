@@ -26,33 +26,10 @@ use Yii;
  * @property string $AOCReason
  * @property string $CGEReason
  * @property string $LeakNumber
- * @property string $LeakReportedTo
- * @property string $LeakPipelineSystemInvestigated
- * @property string $LeakDetectType
  * @property string $LeakGrade
  * @property string $LeakAboveOrBelow
- * @property integer $LeakMeterInspected
- * @property string $LeakMeterNumber
- * @property string $LeakMeterLeakLocation
- * @property integer $RiserOnly
- * @property integer $MultiMeter
- * @property string $PartOfSystem
- * @property string $CustomerType
- * @property string $SurfaceCondition
  * @property string $DetectedByEquipment
  * @property string $EquipmentSerialNumber
- * @property string $Collecting
- * @property string $ProbableCause
- * @property string $Soil
- * @property string $LELPercent
- * @property string $GASPercent
- * @property string $PPM
- * @property string $Negative
- * @property string $Pressure
- * @property string $Surface
- * @property string $PipeSize
- * @property string $PipeType
- * @property string $PipeCondition
  * @property string $Comments
  * @property double $Latitude
  * @property double $Longitude
@@ -88,7 +65,6 @@ use Yii;
  * @property string $LeakFoundMainOrService
  *
  * @property UserTb $createdByUser
- * @property RStatusLookup $eventType
  */
 class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -106,13 +82,12 @@ class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'AccessIssues', 'CGE', 'LeakFoundMainOrService'], 'string'],
-            [['EventType', 'CreatedByUserID', 'LeakMeterInspected', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag', 'SplashGuardNeeded', 'SplashGuardInstalled', 'TracerWireMissing', 'TamperSealNotPresent', 'EnergyDiversionPresent', 'ACGrade', 'RiserPostBad', 'RecommendToRetireInActiveService', 'FacilitiesNeedToBeProtected', 'Other', 'AOCFlag', 'LeakRepaired'], 'integer'],
+            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakGrade', 'LeakAboveOrBelow', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'AccessIssues', 'CGE', 'LeakFoundMainOrService'], 'string'],
+            [['EventType', 'CreatedByUserID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag', 'SplashGuardNeeded', 'SplashGuardInstalled', 'TracerWireMissing', 'TamperSealNotPresent', 'EnergyDiversionPresent', 'ACGrade', 'RiserPostBad', 'RecommendToRetireInActiveService', 'FacilitiesNeedToBeProtected', 'Other', 'AOCFlag', 'LeakRepaired'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
             [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
-            //[['EventType'], 'exist', 'skipOnError' => true, 'targetClass' => RStatusLookup::className(), 'targetAttribute' => ['EventType' => 'StatusCode']],
         ];
     }
 
@@ -141,33 +116,10 @@ class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
             'AOCReason' => 'Aocreason',
             'CGEReason' => 'Cgereason',
             'LeakNumber' => 'Leak Number',
-            'LeakReportedTo' => 'Leak Reported To',
-            'LeakPipelineSystemInvestigated' => 'Leak Pipeline System Investigated',
-            'LeakDetectType' => 'Leak Detect Type',
             'LeakGrade' => 'Leak Grade',
             'LeakAboveOrBelow' => 'Leak Above Or Below',
-            'LeakMeterInspected' => 'Leak Meter Inspected',
-            'LeakMeterNumber' => 'Leak Meter Number',
-            'LeakMeterLeakLocation' => 'Leak Meter Leak Location',
-            'RiserOnly' => 'Riser Only',
-            'MultiMeter' => 'Multi Meter',
-            'PartOfSystem' => 'Part Of System',
-            'CustomerType' => 'Customer Type',
-            'SurfaceCondition' => 'Surface Condition',
             'DetectedByEquipment' => 'Detected By Equipment',
             'EquipmentSerialNumber' => 'Equipment Serial Number',
-            'Collecting' => 'Collecting',
-            'ProbableCause' => 'Probable Cause',
-            'Soil' => 'Soil',
-            'LELPercent' => 'Lelpercent',
-            'GASPercent' => 'Gaspercent',
-            'PPM' => 'Ppm',
-            'Negative' => 'Negative',
-            'Pressure' => 'Pressure',
-            'Surface' => 'Surface',
-            'PipeSize' => 'Pipe Size',
-            'PipeType' => 'Pipe Type',
-            'PipeCondition' => 'Pipe Condition',
             'Comments' => 'Comments',
             'Latitude' => 'Latitude',
             'Longitude' => 'Longitude',
@@ -211,12 +163,4 @@ class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
     {
         return $this->hasOne(BaseUser::className(), ['UserID' => 'CreatedByUserID']);
     }
-
-    // /**
-     // * @return \yii\db\ActiveQuery
-     // */
-    // public function getEventType()
-    // {
-        // return $this->hasOne(RStatusLookup::className(), ['StatusCode' => 'EventType']);
-    // }
 }
