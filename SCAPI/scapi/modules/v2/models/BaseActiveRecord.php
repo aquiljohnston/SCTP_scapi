@@ -64,7 +64,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const SCANA_PROD = 'scana';
 	//york models
 	const SCANA_USER = self::BASE_USER;
-	const SCANA_EVENT = self::BASE_EVENT;
+	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
 	//york auth manager
 	const SCANA_AUTH = 'app\rbac\ClientDbManager';
 	
