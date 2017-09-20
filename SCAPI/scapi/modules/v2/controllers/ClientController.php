@@ -194,6 +194,10 @@ class ClientController extends BaseActiveController
 			
 			return $response;
 		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
