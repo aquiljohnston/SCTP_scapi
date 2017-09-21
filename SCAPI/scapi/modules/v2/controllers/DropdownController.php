@@ -34,7 +34,8 @@ class DropdownController extends Controller
                 'actions' => [
                     'get-employee-type-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
-                    'get-state-codes-dropdown' => ['get']
+                    'get-state-codes-dropdown' => ['get'],
+                    'get-web-drop-downs' => ['get']
                 ],
             ];
         return $behaviors;
@@ -109,6 +110,43 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	//gets web dropdowns from rDropDown
+	//this route is used for base functionality and currently only pulls from CT db
+	//TODO may want to combine this with tabletSurveyQuery()
+	public function actionGetWebDropDowns()
+	{
+		try
+        {
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			$webDropDowns = DropDown::find()
+				->select(['DropDownType', 'FilterName', 'SortSeq', 'FieldDisplayValue'])
+				->distinct()
+				->orderBy([
+					  'FilterName' => SORT_ASC,
+					  'SortSeq' => SORT_ASC
+					])
+				->all();
+				
+			$responseArray['WebDropDowns'] = [];
+			//loop data to format response
+			foreach($webDropDowns as $dropDown)
+			{
+				$responseArray['WebDropDowns'][$dropDown->FilterName][] = $dropDown;
+			}
+			
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $responseArray;
+
+            return $response;
+		}
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 
     public function actionGetTrackerMapGrids() {
         $headers = getallheaders();
