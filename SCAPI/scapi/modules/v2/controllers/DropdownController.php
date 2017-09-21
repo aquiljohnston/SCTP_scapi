@@ -112,17 +112,20 @@ class DropdownController extends Controller
     }
 	
 	//gets web dropdowns from rDropDown
-	//this route is used for base functionality and currently only pulls from CT db
-	//TODO may want to combine this with tabletSurveyQuery()
+	//TODO combine this with actionGetTabletSurveyDropdowns() 
+	//by adding param DropDownType to differentiate between web and tablet dropdowns
 	public function actionGetWebDropDowns()
 	{
 		try
         {
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$webDropDowns = DropDown::find()
-				->select(['DropDownType', 'FilterName', 'SortSeq', 'FieldDisplayValue'])
+				->select(['FilterName', 'SortSeq', 'FieldDisplayValue'])
 				->distinct()
+				->where(['DropDownType' => 'Web'])
 				->orderBy([
 					  'FilterName' => SORT_ASC,
 					  'SortSeq' => SORT_ASC
