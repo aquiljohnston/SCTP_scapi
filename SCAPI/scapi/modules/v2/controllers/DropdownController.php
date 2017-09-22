@@ -34,7 +34,8 @@ class DropdownController extends Controller
                 'actions' => [
                     'get-employee-type-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
-                    'get-state-codes-dropdown' => ['get']
+                    'get-state-codes-dropdown' => ['get'],
+                    'get-web-drop-downs' => ['get']
                 ],
             ];
         return $behaviors;
@@ -109,6 +110,46 @@ class DropdownController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	//gets web dropdowns from rDropDown
+	//TODO combine this with actionGetTabletSurveyDropdowns() 
+	//by adding param DropDownType to differentiate between web and tablet dropdowns
+	public function actionGetWebDropDowns()
+	{
+		try
+        {
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$webDropDowns = DropDown::find()
+				->select(['FilterName', 'SortSeq', 'FieldDisplayValue'])
+				->distinct()
+				->where(['DropDownType' => 'Web'])
+				->orderBy([
+					  'FilterName' => SORT_ASC,
+					  'SortSeq' => SORT_ASC
+					])
+				->all();
+				
+			$responseArray['WebDropDowns'] = [];
+			//loop data to format response
+			foreach($webDropDowns as $dropDown)
+			{
+				$responseArray['WebDropDowns'][$dropDown->FilterName][] = $dropDown;
+			}
+			
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $responseArray;
+
+            return $response;
+		}
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 
     public function actionGetTrackerMapGrids() {
         $headers = getallheaders();
@@ -137,50 +178,38 @@ class DropdownController extends Controller
 	public function actionGetTabletSurveyDropdowns()
 	{
 		try
-		{
+        {
 			//set db target
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
-			$tabletDropdowns = DropDown::find()
-				->select('FilterName')
+			$tabletDropDowns = DropDown::find()
+				->select(['FilterName', 'SortSeq', 'FieldDisplayValue'])
 				->distinct()
 				->where(['DropDownType' => 'Tablet'])
+				->orderBy([
+					  'FilterName' => SORT_ASC,
+					  'SortSeq' => SORT_ASC
+					])
 				->all();
 				
-			$responseData['SurveyDropdowns'] = [];
-			
-			for($i = 0; $i < count($tabletDropdowns); $i++)
+			$responseArray['TabletDropDowns'] = [];
+			//loop data to format response
+			foreach($tabletDropDowns as $dropDown)
 			{
-				$responseData['SurveyDropdowns'][$tabletDropdowns[$i]['FilterName']]= DropdownController::tabletSurveyQuery($tabletDropdowns[$i]['FilterName']);
+				$responseArray['TabletDropDowns'][$dropDown->FilterName][] = $dropDown;
 			}
+			
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $responseArray;
 
-			//send response
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $responseData;
-			return $response;
+            return $response;
 		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
         }
-	}
-
-	//helper method for standard tablet survey query
-	public static function tabletSurveyQuery($filter)
-	{
-		return DropDown::find()
-				->select(['FilterName', 'SortSeq', 'FieldDisplayValue'])
-				->where(['FilterName'=>$filter])
-				//no active flag present may be used later.
-				//->andWhere(['ActiveFlag'=>1])
-				->orderBy('SortSeq')
-				->all();
 	}
 	/////////////////////TABLET DROPDOWNS END////////////////////////
 }
