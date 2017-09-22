@@ -576,6 +576,7 @@ class UserController extends BaseActiveController
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
                 $projectData['ProjectID'] = $projectModel->ProjectID;
                 $projectData['ProjectName'] = $projectModel->ProjectName;
+                $projectData['ProjectUrlPrefix'] = $projectModel->ProjectUrlPrefix;
                 $projectData['ProjectClientID'] = $projectModel->ProjectClientID;
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
