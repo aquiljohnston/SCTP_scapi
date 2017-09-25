@@ -192,14 +192,22 @@ class DropdownController extends Controller
 					  'SortSeq' => SORT_ASC
 					])
 				->all();
-				
-			$responseArray['TabletDropDowns'] = [];
-			//loop data to format response
-			foreach($tabletDropDowns as $dropDown)
-			{
-				$responseArray['TabletDropDowns'][$dropDown->FilterName][] = $dropDown;
+			if($headers['X-Client'] == 'yorkstage' || $headers['X-Client'] == 'york') {
+				$responseArray['SurveyDropdowns'] = [];
+				//loop data to format response
+				foreach($tabletDropDowns as $dropDown)
+				{
+					$responseArray['SurveyDropdowns'][$dropDown->FilterName][] = $dropDown;
+				}
+
+			} else {
+				$responseArray['TabletDropDowns'] = [];
+				//loop data to format response
+				foreach($tabletDropDowns as $dropDown)
+				{
+					$responseArray['TabletDropDowns'][$dropDown->FilterName][] = $dropDown;
+				}
 			}
-			
             $response = Yii::$app ->response;
             $response -> format = Response::FORMAT_JSON;
             $response -> data = $responseArray;
