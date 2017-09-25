@@ -419,7 +419,6 @@ class MileageCardController extends BaseActiveController
             $responseArray['assets'] = $mileageCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
 
-
             if (!empty($responseArray['assets']))
 			{
 				$response->data = $responseArray;
