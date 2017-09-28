@@ -496,6 +496,9 @@ class ScanaRbacController extends Controller
         $viewInspections->description = 'View Inspections';
         $auth->add($viewInspections);
 		
+		$viewCGE = $auth->createPermission('viewCGE');
+        $viewCGE->description = 'View CGE';
+        $auth->add($viewCGE);
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
 		// add "Technician" role and give this role CRUD permissions
@@ -595,6 +598,7 @@ class ScanaRbacController extends Controller
 		$auth->addChild($supervisor, $viewMileageCardMgmt);
 		//$auth->addChild($supervisor, $viewTracker);
 		$auth->addChild($supervisor, $viewInspections);
+		$auth->addChild($supervisor, $viewCGE);
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $auth->createRole('ProjectManager');
