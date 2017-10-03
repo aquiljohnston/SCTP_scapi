@@ -622,8 +622,8 @@ class DispatchController extends Controller
 		$successFlag = 0;
 		try{
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :AssignedUseID,:MapGrid, :SectionNum , :WorkOrderID");
-			$processJSONCommand->bindParam(':AssignedUseID', $userID,  \PDO::PARAM_INT);
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :AssignedUserID,:MapGrid, :SectionNum , :WorkOrderID");
+			$processJSONCommand->bindParam(':AssignedUserID', $userID,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
@@ -649,6 +649,27 @@ class DispatchController extends Controller
 			'WorkOrderID' => $workOrder,
 			'SuccessFlag' => $successFlag
 		];
+	}
+	
+	public static function unassignUser($userID, $client)
+	{
+		try
+		{
+			//set db target
+            BaseActiveRecord::setClient($client);
+			//delete all work queues that are not complete(status 102)
+			WorkQueue::deleteAll(['and', ['AssignedUserID' => $userID], ['not', ['WorkQueueStatus' => 102]]]);
+			return 1;
+		}
+		catch(\Exception $e)
+		{
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, $client, [
+			'AssignedUserID' => $userID,
+			'MapGrid' => $client,
+			'Comment' => 'Failed to delete user work queues.'
+			]);
+			return 0;
+		}
 	}
 	
 	//helper method gets status code based on StatusDescription
