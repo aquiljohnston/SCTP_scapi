@@ -27,7 +27,8 @@ class CgeController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get-map-grids' => ['get'],
-					'get-cge' => ['get']
+					'get-by-map' => ['get'],
+					'get-history' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -44,7 +45,6 @@ class CgeController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'mapGrids';
 			$assetQuery = CGEByMapGrid::find();
@@ -64,11 +64,11 @@ class CgeController extends Controller
 			{
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
+				//pass pagination data to response array
 				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray[$envelope] = $data;
+				//use updated query with pagination caluse to get data
+				$responseArray[$envelope] = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
 			}
 			
 			//create response object
@@ -87,4 +87,66 @@ class CgeController extends Controller
         }
 	}
 	
+	public function actionGetByMap($mapGrid)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			$responseArray['cges'] = NewMostRecentCgeView::find()
+				->where(['MapGrid' => $mapGrid])
+				->orderBy('InspectionDateTime')
+				->all();
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetHistory($workOrderID)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			
+			$connection = BaseActiveRecord::getDb();
+			$getHistoryCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spCGEHistory? :WorkOrderID");
+			$getHistoryCommand->bindParam(':WorkOrderID', $workOrderID,  \PDO::PARAM_INT);
+			$response->data['cgeHistory'] = $getHistoryCommand->query();
+			
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 }
