@@ -19,6 +19,7 @@ use app\modules\v2\models\InActiveUsers;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
+use app\modules\v2\controllers\DispatchController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -440,14 +441,14 @@ class UserController extends BaseActiveController
 			$projectPrefix = $data['ProjectUrlPrefix'];
 			//get user array from json
 			$users = $data['Usernames'];
+			//array of users that errored during sp execution
+			$failedUsers= [];
 			
 			//get user to be deactivated
 			if(BaseActiveController::isSCCT($client))
 			{
 				//ger count in user array
 				$userCount = count($users);
-				//array of users that errored during sp execution
-				$failedUsers= [];
 				
 				//set up connection
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -930,6 +931,9 @@ class UserController extends BaseActiveController
 
 					$projectUser->UserActiveFlag = 0;
 
+					//unassign all associate work queues for the current project prior to deactivating the user
+					$unassignedFlag = DispatchController::unassignUser($projectUser->UserID, $userProjects[$i]['ProjectUrlPrefix']);
+					
 					if ($projectUser->update()) {
 						/*remove rbac role
 						I dont belive this is reset on reactivation and 
@@ -941,7 +945,7 @@ class UserController extends BaseActiveController
 								$projectAuth->revokeAll($projectUser['UserID']);
 							}
 						}	*/
-						$response[] = $userProjects[$i]['ProjectUrlPrefix'];
+						$response[] = [$userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag: ' . $unassignedFlag];
 					}
 					//reset db to Comet Tracker
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
