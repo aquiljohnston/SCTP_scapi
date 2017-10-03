@@ -945,7 +945,7 @@ class UserController extends BaseActiveController
 								$projectAuth->revokeAll($projectUser['UserID']);
 							}
 						}	*/
-						$response[] = [$userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag: ' . $unassignedFlag];
+						$response[] = ['Client' => $userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag' => $unassignedFlag];
 					}
 					//reset db to Comet Tracker
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
