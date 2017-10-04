@@ -10,6 +10,8 @@ use app\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\CGEByMapGrid;
+use app\modules\v2\models\WebManagementCGIByMapGridDetail;
+use app\modules\v2\models\WebManagementCGIByWO;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -27,7 +29,8 @@ class CgeController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get-map-grids' => ['get'],
-					'get-cge' => ['get']
+					'get-by-map' => ['get'],
+					'get-history' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -44,7 +47,6 @@ class CgeController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'mapGrids';
 			$assetQuery = CGEByMapGrid::find();
@@ -64,11 +66,11 @@ class CgeController extends Controller
 			{
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
+				//pass pagination data to response array
 				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray[$envelope] = $data;
+				//use updated query with pagination caluse to get data
+				$responseArray[$envelope] = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
 			}
 			
 			//create response object
@@ -87,4 +89,69 @@ class CgeController extends Controller
         }
 	}
 	
+	public function actionGetByMap($mapGrid)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			$responseArray['cges'] = WebManagementCGIByMapGridDetail::find()
+				->where(['MapGrid' => $mapGrid])
+				->orderBy('Address', 'InspectionDateTime')
+				->all();
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetHistory($workOrderID)
+	{
+		try
+		{
+			//get headers
+			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$responseArray = [];
+			$responseArray['cgeHistory'] = WebManagementCGIByWO::find()
+				->where(['ID' => $workOrderID])
+				->orderBy('InspectionDateTime')
+				->all();
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+			
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 }
