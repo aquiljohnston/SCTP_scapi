@@ -10,6 +10,8 @@ use app\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\CGEByMapGrid;
+use app\modules\v2\models\WebManagementCGIByMapGridDetail;
+use app\modules\v2\models\WebManagementCGIByWO;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -98,9 +100,9 @@ class CgeController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-			$responseArray['cges'] = NewMostRecentCgeView::find()
+			$responseArray['cges'] = WebManagementCGIByMapGridDetail::find()
 				->where(['MapGrid' => $mapGrid])
-				->orderBy('InspectionDateTime')
+				->orderBy('Address', 'InspectionDateTime')
 				->all();
 			
 			//create response object
@@ -129,14 +131,17 @@ class CgeController extends Controller
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
+			$responseArray = [];
+			$responseArray['cgeHistory'] = WebManagementCGIByWO::find()
+				->where(['ID' => $workOrderID])
+				->orderBy('InspectionDateTime')
+				->all();
+			
 			//create response object
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-			
-			$connection = BaseActiveRecord::getDb();
-			$getHistoryCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spCGEHistory? :WorkOrderID");
-			$getHistoryCommand->bindParam(':WorkOrderID', $workOrderID,  \PDO::PARAM_INT);
-			$response->data['cgeHistory'] = $getHistoryCommand->query();
+			$response->data = $responseArray;
+			return $response;
 			
 			return $response;
 		}
