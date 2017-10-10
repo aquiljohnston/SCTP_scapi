@@ -15,9 +15,11 @@ use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Users;
+use app\modules\v2\models\InActiveUsers;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
+use app\modules\v2\controllers\DispatchController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -38,6 +40,8 @@ use yii\data\Pagination;
 class UserController extends BaseActiveController
 {
     public $modelClass = 'app\modules\v2\models\SCUser';
+	
+	const USERNAME_EXIST_MESSAGE = 'UserName already exist.';
 
     /**
      * sets verb filters for http request
@@ -60,6 +64,7 @@ class UserController extends BaseActiveController
                     'update' => ['put'],
                     'view' => ['get'],
                     'deactivate' => ['put'],
+                    'reactivate' => ['put'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
                     'reset-password' => ['put'],
@@ -113,7 +118,7 @@ class UserController extends BaseActiveController
 
             if ($existingUser != null) {
                 $response->setStatusCode(400);
-                $response->data = 'UserName already exist.';
+                $response->data = self::USERNAME_EXIST_MESSAGE;
                 return $response;
             }
 
@@ -357,68 +362,47 @@ class UserController extends BaseActiveController
 
     /**
      * Updates the active flag of a user to 0 for inactive
+	 * if deactivated in base scct will propagate to other projects
      * @param $userID id of the user record
      * @returns Response json body of user data
      * @throws \yii\web\HttpException
      */
-    public function actionDeactivate($userID)
+    public function actionDeactivate($username)
 		{
-		//for non-scct user we're just changing the active flag to 0 no cascade for now
         try {
+			//create response object
+			$response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
 			//get client header
 			$client = getallheaders()['X-Client'];
 			
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userDeactivate');
+			 //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get scct user
+			$user = SCUser::find()
+				->where(['UserName' => $username])
+				->one();
+				
+			//check if requesting user has permission to deactivate
+            PermissionsController::requirePermission('userDeactivate');			
+			//get role to check if requesting user has permissions to updater use they are deactivating  
+			$currentRole = $user['UserAppRoleType'];
+            PermissionsController::requirePermission('userUpdate' . $currentRole);
 
 			//get user to be deactivated
 			if(BaseActiveController::isSCCT($client))
 			{
-				//if ct user pull directly
-				$user = SCUser::findOne($userID);
+				//if ct user call function to handle sp call and deactivation propagation
+				$responseData = self::deactivateInScct($user);
 			}
 			else
 			{
-				//if client user use helper method to get ct user from client id
-				$user = self::getUserByClientUser($userID, $client);
-				//set user id to comet tracker id
-				$userID = $user->UserID;
-			}
-
-            $currentRole = $user['UserAppRoleType'];
-
-            PermissionsController::requirePermission('userUpdate' . $currentRole);
-
-            $response = Yii::$app->response;
-            $response->format = Response::FORMAT_JSON;
-
-            try {
-				//process user deactivation in client dbs
-				$deactivatedProjects = self::deactivateInProjects($user);
-				
-				 //call stored procedure to for cascading deactivation of a user
-                $connection = SCUser::getDb();
-                $userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
-                $userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
-                $userDeactivateCommand->execute();
-				
-                //Log out user so that they don't receive 403s if logged in or deactivating self
-                $auth = Auth::findOne(["AuthUserID" => $userID]);
-				if($auth != null) $auth->delete();
-				
-				//build response data
-				//requery user after deactivation
-				$user = SCUser::findOne($userID);
-				$user->UserPassword = '';
-				$userData[] = $user->attributes;
-				$userData['DeactivatedProjects'] = $deactivatedProjects;
-                $response->data = $userData;
-            } catch (Exception $e) {
-                $response->setStatusCode(400);
-                $response->data = "Http:400 Bad Request";
-            }
+				//if client user use helper method to deactivate only given client
+				$responseData['DeactivatedProjects'] = self::deactivateInProjects($user, $client);
+			} 
+			$response->data = $responseData;
             return $response;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
@@ -427,6 +411,90 @@ class UserController extends BaseActiveController
         }
 
     }
+	
+	/**
+     * Calls Sp on to reactivate a user
+     * Expect Json body or userids and client targer
+     * @returns Response of success per user?
+     * @throws \yii\web\HttpException
+     */
+	public function actionReactivate()
+	{
+		try {
+			//get client header
+			$client = getallheaders()['X-Client'];
+            //set db target for permission check
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//TODO update permissions
+            PermissionsController::requirePermission('userDeactivate');
+			
+            //read the post input
+            $put = file_get_contents("php://input");
+            //decode json post input as php array:
+            $data = json_decode(utf8_decode($put), true);
+
+            //create response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			//get client from json
+			$projectPrefix = $data['ProjectUrlPrefix'];
+			//get user array from json
+			$users = $data['Usernames'];
+			//array of users that errored during sp execution
+			$failedUsers= [];
+			
+			//get user to be deactivated
+			if(BaseActiveController::isSCCT($client))
+			{
+				//ger count in user array
+				$userCount = count($users);
+				
+				//set up connection
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				$ctConnection = BaseActiveRecord::getDb();
+				//loop users for sp execution
+				for($i = 0; $i < $userCount; $i++)
+				{
+					try
+					{
+						//execute CTSP for cascade reactivation
+						$ctUserReactivateCommand = $ctConnection->createCommand("EXECUTE spCTReactivateUser :UserName,:Project");
+						$ctUserReactivateCommand->bindParam(':UserName', $users[$i], \PDO::PARAM_STR);
+						$ctUserReactivateCommand->bindParam(':Project', $projectPrefix, \PDO::PARAM_STR);
+						$ctUserReactivateCommand->execute();
+					}
+					catch(\Exception $e)
+					{
+						$failedUsers['Failed Users'] = $users[$i];
+					}
+				}
+			}
+			else
+			{
+				try
+				{
+					//set up db connection
+					BaseActiveRecord::setClient($projectPrefix);
+					$connection = SCUser::getDb();
+					//execute client SP for reactivation(will call CTSP to determine if reactivation is needed within base aswell)
+					$userReactivateCommand = $connection->createCommand("EXECUTE spReactivateUser :JSON_Str");
+					$userReactivateCommand->bindParam(':JSON_Str', $put, \PDO::PARAM_STR);
+					$userReactivateCommand->execute();
+				}
+				catch(\Exception $e)
+				{
+					$failedUsers['FailedUsers'] = $users;
+				}
+			}
+			$response->data = $failedUsers;
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 
     /**
      * Gets a users data, the equipment assigned to them, and all projects that they are associated with
@@ -509,6 +577,7 @@ class UserController extends BaseActiveController
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
                 $projectData['ProjectID'] = $projectModel->ProjectID;
                 $projectData['ProjectName'] = $projectModel->ProjectName;
+                $projectData['ProjectUrlPrefix'] = $projectModel->ProjectUrlPrefix;
                 $projectData['ProjectClientID'] = $projectModel->ProjectClientID;
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
@@ -581,7 +650,6 @@ class UserController extends BaseActiveController
 				['like', 'UserName', $filter],
 				['like', 'UserFirstName', $filter],
 				['like', 'UserLastName', $filter],
-				['like', 'UserEmployeeType', $filter],
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
@@ -608,6 +676,58 @@ class UserController extends BaseActiveController
                 $response->setStatusCode(200);
                 $response->data = $responseArray;
             }
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+    }
+	
+	/**
+     * Gets users data for all users with an active flag of 0 for inactive
+     * @param $filter
+     * @returns json body of users
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetInactive($filter = null)
+    {
+        try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//TODO create new permission
+            PermissionsController::requirePermission('userGetActive');
+			
+			//initialize response array
+			$responseArray['users'] = [];
+			
+			//set db connection to client db
+			BaseActiveRecord::setClient($client);
+			$userQuery = InActiveUsers::find();
+			
+			//apply filter to query
+			if($filter != null)
+			{
+				$userQuery->andFilterWhere([
+				'or',
+				['like', 'UserName', $filter],
+				['like', 'Name', $filter],
+				['like', 'UserAppRoleType', $filter],
+				]);
+			}
+			$usersArr = $userQuery->all();
+			
+			//populate response array
+            $responseArray['users'] = $usersArr;
+            
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $responseArray;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
@@ -743,49 +863,100 @@ class UserController extends BaseActiveController
 		return $user;
 	}
 	
-	//deactivate user in all accociated non PG&E clients
-	private static function deactivateInProjects($user)
+	//deactivate in scct base and propagate to all associated clients
+	private static function deactivateInScct($user)
 	{
-		$response = [];
-		
-		//find all projects
-		$projectUser = ProjectUser::find()
-			->select('ProjUserProjectID')
-			->where(['ProjUserUserID' => $user->UserID])
-			->all();
-		$projectCount = count($projectUser);
-		
-		 //loop projects
-		for ($i = 0; $i < $projectCount; $i++) {
-			//get project information
-			$project = Project::findOne($projectUser[$i]['ProjUserProjectID']);
-
-			//get model from base active record based on urlPrefix in project
-			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
-			if($userModel == null) continue;
-			$userModel::setClient($project->ProjectUrlPrefix);
-			$projectUser = $userModel::find()
-				->where(['UserName' => $user->UserName])
-				->andWhere(['UserActiveFlag' => 1])
-				->one();
-
-			$projectUser->UserActiveFlag = 0;
-
-			if ($projectUser->update()) {
-				 //remove rbac role
-				$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
-				if($projectAuthClass != null){
-					$projectAuth = new $projectAuthClass($userModel::getDb());
-					if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
-						$projectAuth->revokeAll($projectUser['UserID']);
-					}
-				}	
-				$response[] = $project->ProjectUrlPrefix;
-			}
-			//reset db to Comet Tracker
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		try {
+			//process user deactivation in client dbs
+			$deactivatedProjects = self::deactivateInProjects($user);
+			$userID = $user->UserID;
+			
+			 //call stored procedure to for cascading deactivation of a user
+			$connection = SCUser::getDb();
+			$userDeactivateCommand = $connection->createCommand("EXECUTE SetUserInactive_proc :PARAMETER1");
+			$userDeactivateCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
+			$userDeactivateCommand->execute();
+			
+			//Log out user so that they don't receive 403s if logged in or deactivating self
+			$auth = Auth::findOne(["AuthUserID" => $userID]);
+			if($auth != null) $auth->delete();
+			
+			//build response data
+			//requery user after deactivation
+			$user = SCUser::findOne($userID);
+			$user->UserPassword = '';
+			$userData['User'] = $user->attributes;
+			$userData['DeactivatedProjects'] = $deactivatedProjects;
+			$response = $userData;
+		} catch (Exception $e) {
+			$response = 'Failed to Properly Deactivate User';
 		}
 		return $response;
+	}
+	
+	//deactivate user in all accociated non PG&E clients or given non pge client based on optional param
+	private static function deactivateInProjects($user, $client = null)
+	{
+		try
+		{
+			$response = [];
+			if($client == null)
+			{
+				//find all projects
+				$userProjects = Project::find()
+					->select('ProjectUrlPrefix')
+					->innerJoin('Project_User_Tb', '[ProjectTb].[ProjectID] = [Project_User_Tb].[ProjUserProjectID]')
+					->where(['ProjUserUserID' => $user->UserID])
+					->all();
+			}
+			else //get project for given client
+			{
+				$userProjects[]['ProjectUrlPrefix'] = $client;
+			}
+			$projectCount = count($userProjects);
+			
+			 //loop projects
+			for ($i = 0; $i < $projectCount; $i++) {
+				//try catch for individual projects
+				try
+				{
+					//get model from base active record based on urlPrefix in project
+					$userModel = BaseActiveRecord::getUserModel($userProjects[$i]['ProjectUrlPrefix']);
+					if($userModel == null) continue;
+					$userModel::setClient($userProjects[$i]['ProjectUrlPrefix']);
+					$projectUser = $userModel::find()
+						->where(['UserName' => $user->UserName])
+						->andWhere(['UserActiveFlag' => 1])
+						->one();
+
+					$projectUser->UserActiveFlag = 0;
+
+					//unassign all associate work queues for the current project prior to deactivating the user
+					$unassignedFlag = DispatchController::unassignUser($projectUser->UserID, $userProjects[$i]['ProjectUrlPrefix']);
+					
+					if ($projectUser->update()) {
+						/*remove rbac role
+						I dont belive this is reset on reactivation and 
+						I feel is unnecessary on deactivation because being inactive would prevent system access entirely*/
+						/*$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+						if($projectAuthClass != null){
+							$projectAuth = new $projectAuthClass($userModel::getDb());
+							if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+								$projectAuth->revokeAll($projectUser['UserID']);
+							}
+						}	*/
+						$response[] = ['Client' => $userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag' => $unassignedFlag];
+					}
+					//reset db to Comet Tracker
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				} catch (\Exception $e) {
+				   $response[] =  'Failed to deactivate user in ' . $userProjects[$i]['ProjectUrlPrefix'];
+				}		
+			}
+			return $response;
+		} catch (\Exception $e) {
+           return 'Failed to Deactivate in Project(s)';
+        }		
 	}
 	
 	//public route that will allow techs to reset their passwords. In progress

@@ -58,6 +58,16 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//dominion auth manager
 	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
 	
+	//scana databases
+	const SCANA_DEV = 'scanadev';
+	const SCANA_STAGE = 'scanastage';
+	const SCANA_PROD = 'scana';
+	//york models
+	const SCANA_USER = self::BASE_USER;
+	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
+	//york auth manager
+	const SCANA_AUTH = 'app\rbac\ClientDbManager';
+	
 	//demo client database
 	const DEMO_DEV = 'demo';
 	//beta models
@@ -65,6 +75,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const DEMO_EVENT = self::BASE_EVENT;
 	//beta auth manager
 	const DEMO_AUTH = 'app\rbac\ClientDbManager';
+	
+	//azure test database
+	const AZURE_TEST = 'azure';
+	//beta models
+	const AZURE_USER = self::BASE_USER;
+	const AZURE_EVENT = self::BASE_EVENT;
+	//beta auth manager
+	const AZURE_AUTH = 'app\rbac\ClientDbManager';
 	
 	public static function getClient()
 	{
@@ -126,10 +144,28 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionProdDb;
 		}
+		//scana
+		if (self::$CLIENT_ID == self::SCANA_DEV)
+		{
+			return Yii::$app->scanaDevDb;
+		}
+		// if (self::$CLIENT_ID == self::SCANA_STAGE)
+		// {
+			// return Yii::$app->scanaStageDb;
+		// }
+		// if (self::$CLIENT_ID == self::SCANA_PROD)
+		// {
+			// return Yii::$app->scanaProdDb;
+		// }
 		//demo
 		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{
 			return Yii::$app->demoDb;
+		}
+		//azure test
+		if (self::$CLIENT_ID == self::AZURE_TEST)
+		{
+			return Yii::$app->azureDb;
 		}
 	}
 	
@@ -159,10 +195,22 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::DOMINION_USER;
 		}
+		//Scana
+		if($client == self::SCANA_DEV
+		||$client == self::SCANA_PROD
+		||$client == self::SCANA_STAGE)
+		{
+			return self::SCANA_USER;
+		}
 		//demo
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_USER;
+		}
+		//azure test
+		if($client == self::AZURE_TEST)
+		{
+			return self::AZURE_USER;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 
@@ -200,10 +248,22 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::DOMINION_AUTH;
 		}
+		//Scana
+		if($client == self::SCANA_DEV
+		|| $client == self::SCANA_PROD
+		|| $client == self::SCANA_STAGE)
+		{
+			return self::SCANA_AUTH;
+		}
 		//demo
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_AUTH;
+		}
+		//azure test
+		if($client == self::AZURE_TEST)
+		{
+			return self::AZURE_AUTH;
 		}
 		//PGE - Deos not use standard Auth
 		// if($client == self::PGE_DEV 
@@ -241,12 +301,24 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::DOMINION_EVENT;
 		}
+		//Scana
+		if($client == self::SCANA_DEV
+		|| $client == self::SCANA_PROD
+		|| $client == self::SCANA_STAGE)
+		{
+			return self::SCANA_EVENT;
+		}
 		//demo
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_EVENT;
 		}
-		//PGE - Deos not use standard Events
+		//azure test
+		if($client == self::AZURE_TEST)
+		{
+			return self::AZURE_EVENT;
+		}
+		//PGE - Does not use standard Events
 		return null;
 	}
 }

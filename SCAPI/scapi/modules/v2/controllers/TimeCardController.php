@@ -409,11 +409,9 @@ class TimeCardController extends BaseActiveController
                     throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
                 }
 			}
-			// One code segment to rule them all (Don't Repeat Yourself -- DRY)
-            $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-            $timeCardsQuery = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID');
+            
             if($filter!= null) { //Empty strings or nulls will result in false
-                $timeCardsQuery->andFilterWhere([
+                $timeCards->andFilterWhere([
                     'or',
                     ['like', 'UserName', $filter],
                     ['like', 'UserFirstName', $filter],
@@ -422,7 +420,8 @@ class TimeCardController extends BaseActiveController
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
             }
-            $timeCardsArr = $timeCardsQuery->all();
+			$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+            $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
 
@@ -535,29 +534,6 @@ class TimeCardController extends BaseActiveController
         } catch(\Exception $e) {
             Yii::trace('Exception '.$e->getMessage());
             throw new \yii\web\HttpException(400);
-        }
-    }
-
-	public function paginationProcessor($assetQuery, $page, $listPerPage){
-
-        if($page != null)
-        {
-            // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $pages->pageSizeLimit = [1,100];
-            $offset = $listPerPage*($page-1);
-            $pages->setPageSize($listPerPage);
-            $pages->pageParam = 'timeCardPage';
-            $pages->params = ['per-page' => $listPerPage, 'timeCardPage' => $page];
-
-            $assetQuery->offset($offset)
-                ->limit($listPerPage);
-
-            $asset['pages'] = $pages;
-            $asset['Query'] = $assetQuery;
-
-            return $asset;
         }
     }
 
