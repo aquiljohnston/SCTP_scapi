@@ -29,18 +29,29 @@ return [
             ],
         ],
 		//database connections
+        //Comet Tracker
         'ctDevDb' => $db['ctDevDb'],
+		'ctStageDb' => $db['ctStageDb'],
+		'ctProdDb' => $db['ctProdDb'],
+		//PGE
         'pgeDevDb' => $db['pgeDevDb'],
+		'pgeStageDb' => $db['pgeStageDb'],
+		'pgeProdDb' => $db['pgeProdDb'],
+		//York
         'yorkDevDb' => $db['yorkDevDb'],
-        'ctStageDb' => $db['ctStageDb'],
-        'pgeStageDb' => $db['pgeStageDb'],
 		'yorkStageDb' => $db['yorkStageDb'],
-		'dominionStageDb' => $db['dominionStageDb'],
-        'ctProdDb' => $db['ctProdDb'],
-        'pgeProdDb' => $db['pgeProdDb'],
 		'yorkProdDb' => $db['yorkProdDb'],
+		//Dominion
+		'dominionStageDb' => $db['dominionStageDb'],
 		'dominionProdDb' => $db['dominionProdDb'],
+		//Scana
+		'scanaDevDb' => $db['scanaDevDb'],
+		//'scanaStageDb' => $db['scanaStageDb'],
+		//'scanaProdDb' => $db['scanaProdDb'],
+		//Demo
         'demoDb' => $db['demoDb'],
+		//Azure tests
+		'azureDb' => $db['azureDb'],
     ],
     'params' => $params,
 ];
