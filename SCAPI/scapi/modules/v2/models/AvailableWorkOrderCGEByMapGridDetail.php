@@ -7,6 +7,8 @@ use Yii;
 /**
  * This is the model class for table "vAvailableWorkOrderCGEByMapGridDetail".
  *
+ * @property string $Customer Info
+ * @property string $SurveyType
  * @property string $Inspector
  * @property string $Address
  * @property string $InspectionDateTime
@@ -30,8 +32,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     public function rules()
     {
         return [
-            [['Inspector', 'Address', 'Image', 'MapGrid'], 'string'],
-            [['InspectionDateTime'], 'safe'],
+            [['Customer Info', 'SurveyType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid'], 'string'],
             [['ID'], 'required'],
             [['ID'], 'integer'],
         ];
@@ -43,6 +44,8 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     public function attributeLabels()
     {
         return [
+            'Customer Info' => 'Customer  Info',
+            'SurveyType' => 'Survey Type',
             'Inspector' => 'Inspector',
             'Address' => 'Address',
             'InspectionDateTime' => 'Inspection Date Time',
