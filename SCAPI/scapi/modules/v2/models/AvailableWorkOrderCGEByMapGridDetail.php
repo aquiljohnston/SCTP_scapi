@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vWebManagementCGIByMapGridDetail".
+ * This is the model class for table "vAvailableWorkOrderCGEByMapGridDetail".
  *
  * @property string $Inspector
  * @property string $Address
@@ -14,14 +14,14 @@ use Yii;
  * @property string $MapGrid
  * @property integer $ID
  */
-class WebManagementCGIByMapGridDetail extends \app\modules\v2\models\BaseActiveRecord
+class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vWebManagementCGIByMapGridDetail';
+        return 'vAvailableWorkOrderCGEByMapGridDetail';
     }
 
     /**

@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vWebManagementCGIByWO".
+ * This is the model class for table "vAvailableWorkOrderCGEByWODetails".
  *
  * @property string $Inspector
  * @property string $Address
@@ -13,14 +13,14 @@ use Yii;
  * @property string $Image
  * @property integer $ID
  */
-class WebManagementCGIByWO extends \app\modules\v2\models\BaseActiveRecord
+class AvailableWorkOrderCGEByWODetails extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vWebManagementCGIByWO';
+        return 'vAvailableWorkOrderCGEByWODetails';
     }
 
     /**
