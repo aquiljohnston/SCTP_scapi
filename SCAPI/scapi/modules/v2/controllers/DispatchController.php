@@ -84,6 +84,8 @@ class DispatchController extends Controller
 					['like', 'ComplianceStart', $filter],
 					['like', 'ComplianceEnd', $filter],
 					['like', 'AvailableWorkOrderCount', $filter],
+					['like', 'Frequency', $filter],
+					['like', 'Division', $filter],
 					]);
 				}
 			}

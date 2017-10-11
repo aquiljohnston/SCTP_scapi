@@ -9,9 +9,9 @@ use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\models\CGEByMapGrid;
-use app\modules\v2\models\WebManagementCGIByMapGridDetail;
-use app\modules\v2\models\WebManagementCGIByWO;
+use app\modules\v2\models\AvailableWorkOrderCGEByMapGrid;
+use app\modules\v2\models\AvailableWorkOrderCGEByMapGridDetail;
+use app\modules\v2\models\AvailableWorkOrderCGEByWODetails;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -49,7 +49,7 @@ class CgeController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'mapGrids';
-			$assetQuery = CGEByMapGrid::find();
+			$assetQuery = AvailableWorkOrderCGEByMapGrid::find();
 			
 			if($filter != null)
 			{
@@ -100,7 +100,7 @@ class CgeController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-			$responseArray['cges'] = WebManagementCGIByMapGridDetail::find()
+			$responseArray['cges'] = AvailableWorkOrderCGEByMapGridDetail::find()
 				->where(['MapGrid' => $mapGrid])
 				->orderBy('Address', 'InspectionDateTime')
 				->all();
@@ -132,7 +132,7 @@ class CgeController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
-			$responseArray['cgeHistory'] = WebManagementCGIByWO::find()
+			$responseArray['cgeHistory'] = AvailableWorkOrderCGEByWODetails::find()
 				->where(['ID' => $workOrderID])
 				->orderBy('InspectionDateTime')
 				->all();
