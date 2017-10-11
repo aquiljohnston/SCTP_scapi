@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vCGEByMapGrid".
+ * This is the model class for table "vAvailableWorkOrderCGEByMapGrid".
  *
  * @property string $MapGrid
  * @property string $ComplianceStart
@@ -14,14 +14,14 @@ use Yii;
  * @property integer $AvailableWorkOrderCount
  * @property integer $ScheduleRequired
  */
-class CGEByMapGrid extends \app\modules\v2\models\BaseActiveRecord
+class AvailableWorkOrderCGEByMapGrid extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vCGEByMapGrid';
+        return 'vAvailableWorkOrderCGEByMapGrid';
     }
 
     /**
