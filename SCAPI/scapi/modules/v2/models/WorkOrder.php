@@ -72,8 +72,8 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
             [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'EventIndicator', 'OrderProcessed'], 'integer'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
-            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => UserTb::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
-            [['ModifiedBy'], 'exist', 'skipOnError' => true, 'targetClass' => UserTb::className(), 'targetAttribute' => ['ModifiedBy' => 'UserID']],
+            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
+            [['ModifiedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['ModifiedBy' => 'UserID']],
         ];
     }
 
