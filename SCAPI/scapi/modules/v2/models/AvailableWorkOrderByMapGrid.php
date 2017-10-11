@@ -10,8 +10,11 @@ use Yii;
  * @property string $MapGrid
  * @property string $ComplianceStart
  * @property string $ComplianceEnd
- * @property integer $InspectionAttemptCounter
+ * @property integer $SectionFlag
  * @property integer $AvailableWorkOrderCount
+ * @property string $Frequency
+ * @property string $Division
+ * @property string $BillingCode
  */
 class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -29,9 +32,10 @@ class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecor
     public function rules()
     {
         return [
-            [['MapGrid'], 'string'],
+            [['MapGrid', 'Frequency', 'Division', 'BillingCode'], 'string'],
             [['ComplianceStart', 'ComplianceEnd'], 'safe'],
-            [['InspectionAttemptCounter', 'AvailableWorkOrderCount'], 'integer'],
+            [['SectionFlag'], 'required'],
+            [['SectionFlag', 'AvailableWorkOrderCount'], 'integer'],
         ];
     }
 
@@ -44,8 +48,11 @@ class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecor
             'MapGrid' => 'Map Grid',
             'ComplianceStart' => 'Compliance Start',
             'ComplianceEnd' => 'Compliance End',
-            'InspectionAttemptCounter' => 'Inspection Attempt Counter',
+            'SectionFlag' => 'Section Flag',
             'AvailableWorkOrderCount' => 'Available Work Order Count',
+            'Frequency' => 'Frequency',
+            'Division' => 'Division',
+            'BillingCode' => 'Billing Code',
         ];
     }
 }
