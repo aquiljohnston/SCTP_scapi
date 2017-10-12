@@ -268,6 +268,10 @@ class UserController extends BaseActiveController
             if (isset($data['UserCreatedUID'])) {
                 unset($data['UserCreatedUID']);
             }
+			//can't update this value
+			if (isset($data['UserActiveFlag'])) {
+				unset($data['UserActiveFlag']);
+			}
 
             //pass new data to user
             $user->attributes = $data;
@@ -802,13 +806,6 @@ class UserController extends BaseActiveController
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//get project information
 			$project = Project::findOne($userProjects[$i]['ProjUserProjectID']);
-
-			//if client is populated than original call was to a client controller in which the record has already been updated
-			//so an update does not need to be preformed for that project again
-			if ($project->ProjectUrlPrefix == $client) {
-				$responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
-				continue;
-			}
 				
 			//get model from base active record based on urlPrefix in project
 			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
@@ -816,7 +813,6 @@ class UserController extends BaseActiveController
 			$userModel::setClient($project->ProjectUrlPrefix);
 			$projectUser = $userModel::find()
 				->where(['UserName' => $username])
-				->andWhere(['UserActiveFlag' => 1])
 				->one();
 
 			$projectUser->attributes = $user->attributes;
@@ -826,10 +822,13 @@ class UserController extends BaseActiveController
 			{
 				$projectUser->UserModifiedUID = $updatedByInProject->UserID;
 			}
-			//can't update this value
-            if (isset($projectUser['UserCreatedUID'])) {
-                unset($projectUser['UserCreatedUID']);
-            }
+			//can't update these values
+			if (isset($projectUser['UserCreatedUID'])) {
+				unset($projectUser['UserCreatedUID']);
+			}
+			if (isset($projectUser['UserActiveFlag'])) {
+				unset($projectUser['UserActiveFlag']);
+			}
 			
 			if ($projectUser->update()) {
 				 //handle potential role change
