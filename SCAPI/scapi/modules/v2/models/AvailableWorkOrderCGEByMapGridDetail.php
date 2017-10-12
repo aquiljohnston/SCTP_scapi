@@ -15,6 +15,7 @@ use Yii;
  * @property string $Image
  * @property string $MapGrid
  * @property integer $ID
+ * @property integer $ScheduleRequired
  */
 class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -34,7 +35,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
         return [
             [['CustomerInfo', 'SurveyType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid'], 'string'],
             [['ID'], 'required'],
-            [['ID'], 'integer'],
+            [['ID', 'ScheduleRequired'], 'integer'],
         ];
     }
 
@@ -44,7 +45,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     public function attributeLabels()
     {
         return [
-            'CustomerInfo' => 'Customer  Info',
+            'CustomerInfo' => 'Customer Info',
             'SurveyType' => 'Survey Type',
             'Inspector' => 'Inspector',
             'Address' => 'Address',
@@ -52,6 +53,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
             'Image' => 'Image',
             'MapGrid' => 'Map Grid',
             'ID' => 'ID',
+            'ScheduleRequired' => 'Schedule Required',
         ];
     }
 }
