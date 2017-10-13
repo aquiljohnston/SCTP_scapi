@@ -17,11 +17,13 @@ use Yii;
  * @property integer $ModifiedBy
  * @property string $ModifiedDate
  * @property integer $tAssetID
- * @property integer $TaskedOut 
+ * @property integer $TaskedOut
+ * @property string $ScheduledDispatchDate
  *
- * @property UserTb $assignedUser
  * @property UserTb $createdBy
  * @property UserTb $modifiedBy
+ * @property UserTb $assignedUser
+ * @property RStatusLookup $workQueueStatus
  */
 class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -41,10 +43,11 @@ class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['WorkOrderID', 'AssignedUserID', 'WorkQueueStatus', 'CreatedBy', 'ModifiedBy', 'tAssetID', 'TaskedOut'], 'integer'],
             [['SectionNumber'], 'string'],
-            [['CreatedDate', 'ModifiedDate'], 'safe'],
             [['AssignedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['AssignedUserID' => 'UserID']],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
             [['ModifiedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['ModifiedBy' => 'UserID']],
+            [['CreatedDate', 'ModifiedDate', 'ScheduledDispatchDate'], 'safe'],
+            [['WorkQueueStatus'], 'exist', 'skipOnError' => true, 'targetClass' => StatusLookup::className(), 'targetAttribute' => ['WorkQueueStatus' => 'StatusCode']],
         ];
     }
 
@@ -65,6 +68,7 @@ class WorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'ModifiedDate' => 'Modified Date',
             'tAssetID' => 'T Asset ID',
             'TaskedOut' => 'Tasked Out',
+            'ScheduledDispatchDate' => 'Scheduled Dispatch Date',
         ];
     }
 
