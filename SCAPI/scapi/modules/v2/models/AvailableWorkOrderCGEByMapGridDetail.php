@@ -15,6 +15,7 @@ use Yii;
  * @property string $Image
  * @property string $MapGrid
  * @property integer $ID
+ * @property string $SectionNumber
  * @property integer $ScheduleRequired
  */
 class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseActiveRecord
@@ -33,7 +34,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     public function rules()
     {
         return [
-            [['CustomerInfo', 'SurveyType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid'], 'string'],
+            [['CustomerInfo', 'SurveyType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid', 'SectionNumber'], 'string'],
             [['ID'], 'required'],
             [['ID', 'ScheduleRequired'], 'integer'],
         ];
@@ -53,6 +54,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
             'Image' => 'Image',
             'MapGrid' => 'Map Grid',
             'ID' => 'ID',
+            'SectionNumber' => 'Section Number',
             'ScheduleRequired' => 'Schedule Required',
         ];
     }
