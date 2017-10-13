@@ -227,8 +227,8 @@ class DispatchController extends Controller
 	
 	public function actionDispatch($dispatchType = null)
 	{
-		/*try
-		{*/
+		try
+		{
 			//get client headers
 			$headers = getallheaders();
 			// get created by
@@ -331,7 +331,7 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseData;
 			return $response;
-		/*}
+		}
         catch(ForbiddenHttpException $e)
         {
             throw new ForbiddenHttpException;
@@ -339,7 +339,7 @@ class DispatchController extends Controller
         catch(\Exception $e)
         {
             throw new \yii\web\HttpException(400);
-        }*/
+        }
 	}
 	
 	public function actionGetAssigned($mapGridSelected = null, $filter = null, $listPerPage = 10, $page = 1)
