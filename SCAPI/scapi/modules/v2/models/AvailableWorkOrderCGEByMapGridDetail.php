@@ -14,7 +14,7 @@ use Yii;
  * @property string $InspectionDateTime
  * @property string $Image
  * @property string $MapGrid
- * @property integer $ID
+ * @property integer $WorkOrderID
  * @property string $SectionNumber
  * @property integer $ScheduleRequired
  */
@@ -35,8 +35,8 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     {
         return [
             [['CustomerInfo', 'SurveyType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid', 'SectionNumber'], 'string'],
-            [['ID'], 'required'],
-            [['ID', 'ScheduleRequired'], 'integer'],
+            [['WorkOrderID'], 'required'],
+            [['WorkOrderID', 'ScheduleRequired'], 'integer'],
         ];
     }
 
@@ -53,7 +53,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
             'InspectionDateTime' => 'Inspection Date Time',
             'Image' => 'Image',
             'MapGrid' => 'Map Grid',
-            'ID' => 'ID',
+            'WorkOrderID' => 'Work Order ID',
             'SectionNumber' => 'Section Number',
             'ScheduleRequired' => 'Schedule Required',
         ];
