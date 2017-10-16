@@ -11,7 +11,7 @@ use Yii;
  * @property string $InspectionTabletID
  * @property integer $ActivityID
  * @property integer $WorkQueueID
- * @property string $WorkQueueStatus
+ * @property integer $WorkQueueStatus
  * @property string $MapGrid
  * @property integer $IsAdHocFlag
  * @property integer $IsInGridFlag
@@ -44,6 +44,7 @@ use Yii;
  * @property string $SrvDTLTOffset
  * @property integer $IsWorkOrderUpdated
  * @property string $Photo1Path
+ * @property string $PipelineType
  *
  * @property UserTb $createdBy
  */
@@ -63,8 +64,8 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path'], 'string'],
-            [['WorkQueueStatus', 'ActivityID', 'WorkQueueID', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated'], 'integer'],
+            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType'], 'string'],
+            [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
@@ -113,7 +114,8 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             'SrvDTLT' => 'Srv Dtlt',
             'SrvDTLTOffset' => 'Srv Dtltoffset',
             'IsWorkOrderUpdated' => 'Is Work Order Updated',
-            'Photo1Path' => 'Photo 1 Path',
+            'Photo1Path' => 'Photo1 Path',
+            'PipelineType' => 'Pipeline Type',
         ];
     }
 
