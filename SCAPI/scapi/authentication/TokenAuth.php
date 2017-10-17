@@ -38,7 +38,7 @@ class TokenAuth extends AuthMethod
 				$identity = SCUser::findIdentityByAccessToken($token);
 				if ($identity === null) 
 				{
-					throw new \yii\web\HttpException(401, 'You are requesting with an invalid credentials.');
+					throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
 				}
 				return $identity;
 			}
