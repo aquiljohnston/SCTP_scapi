@@ -2,6 +2,7 @@
 
 namespace app\modules\v2\controllers;
 set_time_limit(600);
+ini_set('memory_limit', '-1');
 
 use Yii;
 use yii\rest\Controller;
