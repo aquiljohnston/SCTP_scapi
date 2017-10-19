@@ -50,7 +50,7 @@ use Yii;
  * @property string $ActivityAppVersion
  * @property string $ActivityAppVersionName
  * @property string $srvUTCDatetime
- * @property string $MapGrid 
+ * @property string $ActivityMapGrid 
  */
 class Activity extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -69,7 +69,7 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT', 'srvUTCDatetime'], 'safe'],
-            [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName', 'MapGrid'], 'string'],
+            [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName', 'ActivityMapGrid'], 'string'],
             [['ActivityCode', 'ActivityPayCode', 'ActivityArchiveFlag', 'ActivityProjectID', 'ActivityElapsedSec', 'ActivityFixQuality', 'ActivityNumberOfSatellites', 'ActivityNumberOfGPSAttempts'], 'integer'],
             [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed'], 'number'],
         ];
@@ -124,7 +124,7 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
             'ActivityAppVersion' => 'Activity App Version',
             'ActivityAppVersionName' => 'Activity App Version Name',
             'srvUTCDatetime' => 'Srv Utcdatetime',
-			'MapGrid' => 'Map Grid',
+			'ActivityMapGrid' => 'Activity Map Grid',
         ];
     }
 }
