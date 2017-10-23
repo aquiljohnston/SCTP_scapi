@@ -17,7 +17,8 @@ use Yii;
  * @property string $DropDownType
  * @property string $FilterName
  * @property integer $SortSeq
- * @property string $FieldDisplayValue
+ * @property string $FieldDisplay
+ * @property string $FieldValue
  * @property string $FieldDescription
  * @property string $ConversionValue
  */
@@ -39,7 +40,7 @@ class DropDown extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['ProjectID', 'CreatedUserID', 'ModifiedUserID', 'SortSeq'], 'integer'],
             [['CreatedDTLT', 'ModifiedDTLT'], 'safe'],
-            [['Comments', 'DropDownType', 'FilterName', 'FieldDisplayValue', 'FieldDescription', 'ConversionValue'], 'string'],
+            [['Comments', 'DropDownType', 'FilterName', 'FieldDisplay', 'FieldValue', 'FieldDescription', 'ConversionValue'], 'string'],
         ];
     }
 
@@ -59,7 +60,8 @@ class DropDown extends \app\modules\v2\models\BaseActiveRecord
             'DropDownType' => 'Drop Down Type',
             'FilterName' => 'Filter Name',
             'SortSeq' => 'Sort Seq',
-            'FieldDisplayValue' => 'Field Display Value',
+            'FieldDisplay' => 'Field Display',
+            'FieldValue' => 'Field Value',
             'FieldDescription' => 'Field Description',
             'ConversionValue' => 'Conversion Value',
         ];
