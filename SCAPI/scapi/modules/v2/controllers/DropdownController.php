@@ -123,7 +123,7 @@ class DropdownController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$webDropDowns = DropDown::find()
-				->select(['FilterName', 'SortSeq', 'FieldDisplayValue'])
+				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
 				->distinct()
 				->where(['DropDownType' => 'Web'])
 				->orderBy([
