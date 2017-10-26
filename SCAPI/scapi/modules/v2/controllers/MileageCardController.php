@@ -240,7 +240,7 @@ class MileageCardController extends BaseActiveController
 			$dataArray['StartDate'] = $mileageCard-> MileageStartDate;
 			$dataArray['EndDate'] = $mileageCard-> MileageEndDate;
 			$dataArray['ApprovedFlag'] = $mileageCard-> MileageCardApprovedFlag;
-			$dataArray['MileageEntries'] = [$dayArray];
+			$dataArray['MileageEntries'] = $dayArray;
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
