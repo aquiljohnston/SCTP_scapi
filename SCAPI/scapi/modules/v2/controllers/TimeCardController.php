@@ -212,7 +212,7 @@ class TimeCardController extends BaseActiveController
 			$dataArray['StartDate'] = $timeCard-> TimeCardStartDate;
 			$dataArray['EndDate'] = $timeCard-> TimeCardEndDate;
 			$dataArray['ApprovedFlag'] = $timeCard-> TimeCardApprovedFlag;
-			$dataArray['TimeEntries'] = [$dayArray];
+			$dataArray['TimeEntries'] = $dayArray;
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
