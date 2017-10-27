@@ -23,7 +23,6 @@ use Yii;
  * @property integer $DeletedFlag
  * @property string $Comments
  * @property double $TotalMapTime
- * @property integer $FeetOfDistribution
  * @property integer $FeetOfTransmission
  * @property integer $FeetOfHighPressure
  *
@@ -46,7 +45,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ActivityID', 'CreatedUserID'], 'required'],
-            [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfDistribution', 'FeetOfTransmission', 'FeetOfHighPressure'], 'integer'],
+            [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
             [['MapGrid', 'Comments'], 'string'],
             [['TotalMapTime'], 'number'],
@@ -76,7 +75,6 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             'DeletedFlag' => 'Deleted Flag',
             'Comments' => 'Comments',
             'TotalMapTime' => 'Total Map Time',
-            'FeetOfDistribution' => 'Feet Of Distribution',
             'FeetOfTransmission' => 'Feet Of Transmission',
             'FeetOfHighPressure' => 'Feet Of High Pressure',
         ];
