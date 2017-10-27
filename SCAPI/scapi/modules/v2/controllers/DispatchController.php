@@ -25,6 +25,7 @@ use app\modules\v2\controllers\PermissionsController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
+use yii\db\Query;
 
 class DispatchController extends Controller 
 {
@@ -340,28 +341,21 @@ class DispatchController extends Controller
 			{
 				$orderBy = 'ComplianceEnd';
 				$envelope = 'mapGrids';
-				$assetQuery = AssignedWorkQueueByMapGrid::find();
 				
-				if($filter != null)
-				{
-					$assetQuery->andFilterWhere([
-					'or',
-					['like', 'MapGrid', $filter],
-					['like', 'ComplianceStart', $filter],
-					['like', 'ComplianceEnd', $filter],
-					['like', 'AssignedWorkOrderCount', $filter],
-					['like', 'SearchString', $filter],
-					]);
-				}
+				$assetQuery = new Query;
+				$assetQuery->select('*')
+					->from("fnAssignedWorkQueueByMapGrid(:Filter)")
+					->addParams([':Filter' => $filter]);
 			}
 			
 			if($page != null)
 			{
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//return $paginationResponse;
 				//use updated query with pagination caluse to get data
 				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
+				->all(BaseActiveRecord::getDb());
 				$responseArray['pages'] = $paginationResponse['pages'];
 				$responseArray[$envelope] = $data;
 			}
@@ -370,6 +364,7 @@ class DispatchController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
+			//$response->data = $results;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -489,7 +484,6 @@ class DispatchController extends Controller
 			for($i = 0; $i < $mapCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignMap'][$i]['AssignedUserID'],
 					$data['unassignMap'][$i]['MapGrid']
 				);
 				$responseData['unassignMap'][] = $results;
@@ -499,7 +493,6 @@ class DispatchController extends Controller
 			for($i = 0; $i < $sectionCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignSection'][$i]['AssignedUserID'],
 					$data['unassignSection'][$i]['MapGrid'],
 					$data['unassignSection'][$i]['SectionNumber']
 				);
@@ -510,7 +503,6 @@ class DispatchController extends Controller
 			for($i = 0; $i < $assetCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignAsset'][$i]['AssignedUserID'],
 					null,
 					null,
 					$data['unassignAsset'][$i]['WorkOrderID']
@@ -639,13 +631,12 @@ class DispatchController extends Controller
 		return $results;
 	}
 	
-	private static function processUnassigned($userID, $mapGrid = null, $section = null, $workOrder = null)
+	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null)
 	{
 		$successFlag = 0;
 		try{
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :AssignedUserID,:MapGrid, :SectionNum , :WorkOrderID");
-			$processJSONCommand->bindParam(':AssignedUserID', $userID,  \PDO::PARAM_INT);
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID");
 			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
@@ -655,7 +646,6 @@ class DispatchController extends Controller
 		catch(\Exception $e)
 		{
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
-			'AssignedUserID' => $userID,
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
@@ -665,7 +655,6 @@ class DispatchController extends Controller
 		
 		//build response format
 		return [
-			'AssignedUserID' => $userID,
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
