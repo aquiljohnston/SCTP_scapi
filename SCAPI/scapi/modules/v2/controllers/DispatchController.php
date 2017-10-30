@@ -75,7 +75,7 @@ class DispatchController extends Controller
 			}
 			else
 			{
-				$orderBy = 'ComplianceEnd';
+				$orderBy = ['MapGrid' => SORT_ASC, 'ComplianceEnd' => SORT_ASC];
 				$envelope = 'mapGrids';
 				$assetQuery = AvailableWorkOrderByMapGrid::find();
 				
@@ -341,7 +341,7 @@ class DispatchController extends Controller
 			}
 			else
 			{
-				$orderBy = 'ComplianceEnd';
+				$orderBy = ['MapGrid' => SORT_ASC, 'ComplianceEnd' => SORT_ASC];
 				$envelope = 'mapGrids';
 				
 				$assetQuery = new Query;
