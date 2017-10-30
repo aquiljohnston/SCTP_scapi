@@ -206,7 +206,9 @@ class DispatchController extends Controller
 				]);
 			}
 			
-			$users = $userQuery->asArray()
+			$users = $userQuery
+				->orderBy(['UserLastName'=>SORT_ASC, 'UserFirstName'=>SORT_ASC])
+				->asArray()
 				->all();
 			
 			$responseArray['users'] = $users;
