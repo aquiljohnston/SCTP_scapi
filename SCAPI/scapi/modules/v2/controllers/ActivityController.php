@@ -253,7 +253,6 @@ class ActivityController extends BaseActiveController
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
-									$timeEntry->TimeEntryCreateDate = Parent::getDate();
 									try{
 										if($timeEntry->save())
 										{
