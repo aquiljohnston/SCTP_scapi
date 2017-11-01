@@ -5,25 +5,23 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "vAvailableWorkOrderByMapGrid".
+ * This is the model class for table "vAvailableWorkOrderCGEByMapGrid".
  *
  * @property string $MapGrid
  * @property string $ComplianceStart
  * @property string $ComplianceEnd
  * @property integer $SectionFlag
  * @property integer $AvailableWorkOrderCount
- * @property string $Frequency
- * @property string $Division
- * @property string $BillingCode
+ * @property integer $ScheduleRequired
  */
-class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecord
+class AvailableWorkOrderCGEByMapGrid extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'vAvailableWorkOrderByMapGrid';
+        return 'vAvailableWorkOrderCGEByMapGrid';
     }
 
     /**
@@ -32,10 +30,10 @@ class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecor
     public function rules()
     {
         return [
-            [['MapGrid', 'Frequency', 'Division', 'BillingCode'], 'string'],
+            [['MapGrid'], 'string'],
             [['ComplianceStart', 'ComplianceEnd'], 'safe'],
             [['SectionFlag'], 'required'],
-            [['SectionFlag', 'AvailableWorkOrderCount'], 'integer'],
+            [['SectionFlag', 'AvailableWorkOrderCount', 'ScheduleRequired'], 'integer'],
         ];
     }
 
@@ -50,9 +48,7 @@ class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecor
             'ComplianceEnd' => 'Compliance End',
             'SectionFlag' => 'Section Flag',
             'AvailableWorkOrderCount' => 'Available Work Order Count',
-            'Frequency' => 'Frequency',
-            'Division' => 'Division',
-            'BillingCode' => 'Billing Code',
+            'ScheduleRequired' => 'Schedule Required',
         ];
     }
 }

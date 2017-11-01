@@ -205,82 +205,40 @@ class MileageCardController extends BaseActiveController
 			$mileageCard = MileageCard::findOne($cardID);
 			$date = new DateTime($mileageCard-> MileageStartDate);
 			
-			//get all time entries for Sunday
-			$sundayDate = $date;
-			$sundayStr = $sundayDate->format(BaseActiveController::DATE_FORMAT);
-			$sundayEntries = MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$sundayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-			
-			//get all time entries for Monday
-			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format(BaseActiveController::DATE_FORMAT);
-			$mondayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$mondayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Tuesday	
-			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$tuesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Wednesday	
-			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$wednesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Thursday
-			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format(BaseActiveController::DATE_FORMAT);
-			$thursdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Friday
-			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format(BaseActiveController::DATE_FORMAT);
-			$fridayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$fridayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Saturday
-			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format(BaseActiveController::DATE_FORMAT);
-			$saturdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$satudayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//load data into array
-			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
-			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
-			$dataArray["ApprovedFlag"] = $mileageCard-> MileageCardApprovedFlag;
 			$dayArray =
 			[
-				"Sunday" => $sundayEntries,
-				"Monday" => $mondayEntries,
-				"Tuesday" => $tuesdayEntries,
-				"Wednesday" => $wednesdayEntries,
-				"Thursday" => $thursdayEntries,
-				"Friday" => $fridayEntries,
-				"Saturday" => $saturdayEntries,
+				'Sunday' => [],
+				'Monday' => [],
+				'Tuesday' => [],
+				'Wednesday' => [],
+				'Thursday' => [],
+				'Friday' => [],
+				'Saturday' => [],
 			];
-			$dataArray["MileageEntries"] = [$dayArray];
+			
+			foreach ($dayArray as $day => $entries)
+			{
+				$dayStart = $date->format(BaseActiveController::DATE_FORMAT);
+				$dayEnd = $date->modify('+1 day')->format(BaseActiveController::DATE_FORMAT);
+				$dayArray[$day] = MileageEntry::find()
+				->where([ 'and',
+					['>=', 'MileageEntryDate', $dayStart],
+					['<', 'MileageEntryDate', $dayEnd],
+					['MileageEntryMileageCardID' => $cardID]
+					])
+				->all();
+			}	
+				
+			//load data into array
+			$dataArray['StartDate'] = $mileageCard-> MileageStartDate;
+			$dataArray['EndDate'] = $mileageCard-> MileageEndDate;
+			$dataArray['ApprovedFlag'] = $mileageCard-> MileageCardApprovedFlag;
+			$dataArray['MileageEntries'] = [$dayArray];
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(\Exception $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -418,7 +376,6 @@ class MileageCardController extends BaseActiveController
             $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageStartDate,ProjectID')->all();
             $responseArray['assets'] = $mileageCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
-
 
             if (!empty($responseArray['assets']))
 			{

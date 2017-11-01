@@ -177,77 +177,35 @@ class TimeCardController extends BaseActiveController
 			$timeCard = TimeCard::findOne($cardID);
 			$date = new DateTime($timeCard-> TimeCardStartDate);
 			
-			//get all time entries for Sunday
-			$sundayDate = $date;
-			$sundayStr = $sundayDate->format('Y-m-d H:i:s');
-			$sundayEntries = TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$sundayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-			
-			//get all time entries for Monday
-			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format(BaseActiveController::DATE_FORMAT);
-			$mondayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$mondayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-				
-			//get all time entries for Tuesday	
-			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$tuesdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$tuesdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-				
-			//get all time entries for Wednesday	
-			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$wednesdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$wednesdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-				
-			//get all time entries for Thursday
-			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format(BaseActiveController::DATE_FORMAT);
-			$thursdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$thursdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-				
-			//get all time entries for Friday
-			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format(BaseActiveController::DATE_FORMAT);
-			$fridayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$fridayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-				
-			//get all time entries for Saturday
-			$saturdayDate = $date->modify('1 day');
-			$saturdayStr = $saturdayDate->format(BaseActiveController::DATE_FORMAT);
-			$saturdayEntries =TimeEntry::find()
-				->where("TimeEntryDate ="."'"."$saturdayStr". "'")
-				->andWhere("TimeEntryTimeCardID = $cardID")
-				->all();
-				
-			//load data into array
-			$dataArray["StartDate"] = $timeCard-> TimeCardStartDate;
-			$dataArray["EndDate"] = $timeCard-> TimeCardEndDate;
-			$dataArray["ApprovedFlag"] = $timeCard-> TimeCardApprovedFlag;
 			$dayArray =
 			[
-				"Sunday" => $sundayEntries,
-				"Monday" => $mondayEntries,
-				"Tuesday" => $tuesdayEntries,
-				"Wednesday" => $wednesdayEntries,
-				"Thursday" => $thursdayEntries,
-				"Friday" => $fridayEntries,
-				"Saturday" => $saturdayEntries,
+				'Sunday' => [],
+				'Monday' => [],
+				'Tuesday' => [],
+				'Wednesday' => [],
+				'Thursday' => [],
+				'Friday' => [],
+				'Saturday' => [],
 			];
-			$dataArray["TimeEntries"] = [$dayArray];
+			
+			foreach ($dayArray as $day => $entries)
+			{
+				$dayStart = $date->format(BaseActiveController::DATE_FORMAT);
+				$dayEnd = $date->modify('+1 day')->format(BaseActiveController::DATE_FORMAT);
+				$dayArray[$day] = TimeEntry::find()
+				->where([ 'and',
+					['>=', 'TimeEntryDate', $dayStart],
+					['<', 'TimeEntryDate', $dayEnd],
+					['TimeEntryTimeCardID' => $cardID]
+					])
+				->all();
+			}	
+				
+			//load data into array
+			$dataArray['StartDate'] = $timeCard-> TimeCardStartDate;
+			$dataArray['EndDate'] = $timeCard-> TimeCardEndDate;
+			$dataArray['ApprovedFlag'] = $timeCard-> TimeCardApprovedFlag;
+			$dataArray['TimeEntries'] = [$dayArray];
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
@@ -409,11 +367,9 @@ class TimeCardController extends BaseActiveController
                     throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
                 }
 			}
-			// One code segment to rule them all (Don't Repeat Yourself -- DRY)
-            $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-            $timeCardsQuery = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID');
+            
             if($filter!= null) { //Empty strings or nulls will result in false
-                $timeCardsQuery->andFilterWhere([
+                $timeCards->andFilterWhere([
                     'or',
                     ['like', 'UserName', $filter],
                     ['like', 'UserFirstName', $filter],
@@ -422,7 +378,8 @@ class TimeCardController extends BaseActiveController
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
             }
-            $timeCardsArr = $timeCardsQuery->all();
+			$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+            $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
 

@@ -42,7 +42,14 @@ use Yii;
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
+ * @property integer $EventIndicator
+ * @property integer $OrderProcessed
+ * @property string $Frequency
+ * @property string $Division
+ * @property string $BillingCode
+ * @property string $Rollup
  *
+ * @property TPipelinePoints[] $tPipelinePoints
  * @property UserTb $createdBy
  * @property UserTb $modifiedBy
  */
@@ -62,8 +69,8 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
-            [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Frequency', 'Division', 'BillingCode', 'Rollup'], 'string'],
+            [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'EventIndicator', 'OrderProcessed'], 'integer'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
@@ -112,8 +119,22 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
             'SequenceNumber' => 'Sequence Number',
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
+            'EventIndicator' => 'Event Indicator',
+            'OrderProcessed' => 'Order Processed',
+            'Frequency' => 'Frequency',
+            'Division' => 'Division',
+            'BillingCode' => 'Billing Code',
+            'Rollup' => 'Rollup',
         ];
     }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    // public function getTPipelinePoints()
+    // {
+        // return $this->hasMany(TPipelinePoints::className(), ['WorkOrderID' => 'ID']);
+    // }
 
     /**
      * @return \yii\db\ActiveQuery
