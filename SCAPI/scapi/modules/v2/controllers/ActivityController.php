@@ -306,7 +306,6 @@ class ActivityController extends BaseActiveController
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
-									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 									try{
 										if($mileageEntry->save())
 										{
