@@ -36,7 +36,7 @@ use Yii;
  * @property integer $ActivityElapsedSec
  * @property string $ActivityGPSSource
  * @property string $ActivityGPSTime
- * @property integer $ActivityFixQuality
+ * @property double $ActivityFixQuality
  * @property integer $ActivityNumberOfSatellites
  * @property double $ActivityHDOP
  * @property double $ActivityAltitudemetersAboveMeanSeaLevel
@@ -70,8 +70,8 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT', 'srvUTCDatetime'], 'safe'],
             [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName', 'ActivityMapGrid'], 'string'],
-            [['ActivityCode', 'ActivityPayCode', 'ActivityArchiveFlag', 'ActivityProjectID', 'ActivityElapsedSec', 'ActivityFixQuality', 'ActivityNumberOfSatellites', 'ActivityNumberOfGPSAttempts'], 'integer'],
-            [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed'], 'number'],
+            [['ActivityCode', 'ActivityPayCode', 'ActivityArchiveFlag', 'ActivityProjectID', 'ActivityElapsedSec', 'ActivityNumberOfSatellites', 'ActivityNumberOfGPSAttempts'], 'integer'],
+            [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed', 'ActivityFixQuality'], 'number'],
         ];
     }
 
