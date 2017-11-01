@@ -19,6 +19,7 @@ use app\modules\v2\models\InActiveUsers;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
+use app\modules\v2\controllers\DispatchController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -268,6 +269,10 @@ class UserController extends BaseActiveController
             if (isset($data['UserCreatedUID'])) {
                 unset($data['UserCreatedUID']);
             }
+			//can't update this value
+			if (isset($data['UserActiveFlag'])) {
+				unset($data['UserActiveFlag']);
+			}
 
             //pass new data to user
             $user->attributes = $data;
@@ -440,14 +445,14 @@ class UserController extends BaseActiveController
 			$projectPrefix = $data['ProjectUrlPrefix'];
 			//get user array from json
 			$users = $data['Usernames'];
+			//array of users that errored during sp execution
+			$failedUsers= [];
 			
 			//get user to be deactivated
 			if(BaseActiveController::isSCCT($client))
 			{
 				//ger count in user array
 				$userCount = count($users);
-				//array of users that errored during sp execution
-				$failedUsers= [];
 				
 				//set up connection
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -802,13 +807,6 @@ class UserController extends BaseActiveController
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//get project information
 			$project = Project::findOne($userProjects[$i]['ProjUserProjectID']);
-
-			//if client is populated than original call was to a client controller in which the record has already been updated
-			//so an update does not need to be preformed for that project again
-			if ($project->ProjectUrlPrefix == $client) {
-				$responseArray['UpdatedProjects'][] = $project->ProjectUrlPrefix;
-				continue;
-			}
 				
 			//get model from base active record based on urlPrefix in project
 			$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
@@ -816,7 +814,6 @@ class UserController extends BaseActiveController
 			$userModel::setClient($project->ProjectUrlPrefix);
 			$projectUser = $userModel::find()
 				->where(['UserName' => $username])
-				->andWhere(['UserActiveFlag' => 1])
 				->one();
 
 			$projectUser->attributes = $user->attributes;
@@ -826,10 +823,13 @@ class UserController extends BaseActiveController
 			{
 				$projectUser->UserModifiedUID = $updatedByInProject->UserID;
 			}
-			//can't update this value
-            if (isset($projectUser['UserCreatedUID'])) {
-                unset($projectUser['UserCreatedUID']);
-            }
+			//can't update these values
+			if (isset($projectUser['UserCreatedUID'])) {
+				unset($projectUser['UserCreatedUID']);
+			}
+			if (isset($projectUser['UserActiveFlag'])) {
+				unset($projectUser['UserActiveFlag']);
+			}
 			
 			if ($projectUser->update()) {
 				 //handle potential role change
@@ -930,6 +930,9 @@ class UserController extends BaseActiveController
 
 					$projectUser->UserActiveFlag = 0;
 
+					//unassign all associate work queues for the current project prior to deactivating the user
+					$unassignedFlag = DispatchController::unassignUser($projectUser->UserID, $userProjects[$i]['ProjectUrlPrefix']);
+					
 					if ($projectUser->update()) {
 						/*remove rbac role
 						I dont belive this is reset on reactivation and 
@@ -941,7 +944,7 @@ class UserController extends BaseActiveController
 								$projectAuth->revokeAll($projectUser['UserID']);
 							}
 						}	*/
-						$response[] = $userProjects[$i]['ProjectUrlPrefix'];
+						$response[] = ['Client' => $userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag' => $unassignedFlag];
 					}
 					//reset db to Comet Tracker
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());

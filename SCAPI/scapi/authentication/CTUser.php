@@ -89,7 +89,7 @@ class CTUser extends User
 				$this->logout(true, null, $token);
 			}
 		} else {
-			throw new \yii\web\HttpException(401, 'You are requesting with an invalid credential.');
+			throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
 		}
 	}
 }
