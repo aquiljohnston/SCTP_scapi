@@ -490,30 +490,6 @@ class MileageCardController extends BaseActiveController
         }
     }
 
-    //todo: need to review and remove
-    /*public function paginationProcessor($assetQuery, $page, $listPerPage){
-
-        if($page != null)
-        {
-            // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $pages->pageSizeLimit = [1,100];
-            $offset = $listPerPage*($page-1);
-            $pages->setPageSize($listPerPage);
-            $pages->pageParam = 'mileageCardPage';
-            $pages->params = ['per-page' => $listPerPage, 'mileageCardPage' => $page];
-
-            $assetQuery->offset($offset)
-                ->limit($listPerPage);
-
-            $asset['pages'] = $pages;
-            $asset['Query'] = $assetQuery;
-
-            return $asset;
-        }
-    }*/
-
     // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');

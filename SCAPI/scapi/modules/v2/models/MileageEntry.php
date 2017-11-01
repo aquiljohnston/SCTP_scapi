@@ -7,31 +7,28 @@ use Yii;
 /**
  * This is the model class for table "MileageEntryTb".
  *
- * @property string $MileageEntryID
- * @property string $MileageEntryUserID
+ * @property integer $MileageEntryID
  * @property string $MileageEntryStartingMileage
  * @property string $MileageEntryEndingMileage
  * @property string $MileageEntryStartDate
  * @property string $MileageEntryEndDate
  * @property string $MileageEntryWeekDay
- * @property string $MileageEntryDate
- * @Property String $MileageEntryActiveFlag
  * @property string $MileageEntryType
  * @property integer $MileageEntryMileageCardID
  * @property integer $MileageEntryActivityID
  * @property string $MileageEntryApprovedBy
- * @property integer $MileageEntryStatus
  * @property string $MileageEntryComment
- * @property string $MileageEntryArchiveFlag
- * @property string $MileageEntryCreateDate
  * @property string $MileageEntryCreatedBy
  * @property string $MileageEntryModifiedDate
  * @property string $MileageEntryModifiedBy
+ * @property string $MileageEntryUserName
+ * @property string $MileageEntrySrcDTLT
+ * @property string $MileageEntrySrvDTLT
+ * @property integer $MileageEntryActiveFlag
  *
- * @property ActivityTb $mileageEntryActivity
  * @property MileageCardTb $mileageEntryMileageCard
  */
-class MileageEntry extends BaseActiveRecord
+class MileageEntry extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -48,9 +45,10 @@ class MileageEntry extends BaseActiveRecord
     {
         return [
             [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
-            [['MileageEntryType', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryStatus', 'MileageEntryUserID'], 'integer'],
-            [['MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryActiveFlag', 'MileageEntryWeekDay', 'MileageEntryArchiveFlag', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy'], 'string'],
-            [['MileageEntryDate', 'MileageEntryStartDate', 'MileageEntryEndDate',  'MileageEntryCreateDate', 'MileageEntryModifiedDate'], 'safe']
+            [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT'], 'safe'],
+            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName'], 'string'],
+            [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
+            [['MileageEntryMileageCardID'], 'exist', 'skipOnError' => true, 'targetClass' => MileageCard::className(), 'targetAttribute' => ['MileageEntryMileageCardID' => 'MileageCardID']],
         ];
     }
 
@@ -61,34 +59,24 @@ class MileageEntry extends BaseActiveRecord
     {
         return [
             'MileageEntryID' => 'Mileage Entry ID',
-			'MileageEntryUserID' => 'Mileage Entry User ID',
             'MileageEntryStartingMileage' => 'Mileage Entry Starting Mileage',
             'MileageEntryEndingMileage' => 'Mileage Entry Ending Mileage',
-			'MileageEntryStartDate' => 'Mileage Entry Start Date',
-			'MileageEntryEndDate' => 'Mileage Entry End Date',
-			'MileageEntryWeekDay' => 'Mileage Entry Week Day',
-			'MileageEntryDate' => 'Mileage Entry Date',
-			'MileageEntryActiveFlag' => 'Mileage Entry Active Flag',
-			'MileageEntryType' => 'Mileage Entry Type',
+            'MileageEntryStartDate' => 'Mileage Entry Start Date',
+            'MileageEntryEndDate' => 'Mileage Entry End Date',
+            'MileageEntryWeekDay' => 'Mileage Entry Week Day',
+            'MileageEntryType' => 'Mileage Entry Type',
             'MileageEntryMileageCardID' => 'Mileage Entry Mileage Card ID',
             'MileageEntryActivityID' => 'Mileage Entry Activity ID',
             'MileageEntryApprovedBy' => 'Mileage Entry Approved By',
-            'MileageEntryStatus' => 'Mileage Entry Status',
             'MileageEntryComment' => 'Mileage Entry Comment',
-			'MileageEntryArchiveFlag' => 'Mileage Entry Archive Flag',
-            'MileageEntryCreateDate' => 'Mileage Entry Create Date',
             'MileageEntryCreatedBy' => 'Mileage Entry Created By',
             'MileageEntryModifiedDate' => 'Mileage Entry Modified Date',
             'MileageEntryModifiedBy' => 'Mileage Entry Modified By',
+            'MileageEntryUserName' => 'Mileage Entry User Name',
+            'MileageEntrySrcDTLT' => 'Mileage Entry Src Dtlt',
+            'MileageEntrySrvDTLT' => 'Mileage Entry Srv Dtlt',
+            'MileageEntryActiveFlag' => 'Mileage Entry Active Flag',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getMileageEntryActivity()
-    {
-        return $this->hasOne(ActivityTb::className(), ['ActivtyID' => 'MileageEntryActivityID']);
     }
 
     /**
@@ -96,6 +84,6 @@ class MileageEntry extends BaseActiveRecord
      */
     public function getMileageEntryMileageCard()
     {
-        return $this->hasOne(MileageCardTb::className(), ['MileageCardID' => 'MileageEntryMileageCardID']);
+        return $this->hasOne(MileageCard::className(), ['MileageCardID' => 'MileageEntryMileageCardID']);
     }
 }
