@@ -255,31 +255,24 @@ class DispatchController extends Controller
 			if(array_key_exists('dispatchMap', $data))
 			{
 				$mapCount = count($data['dispatchMap']);
+				//process map dispatch
+				for($i = 0; $i < $mapCount; $i++)
+				{
+					//calls helper method to process assingments
+					$results = self::processDispatch(
+						$data['dispatchMap'][$i]['AssignedUserID'],
+						$createdBy,
+						$data['dispatchMap'][$i]['MapGrid']
+					);
+					$responseData['dispatchMap'][] = $results;
+				}
 			}
 			//check if items exist to dispatch by section, and get section count
 			if(array_key_exists('dispatchSection', $data))
 			{
 				$sectionCount = count($data['dispatchSection']);
-			}
-			//check if items exist to dispatch by asset, and get asset count
-			if(array_key_exists('dispatchAsset', $data))
-			{
-				$assetCount = count($data['dispatchAsset']);
-			}
-			
-			//process map dispatch
-			for($i = 0; $i < $mapCount; $i++)
-			{
-                //calls helper method to process assingments
-                $results = self::processDispatch(
-                    $data['dispatchMap'][$i]['AssignedUserID'],
-                    $createdBy,
-                    $data['dispatchMap'][$i]['MapGrid']
-                );
-				$responseData['dispatchMap'][] = $results;
-			}
-			//process section dispatch
-            for ($i = 0; $i < $sectionCount; $i++) {
+				//process section dispatch
+				for ($i = 0; $i < $sectionCount; $i++) {
                     //calls helper method to process assingments
                     $results = self::processDispatch(
                         $data['dispatchSection'][$i]['AssignedUserID'],
@@ -289,24 +282,29 @@ class DispatchController extends Controller
                     );
                     $responseData['dispatchSection'][] = $results;
                 }
-
-			//process asset dispatch
-			for($i = 0; $i < $assetCount; $i++)
-			{
-			    $scheduledDate = (array_key_exists("ScheduledDate",$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null);
-
-                //calls helper method to process assingments
-                $results = self::processDispatch(
-                    $data['dispatchAsset'][$i]['AssignedUserID'],
-                    $createdBy,
-                    null,
-                    null,
-                    $data['dispatchAsset'][$i]['WorkOrderID'],
-                    $scheduledDate
-                );
-				$responseData['dispatchAsset'][] = $results;
 			}
-			
+			//check if items exist to dispatch by asset, and get asset count
+			if(array_key_exists('dispatchAsset', $data))
+			{
+				$assetCount = count($data['dispatchAsset']);
+				//process asset dispatch
+				for($i = 0; $i < $assetCount; $i++)
+				{
+					$scheduledDate = (array_key_exists("ScheduledDate",$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null);
+
+					//calls helper method to process assingments
+					$results = self::processDispatch(
+						$data['dispatchAsset'][$i]['AssignedUserID'],
+						$createdBy,
+						null,
+						null,
+						$data['dispatchAsset'][$i]['WorkOrderID'],
+						$scheduledDate
+					);
+					$responseData['dispatchAsset'][] = $results;
+				}
+			}
+
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
