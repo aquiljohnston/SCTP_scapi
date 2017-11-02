@@ -228,7 +228,7 @@ class BaseActiveController extends ActiveController
     {
         // set pagination
         $countAssetQuery = clone $assetQuery;
-        $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
+        $pages = new Pagination(['totalCount' => $countAssetQuery->count('*', BaseActiveRecord::getDb())]);
         $pages->pageSizeLimit = [1, 750];
         $offset = $listPerPage * ($page - 1);
         $pages->setPageSize($listPerPage);

@@ -15,6 +15,7 @@ use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
 use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
 use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
+use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -27,6 +28,7 @@ use yii\helpers\ArrayHelper;
 use yii\web\Response;
 use \DateTime;
 use yii\data\Pagination;
+use yii\db\query;
 
 /**
  * MileageCardController implements the CRUD actions for MileageCard model.
@@ -203,84 +205,47 @@ class MileageCardController extends BaseActiveController
 			$response = Yii::$app ->response;
 			$dataArray = [];
 			$mileageCard = MileageCard::findOne($cardID);
-			$date = new DateTime($mileageCard-> MileageStartDate);
 			
-			//get all time entries for Sunday
-			$sundayDate = $date;
-			$sundayStr = $sundayDate->format(BaseActiveController::DATE_FORMAT);
-			$sundayEntries = MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$sundayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-			
-			//get all time entries for Monday
-			$mondayDate = $date->modify('+1 day');	
-			$mondayStr = $mondayDate->format(BaseActiveController::DATE_FORMAT);
-			$mondayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$mondayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Tuesday	
-			$tuesdayDate = $date->modify('+1 day');
-			$tuesdayStr = $tuesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$tuesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$tuesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Wednesday	
-			$wednesdayDate = $date->modify('+1 day');
-			$wednesdayStr = $wednesdayDate->format(BaseActiveController::DATE_FORMAT);
-			$wednesdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$wednesdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Thursday
-			$thursdayDate = $date->modify('+1 day');
-			$thursdayStr = $thursdayDate->format(BaseActiveController::DATE_FORMAT);
-			$thursdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$thursdayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Friday
-			$fridayDate = $date->modify('+1 day');
-			$fridayStr = $fridayDate->format(BaseActiveController::DATE_FORMAT);
-			$fridayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$fridayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//get all time entries for Saturday
-			$satudayDate = $date->modify('1 day');
-			$satudayStr = $satudayDate->format(BaseActiveController::DATE_FORMAT);
-			$saturdayEntries =MileageEntry::find()
-				->where("MileageEntryDate ="."'"."$satudayStr". "'")
-				->andWhere("MileageEntryMileageCardID = $cardID")
-				->all();
-				
-			//load data into array
-			$dataArray["StartDate"] = $mileageCard-> MileageStartDate;
-			$dataArray["EndDate"] = $mileageCard-> MileageEndDate;
-			$dataArray["ApprovedFlag"] = $mileageCard-> MileageCardApprovedFlag;
 			$dayArray =
 			[
-				"Sunday" => $sundayEntries,
-				"Monday" => $mondayEntries,
-				"Tuesday" => $tuesdayEntries,
-				"Wednesday" => $wednesdayEntries,
-				"Thursday" => $thursdayEntries,
-				"Friday" => $fridayEntries,
-				"Saturday" => $saturdayEntries,
+				'Sunday' => ['Entries' => [], 'Total' => 0],
+				'Monday' => ['Entries' => [], 'Total' => 0],
+				'Tuesday' => ['Entries' => [], 'Total' => 0],
+				'Wednesday' => ['Entries' => [], 'Total' => 0],
+				'Thursday' => ['Entries' => [], 'Total' => 0],
+				'Friday' => ['Entries' => [], 'Total' => 0],
+				'Saturday' => ['Entries' => [], 'Total' => 0],
 			];
-			$dataArray["MileageEntries"] = [$dayArray];
+			
+			$entriesQuery = new Query;
+			$entriesQuery->select('*')
+					->from("fnMileageCardEntrysByMileageCard(:cardID)")
+					->addParams([':cardID' => $cardID])
+					->orderBy('MileageEntryStartTime');
+			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+			
+			foreach ($entries as $entry)
+			{
+				$dayArray[$entry['MileageEntryWeekDay']]['Entries'][] = $entry;
+			}
+			foreach ($dayArray as $day => $data)
+			{
+				if(count($dayArray[$day]['Entries']) > 0)
+				{
+					$dayArray[$day]['Total'] = $data['Entries'][0]['DayTotalMiles'];
+				}
+			}
+			
+			//load data into array
+			$dataArray['StartDate'] = $mileageCard-> MileageStartDate;
+			$dataArray['EndDate'] = $mileageCard-> MileageEndDate;
+			$dataArray['ApprovedFlag'] = $mileageCard-> MileageCardApprovedFlag;
+			$dataArray['MileageEntries'] = $dayArray;
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(\Exception $e) 
+		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -524,30 +489,6 @@ class MileageCardController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
-
-    //todo: need to review and remove
-    /*public function paginationProcessor($assetQuery, $page, $listPerPage){
-
-        if($page != null)
-        {
-            // set pagination
-            $countAssetQuery = clone $assetQuery;
-            $pages = new Pagination(['totalCount' => $countAssetQuery->count()]);
-            $pages->pageSizeLimit = [1,100];
-            $offset = $listPerPage*($page-1);
-            $pages->setPageSize($listPerPage);
-            $pages->pageParam = 'mileageCardPage';
-            $pages->params = ['per-page' => $listPerPage, 'mileageCardPage' => $page];
-
-            $assetQuery->offset($offset)
-                ->limit($listPerPage);
-
-            $asset['pages'] = $pages;
-            $asset['Query'] = $assetQuery;
-
-            return $asset;
-        }
-    }*/
 
     // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){
