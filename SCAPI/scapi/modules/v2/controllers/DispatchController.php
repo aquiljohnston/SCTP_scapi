@@ -25,6 +25,7 @@ use app\modules\v2\controllers\PermissionsController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
+use yii\db\Query;
 
 class DispatchController extends Controller 
 {
@@ -74,7 +75,7 @@ class DispatchController extends Controller
 			}
 			else
 			{
-				$orderBy = 'ComplianceEnd';
+				$orderBy = ['MapGrid' => SORT_ASC, 'ComplianceEnd' => SORT_ASC];
 				$envelope = 'mapGrids';
 				$assetQuery = AvailableWorkOrderByMapGrid::find();
 				
@@ -205,7 +206,9 @@ class DispatchController extends Controller
 				]);
 			}
 			
-			$users = $userQuery->asArray()
+			$users = $userQuery
+				->orderBy(['UserLastName'=>SORT_ASC, 'UserFirstName'=>SORT_ASC])
+				->asArray()
 				->all();
 			
 			$responseArray['users'] = $users;
@@ -225,7 +228,7 @@ class DispatchController extends Controller
         }
     }
 	
-	public function actionDispatch($dispatchType = null)
+	public function actionDispatch()
 	{
 		try
 		{
@@ -267,29 +270,16 @@ class DispatchController extends Controller
 			//process map dispatch
 			for($i = 0; $i < $mapCount; $i++)
 			{
-			    if ($dispatchType == null) {
-                    //calls helper method to process assingments
-                    $results = self::processDispatch(
-                        $data['dispatchMap'][$i]['AssignedUserID'],
-                        $createdBy,
-                        $data['dispatchMap'][$i]['MapGrid']
-                    );
-                } else if ($dispatchType == self::DISPATCH_CGE_TYPE) {
-                    //calls helper method to process assingments
-                    $results = self::processDispatch(
-                        $data['dispatchMap'][$i]['AssignedUserID'],
-                        $createdBy,
-                        $data['dispatchMap'][$i]['MapGrid'],
-                        null,
-                        null,
-                        self::DISPATCH_CGE_TYPE
-                    );
-                }
+                //calls helper method to process assingments
+                $results = self::processDispatch(
+                    $data['dispatchMap'][$i]['AssignedUserID'],
+                    $createdBy,
+                    $data['dispatchMap'][$i]['MapGrid']
+                );
 				$responseData['dispatchMap'][] = $results;
 			}
 			//process section dispatch
-            if ($dispatchType == null) {
-                for ($i = 0; $i < $sectionCount; $i++) {
+            for ($i = 0; $i < $sectionCount; $i++) {
                     //calls helper method to process assingments
                     $results = self::processDispatch(
                         $data['dispatchSection'][$i]['AssignedUserID'],
@@ -299,30 +289,21 @@ class DispatchController extends Controller
                     );
                     $responseData['dispatchSection'][] = $results;
                 }
-            }
+
 			//process asset dispatch
 			for($i = 0; $i < $assetCount; $i++)
 			{
-			    if ($dispatchType == self::DISPATCH_CGE_TYPE) {
-                    //calls helper method to process assingments
-                    $results = self::processDispatch(
-                        $data['dispatchAsset'][$i]['AssignedUserID'],
-                        $createdBy,
-                        null,
-                        null,
-                        $data['dispatchAsset'][$i]['WorkOrderID'],
-                        self::DISPATCH_CGE_TYPE,
-                        $data['dispatchAsset'][$i]['ScheduledDate']
-                    );
-                } else {
-                    $results = self::processDispatch(
-                        $data['dispatchAsset'][$i]['AssignedUserID'],
-                        $createdBy,
-                        null,
-                        null,
-                        $data['dispatchAsset'][$i]['WorkOrderID']
-                    );
-                }
+			    $scheduledDate = (array_key_exists("ScheduledDate",$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null);
+
+                //calls helper method to process assingments
+                $results = self::processDispatch(
+                    $data['dispatchAsset'][$i]['AssignedUserID'],
+                    $createdBy,
+                    null,
+                    null,
+                    $data['dispatchAsset'][$i]['WorkOrderID'],
+                    $scheduledDate
+                );
 				$responseData['dispatchAsset'][] = $results;
 			}
 			
@@ -360,30 +341,23 @@ class DispatchController extends Controller
 			}
 			else
 			{
-				$orderBy = 'ComplianceEnd';
+				$orderBy = ['MapGrid' => SORT_ASC, 'ComplianceEnd' => SORT_ASC];
 				$envelope = 'mapGrids';
-				$assetQuery = AssignedWorkQueueByMapGrid::find();
 				
-				if($filter != null)
-				{
-					$assetQuery->andFilterWhere([
-					'or',
-					['like', 'MapGrid', $filter],
-					['like', 'ComplianceStart', $filter],
-					['like', 'ComplianceEnd', $filter],
-					['like', 'AssignedWorkOrderCount', $filter],
-					['like', 'SearchString', $filter],
-					]);
-				}
+				$assetQuery = new Query;
+				$assetQuery->select('*')
+					->from("fnAssignedWorkQueueByMapGrid(:Filter)")
+					->addParams([':Filter' => $filter]);
 			}
 			
 			if($page != null)
 			{
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+				//return $paginationResponse;
 				//use updated query with pagination caluse to get data
 				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
+				->all(BaseActiveRecord::getDb());
 				$responseArray['pages'] = $paginationResponse['pages'];
 				$responseArray[$envelope] = $data;
 			}
@@ -392,6 +366,7 @@ class DispatchController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
+			//$response->data = $results;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -511,7 +486,6 @@ class DispatchController extends Controller
 			for($i = 0; $i < $mapCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignMap'][$i]['AssignedUserID'],
 					$data['unassignMap'][$i]['MapGrid']
 				);
 				$responseData['unassignMap'][] = $results;
@@ -521,7 +495,6 @@ class DispatchController extends Controller
 			for($i = 0; $i < $sectionCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignSection'][$i]['AssignedUserID'],
 					$data['unassignSection'][$i]['MapGrid'],
 					$data['unassignSection'][$i]['SectionNumber']
 				);
@@ -532,7 +505,6 @@ class DispatchController extends Controller
 			for($i = 0; $i < $assetCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignAsset'][$i]['AssignedUserID'],
 					null,
 					null,
 					$data['unassignAsset'][$i]['WorkOrderID']
@@ -559,16 +531,16 @@ class DispatchController extends Controller
 	**Then checks for existing assigned work queue records and removes any from 
 	**results that already exist. Finally creates new records and returns results.
 	*/
-	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null, $dispatchType = null, $scheduledDate = null)
+	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null, $scheduledDate = null)
 	{
             $results = [];
 
             //get status code for Assigned work
             $assignedCode = self::statusCodeLookup('Assigned');
 
-        if ($dispatchType == null) {
+        if ($scheduledDate == null) {
             //build query to get work orders based on map grid and section(optional)
-            if ($workOrder == null && $dispatchType == null) {
+            if ($workOrder == null ) {
                 $workOrdersQuery = AvailableWorkOrder::find()
                     ->where(['MapGrid' => $mapGrid]);
                 if ($section != null) {
@@ -592,17 +564,11 @@ class DispatchController extends Controller
 				$successFlag = 0;
 
 				//check for existing records
-                if ($dispatchType != null) {
-                    $assignedWork = WorkQueue::find()
-                        ->where(['WorkOrderID' => $workOrders[$i]->ID])
-                        ->andWhere(['<>', 'WorkQueueStatus', 102])
-                        ->count();
-                }else{
-                    $assignedWork = WorkQueue::find()
-                        ->where(['WorkOrderID' => $workOrders[$i]->WorkOrderID])
-                        ->andWhere(['<>', 'WorkQueueStatus', 102])
-                        ->count();
-                }
+                $assignedWork = WorkQueue::find()
+                    ->where(['WorkOrderID' => $workOrders[$i]->WorkOrderID])
+                    ->andWhere(['<>', 'WorkQueueStatus', 102])
+                    ->count();
+
 				//if no record exist create one
 				if($assignedWork < 1)
 				{
@@ -612,14 +578,9 @@ class DispatchController extends Controller
 					$newAssignment->AssignedUserID = $userID;
 					$newAssignment->WorkQueueStatus = $assignedCode;
                     $newAssignment->SectionNumber = $workOrders[$i]->SectionNumber;
-                    
-                    if ($dispatchType != self::DISPATCH_CGE_TYPE) {
-                        $newAssignment->WorkOrderID = $workOrders[$i]->WorkOrderID;
-                    }else{
-                        $newAssignment->WorkOrderID = $workOrders[$i]->ID;
-                    }
+                    $newAssignment->WorkOrderID = $workOrders[$i]->WorkOrderID;
 
-                    if ($dispatchType == self::DISPATCH_CGE_TYPE && $scheduledDate != null)
+                    if ($scheduledDate != null)
                         $newAssignment->ScheduledDispatchDate = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
 
 					if($newAssignment->save())
@@ -640,7 +601,7 @@ class DispatchController extends Controller
 			{
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
 			}
-			if ($dispatchType != self::DISPATCH_CGE_TYPE || $scheduledDate == null) {
+			if ($scheduledDate == null) {
                 $results = [
                     'MapGrid' => $workOrders[$i]->MapGrid,
                     'AssignedUserID' => $userID,
@@ -652,7 +613,7 @@ class DispatchController extends Controller
                 $results = [
                     'MapGrid' => $workOrders[$i]->MapGrid,
                     'AssignedUserID' => $userID,
-                    'WorkOrderID' => $workOrders[$i]->ID,
+                    'WorkOrderID' => $workOrders[$i]->WorkOrderID,
                     'ScheduledDispatchDate' => $scheduledDate,
                     'SuccessFlag' => $successFlag
                 ];
@@ -672,13 +633,12 @@ class DispatchController extends Controller
 		return $results;
 	}
 	
-	private static function processUnassigned($userID, $mapGrid = null, $section = null, $workOrder = null)
+	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null)
 	{
 		$successFlag = 0;
 		try{
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :AssignedUserID,:MapGrid, :SectionNum , :WorkOrderID");
-			$processJSONCommand->bindParam(':AssignedUserID', $userID,  \PDO::PARAM_INT);
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID");
 			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
@@ -688,7 +648,6 @@ class DispatchController extends Controller
 		catch(\Exception $e)
 		{
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
-			'AssignedUserID' => $userID,
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
@@ -698,7 +657,6 @@ class DispatchController extends Controller
 		
 		//build response format
 		return [
-			'AssignedUserID' => $userID,
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
@@ -748,7 +706,7 @@ class DispatchController extends Controller
 
         } else {
             $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['ID' => $workOrder]);
+                ->where(['WorkOrderID' => $workOrder]);
         }
         $workOrders = $workOrdersQuery->all();
 
