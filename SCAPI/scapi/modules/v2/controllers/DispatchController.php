@@ -536,7 +536,6 @@ class DispatchController extends Controller
 		//get status code for Assigned work
 		$assignedCode = self::statusCodeLookup('Assigned');
 		$successFlag = 1;
-		$workOrdersCount = count($workOrders);
 
 		//pull work orders to update
         if ($scheduledDate == null) {
@@ -556,6 +555,7 @@ class DispatchController extends Controller
             $workOrders = self::getCgeWorkOrders($mapGrid, $workOrder);
         }
 		
+		$workOrdersCount = count($workOrders);
 		$db = BaseActiveRecord::getDb();
 		$transaction = $db->beginTransaction();
 		try{
