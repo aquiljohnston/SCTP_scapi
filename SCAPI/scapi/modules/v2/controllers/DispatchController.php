@@ -532,11 +532,13 @@ class DispatchController extends Controller
 	*/
 	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null, $scheduledDate = null)
 	{
-            $results = [];
+		$results = [];
+		//get status code for Assigned work
+		$assignedCode = self::statusCodeLookup('Assigned');
+		$successFlag = 1;
+		$workOrdersCount = count($workOrders);
 
-            //get status code for Assigned work
-            $assignedCode = self::statusCodeLookup('Assigned');
-
+		//pull work orders to update
         if ($scheduledDate == null) {
             //build query to get work orders based on map grid and section(optional)
             if ($workOrder == null ) {
@@ -554,32 +556,25 @@ class DispatchController extends Controller
             $workOrders = self::getCgeWorkOrders($mapGrid, $workOrder);
         }
 		
-		$workOrdersCount = count($workOrders);
-
-		// test
 		$db = BaseActiveRecord::getDb();
-		if($db === NULL)
-			throw new NotFoundHttpException();
-			
 		$transaction = $db->beginTransaction();
-		$successFlag = 1;
 		try{
 			//loop work orders to assign
 			for($i = 0; $i < $workOrdersCount; $i++)
 			{
-				$newAssignment = new WorkQueue;
-				$newAssignment->CreatedBy = $createdBy;
-				$newAssignment->CreatedDate = date(BaseActiveController::DATE_FORMAT);
-				$newAssignment->AssignedUserID = $userID;
-				$newAssignment->WorkQueueStatus = $assignedCode;
-				$newAssignment->SectionNumber = $workOrders[$i]->SectionNumber;
-				$newAssignment->WorkOrderID = $workOrders[$i]->WorkOrderID;
-
-				if ($scheduledDate != null)
-					$newAssignment->ScheduledDispatchDate = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
+				$dataArray = [
+				'CreatedBy' => $createdBy,
+				'CreatedDate' => date(BaseActiveController::DATE_FORMAT),
+				'AssignedUserID' => $userID,
+				'WorkQueueStatus' => $assignedCode,
+				'SectionNumber' => $workOrders[$i]->SectionNumber,
+				'WorkOrderID' => $workOrders[$i]->WorkOrderID
+				];
 				
-				if(!$newAssignment->save())
-					throw BaseActiveController::modelValidationException($newAssignment);
+				if ($scheduledDate != null)
+					$dataArray['ScheduledDispatchDate'] = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
+				
+				$db->createCommand()->insert('tWorkQueue', $dataArray)->execute();
 			} 
 			$transaction->commit();
 		} catch(\Exception $e)
