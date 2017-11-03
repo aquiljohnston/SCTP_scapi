@@ -26,6 +26,7 @@ use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Connection;
 use yii\db\Query;
+use yii\web\NotFoundHttpException;
 
 class DispatchController extends Controller 
 {
@@ -555,80 +556,45 @@ class DispatchController extends Controller
 		
 		$workOrdersCount = count($workOrders);
 
-		//loop work orders to assign
-		for($i = 0; $i < $workOrdersCount; $i++)
-		{
-			try{
-				$successFlag = 0;
-
-				//check for existing records
-                $assignedWork = WorkQueue::find()
-                    ->where(['WorkOrderID' => $workOrders[$i]->WorkOrderID])
-                    ->andWhere(['<>', 'WorkQueueStatus', 102])
-                    ->count();
-
-				//if no record exist create one
-				if($assignedWork < 1)
-				{
-					$newAssignment = new WorkQueue;
-					$newAssignment->CreatedBy = $createdBy;
-					$newAssignment->CreatedDate = date(BaseActiveController::DATE_FORMAT);
-					$newAssignment->AssignedUserID = $userID;
-					$newAssignment->WorkQueueStatus = $assignedCode;
-                    $newAssignment->SectionNumber = $workOrders[$i]->SectionNumber;
-                    $newAssignment->WorkOrderID = $workOrders[$i]->WorkOrderID;
-
-                    if ($scheduledDate != null)
-                        $newAssignment->ScheduledDispatchDate = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
-
-					if($newAssignment->save())
-					{
-						$successFlag = 1;
-					}
-					else
-					{
-						throw BaseActiveController::modelValidationException($newAssignment);
-					}
-				}
-				else
-				{
-					$successFlag = 1;
-				}
-			}
-			catch(\Exception $e)
+		// test
+		$db = BaseActiveRecord::getDb();
+		if($db === NULL)
+			throw new NotFoundHttpException();
+			
+		$transaction = $db->beginTransaction();
+		$successFlag = 1;
+		try{
+			//loop work orders to assign
+			for($i = 0; $i < $workOrdersCount; $i++)
 			{
-				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
-			}
-			if ($scheduledDate == null) {
-                $results = [
-                    'MapGrid' => $workOrders[$i]->MapGrid,
-                    'AssignedUserID' => $userID,
-                    'SectionNumber' => $workOrders[$i]->SectionNumber,
-                    'WorkOrderID' => $workOrders[$i]->WorkOrderID,
-                    'SuccessFlag' => $successFlag
-                ];
-            }else{
-                $results = [
-                    'MapGrid' => $workOrders[$i]->MapGrid,
-                    'AssignedUserID' => $userID,
-                    'WorkOrderID' => $workOrders[$i]->WorkOrderID,
-                    'ScheduledDispatchDate' => $scheduledDate,
-                    'SuccessFlag' => $successFlag
-                ];
-            }
-		}
-		if($workOrdersCount == 0)
-		{
-			$results = [
-				'MapGrid' => $mapGrid,
-				'AssignedUserID' => $userID,
-				'SectionNumber' => $section,
-				'WorkOrderID' => $workOrder,
-				'SuccessFlag' => 1
-			];
-		}
+				$newAssignment = new WorkQueue;
+				$newAssignment->CreatedBy = $createdBy;
+				$newAssignment->CreatedDate = date(BaseActiveController::DATE_FORMAT);
+				$newAssignment->AssignedUserID = $userID;
+				$newAssignment->WorkQueueStatus = $assignedCode;
+				$newAssignment->SectionNumber = $workOrders[$i]->SectionNumber;
+				$newAssignment->WorkOrderID = $workOrders[$i]->WorkOrderID;
 
-		return $results;
+				if ($scheduledDate != null)
+					$newAssignment->ScheduledDispatchDate = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
+				
+				if(!$newAssignment->save())
+					throw BaseActiveController::modelValidationException($newAssignment);
+			} 
+			$transaction->commit();
+		} catch(\Exception $e)
+		{
+			$transaction->rollback();				
+			$successFlag = 0;
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
+		}
+		return $results = [
+			'MapGrid' => $mapGrid,
+			'AssignedUserID' => $userID,
+			'SectionNumber' => $section,
+			'WorkOrderID' => $workOrder,
+			'SuccessFlag' => $successFlag
+		];
 	}
 	
 	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null)
