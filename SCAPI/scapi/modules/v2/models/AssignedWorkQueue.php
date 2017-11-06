@@ -48,6 +48,7 @@ use Yii;
  * @property string $AssignedBy
  * @property integer $AssignedByID
  * @property integer $AssignedToID
+ * @property string $Address
  */
 class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -67,7 +68,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['WorkQueueID', 'WorkOrderID'], 'required'],
             [['WorkQueueID', 'WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'AssignedTo', 'AssignedBy'], 'string'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'AssignedTo', 'AssignedBy', 'Address'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
         ];
@@ -120,6 +121,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'AssignedBy' => 'Assigned By',
             'AssignedByID' => 'Assigned By ID',
             'AssignedToID' => 'Assigned To ID',
+            'Address' => 'Address',
         ];
     }
 }
