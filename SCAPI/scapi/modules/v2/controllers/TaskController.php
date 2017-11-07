@@ -37,9 +37,19 @@ class TaskController extends Controller
 	{
 		//TODO add call to db
 		return [
-			'1' => 'Training',
-			'2' => 'Leak Survey',
-			'3' => 'Dropping Kids At The Pool',
+			[
+				'FilterName' => 'Training',
+				'SortSeq' => 1,
+				'FieldDisplayValue' => 'Training',
+			],[
+				'FilterName' => 'Leak Survey',
+				'SortSeq' => 2,
+				'FieldDisplayValue' => 'Leak Survey',
+			],[
+				'FilterName' => 'Atmospheric Corrosion',
+				'SortSeq' => 3,
+				'FieldDisplayValue' => 'Atmospheric Corrosion',
+			],
 		];
 	}
 	
@@ -47,8 +57,15 @@ class TaskController extends Controller
 	{
 		//TODO add call to db
 		return [
-			'1' => 'Training',
-			'2' => 'Leak Survey',
+			[
+				'FilterName' => 'Training',
+				'SortSeq' => 1,
+				'FieldDisplayValue' => 'Training',
+			],[
+				'FilterName' => 'Leak Survey',
+				'SortSeq' => 2,
+				'FieldDisplayValue' => 'Leak Survey',
+			],
 		];
 	}
 }
