@@ -42,6 +42,7 @@ use Yii;
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
+ * @property string $Address
  */
 class AvailableWorkOrder extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -61,7 +62,7 @@ class AvailableWorkOrder extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['WorkOrderID'], 'required'],
             [['WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter'], 'integer'],
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape'], 'string'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Address'], 'string'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
         ];
@@ -108,6 +109,7 @@ class AvailableWorkOrder extends \app\modules\v2\models\BaseActiveRecord
             'SequenceNumber' => 'Sequence Number',
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
+            'Address' => 'Address',
         ];
     }
 }

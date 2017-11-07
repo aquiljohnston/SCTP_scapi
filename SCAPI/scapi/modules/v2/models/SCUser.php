@@ -30,6 +30,9 @@ use app\modules\v2\models\Auth;
  * @property string $UserInactiveDTLTOffset
  * @property string $UserUID
  * @property string $UserPassword
+ * @property integer $UserPaySourceID
+ * @property integer $UserOasisID
+ * @property integer $SCCEmployeeID
  *
  * @property EquipmentTb[] $equipmentTbs
  * @property ProjectUserTb[] $projectUserTbs
@@ -53,7 +56,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
         return [
             [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
 			'UserPassword', 'UserUID'], 'string'],
-            [['UserActiveFlag', 'UserArchiveFlag'], 'integer'],
+            [['UserActiveFlag', 'UserArchiveFlag', 'UserPaySourceID', 'UserOasisID', 'SCCEmployeeID'], 'integer'],
             [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
         ];
     }
@@ -85,6 +88,9 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
 			'UserUID' => 'User UID',
 			'UserPassword' => 'User Password',
+			'UserPaySourceID' => 'User Pay Source ID',
+			'UserOasisID' => 'User Oasis ID',
+			'SCCEmployeeID' => 'SCC Employee ID',
         ];
     }
 
