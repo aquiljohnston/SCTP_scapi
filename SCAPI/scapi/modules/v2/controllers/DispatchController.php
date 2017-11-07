@@ -155,6 +155,7 @@ class DispatchController extends Controller
 				['like', 'ComplianceStart', $filter],
 				['like', 'ComplianceEnd', $filter],
 				['like', 'SectionNumber', $filter],
+                ['like', 'Address', $filter],
 				]);
 			}
 			
@@ -412,6 +413,7 @@ class DispatchController extends Controller
 				['like', 'ComplianceEnd', $filter],
 				['like', 'SectionNumber', $filter],
 				['like', 'AssignedTo', $filter],
+                ['like', 'Address', $filter],
 				]);
 			}
 			
