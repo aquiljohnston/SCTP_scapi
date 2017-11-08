@@ -18,7 +18,6 @@ use Yii;
  * @property string $ProjectUrlPrefix
  * @property string $ProjectStartDate
  * @property string $ProjectEndDate
- * @property string $ProjectArchiveFlag
  * @property string $ProjectCreateDate
  * @property integer $ProjectCreatedBy
  * @property string $ProjectModifiedDate
@@ -27,7 +26,7 @@ use Yii;
  * @property double $ProjectSurveyGPSInterval
  * @property integer $ProjectSurveyGPSMinDistance
  * @property string $ProjectMinimumAppVersion
- * @property string $ProjectAppVersionDate
+ * @property string $ProjectRefreshDateTime
  * @property string $ProjectLandingPage 
  * @property integer $ProjectQBProjectID 
  * @property integer $ProjectReferenceID 
@@ -52,9 +51,9 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectArchiveFlag', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion', 'ProjectLandingPage'], 'string'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion', 'ProjectLandingPage'], 'string'],
             [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID'], 'integer'],
-            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectAppVersionDate'], 'safe'],
+            [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
 			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
 			[['ProjectUrlPrefix'], 'unique']
         ];
@@ -77,7 +76,6 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
 			'ProjectState' => 'Project State',
             'ProjectStartDate' => 'Project Start Date',
             'ProjectEndDate' => 'Project End Date',
-			'ProjectArchiveFlag' => 'Project Archive Flag',
             'ProjectCreateDate' => 'Project Create Date',
             'ProjectCreatedBy' => 'Project Created By',
             'ProjectModifiedDate' => 'Project Modified Date',
@@ -86,10 +84,10 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
 			'ProjectSurveyGPSInterval' => 'Project Survey GPS Interval',
 			'ProjectSurveyGPSMinDistance' => 'Project Survey GPS Min Distance',
 			'ProjectMinimumAppVersion' => 'Project Minimum App Version',
-			'ProjectAppVersionDate' => 'Project App Version Date',
 			'ProjectLandingPage' => 'Project Landing Page',
 			'ProjectQBProjectID' => 'Project QB Project ID',
 			'ProjectReferenceID' => 'Project Reference ID',
+			'ProjectRefreshDateTime' => 'Project Refresh Date Time',
         ];
     }
 
