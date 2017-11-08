@@ -63,7 +63,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     {
         return [
             [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
-			'UserPassword', 'UserUID', 'UserOasisID'], 'string', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserRefreshDateTime'],
+			'UserPassword', 'UserUID', 'UserOasisID', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserRefreshDateTime'], 'string'],
             [['UserActiveFlag', 'UserArchiveFlag', 'UserPaySourceID', 'SCCEmployeeID'], 'integer'],
             [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
         ];
