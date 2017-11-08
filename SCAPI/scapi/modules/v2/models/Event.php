@@ -59,7 +59,7 @@ use Yii;
  * @property string $GPSType
  * @property string $GPSSentence
  * @property string $GPSTime
- * @property integer $FixQuality
+ * @property double $FixQuality
  * @property integer $NumberOfSatellites
  * @property double $HDOP
  * @property double $AltitudeMetersAboveMeanSeaLevel
@@ -91,9 +91,9 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'CGEReason', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'RiserOnly', 'MultiMeter', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
+            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'RiserOnly', 'MultiMeter', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
-            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
+            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
             [['InspectionID'], 'required'],
             [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
         ];
