@@ -90,10 +90,7 @@ class MileageEntryController extends BaseActiveController
 
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			
-			//create date
-			$model->MileageEntryCreateDate = Parent::getDate();
-			
+
 			if($model-> save())
 			{
 				$response->setStatusCode(201);
@@ -149,7 +146,7 @@ class MileageEntryController extends BaseActiveController
 			
 				foreach($approvedEntries as $entry)
 				{
-					$entry-> MileageEntryActiveFlag = "Inactive";
+					$entry-> MileageEntryActiveFlag = 0;
 					$entry-> MileageEntryModifiedDate = Parent::getDate();
 					$entry-> MileageEntryModifiedBy = $deactivatedBy;
 					$entry-> update();

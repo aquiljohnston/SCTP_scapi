@@ -12,24 +12,18 @@ use Yii;
  * @property string $TimeEntryStartTime
  * @property string $TimeEntryEndTime
  * @property string $TimeEntryWeekDay
- * @property string $TimeEntryDate
- * @property string $TimeEntryActiveFlag
- * @property string $TimeEntryHours
- * @property integer $TimeEntryMinutes
  * @property integer $TimeEntryTimeCardID
- * @property integer $TimeCardFK
  * @property integer $TimeEntryActivityID
  * @property string $TimeEntryComment
- * @property string $TimeEntryArchiveFlag
- * @property string $TimeEntryCreateDate
  * @property string $TimeEntryCreatedBy
  * @property string $TimeEntryModifiedDate
  * @property string $TimeEntryModifiedBy
- *
- * @property ActivityTb $timeEntryActivity
- * @property TimeCardTb $timeEntryTimeCard
+ * @property string $TimeEntryUserName
+ * @property string $TimeEntrySrcDTLT
+ * @property string $TimeEntrySvrDTLT
+ * @property integer $TimeEntryActiveFlag
  */
-class TimeEntry extends BaseActiveRecord
+class TimeEntry extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -45,9 +39,10 @@ class TimeEntry extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['TimeEntryStartTime', 'TimeEntryEndTime', 'TimeEntryDate', 'TimeEntryCreateDate', 'TimeEntryModifiedDate'], 'safe'],
-            [['TimeEntryUserID', 'TimeEntryMinutes', 'TimeEntryTimeCardID', 'TimeEntryActivityID', 'TimeCardFK'], 'integer'],
-            [['TimeEntryComment', 'TimeEntryActiveFlag', 'TimeEntryWeekDay', 'TimeEntryHours', 'TimeEntryArchiveFlag', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy'], 'string']
+            [['TimeEntryUserID', 'TimeEntryTimeCardID', 'TimeEntryActivityID', 'TimeEntryActiveFlag'], 'integer'],
+            [['TimeEntryStartTime', 'TimeEntryEndTime', 'TimeEntryModifiedDate', 'TimeEntrySrcDTLT', 'TimeEntrySvrDTLT'], 'safe'],
+            [['TimeEntryWeekDay', 'TimeEntryComment', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy', 'TimeEntryUserName'], 'string'],
+            [['TimeEntryEndTime', 'TimeEntryStartTime', 'TimeEntryUserID'], 'unique', 'targetAttribute' => ['TimeEntryEndTime', 'TimeEntryStartTime', 'TimeEntryUserID'], 'message' => 'The combination of Time Entry User ID, Time Entry Start Time and Time Entry End Time has already been taken.'],
         ];
     }
 
@@ -58,39 +53,20 @@ class TimeEntry extends BaseActiveRecord
     {
         return [
             'TimeEntryID' => 'Time Entry ID',
-			'TimeEntryUserID' => 'Time Entry User ID',
+            'TimeEntryUserID' => 'Time Entry User ID',
             'TimeEntryStartTime' => 'Time Entry Start Time',
             'TimeEntryEndTime' => 'Time Entry End Time',
-            'TimeEntryDate' => 'Time Entry Date',
-			'TimeEntryWeekDay' => 'Time Entry Week Day',
-			'TimeEntryActiveFlag' => 'Time Entry Active Flag',
-			'TimeEntryHours' => 'Time Entry Hours',
-			'TimeEntryMinutes' => 'Time Entry Minutes',
+            'TimeEntryWeekDay' => 'Time Entry Week Day',
             'TimeEntryTimeCardID' => 'Time Entry Time Card ID',
-			'TimeCardFK' => 'Time Card FK',
             'TimeEntryActivityID' => 'Time Entry Activity ID',
             'TimeEntryComment' => 'Time Entry Comment',
-			'TimeEntryArchiveFlag' => 'Time Entry Archive Flag',
-            'TimeEntryCreateDate' => 'Time Entry Create Date',
             'TimeEntryCreatedBy' => 'Time Entry Created By',
             'TimeEntryModifiedDate' => 'Time Entry Modified Date',
             'TimeEntryModifiedBy' => 'Time Entry Modified By',
+            'TimeEntryUserName' => 'Time Entry User Name',
+            'TimeEntrySrcDTLT' => 'Time Entry Src Dtlt',
+            'TimeEntrySvrDTLT' => 'Time Entry Svr Dtlt',
+            'TimeEntryActiveFlag' => 'Time Entry Active Flag',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTimeEntryActivity()
-    {
-        return $this->hasOne(ActivityTb::className(), ['ActivtyID' => 'TimeEntryActivityID']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTimeEntryTimeCard()
-    {
-        return $this->hasOne(TimeCardTb::className(), ['TimeCardID' => 'TimeEntryTimeCardID']);
     }
 }
