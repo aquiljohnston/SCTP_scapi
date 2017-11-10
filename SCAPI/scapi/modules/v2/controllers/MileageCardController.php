@@ -285,8 +285,8 @@ class MileageCardController extends BaseActiveController
 	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null)
 	{
 		// RBAC permission check is embedded in this action	
-		// try
-		// {
+		try
+		{
 			//get headers
 			$headers = getallheaders();
 			//get client header
@@ -376,11 +376,11 @@ class MileageCardController extends BaseActiveController
 				$response->setStatusCode(404);
 				return $response;
 			}
-		// } catch (ForbiddenHttpException $e) {
-            // throw new ForbiddenHttpException;
-        // } catch(\Exception $e) {
-			// throw new \yii\web\HttpException(400);
-		// }
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
 	}
 
     public function actionGetMileageCardsHistoryData($week)
