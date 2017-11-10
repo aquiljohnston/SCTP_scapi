@@ -34,7 +34,7 @@ use Yii;
  * @property string $GPSType
  * @property string $GPSSentence
  * @property string $GPSTime
- * @property integer $FixQuality
+ * @property double $FixQuality
  * @property integer $NumberOfSatellites
  * @property double $HDOP
  * @property double $AltitudeMetersAboveMeanSeaLevel
@@ -65,9 +65,9 @@ class Asset extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['AssetTabletID', 'MapGrid', 'HouseNo', 'Street', 'Apt', 'City', 'State', 'ReverseGeoLocationString', 'MeterID', 'PipelineType', 'Grade1ReleaseReasonType', 'Comments', 'Photo1Path', 'Inspection', 'GPSType', 'GPSSentence', 'GPSTime', 'CheckSumData', 'Zip'], 'string'],
-            [['InspectionID', 'CreatedUserID', 'AOCs', 'FixQuality', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
+            [['InspectionID', 'CreatedUserID', 'AOCs', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
             [['Grade1ReleaseDateTime', 'SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
-            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
+            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
             [['CreatedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedUserID' => 'UserID']],
         ];
     }
