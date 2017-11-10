@@ -292,6 +292,9 @@ class MileageCardController extends BaseActiveController
 			//get client header
 			$client = $headers['X-Client'];
 			
+			//url decode filter value
+			$filter = urldecode($filter);
+			
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
