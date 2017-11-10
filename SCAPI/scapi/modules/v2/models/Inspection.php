@@ -45,6 +45,7 @@ use Yii;
  * @property integer $IsWorkOrderUpdated
  * @property string $Photo1Path
  * @property string $PipelineType
+ * @property string $Comments
  *
  * @property UserTb $createdBy
  */
@@ -64,7 +65,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType'], 'string'],
+            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType', 'Comments'], 'string'],
             [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
@@ -116,6 +117,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             'IsWorkOrderUpdated' => 'Is Work Order Updated',
             'Photo1Path' => 'Photo1 Path',
             'PipelineType' => 'Pipeline Type',
+            'Comments' => 'Comments',
         ];
     }
 
