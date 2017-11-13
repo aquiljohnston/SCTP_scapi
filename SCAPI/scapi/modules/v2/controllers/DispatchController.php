@@ -66,6 +66,7 @@ class DispatchController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
+			$divisionFlag = self::getDivisionFlag();
 			
 			if($mapGridSelected != null)
 			{
@@ -102,6 +103,7 @@ class DispatchController extends Controller
 				$data = $paginationResponse['Query']->orderBy($orderBy)
 				->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray['divisionFlag'] = $divisionFlag;
 				$responseArray[$envelope] = $data;
 			}
 			
@@ -673,4 +675,15 @@ class DispatchController extends Controller
 
         return $workOrders;
     }
+	
+	//helper method returns flag to determine if division column needs to be displayed on the web
+	//will return a flag 1/0 based on if any division values for getAvaliableByMapGrid do not equal null
+	private static function getDivisionFlag()
+	{
+		$divisionCount = AvailableWorkOrderByMapGrid::find()
+			->where(['not', ['Division'=>null]])
+			->count();
+		$flag = $divisionCount > 0 ? 1 : 0;
+		return $flag;
+	}
 }
