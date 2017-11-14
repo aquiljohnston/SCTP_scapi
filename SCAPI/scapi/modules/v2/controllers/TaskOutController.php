@@ -55,7 +55,7 @@ class TaskOutController extends Controller
 					$newTaskOut->attributes = $data[$i];
 					$newTaskOut->ActivityID = $activityID;
 					
-					//check if Calibration already exist.
+					//check if taskout already exist.
 					$previousTaskOut = TaskOut::find()
 						->where(['CreatedUserID' => $newTaskOut->CreatedUserID])
 						->andWhere(['MapGrid' => $newTaskOut->MapGrid])

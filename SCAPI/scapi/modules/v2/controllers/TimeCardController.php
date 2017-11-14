@@ -11,6 +11,7 @@ use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
+use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\authentication\TokenAuth;
 use yii\db\Connection;
@@ -23,6 +24,7 @@ use yii\helpers\ArrayHelper;
 use yii\web\Response;
 use \DateTime;
 use yii\data\Pagination;
+use yii\db\Query;
 
 /**
  * TimeCardController implements the CRUD actions for TimeCard model.
@@ -175,37 +177,42 @@ class TimeCardController extends BaseActiveController
 			$response = Yii::$app ->response;
 			$dataArray = [];
 			$timeCard = TimeCard::findOne($cardID);
-			$date = new DateTime($timeCard-> TimeCardStartDate);
 			
 			$dayArray =
 			[
-				'Sunday' => [],
-				'Monday' => [],
-				'Tuesday' => [],
-				'Wednesday' => [],
-				'Thursday' => [],
-				'Friday' => [],
-				'Saturday' => [],
+				'Sunday' => ['Entries' => [], 'Total' => 0],
+				'Monday' => ['Entries' => [], 'Total' => 0],
+				'Tuesday' => ['Entries' => [], 'Total' => 0],
+				'Wednesday' => ['Entries' => [], 'Total' => 0],
+				'Thursday' => ['Entries' => [], 'Total' => 0],
+				'Friday' => ['Entries' => [], 'Total' => 0],
+				'Saturday' => ['Entries' => [], 'Total' => 0],
 			];
 			
-			foreach ($dayArray as $day => $entries)
+			$entriesQuery = new Query;
+			$entriesQuery->select('*')
+					->from("fnTimeCardEntrysByTimeCard(:cardID)")
+					->addParams([':cardID' => $cardID])
+					->orderBy('TimeEntryStartTime');
+			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+			
+			foreach ($entries as $entry)
 			{
-				$dayStart = $date->format(BaseActiveController::DATE_FORMAT);
-				$dayEnd = $date->modify('+1 day')->format(BaseActiveController::DATE_FORMAT);
-				$dayArray[$day] = TimeEntry::find()
-				->where([ 'and',
-					['>=', 'TimeEntryDate', $dayStart],
-					['<', 'TimeEntryDate', $dayEnd],
-					['TimeEntryTimeCardID' => $cardID]
-					])
-				->all();
-			}	
+				$dayArray[$entry['TimeEntryWeekDay']]['Entries'][] = $entry;
+			}
+			foreach ($dayArray as $day => $data)
+			{
+				if(count($dayArray[$day]['Entries']) > 0)
+				{
+					$dayArray[$day]['Total'] = $data['Entries'][0]['DayTotalTime'];
+				}
+			}
 				
 			//load data into array
 			$dataArray['StartDate'] = $timeCard-> TimeCardStartDate;
 			$dataArray['EndDate'] = $timeCard-> TimeCardEndDate;
 			$dataArray['ApprovedFlag'] = $timeCard-> TimeCardApprovedFlag;
-			$dataArray['TimeEntries'] = [$dayArray];
+			$dataArray['TimeEntries'] = $dayArray;
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
@@ -274,6 +281,9 @@ class TimeCardController extends BaseActiveController
 			//get client header
 			$client = $headers['X-Client'];
 
+			//url decode filter value
+			$filter = urldecode($filter);
+			
 			//set db target headers
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());

@@ -255,7 +255,6 @@ class ActivityController extends BaseActiveController
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
-									$timeEntry->TimeEntryCreateDate = Parent::getDate();
 									try{
 										if($timeEntry->save())
 										{
@@ -309,7 +308,6 @@ class ActivityController extends BaseActiveController
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
-									$mileageEntry->MileageEntryCreateDate = Parent::getDate();
 									try{
 										if($mileageEntry->save())
 										{

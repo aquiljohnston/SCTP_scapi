@@ -19,7 +19,7 @@ use yii\web\Response;
  */
 class ProjectController extends BaseActiveController
 {
-	public $modelClass = 'app\modules\v1\models\Project'; 
+	public $modelClass = 'app\modules\v2\models\Project'; 
 	
 	/**
 	* sets verb filters for http request
@@ -73,7 +73,7 @@ class ProjectController extends BaseActiveController
                     'SELECT CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
                     ClientTb.ClientName
                     FROM ProjectTb 
-                    JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
+                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
                     LEFT JOIN [ClientTb] ON ProjectTb.ProjectClientID = ClientTb.ClientID
                     WHERE ProjectTb.ProjectId = :id';
 			    $project = Project::getDb()->createCommand($sql)->bindValue(':id', $id)
@@ -298,7 +298,7 @@ class ProjectController extends BaseActiveController
 	* @returns json containing two user arrays
 	* @throws \yii\web\HttpException
     */	
-	public function actionGetUserRelationships($projectID, $filter = null)
+	public function actionGetUserRelationships($projectID, $uaFilter = null, $aFilter = null)
 	{
 		try
 		{
@@ -312,12 +312,12 @@ class ProjectController extends BaseActiveController
 			$project = Project::findOne($projectID);
 			$assignedUsers = $project->getUsers()
 				->where(['UserActiveFlag' => 1]);
-            if ($filter != null){
+            if ($aFilter != null){
                 $assignedUsers->andFilterWhere([
                     'or',
-                    ['like', 'UserFirstName', $filter],
-                    ['like', 'UserLastName', $filter],
-                    ['like', 'UserName', $filter],
+                    ['like', 'UserFirstName', $aFilter],
+                    ['like', 'UserLastName', $aFilter],
+                    ['like', 'UserName', $aFilter],
                 ]);
             }
             $assignedUsers = $assignedUsers->orderBy('UserLastName')
@@ -334,12 +334,12 @@ class ProjectController extends BaseActiveController
 			//get all users
 			$allUsers = SCUser::find()
 				->where(['UserActiveFlag' => 1]);
-            if ($filter != null){
+            if ($uaFilter != null){
                 $allUsers->andFilterWhere([
                     'or',
-                    ['like', 'UserFirstName', $filter],
-                    ['like', 'UserLastName', $filter],
-                    ['like', 'UserName', $filter],
+                    ['like', 'UserFirstName', $uaFilter],
+                    ['like', 'UserLastName', $uaFilter],
+                    ['like', 'UserName', $uaFilter],
                 ]);
             }
             $allUsers = $allUsers->orderBy('UserLastName')
