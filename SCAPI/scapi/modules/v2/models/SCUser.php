@@ -25,15 +25,26 @@ use app\modules\v2\models\Auth;
  * @property string $UserModifiedDate
  * @property string $UserCreatedUID
  * @property string $UserModifiedUID
- * @property string $UserCreateDTLTOffset
+ * @property string $UserCreatedDTLTOffset
  * @property string $UserModifiedDTLTOffset
  * @property string $UserInactiveDTLTOffset
  * @property string $UserUID
  * @property string $UserPassword
+ * @property integer $UserPaySourceID
+ * @property string $UserOasisID
+ * @property integer $SCCEmployeeID
+ * @property string $UserAddress 
+ * @property string $UserCity 
+ * @property string $UserState 
+ * @property string $UserZip 
+ * @property string $UserLocation 
+ * @property string $UserPayMethod 
+ * @property string $UserPreferredEmail 
+ * @property string $UserRefreshDateTime 
  *
  * @property EquipmentTb[] $equipmentTbs
  * @property ProjectUserTb[] $projectUserTbs
- * @property KeyTb $userKey
+ * @property TTaskOut[] $tTaskOuts
  */
 class SCUser extends BaseActiveRecord  implements IdentityInterface
 {	
@@ -52,8 +63,8 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     {
         return [
             [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
-			'UserPassword', 'UserUID'], 'string'],
-            [['UserActiveFlag', 'UserArchiveFlag'], 'integer'],
+			'UserPassword', 'UserUID', 'UserOasisID', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserRefreshDateTime'], 'string'],
+            [['UserActiveFlag', 'UserArchiveFlag', 'UserPaySourceID', 'SCCEmployeeID'], 'integer'],
             [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
         ];
     }
@@ -85,6 +96,17 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
 			'UserUID' => 'User UID',
 			'UserPassword' => 'User Password',
+			'UserPaySourceID' => 'User Pay Source ID',
+			'UserOasisID' => 'User Oasis ID',
+			'SCCEmployeeID' => 'SCC Employee ID',
+			'UserAddress' => 'User Address',
+			'UserCity' => 'User City',
+			'UserState' => 'User State',
+			'UserZip' => 'User Zip',
+			'UserLocation' => 'User Location',
+			'UserPayMethod' => 'User Pay Method',
+			'UserPreferredEmail' => 'User Preferred Email',
+			'UserRefreshDateTime' => 'User Refresh Date Time',
         ];
     }
 
@@ -112,6 +134,15 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
         return $this->hasMany(Project::className(), ['ProjectID' => 'ProjUserProjectID'])
 			->via('projectUserTbs');
     }
+	
+	/**
+     * @return \yii\db\ActiveQuery
+	 * probably need TODO set this up for the join table
+     */
+	// public function getTTaskOuts()
+   // {
+	   // return $this->hasMany(TTaskOut::className(), ['CreatedUserID' => 'UserID']);
+   // }
 	
 	/**
      * Finds an identity by the given ID.

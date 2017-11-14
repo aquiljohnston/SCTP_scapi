@@ -86,9 +86,6 @@ class TimeEntryController extends BaseActiveController
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			
-			//create date
-			$model->TimeEntryCreateDate = Parent::getDate();
 
 			//created by
 			$userID = self::getUserFromToken()->UserID;
@@ -148,7 +145,7 @@ class TimeEntryController extends BaseActiveController
 			
 				foreach($approvedEntries as $entry)
 				{
-					$entry-> TimeEntryActiveFlag = "Inactive";
+					$entry-> TimeEntryActiveFlag = 0;
 					$entry-> TimeEntryModifiedDate = Parent::getDate();
 					$entry-> TimeEntryModifiedBy = $deactivatedBy;
 					$entry-> update();

@@ -72,7 +72,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const DEMO_DEV = 'demo';
 	//beta models
 	const DEMO_USER = self::BASE_USER;
-	const DEMO_EVENT = self::BASE_EVENT;
+	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
 	//beta auth manager
 	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 	
