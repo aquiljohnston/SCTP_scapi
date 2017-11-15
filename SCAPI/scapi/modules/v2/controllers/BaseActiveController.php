@@ -7,6 +7,7 @@ use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\BaseUser;
 use app\modules\v2\models\TabletDataInsertArchive;
+use app\modules\v2\models\WebDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\authentication\TokenAuth;
@@ -180,6 +181,20 @@ class BaseActiveController extends ActiveController
 		TabletDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new TabletDataInsertArchive;
+		$archiveRecord->CreatedUserUID = (string)$userUID;
+		$archiveRecord->TransactionType = $type;
+		$archiveRecord->InsertedData = $json;
+		
+		$archiveRecord->save();
+	}
+	
+	//Archives incoming web json records for logging and data recovery
+	//TODO: potentially want to merge with archive json function, not doing this now because it would require a lot of refactoring.
+	public static function archiveWebJson($json, $type, $userUID, $client)
+	{
+		WebDataInsertArchive::setClient($client);
+		
+		$archiveRecord =  new WebDataInsertArchive;
 		$archiveRecord->CreatedUserUID = (string)$userUID;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
