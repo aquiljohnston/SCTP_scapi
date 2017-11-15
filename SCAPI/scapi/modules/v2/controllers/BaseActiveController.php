@@ -10,6 +10,7 @@ use app\modules\v2\models\TabletDataInsertArchive;
 use app\modules\v2\models\WebDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
+use app\modules\v2\models\WebJSONDataInsertError;
 use app\authentication\TokenAuth;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
@@ -221,6 +222,23 @@ class BaseActiveController extends ActiveController
 		TabletJSONDataInsertError::setClient($client);
 		
 		$archiveError = new TabletJSONDataInsertError;
+		$archiveError->InsertedData = $data;
+		$archiveError->InsertedData2 = json_encode($data2);
+		$archiveError->InsertedData3 = json_encode($data3);
+		$archiveError->InsertedData4 = json_encode($data4);
+		$archiveError->InsertedData5 = json_encode($data5);
+		$archiveError->ErrorNumber = $error->getCode();
+		$archiveError->ErrorMessage = $error->getMessage();
+		
+		$archiveError->save();
+	}
+	
+	//inserts a new error record into tWebJSONDataInsertError table for given $client
+	public static function archiveWebErrorJson($data, $error, $client, $data2 = null, $data3 = null, $data4 = null, $data5 = null)
+	{
+		WebJSONDataInsertError::setClient($client);
+		
+		$archiveError = new WebJSONDataInsertError;
 		$archiveError->InsertedData = $data;
 		$archiveError->InsertedData2 = json_encode($data2);
 		$archiveError->InsertedData3 = json_encode($data3);
