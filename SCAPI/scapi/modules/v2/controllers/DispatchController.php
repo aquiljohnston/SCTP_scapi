@@ -238,14 +238,21 @@ class DispatchController extends Controller
 		{
 			//get client headers
 			$headers = getallheaders();
+			$client = $headers['X-Client'];
 			// get created by
-			$createdBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
+			$user = BaseActiveController::getClientUser($client);
+			$createdBy = $user->UserID;
+			$username = $user->UserName;
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			
 			//get post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Dispatch', $username, $client);
+			
 			//create response format
 			$responseData = [];
 			$responseData['dispatchMap'] = [];
@@ -452,11 +459,16 @@ class DispatchController extends Controller
 		{
 			//set db
 			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = $headers['X-Client'];
+			BaseActiveRecord::setClient($client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Unassign', BaseActiveController::getClientUser($client)->UserName, $client);
+			
 			//create response format
 			$responseData = [];
 			$responseData['unassignMap'] = [];
