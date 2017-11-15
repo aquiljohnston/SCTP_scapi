@@ -328,6 +328,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -538,6 +539,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -597,7 +599,7 @@ class DispatchController extends Controller
 		{
 			$transaction->rollback();				
 			$successFlag = 0;
-			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 		}
 		return $results = [
 			'MapGrid' => $mapGrid,
@@ -622,7 +624,7 @@ class DispatchController extends Controller
 		}
 		catch(\Exception $e)
 		{
-			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
