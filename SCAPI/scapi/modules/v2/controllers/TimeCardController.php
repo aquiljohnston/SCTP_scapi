@@ -281,6 +281,9 @@ class TimeCardController extends BaseActiveController
 			//get client header
 			$client = $headers['X-Client'];
 
+			//url decode filter value
+			$filter = urldecode($filter);
+			
 			//set db target headers
 			$headers = getallheaders();
 			TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
