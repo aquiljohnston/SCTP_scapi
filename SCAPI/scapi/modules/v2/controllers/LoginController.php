@@ -31,8 +31,6 @@ class LoginController extends Controller
 			{
 				$client = $headers['X-Client'];
 			}
-			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -43,6 +41,17 @@ class LoginController extends Controller
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 
+			//archive json
+			BaseActiveController::archiveWebJson(
+				json_encode($data),
+				'Login',
+				//ternary check if username is in data set to prevent potential error on bad json
+				(array_key_exists('UserName', $data) ? $data['UserName'] : null),
+				$client);
+			
+			//set db target
+			SCUser::setClient(BaseActiveController::urlPrefix());
+			
 			//login is a Yii model:
 			$userName = new SCUser();
 
@@ -116,6 +125,15 @@ class LoginController extends Controller
 			SCUser::setClient(BaseActiveController::urlPrefix());
 			//create response object
 			$response = Yii::$app->response;
+			
+			//archive request
+			//check if header contains xclient
+			$client = (array_key_exists('X-Client', $headers) ? $headers['X-Client'] : null);
+			BaseActiveController::archiveWebJson(
+				null,
+				'Logout',
+				($client !== null ? BaseActiveController::getClientUser($client)->UserName : null),
+				$client);
 			
 			if(array_key_exists('Authorization', $headers))
 			{
