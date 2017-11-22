@@ -311,7 +311,7 @@ class DispatchController extends Controller
 						$data['dispatchAsset'][$i]['AssignedUserID'],
 						$createdBy,
 						null,
-						null,
+						$data['dispatchAsset'][$i]['SectionNumber'],
 						$data['dispatchAsset'][$i]['WorkOrderID'],
 						$scheduledDate
 					);
@@ -528,7 +528,9 @@ class DispatchController extends Controller
 				$results = self::processUnassigned(
 					null,
 					null,
-					$data['unassignAsset'][$i]['WorkOrderID']
+					$data['unassignAsset'][$i]['WorkOrderID'],
+					//ternary check if user id is present
+					(array_key_exists('AssignedUserID', $data['unassignAsset'][$i]) ? $data['unassignAsset'][$i]['AssignedUserID'] : null)
 				);
 				$responseData['unassignAsset'][] = $results;
 			}
@@ -556,9 +558,11 @@ class DispatchController extends Controller
 	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null, $scheduledDate = null)
 	{
 		$results = [];
+		$workOrders = [];
 		//get status code for Assigned work
 		$assignedCode = self::statusCodeLookup('Assigned');
 		$successFlag = 1;
+		$isAsset = 0;
 
 		//pull work orders to update
         if ($scheduledDate == null) {
@@ -569,16 +573,17 @@ class DispatchController extends Controller
                 if ($section != null) {
                     $workOrdersQuery->andWhere(['SectionNumber' => $section]);
                 }
+				 $workOrders = $workOrdersQuery->all();
+				 $workOrdersCount = count($workOrders);
             } else {
-                $workOrdersQuery = AvailableWorkOrder::find()
-                    ->where(['WorkOrderID' => $workOrder]);
+                $isAsset = true;
+				$workOrdersCount = 1;
             }
-            $workOrders = $workOrdersQuery->all();
         } else {
             $workOrders = self::getCgeWorkOrders($mapGrid, $workOrder);
+			$workOrdersCount = count($workOrders);
         }
 		
-		$workOrdersCount = count($workOrders);
 		$db = BaseActiveRecord::getDb();
 		$transaction = $db->beginTransaction();
 		try{
@@ -590,9 +595,16 @@ class DispatchController extends Controller
 				'CreatedDate' => date(BaseActiveController::DATE_FORMAT),
 				'AssignedUserID' => $userID,
 				'WorkQueueStatus' => $assignedCode,
-				'SectionNumber' => $workOrders[$i]->SectionNumber,
-				'WorkOrderID' => $workOrders[$i]->WorkOrderID
 				];
+				
+				//assign workorder/section based on data available
+				if($isAsset){
+					$dataArray['SectionNumber'] = $section;
+					$dataArray['WorkOrderID'] = $workOrder;
+				}else{
+					$dataArray['SectionNumber'] = $workOrders[$i]->SectionNumber;
+					$dataArray['WorkOrderID'] = $workOrders[$i]->WorkOrderID;
+				}
 				
 				if ($scheduledDate != null)
 					$dataArray['ScheduledDispatchDate'] = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
@@ -615,15 +627,16 @@ class DispatchController extends Controller
 		];
 	}
 	
-	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null)
+	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null, $assignedUserID = null)
 	{
 		$successFlag = 0;
 		try{
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID");
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID, :AssignedUserID");
 			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
+			$processJSONCommand->bindParam(':AssignedUserID', $assignedUserID,  \PDO::PARAM_INT);
 			$processJSONCommand->execute();
 			$successFlag = 1;
 		}
@@ -633,6 +646,7 @@ class DispatchController extends Controller
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
+			'UserID' => $assignedUserID,
 			'SuccessFlag' => $successFlag
 			]);
 		}
@@ -642,6 +656,7 @@ class DispatchController extends Controller
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
+			'UserID' => $assignedUserID,
 			'SuccessFlag' => $successFlag
 		];
 	}
