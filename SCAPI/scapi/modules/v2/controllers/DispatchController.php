@@ -119,6 +119,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson('actionGetAvailable', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -183,6 +184,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson('actionGetAvailableAssets', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -228,6 +230,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson('actionGetSurveyors', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
     }
@@ -385,6 +388,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson('actionGetAssigned', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -450,6 +454,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson('actionGetAssignedAssets', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
