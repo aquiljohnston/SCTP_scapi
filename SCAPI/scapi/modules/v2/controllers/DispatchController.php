@@ -66,6 +66,7 @@ class DispatchController extends Controller
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
 			$responseArray = [];
+			$divisionFlag = self::getDivisionFlag();
 			
 			if($mapGridSelected != null)
 			{
@@ -102,6 +103,7 @@ class DispatchController extends Controller
 				$data = $paginationResponse['Query']->orderBy($orderBy)
 				->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
+				$responseArray['divisionFlag'] = $divisionFlag;
 				$responseArray[$envelope] = $data;
 			}
 			
@@ -236,14 +238,21 @@ class DispatchController extends Controller
 		{
 			//get client headers
 			$headers = getallheaders();
+			$client = $headers['X-Client'];
 			// get created by
-			$createdBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
+			$user = BaseActiveController::getClientUser($client);
+			$createdBy = $user->UserID;
+			$username = $user->UserName;
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			
 			//get post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Dispatch', $username, $client);
+			
 			//create response format
 			$responseData = [];
 			$responseData['dispatchMap'] = [];
@@ -319,6 +328,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -450,11 +460,16 @@ class DispatchController extends Controller
 		{
 			//set db
 			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = $headers['X-Client'];
+			BaseActiveRecord::setClient($client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Unassign', BaseActiveController::getClientUser($client)->UserName, $client);
+			
 			//create response format
 			$responseData = [];
 			$responseData['unassignMap'] = [];
@@ -524,6 +539,7 @@ class DispatchController extends Controller
         }
         catch(\Exception $e)
         {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -583,7 +599,7 @@ class DispatchController extends Controller
 		{
 			$transaction->rollback();				
 			$successFlag = 0;
-			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workOrders[$i]);
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 		}
 		return $results = [
 			'MapGrid' => $mapGrid,
@@ -608,7 +624,7 @@ class DispatchController extends Controller
 		}
 		catch(\Exception $e)
 		{
-			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
 			'MapGrid' => $mapGrid,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
@@ -673,4 +689,15 @@ class DispatchController extends Controller
 
         return $workOrders;
     }
+	
+	//helper method returns flag to determine if division column needs to be displayed on the web
+	//will return a flag 1/0 based on if any division values for getAvaliableByMapGrid do not equal null
+	private static function getDivisionFlag()
+	{
+		$divisionCount = AvailableWorkOrderByMapGrid::find()
+			->where(['not', ['Division'=>null]])
+			->count();
+		$flag = $divisionCount > 0 ? 1 : 0;
+		return $flag;
+	}
 }

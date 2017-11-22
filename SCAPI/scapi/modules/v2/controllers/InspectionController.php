@@ -174,17 +174,17 @@ class InspectionController extends Controller
 				$eventID = null;
 				//get dynamic event model
 				$eventModel = BaseActiveRecord::getEventModel($client);
-				$newEvent = new $eventModel;
-				$newEvent->attributes = $data[$i];
-				$newEvent->InspectionID = $inspectionID;
 				
 				//check if Event already exist.
 				$previousEvent = $eventModel::find()
-					->where(['EventTabletID' => $newEvent->EventTabletID])
+					->where(['EventTabletID' => $data[$i]['EventTabletID']])
 					//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 					->one();
 					
 				if ($previousEvent == null) {
+					$newEvent = new $eventModel;
+					$newEvent->attributes = $data[$i];
+					$newEvent->InspectionID = $inspectionID;
 					if ($newEvent->save()) {
 						$eventSuccessFlag = 1;
 						$eventID = $newEvent->ID;
@@ -192,9 +192,20 @@ class InspectionController extends Controller
 						throw BaseActiveController::modelValidationException($newEvent);
 					}
 				}
-				else
+				elseif($_SERVER['REQUEST_METHOD'] === 'PUT')
 				{
 					//Handle updates if applicable.
+					$previousEvent->attributes = $data[$i];
+					if($previousEvent->update())
+					{
+						$eventSuccessFlag = 1;
+						$eventID = $previousEvent->ID;
+					} else {
+						throw BaseActiveController::modelValidationException($previousEvent);
+					}
+				}
+				else
+				{
 					//send success if Event record was already saved previously
 					$eventSuccessFlag = 1;
 					$eventID = $previousEvent->ID;
@@ -221,17 +232,16 @@ class InspectionController extends Controller
 			$assetSuccessFlag = 0;
 			$assetID = null;
 		
-			$newAsset = new Asset;
-			$newAsset->attributes = $data;
-			$newAsset->InspectionID = $inspectionID;
-			
 			//check if Asset already exist.
 			$previousAsset = Asset::find()
-				->where(['AssetTabletID' => $newAsset->AssetTabletID])
+				->where(['AssetTabletID' => $data['AssetTabletID']])
 				//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 				->one();
 				
 			if ($previousAsset == null) {
+				$newAsset = new Asset;
+				$newAsset->attributes = $data;
+				$newAsset->InspectionID = $inspectionID;
 				if ($newAsset->save()) {
 					$assetSuccessFlag = 1;
 					$assetID = $newAsset->ID;
@@ -239,9 +249,20 @@ class InspectionController extends Controller
 					throw BaseActiveController::modelValidationException($newAsset);
 				}
 			}
-			else
+			elseif($_SERVER['REQUEST_METHOD'] === 'PUT')
 			{
 				//Handle updates if applicable.
+				$previousAsset->attributes = $data;
+				if($previousAsset->update())
+				{
+					$assetSuccessFlag = 1;
+					$assetID = $previousAsset->ID;
+				} else {
+					throw BaseActiveController::modelValidationException($previousAsset);
+				}
+			}
+			else
+			{
 				//send success if Asset record was already saved previously
 				$assetSuccessFlag = 1;
 				$assetID = $previousAsset->ID;
@@ -357,7 +378,7 @@ class InspectionController extends Controller
 	public function actionUpdate()
 	{
 		try
-		{
+		{			
 			//set db
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
@@ -367,7 +388,7 @@ class InspectionController extends Controller
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($client)->UserID, $client);
 			
 			$inspectionData = $data['activity'][0]['Inspection'];
 			
@@ -392,21 +413,19 @@ class InspectionController extends Controller
 							$successFlag = 1;
 							unset($data['activity'][0]['Inspection']);
 							$responseData = ActivityController::actionCreate($data)->data;
-							
-							//process event data if available
-							if(array_key_exists('Event', $inspectionData))
-							{
-								if($inspectionData['Event'] != null)
-									//TODO: make sure I get all of the params for this call
-									$eventResponse = self::processEvent($inspectionData['Event'], $client, $inspectionID);
-							}
-							
+							//build base response
 							$responseData['activity'][0]['Inspection'] = [
 								'ID' => $inspection->ID,
 								'InspectionTabletID' => $inspection->InspectionTabletID,
 								'SuccessFlag' => $successFlag
 							];
-							$responseData['activity'][0]['Inspection']['Event'] = $eventResponse;
+							
+							//process event data if available
+							if(array_key_exists('Event', $inspectionData) && $inspectionData['Event'] != null)
+								$responseData['activity'][0]['Inspection']['Event'] = self::processEvent($inspectionData['Event'], $client, $inspectionID);
+							//process asset data if available
+							if(array_key_exists('Asset', $inspectionData) && $inspectionData['Asset'] != null)
+								$responseData['activity'][0]['Inspection']['Asset'] = self::processAsset($inspectionData['Asset'], $client, $inspectionID);
 						}
 						else
 						{
@@ -449,14 +468,15 @@ class InspectionController extends Controller
 		{
 			//set db
 			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client =  $headers['X-Client'];
+			BaseActiveRecord::setClient($client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($client)->UserID, $client);
 			
 			//create response format
 			$responseData = [];
@@ -471,7 +491,7 @@ class InspectionController extends Controller
 				//try catch to log individual errors
 				try
 				{	
-					$successFlag = 0;
+					$successFlag = 0; 
 					//get dynamic event model
 					$eventModel = BaseActiveRecord::getEventModel($client);
 					$event = $eventModel::find()
