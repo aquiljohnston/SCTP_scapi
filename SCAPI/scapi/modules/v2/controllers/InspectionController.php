@@ -468,14 +468,15 @@ class InspectionController extends Controller
 		{
 			//set db
 			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client =  $headers['X-Client'];
+			BaseActiveRecord::setClient($client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($client)->UserID, $client);
 			
 			//create response format
 			$responseData = [];
@@ -490,7 +491,7 @@ class InspectionController extends Controller
 				//try catch to log individual errors
 				try
 				{	
-					$successFlag = 0;
+					$successFlag = 0; 
 					//get dynamic event model
 					$eventModel = BaseActiveRecord::getEventModel($client);
 					$event = $eventModel::find()
