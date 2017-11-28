@@ -20,14 +20,12 @@ use app\modules\v2\models\Auth;
  * @property string $UserAppRoleType
  * @property string $UserComments
  * @property integer $UserActiveFlag
- * @property integer $UserArchiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
  * @property string $UserCreatedUID
  * @property string $UserModifiedUID
  * @property string $UserCreatedDTLTOffset
  * @property string $UserModifiedDTLTOffset
- * @property string $UserInactiveDTLTOffset
  * @property string $UserUID
  * @property string $UserPassword
  * @property integer $UserPaySourceID
@@ -64,8 +62,8 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
         return [
             [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
 			'UserPassword', 'UserUID', 'UserOasisID', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserRefreshDateTime'], 'string'],
-            [['UserActiveFlag', 'UserArchiveFlag', 'UserPaySourceID', 'SCCEmployeeID'], 'integer'],
-            [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
+            [['UserActiveFlag', 'UserPaySourceID', 'SCCEmployeeID'], 'integer'],
+            [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
         ];
     }
 
@@ -86,14 +84,12 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserAppRoleType' => 'User App Role Type',
             'UserComments' => 'User Comments',
             'UserActiveFlag' => 'User Active Flag',
-			'UserArchiveFlag' => 'User Archive Flag',
             'UserCreatedDate' => 'User Created Date',
             'UserModifiedDate' => 'User Modified Date',
             'UserCreatedUID' => 'User Created UID',
             'UserModifiedUID' => 'User Modified UID',
             'UserCreatedDTLTOffset' => 'User Created Dtltoffset',
             'UserModifiedDTLTOffset' => 'User Modified Dtltoffset',
-            'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
 			'UserUID' => 'User UID',
 			'UserPassword' => 'User Password',
 			'UserPaySourceID' => 'User Pay Source ID',
