@@ -288,55 +288,117 @@ class InspectionController extends Controller
 			{
 				$successFlag = 0;
 				$workOrderID = null;
+				//query to get work queue workOrderID if completed
 				$workQueue = WorkQueue::find()
+					->select('WorkOrderID')
+					//get id from inspection
 					->where(['ID' => $inspectionData['WorkQueueID']])
 					->andWhere(['WorkQueueStatus' => WorkQueueController::$completed])
 					->one();
+				//check if completed work queue was found
 				if($workQueue != null)
 				{
+					//get work order id from work queue
 					$workOrderID = $workQueue->WorkOrderID;
+					//count all work queues
+					$totalWorkQueueCount = WorkQueue::find()
+						->where(['WorkOrderID' => $workOrderID])
+						->count();
+					//get work order
 					$workOrder = WorkOrder::find()
-						->where(['ID' => $workQueue->WorkOrderID])
+						->where(['ID' => $workOrderID])
 						->one();
-					if($workOrder != null)
+					//check if work order was found and not completed yet
+					if($workOrder != null && $workOrder->CompletedFlag != 1)
 					{
-						//mark work order completed if not already done
-						if(!$workOrder->CompletedFlag == 1)
+						//skip if record is cge SP handles these during task out to prevent attempt counter errrors
+						if(!array_key_exists('IsCGEFlag', $inspectionData) || $inspectionData['IsCGEFlag'] != 1)
 						{
-							if( !array_key_exists('IsCGEFlag', $inspectionData) || $inspectionData['IsCGEFlag'] != 1)
+							//check work queue count
+							if($totalWorkQueueCount > 1)
+							//handle for records with multiple work queues
 							{
+								//count all completed work queues associated with this work order
+								$completedWorkQueueCount = WorkQueue::find()
+									->where(['WorkOrderID' => $workOrderID])
+									->andWhere(['WorkQueueStatus' => WorkQueueController::$completed])
+									->count();
 								//handle appropriate updates to work order record
-								$completedDate = $inspectionData['CreatedDate'];
-								$eventIndicator = 0;
-								$completedFlag = 0;
-								$inspectionAttemptCounter = $workOrder->InspectionAttemptCounter + 1;
-								if((array_key_exists('IsAOCFlag', $inspectionData) && $inspectionData['IsAOCFlag'] == 1)
-									|| ( array_key_exists('IsAdHocFlag', $inspectionData) && $inspectionData['IsAdHocFlag'] == 1) 
-									|| ( array_key_exists('IsIndicationFlag', $inspectionData) && $inspectionData['IsIndicationFlag'] == 1))
+								$eventIndicator = $workOrder->EventIndicator;
+								/*////////////////////////////////////
+								if EI 2 && IACount 0
+									successFlag = 1
+								else
+									if EI != 1
+										override EI
+									update EI
+									if total == completed 
+										complete WO
+										increment IA
+									update WO
+										successFlag = 1
+								////////////////////////////////////*/
+								//if record is EI of 2 and IA of 0 indicates a Dual Dispatach CGE, in which case no cation will be taken
+								if($eventIndicator === 2 && $workOrder->InspectionAttemptCounter == 0)
 								{
-									if($inspectionData['IsAdHocFlag'])
-									{
-										$eventIndicator = 3;
-										$completedFlag = 1;
-									}
-									else
-									{
-										$eventIndicator = 1;
-										$completedFlag = 1;
-									}
+									$successFlag = 1;
 								}
 								else
 								{
-									$eventIndicator = 0;
-									$completedFlag = 1;
+									//IE != 1 override IE value with new value
+									if($eventIndicator != 1)
+									{
+										if(array_key_exists('Event', $inspectionData) && count($inspectionData['Event']) > 0)
+										{
+											$eventIndicator = 1;
+										}
+										else
+										{
+											$eventIndicator = 0;
+										}
+									}
+									//assign new data
+									$workOrder->EventIndicator = $eventIndicator;
+									$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
+									$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
+									//only mark work order as completed and increment counter if this is the only open record.
+									if($totalWorkQueueCount === $completedWorkQueueCount)
+									{
+										$workOrder->CompletedFlag = 1;
+										$workOrder->CompletedDate = $inspectionData['CreatedDate'];
+										$workOrder->InspectionAttemptCounter =  $workOrder->InspectionAttemptCounter + 1;
+									}
+									//update
+									if($workOrder->update())
+									{
+										$successFlag = 1;
+									}
+									else
+									{
+										throw BaseActiveController::modelValidationException($workOrder);
+									}
+								}
+							}
+							//handle for records without multiple work queues
+							else
+							{
+								//handle appropriate updates to work order record
+								$eventIndicator = 0;
+								if(array_key_exists('IsAdHocFlag', $inspectionData) && $inspectionData['IsAdHocFlag'] == 1)
+								{
+									$eventIndicator = 3;
+								}
+								elseif(array_key_exists('Event', $inspectionData) && count($inspectionData['Event']) > 0)
+								{
+									$eventIndicator = 1;
 								}
 								//assign new data
 								$workOrder->EventIndicator = $eventIndicator;
-								$workOrder->CompletedFlag = $completedFlag;
-								$workOrder->CompletedDate = $completedDate;
+								$workOrder->CompletedFlag = 1;
+								$workOrder->CompletedDate = $inspectionData['CreatedDate'];
 								$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
-								$workOrder->ModifiedDateTime = $completedDate;
-								$workOrder->InspectionAttemptCounter = $inspectionAttemptCounter;
+								$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
+								$workOrder->InspectionAttemptCounter =  $workOrder->InspectionAttemptCounter + 1;
 								//update
 								if($workOrder->update())
 								{
@@ -347,10 +409,10 @@ class InspectionController extends Controller
 									throw BaseActiveController::modelValidationException($workOrder);
 								}
 							}
-							else
-							{
-								$successFlag = 1;
-							}
+						}
+						else
+						{
+							$successFlag = 1;
 						}
 					}	
 				}
