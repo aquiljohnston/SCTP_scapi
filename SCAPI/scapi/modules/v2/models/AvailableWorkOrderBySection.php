@@ -43,6 +43,8 @@ class AvailableWorkOrderBySection extends \app\modules\v2\models\BaseActiveRecor
             'SectionNumber' => 'Section Number',
             'AvailableWorkOrderCount' => 'Available Work Order Count',
             'LocationType' => 'Location Type',
+            'InspectionType' => 'Inspection Type',
+            'BillingCode' => 'Billing Code',
         ];
     }
 }

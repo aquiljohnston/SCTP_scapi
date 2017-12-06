@@ -112,7 +112,7 @@ class BaseActiveController extends ActiveController
 		}
 		return SCUser::findIdentityByAccessToken($token);
 	}
-	
+
 	//function gets user from client table based on token and client header
 	public static function getClientUser($client)
 	{
@@ -256,7 +256,7 @@ class BaseActiveController extends ActiveController
 		$e = new ErrorException(get_class($model) . ' Validation Exception: ' . json_encode($model->errors), 42, 2);
 		return $e;
 	}
-
+	
     public function paginationProcessor($assetQuery, $page, $listPerPage)
     {
         // set pagination

@@ -49,6 +49,8 @@ class AvailableWorkOrderCGEByMapGrid extends \app\modules\v2\models\BaseActiveRe
             'SectionFlag' => 'Section Flag',
             'AvailableWorkOrderCount' => 'Available Work Order Count',
             'ScheduleRequired' => 'Schedule Required',
+            'InspectionType' => 'Inspection Type',
+            'BillingCode' => 'Billing Code',
         ];
     }
 }
