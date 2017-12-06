@@ -233,7 +233,6 @@ class AssetAddress extends \app\modules\v2\models\BaseActiveRecord
             'Grade1ReleaseDateTime' => 'Grade1 Release Date Time',
             'PipelineType' => 'Pipeline Type',
             'InspectionType' => 'Inspection Type',
-            'BillingCode' => 'Billing Code',
         ];
     }
 }
