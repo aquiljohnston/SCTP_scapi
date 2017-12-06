@@ -47,6 +47,8 @@ class AvailableWorkOrderCGEByWODetails extends \app\modules\v2\models\BaseActive
             'InspectionDateTime' => 'Inspection Date Time',
             'Image' => 'Image',
             'ID' => 'ID',
+            'BillingCode' => 'Billing Code',
+            'InspectionType' => 'Inspection Type',
         ];
     }
 }
