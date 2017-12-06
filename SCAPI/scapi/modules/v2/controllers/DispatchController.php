@@ -146,7 +146,6 @@ class DispatchController extends Controller
 				$assetQuery->andFilterWhere([
 				'or',
 				['like', 'InspectionType', $filter],
-				['like', 'BillingCode', $filter],
 				['like', 'HouseNumber', $filter],
 				['like', 'Street', $filter],
 				['like', 'AptSuite', $filter],
@@ -412,7 +411,6 @@ class DispatchController extends Controller
 				$assetQuery->andFilterWhere([
 				'or',
 				['like', 'InspectionType', $filter],
-				['like', 'BillingCode', $filter],
 				['like', 'HouseNumber', $filter],
 				['like', 'Street', $filter],
 				['like', 'AptSuite', $filter],
