@@ -357,7 +357,7 @@ class TimeCardController extends BaseActiveController
                     ['like', 'UserFirstName', $filter],
                     ['like', 'UserLastName', $filter],
                     ['like', 'ProjectName', $filter],
-                    ['like', 'TimeCardApproved', $filter]
+                    ['like', 'TimeCardApprovedFlag', $filter]
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
             }
