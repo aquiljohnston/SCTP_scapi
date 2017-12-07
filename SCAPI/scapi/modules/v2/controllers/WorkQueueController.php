@@ -9,11 +9,8 @@ use yii\filters\VerbFilter;
 use yii\data\Pagination;
 use app\authentication\TokenAuth;
 use app\modules\v2\models\BaseActiveRecord;
-//use app\modules\v2\models\AvailableWorkQueue;
 use app\modules\v2\models\AssignedWorkQueue;
-//use app\modules\v2\models\WorkOrder;
 use app\modules\v2\models\WorkQueue;
-//use app\modules\v2\models\StatusLookup;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
@@ -79,6 +76,10 @@ class WorkQueueController extends Controller
 				,SequenceNumber
 				,SectionNumber
 				,WorkQueueStatus
+				,BillingCode
+				,MeterLocation
+				,PipelineFootage
+				,SpecialInstructions
 				,AssignedToID')
 				->where(['AssignedToID' => $userID])
 				->all();
@@ -151,66 +152,6 @@ class WorkQueueController extends Controller
 					'SuccessFlag' => $successFlag
 				];
 			}
-			return $responseData;
-		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-	}
-	
-	//fuction called by activity to parse and accept work queues
-	public static function complete($workQueueID, $workQueueStatus, $client, $modifiedBy, $modifiedDate)
-	{
-		try
-		{
-			//set db
-			BaseActiveRecord::setClient($client);
-			
-			//create response format
-			$responseData = [];
-			
-			//try catch to log individual errors
-			try
-			{
-				$successFlag = 0;
-				$workQueue = WorkQueue::find()
-					->where(['ID' => $workQueueID])
-					->one();
-				if($workQueue != null)
-				{
-					if($workQueue->WorkQueueStatus != self::$completed)
-					{
-						$workQueue->WorkQueueStatus = $workQueueStatus;
-						$workQueue->ModifiedBy = $modifiedBy;
-						$workQueue->ModifiedDate = $modifiedDate;
-						if($workQueue->update())
-						{
-							$successFlag = 1;
-						}
-						else
-						{
-							throw BaseActiveController::modelValidationException($workQueue);
-						}
-					}
-					else{
-						$successFlag = 1;
-					}
-				}
-			}
-			catch(\Exception $e)
-			{
-				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $workQueueID);
-			}
-			$responseData = [
-				'WorkQueueID' => $workQueueID,
-				'WorkQueueStatus' => $workQueueStatus,
-				'SuccessFlag' => $successFlag
-			];
 			return $responseData;
 		}
         catch(ForbiddenHttpException $e)

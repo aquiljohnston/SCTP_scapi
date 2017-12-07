@@ -88,6 +88,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'CreatedDateTime' => 'Created Date Time',
             'ModifiedDateTime' => 'Modified Date Time',
             'InspectionType' => 'Inspection Type',
+            'BillingCode' => 'Billing Code',
             'HouseNumber' => 'House Number',
             'Street' => 'Street',
             'AptSuite' => 'Apt Suite',
@@ -122,6 +123,10 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'AssignedByID' => 'Assigned By ID',
             'AssignedToID' => 'Assigned To ID',
             'Address' => 'Address',
+            'BillingCode' => 'Billing Code',
+            'MeterLocation' => 'Meter Locaation',
+            'PipelineFootage' => 'Pipeline Footage',
+            'SpecialInstructions' => 'Special Instructions',
         ];
     }
 }
