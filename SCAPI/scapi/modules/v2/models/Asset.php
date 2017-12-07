@@ -116,6 +116,7 @@ class Asset extends \app\modules\v2\models\BaseActiveRecord
             'Speed' => 'Speed',
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
             'Zip' => 'Zip',
+            'MeterNumber' => 'Meter Number',
         ];
     }
 
