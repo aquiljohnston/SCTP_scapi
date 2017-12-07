@@ -562,6 +562,7 @@ class DispatchController extends Controller
 		$results = [];
 		$workOrders = [];
 		//get status code for Assigned work
+		//TODO replace with constant
 		$assignedCode = self::statusCodeLookup('Assigned');
 		$successFlag = 1;
 		$isAsset = 0;
@@ -721,5 +722,38 @@ class DispatchController extends Controller
 			->count();
 		$flag = $divisionCount > 0 ? 1 : 0;
 		return $flag;
+	}
+	
+	
+	//route to get pipeline records for the purpose of Andre's dual dispatch test.
+	public function actionGetPipe()
+	{
+		try
+		{
+			//set dbl
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$assetQuery = AvailableWorkOrder::find()
+				->limit(8)
+				->select(['WorkOrderID', 'MapGrid', 'SectionNumber'])
+				->where(['LocationType' => 'Gas Main'])
+				->all();
+
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $assetQuery;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveWebErrorJson('actionGetPipe', $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }
