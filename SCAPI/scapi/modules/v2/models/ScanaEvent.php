@@ -65,6 +65,7 @@ use Yii;
  * @property string $LeakFoundMainOrService
  * @property integer $BadDogPresent
  * @property string $NIFReason
+ * @property string $PipelineAOCIssues
  *
  * @property UserTb $createdByUser
  */
@@ -84,7 +85,7 @@ class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakGrade', 'LeakAboveOrBelow', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'ACGrade', 'AccessIssues', 'CGE', 'LeakFoundMainOrService', 'NIFReason'], 'string'],
+            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakGrade', 'LeakAboveOrBelow', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'ACGrade', 'AccessIssues', 'CGE', 'LeakFoundMainOrService', 'NIFReason', 'PipelineAOCIssues'], 'string'],
             [['EventType', 'CreatedByUserID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag', 'SplashGuardNeeded', 'SplashGuardInstalled', 'TracerWireMissing', 'TamperSealNotPresent', 'EnergyDiversionPresent', 'RiserPostBad', 'RecommendToRetireInActiveService', 'FacilitiesNeedToBeProtected', 'Other', 'AOCFlag', 'LeakRepaired', 'BadDogPresent'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
@@ -157,6 +158,7 @@ class ScanaEvent extends \app\modules\v2\models\BaseActiveRecord
             'LeakFoundMainOrService' => 'Leak Found Main Or Service',
             'BadDogPresent' => 'Bad Dog Present',
 			'NIFReason' => 'NIF Reason',
+			'PipelineAOCIssues' => 'Pipeline AOC Issues',
         ];
     }
 
