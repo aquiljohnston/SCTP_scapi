@@ -734,10 +734,14 @@ class DispatchController extends Controller
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
-			$assetQuery = AvailableWorkOrder::find()
+			$assetQuery = WorkOrder::find()
 				->limit(8)
-				->select(['WorkOrderID', 'MapGrid', 'SectionNumber'])
+				->select(['ID AS WorkOrderID', 'MapGrid', 'SectionNumber'])
 				->where(['LocationType' => 'Gas Main'])
+				->andWhere(['CompletedFlag' => 0])
+				->andWhere(['InspectionAttemptCounter' => 0])
+				->andWhere(['EventIndicator' => null])
+				->asArray()
 				->all();
 
 			//create response object
