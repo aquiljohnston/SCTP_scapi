@@ -24,6 +24,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
+		//azure
+		const AZURE_CT_PROD = 'azureapi';
 	//comet tracker models
 	const CT_USER = 'app\modules\v2\models\SCUser';
 	const CT_EVENT = self::BASE_EVENT;
@@ -43,6 +45,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const YORK_DEV = 'yorkdev';
 	const YORK_STAGE = 'yorkstage';
 	const YORK_PROD = 'york';
+		//azure
+		const AZURE_YORK_PROD = 'azureyork';
 	//york models
 	const YORK_USER = self::BASE_USER;
 	const YORK_EVENT = self::BASE_EVENT;
@@ -52,6 +56,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//dominion databases
 	const DOMINION_STAGE = 'deostage';
 	const DOMINION_PROD = 'deo';
+		//azure
+		const AZURE_DOMINION_PROD = 'azuredeo';
 	//dominion models
 	const DOMINION_USER = self::BASE_USER;
 	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
@@ -62,6 +68,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const SCANA_DEV = 'scanadev';
 	const SCANA_STAGE = 'scanastage';
 	const SCANA_PROD = 'scana';
+		//azure
+		const AZURE_SCANA_PROD = 'azurescana';
 	//york models
 	const SCANA_USER = self::BASE_USER;
 	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
@@ -76,13 +84,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//beta auth manager
 	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 	
-	//azure test database
-	const AZURE_TEST = 'azure';
-	//beta models
-	const AZURE_USER = self::BASE_USER;
-	const AZURE_EVENT = self::BASE_EVENT;
-	//beta auth manager
-	const AZURE_AUTH = 'app\rbac\ClientDbManager';
 	
 	public static function getClient()
 	{
@@ -109,6 +110,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctProdDb;
 		}
+			//azure
+			if (self::$CLIENT_ID == self::AZURE_CT_PROD)
+			{
+				return Yii::$app->azureProdDb;
+			}
 		//pge
 		if (self::$CLIENT_ID == self::PGE_DEV)
 		{
@@ -135,6 +141,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkProdDb;
 		}
+			//azure
+			if (self::$CLIENT_ID == self::AZURE_YORK_PROD)
+			{
+				return Yii::$app->azureYorkProdDb;
+			}
 		//dominion
 		if (self::$CLIENT_ID == self::DOMINION_STAGE)
 		{
@@ -144,6 +155,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionProdDb;
 		}
+			//azure
+			if (self::$CLIENT_ID == self::AZURE_DOMINION_PROD)
+			{
+				return Yii::$app->azureDeoProdDb;
+			}
 		//scana
 		if (self::$CLIENT_ID == self::SCANA_DEV)
 		{
@@ -157,15 +173,15 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		// {
 			// return Yii::$app->scanaProdDb;
 		// }
+			//azure
+			if (self::$CLIENT_ID == self::AZURE_SCANA_PROD)
+			{
+				return Yii::$app->azureScanaProdDb;
+			}
 		//demo
 		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{
 			return Yii::$app->demoDb;
-		}
-		//azure test
-		if (self::$CLIENT_ID == self::AZURE_TEST)
-		{
-			return Yii::$app->azureDb;
 		}
 	}
 	
@@ -176,6 +192,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::CT_DEV
 		|| $client == self::CT_STAGE
 		|| $client == self::CT_PROD
+		|| $client == self::AZURE_CT_PROD//azure
 		|| $client == self::SCCT_DEV
 		|| $client == self::SCCT_STAGE
 		|| $client == self::SCCT_PROD)
@@ -185,12 +202,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == self::YORK_DEV
 		||$client == self::YORK_PROD
+		||$client == self::AZURE_YORK_PROD//azure
 		||$client == self::YORK_STAGE)
 		{
 			return self::YORK_USER;
 		}
 		//Dominion
 		if($client == self::DOMINION_PROD
+		||$client == self::AZURE_DOMINION_PROD//azure
 		||$client == self::DOMINION_STAGE)
 		{
 			return self::DOMINION_USER;
@@ -198,6 +217,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == self::SCANA_DEV
 		||$client == self::SCANA_PROD
+		||$client == self::AZURE_SCANA_PROD//azure
 		||$client == self::SCANA_STAGE)
 		{
 			return self::SCANA_USER;
@@ -206,11 +226,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_USER;
-		}
-		//azure test
-		if($client == self::AZURE_TEST)
-		{
-			return self::AZURE_USER;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 
@@ -229,6 +244,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::CT_DEV
 		|| $client == self::CT_STAGE
 		|| $client == self::CT_PROD
+		|| $client == self::AZURE_CT_PROD//azure
 		|| $client == self::SCCT_DEV
 		|| $client == self::SCCT_STAGE
 		|| $client == self::SCCT_PROD)
@@ -238,12 +254,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == self::YORK_DEV
 		|| $client == self::YORK_PROD
+		|| $client == self::AZURE_YORK_PROD//azure
 		|| $client == self::YORK_STAGE)
 		{
 			return self::YORK_AUTH;
 		}
 		//Dominion
 		if($client == self::DOMINION_PROD
+		|| $client == self::AZURE_DOMINION_PROD//azure
 		|| $client == self::DOMINION_STAGE)
 		{
 			return self::DOMINION_AUTH;
@@ -251,6 +269,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == self::SCANA_DEV
 		|| $client == self::SCANA_PROD
+		|| $client == self::AZURE_SCANA_PROD//azure
 		|| $client == self::SCANA_STAGE)
 		{
 			return self::SCANA_AUTH;
@@ -259,11 +278,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_AUTH;
-		}
-		//azure test
-		if($client == self::AZURE_TEST)
-		{
-			return self::AZURE_AUTH;
 		}
 		//PGE - Deos not use standard Auth
 		// if($client == self::PGE_DEV 
@@ -282,6 +296,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::CT_DEV
 		|| $client == self::CT_STAGE
 		|| $client == self::CT_PROD
+		|| $client == self::AZURE_CT_PROD//azure
 		|| $client == self::SCCT_DEV
 		|| $client == self::SCCT_STAGE
 		|| $client == self::SCCT_PROD)
@@ -291,12 +306,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == self::YORK_DEV
 		|| $client == self::YORK_PROD
+		|| $client == self::AZURE_YORK_PROD//azure
 		|| $client == self::YORK_STAGE)
 		{
 			return self::YORK_EVENT;
 		}
 		//Dominion
 		if($client == self::DOMINION_PROD
+		|| $client == self::AZURE_DOMINION_PROD//azure
 		|| $client == self::DOMINION_STAGE)
 		{
 			return self::DOMINION_EVENT;
@@ -304,6 +321,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == self::SCANA_DEV
 		|| $client == self::SCANA_PROD
+		|| $client == self::AZURE_SCANA_PROD//azure
 		|| $client == self::SCANA_STAGE)
 		{
 			return self::SCANA_EVENT;
@@ -312,11 +330,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::DEMO_DEV)
 		{
 			return self::DEMO_EVENT;
-		}
-		//azure test
-		if($client == self::AZURE_TEST)
-		{
-			return self::AZURE_EVENT;
 		}
 		//PGE - Does not use standard Events
 		return null;

@@ -51,7 +51,13 @@ return [
 		//Demo
         'demoDb' => $db['demoDb'],
 		//Azure tests
-		'azureDb' => $db['azureDb'],
+		'azureBaseDb' => $db['azureBaseDb'],
+		'azureClientDb' => $db['azureClientDb'],
+		//Azure Prod Config
+		'azureProdDb' => $db['azureProdDb'],
+		'azureYorkProdDb' => $db['azureYorkProdDb'],
+		'azureDeoProdDb' => $db['azureDeoProdDb'],
+		'azureScanaProdDb' => $db['azureScanaProdDb'],
     ],
     'params' => $params,
 ];

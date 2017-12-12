@@ -112,14 +112,34 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
-//Azure Test
-	'azureDb' =>[
+//Azure Prod Config
+	'azureProdDb' =>[
 		'class' => 'yii\db\Connection',
-		'dsn' => 'sqlsrv:Server=10.101.3.4;Database=AzureScctTemplate',
-		'username' => 'testuser',
-		'password' => 'testuser20170823',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2db;Database=AZCometTracker_PROD',
+		'username' => 'ApplicationCometTracker',
+		'password' => '6Iy2udrKO&Xy',
 		'charset' => 'utf8',
-	],
-	
+	],	
+	'azureDeoProdDb' =>[
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2db01;Database=vCAT_DOMINION_GIS_PROD',
+		'username' => 'ApplicationCometTracker',
+		'password' => '6Iy2udrKO&Xy',
+		'charset' => 'utf8',
+	],	
+	'azureScanaProdDb' =>[
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2dbscan;Database=vCAT_SCANA_GIS_PROD',
+		'username' => 'ApplicationCometTracker',
+		'password' => '6Iy2udrKO&Xy',
+		'charset' => 'utf8',
+	],	
+	'azureYorkProdDb' =>[
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2db01;Database=vCAT_YORK_GIS_PROD',
+		'username' => 'ApplicationCometTracker',
+		'password' => '6Iy2udrKO&Xy',
+		'charset' => 'utf8',
+	],	
 ];
 
