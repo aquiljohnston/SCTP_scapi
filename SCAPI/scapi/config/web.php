@@ -95,25 +95,28 @@ $config = [
 		//'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
-		//Azure tests
-		'azureDb' => $db['azureDb'],
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,
 			// 'showScriptName' => false,
 		// ],
+		//Azure Prod Config
+		'azureProdDb' => $db['azureProdDb'],
+		'azureYorkProdDb' => $db['azureYorkProdDb'],
+		'azureDeoProdDb' => $db['azureDeoProdDb'],
+		'azureScanaProdDb' => $db['azureScanaProdDb'],
     ],
     'params' => $params,
 ];
 
 if (YII_ENV_DEV) {
     // configuration adjustments for 'dev' environment
-    //$config['bootstrap'][] = 'debug';
-    $config['modules']['debug'] = [
-        'class' => 'yii\debug\Module',
-		//TO DO add dynamic IPs
-		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
-    ];
+    // $config['bootstrap'][] = 'debug';
+    // $config['modules']['debug'] = [
+        // 'class' => 'yii\debug\Module',
+		// //TO DO add dynamic IPs
+		// 'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
+    // ];
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
