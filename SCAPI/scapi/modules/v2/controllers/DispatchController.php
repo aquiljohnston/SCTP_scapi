@@ -430,6 +430,7 @@ class DispatchController extends Controller
 				['like', 'SectionNumber', $filter],
 				['like', 'AssignedTo', $filter],
                 ['like', 'Address', $filter],
+                ['like', 'AccountTelephoneNumber', $filter],
 				]);
 			}
 			
