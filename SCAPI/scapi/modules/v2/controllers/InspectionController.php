@@ -430,7 +430,8 @@ class InspectionController extends Controller
 									if($workOrder->EventIndicator === 2)
 									{
 										// increment work order attempt counter
-										if(self::updateWorkOrder($inspectionData, $workOrder, false, true)) $workOrderSuccessFlag = 1;
+										//if(self::updateWorkOrder($inspectionData, $workOrder, false, true)) $workOrderSuccessFlag = 1;
+										$workOrderSuccessFlag = 1;
 									} else {
 										// set event indicator, increment work order attempt counter, close work order
 										if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;

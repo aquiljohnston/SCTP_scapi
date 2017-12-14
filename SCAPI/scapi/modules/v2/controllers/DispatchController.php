@@ -737,11 +737,12 @@ class DispatchController extends Controller
 			
 			$assetQuery = WorkOrder::find()
 				->limit(8)
-				->select(['ID AS WorkOrderID', 'MapGrid', 'SectionNumber'])
-				->where(['LocationType' => 'Gas Main'])
-				->andWhere(['CompletedFlag' => 0])
-				->andWhere(['InspectionAttemptCounter' => 0])
-				->andWhere(['EventIndicator' => null])
+				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
+				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
+				->where(['tWorkOrder.LocationType' => 'Gas Main',
+					'tWorkOrder.CompletedFlag' => 0,
+					'tWorkOrder.InspectionAttemptCounter' => 0,
+					'tWorkOrder.EventIndicator' => null])
 				->asArray()
 				->all();
 
