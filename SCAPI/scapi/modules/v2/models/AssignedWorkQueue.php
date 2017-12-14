@@ -123,8 +123,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'AssignedByID' => 'Assigned By ID',
             'AssignedToID' => 'Assigned To ID',
             'Address' => 'Address',
-            'BillingCode' => 'Billing Code',
-            'MeterLocation' => 'Meter Locaation',
+            'MeterLocation' => 'Meter Location',
             'PipelineFootage' => 'Pipeline Footage',
             'SpecialInstructions' => 'Special Instructions',
         ];
