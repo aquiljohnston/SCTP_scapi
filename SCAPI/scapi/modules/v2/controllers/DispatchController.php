@@ -91,6 +91,8 @@ class DispatchController extends Controller
 					['like', 'AvailableWorkOrderCount', $filter],
 					['like', 'Frequency', $filter],
 					['like', 'Division', $filter],
+					['like', 'InspectionType', $filter],
+					['like', 'BillingCode', $filter],
 					]);
 				}
 			}
