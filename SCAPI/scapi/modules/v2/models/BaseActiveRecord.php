@@ -24,8 +24,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
-		//azure
-		const AZURE_CT_PROD = 'azureapi';
+	//azure prod
+	const AZURE_CT_PROD = 'azureapi';
 	//comet tracker models
 	const CT_USER = 'app\modules\v2\models\SCUser';
 	const CT_EVENT = self::BASE_EVENT;
@@ -67,7 +67,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//scana databases
 	const SCANA_DEV = 'scanadev';
 	const SCANA_STAGE = 'scanastage';
-	const SCANA_PROD = 'scana';
+	const SCANA_PROD = 'azurescana';
 		//azure
 		const AZURE_SCANA_PROD = 'azurescana';
 	//york models
@@ -106,15 +106,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctStageDb;
 		}
-		if (self::$CLIENT_ID == self::CT_PROD || self::$CLIENT_ID == self::SCCT_PROD)
+		if (self::$CLIENT_ID == self::CT_PROD || self::$CLIENT_ID == self::SCCT_PROD || self::$CLIENT_ID == self::AZURE_CT_PROD)
 		{
 			return Yii::$app->ctProdDb;
 		}
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_CT_PROD)
-			{
-				return Yii::$app->azureProdDb;
-			}
 		//pge
 		if (self::$CLIENT_ID == self::PGE_DEV)
 		{
@@ -137,29 +132,19 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkStageDb;
 		}
-		if (self::$CLIENT_ID == self::YORK_PROD)
+		if (self::$CLIENT_ID == self::YORK_PROD || self::$CLIENT_ID == self::AZURE_YORK_PROD)
 		{
 			return Yii::$app->yorkProdDb;
 		}
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_YORK_PROD)
-			{
-				return Yii::$app->azureYorkProdDb;
-			}
 		//dominion
 		if (self::$CLIENT_ID == self::DOMINION_STAGE)
 		{
 			return Yii::$app->dominionStageDb;
 		}
-		if (self::$CLIENT_ID == self::DOMINION_PROD)
+		if (self::$CLIENT_ID == self::DOMINION_PROD || self::$CLIENT_ID == self::AZURE_DOMINION_PROD)
 		{
 			return Yii::$app->dominionProdDb;
 		}
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_DOMINION_PROD)
-			{
-				return Yii::$app->azureDeoProdDb;
-			}
 		//scana
 		if (self::$CLIENT_ID == self::SCANA_DEV)
 		{
@@ -169,15 +154,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		// {
 			// return Yii::$app->scanaStageDb;
 		// }
-		// if (self::$CLIENT_ID == self::SCANA_PROD)
-		// {
-			// return Yii::$app->scanaProdDb;
-		// }
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_SCANA_PROD)
-			{
-				return Yii::$app->azureScanaProdDb;
-			}
+		if (self::$CLIENT_ID == self::SCANA_PROD == self::$CLIENT_ID == self::AZURE_SCANA_PROD)
+		{
+			return Yii::$app->scanaProdDb;
+		}
 		//demo
 		if (self::$CLIENT_ID == self::DEMO_DEV)
 		{

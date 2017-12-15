@@ -82,7 +82,7 @@ $config = [
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
 		//'scanaStageDb' => $db['scanaStageDb'],
-		//'scanaProdDb' => $db['scanaProdDb'],
+		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
 		// // clean up the Url
@@ -90,11 +90,6 @@ $config = [
 			// 'enablePrettyUrl' => true,
 			// 'showScriptName' => false,
 		// ],
-		//Azure Prod Config
-		'azureProdDb' => $db['azureProdDb'],
-		'azureYorkProdDb' => $db['azureYorkProdDb'],
-		'azureDeoProdDb' => $db['azureDeoProdDb'],
-		'azureScanaProdDb' => $db['azureScanaProdDb'],
     ],
     'params' => $params,
 ];
