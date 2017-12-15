@@ -154,7 +154,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		// {
 			// return Yii::$app->scanaStageDb;
 		// }
-		if (self::$CLIENT_ID == self::SCANA_PROD == self::$CLIENT_ID == self::AZURE_SCANA_PROD)
+		if (self::$CLIENT_ID == self::SCANA_PROD || self::$CLIENT_ID == self::AZURE_SCANA_PROD)
 		{
 			return Yii::$app->scanaProdDb;
 		}
