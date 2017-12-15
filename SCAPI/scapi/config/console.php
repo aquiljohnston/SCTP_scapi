@@ -47,17 +47,9 @@ return [
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
 		'scanaStageDb' => $db['scanaStageDb'],
-		//'scanaProdDb' => $db['scanaProdDb'],
+		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
-		//Azure tests
-		'azureBaseDb' => $db['azureBaseDb'],
-		'azureClientDb' => $db['azureClientDb'],
-		//Azure Prod Config
-		'azureProdDb' => $db['azureProdDb'],
-		'azureYorkProdDb' => $db['azureYorkProdDb'],
-		'azureDeoProdDb' => $db['azureDeoProdDb'],
-		'azureScanaProdDb' => $db['azureScanaProdDb'],
     ],
     'params' => $params,
 ];

@@ -11,75 +11,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	
 	//TODO: create object/array for all clients and refactor get methods(exclude getDb) into single function
 	//that takes in client and model to retrive that will be based on client object keys
-	
-	//scct databases
-	const SCCT_DEV = 'scctdev';
-	const SCCT_STAGE = 'scctstage';
-	const SCCT_PROD = 'scct';
-	
-	//base comet tracker databases
-	const CT_DEV = 'apidev';	
-	const CT_STAGE = 'apistage';
-	const CT_PROD = 'api';
-		//azure
-		const AZURE_CT_PROD = 'azureapi';
-	//comet tracker models
-	const CT_USER = 'app\modules\v2\models\SCUser';
-	const CT_EVENT = self::BASE_EVENT;
-	//comet tracker auth manager
-	const CT_AUTH = 'app\rbac\ScDbManager';
-	
-	//pg&e databases
-	const PGE_DEV = 'pgedev';
-	const PGE_STAGE = 'pgestage';
-	const PGE_PROD = 'pge';
-	//pg&e user model
-	const PGE_USER = 'app\modules\v2\modules\pge\models\PGEUser';
-	//pg&e auth manager
-	const PGE_AUTH = 'app\rbac\PgeDbManager';
-	
-	//york databases
-	const YORK_DEV = 'yorkdev';
-	const YORK_STAGE = 'yorkstage';
-	const YORK_PROD = 'york';
-		//azure
-		const AZURE_YORK_PROD = 'azureyork';
-	//york models
-	const YORK_USER = self::BASE_USER;
-	const YORK_EVENT = self::BASE_EVENT;
-	//york auth manager
-	const YORK_AUTH = 'app\rbac\ClientDbManager';
-	
-	//dominion databases
-	const DOMINION_STAGE = 'deostage';
-	const DOMINION_PROD = 'deo';
-		//azure
-		const AZURE_DOMINION_PROD = 'azuredeo';
-	//dominion models
-	const DOMINION_USER = self::BASE_USER;
-	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
-	//dominion auth manager
-	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
-	
-	//scana databases
-	const SCANA_DEV = 'scanadev';
-	const SCANA_STAGE = 'scanastage';
-	const SCANA_PROD = 'scana';
-		//azure
-		const AZURE_SCANA_PROD = 'azurescana';
-	//york models
-	const SCANA_USER = self::BASE_USER;
-	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
-	//york auth manager
-	const SCANA_AUTH = 'app\rbac\ClientDbManager';
-	
-	//demo client database
-	const DEMO_DEV = 'demo';
-	//beta models
-	const DEMO_USER = self::BASE_USER;
-	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
-	//beta auth manager
-	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 
 	public static function getClient()
 	{
@@ -106,11 +37,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctProdDb;
 		}
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_CT_PROD)
-			{
-				return Yii::$app->azureProdDb;
-			}
 		//pge
 		if (self::$CLIENT_ID == Constants::PGE_DEV)
 		{
@@ -137,11 +63,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkProdDb;
 		}
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_YORK_PROD)
-			{
-				return Yii::$app->azureYorkProdDb;
-			}
 		//dominion
 		if (self::$CLIENT_ID == Constants::DOMINION_STAGE)
 		{
@@ -151,11 +72,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionProdDb;
 		}
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_DOMINION_PROD)
-			{
-				return Yii::$app->azureDeoProdDb;
-			}
 		//scana
 		if (self::$CLIENT_ID == Constants::SCANA_DEV)
 		{
@@ -165,15 +81,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->scanaStageDb;
 		}
-		// if (self::$CLIENT_ID == Constants::SCANA_PROD)
-		// {
-			// return Yii::$app->scanaProdDb;
-		// }
-			//azure
-			if (self::$CLIENT_ID == self::AZURE_SCANA_PROD)
-			{
-				return Yii::$app->azureScanaProdDb;
-			}
+		if (self::$CLIENT_ID == Constants::SCANA_PROD || self::$CLIENT_ID == Constants::AZURE_SCANA_PROD)
+		{
+			return Yii::$app->scanaProdDb;
+		}
 		//demo
 		if (self::$CLIENT_ID == Constants::DEMO_DEV)
 		{
