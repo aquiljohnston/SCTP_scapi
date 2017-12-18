@@ -172,7 +172,7 @@ class UserController extends BaseActiveController
             PermissionsController::requirePermission('userUpdate');
 			
             if ($jsonData != null) {
-				$data = json_decode($jsonData, true);
+                $data = json_decode($jsonData, true);
             } else {
                 $put = file_get_contents("php://input");
                 $data = json_decode($put, true);

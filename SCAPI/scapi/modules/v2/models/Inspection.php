@@ -46,6 +46,7 @@ use Yii;
  * @property string $Photo1Path
  * @property string $PipelineType
  * @property string $Comments
+ * @property integer $HardToLocateFlag
  *
  * @property UserTb $createdBy
  */
@@ -66,7 +67,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType', 'Comments'], 'string'],
-            [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated'], 'integer'],
+            [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated', 'HardToLocateFlag'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
@@ -118,6 +119,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             'Photo1Path' => 'Photo1 Path',
             'PipelineType' => 'Pipeline Type',
             'Comments' => 'Comments',
+            'HardToLocateFlag' => 'Hard To Locate Flag',
         ];
     }
 
