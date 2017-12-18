@@ -70,7 +70,6 @@ class PermissionsController extends Controller {
 				return false;
 			}
 		}
-
         $access = $manager->checkAccess($userID, $permissionName);
 
         return $access;

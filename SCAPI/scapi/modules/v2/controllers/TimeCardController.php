@@ -269,150 +269,123 @@ class TimeCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
-	public function actionGetCards($week, $listPerPage = 10, $page = 1, $filter = null)
-	{
+
+    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null)
+    {
         $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
-		// RBAC permission check is embedded in this action
-		try
-		{
-			//get headers
-			$headers = getallheaders();
-			//get client header
-			$client = $headers['X-Client'];
+        // RBAC permission check is embedded in this action
+        try
+        {
+            //get headers
+            $headers = getallheaders();
+            //get client header
+            $client = $headers['X-Client'];
 
-			//url decode filter value
-			$filter = urldecode($filter);
-			
-			//set db target headers
-			$headers = getallheaders();
-			TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+            //url decode filter value
+            $filter = urldecode($filter);
 
-			//format response
-			$response = Yii::$app->response;
-			$response-> format = Response::FORMAT_JSON;
+            //set db target headers
+            $headers = getallheaders();
+            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
-			//response array of time cards
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+
+            //response array of time cards
             $timeCardsArr = [];
             $responseArray = [];
 
-			//if is scct website get all or own
-			if(BaseActiveController::isSCCT($client))
-			{
-				/*
-				 * Check if user can get all cards
-				 */
-				if (PermissionsController::can('timeCardGetAllCards'))
-				{
-					//check if week is prior or current to determine appropriate view
-                    if ($week == 'prior') {
-                        $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find();
-                    } elseif ($week == 'current') {
-                        $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find();
-                    } else {
-                        // The request is bad
-                        throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
-                    }
-				}
-				/*
-				 * Check if user can get their own cards
-				 */
-				elseif (PermissionsController::can('timeCardGetOwnCards'))
-				{
-					$userID = self::getUserFromToken()->UserID;
-					//get user project relations array
-					$projects = ProjectUser::find()
-						->where("ProjUserUserID = $userID")
-						->all();
-					$projectsSize = count($projects);
+            //build base query
+            $timeCards = new Query;
+            $timeCards->select('*')
+                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
-					//check if week is prior or current to determine appropriate view
-					if($week == 'prior' && $projectsSize > 0)
-					{
-						$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-						if($projectsSize > 1)
-						{
-							for($i=1; $i < $projectsSize; $i++)
-							{
-								$projectID = $projects[$i]->ProjUserProjectID;
-								$timeCards->orWhere(['ProjectID'=>$projectID]);
-							}
-						}
 
-					}
-					elseif($week == 'current' && $projectsSize > 0)
-					{
-						$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-						if($projectsSize > 1)
-						{
-							for($i=1; $i < $projectsSize; $i++)
-							{
-								$projectID = $projects[$i]->ProjUserProjectID;
-								$timeCards->orWhere(['ProjectID'=>$projectID]);
-							}
-						}
-					} else {
-                        throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
+            //if is scct website get all or own
+            if(BaseActiveController::isSCCT($client))
+            {
+                /*
+                 * Check if user can get all cards
+                 */
+                if (PermissionsController::can('timeCardGetAllCards'))
+                {
+                    $userID = self::getUserFromToken()->UserID;
+                    //get user project relations array
+                    $projects = ProjectUser::find()
+                        ->where("ProjUserUserID = $userID")
+                        ->all();
+                    $projectsSize = count($projects);
+
+                    //check if week is prior or current to determine appropriate view
+                    if($projectsSize > 0)
+                    {
+                        $timeCards->where(['TimeCardProjectID' => $projects[0]->ProjUserProjectID]);
                     }
-				}
-				else{
-					throw new ForbiddenHttpException;
-				}
-			}
-			else // get only cards for the current project.
-			{
-				//get project based on client header
-				$project = Project::find()
-					->where(['ProjectUrlPrefix' => $client])
-					->one();
-				//check if week is prior or current to determine appropriate view
-				if($week == 'prior')
-				{
-					$timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-				}
-				elseif($week == 'current')
-				{
-					$timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $project->ProjectID]);
-				} else {
-                    throw new BadRequestHttpException($weekParameterIsInvalidString); //legit bad request
+                    if($projectsSize > 1)
+                    {
+                        for($i=1; $i < $projectsSize; $i++)
+                        {
+                            $projectID = $projects[$i]->ProjUserProjectID;
+                            $timeCards->orWhere(['TimeCardProjectID'=>$projectID]);
+                        }
+                    }
                 }
-			}
-            
-            if($filter!= null) { //Empty strings or nulls will result in false
+                /*
+                 * Check if user can get their own cards
+                 */
+                elseif (PermissionsController::can('timeCardGetOwnCards'))
+                {
+                    throw new ForbiddenHttpException;
+                }
+            }
+            else // get only cards for the current project.
+            {
+                //get project based on client header
+                $project = Project::find()
+                    ->where(['ProjectUrlPrefix' => $client])
+                    ->one();
+                //add project where to query
+                $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
+            }
+
+            if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
                 $timeCards->andFilterWhere([
                     'or',
-                    ['like', 'UserName', $filter],
+                    //['like', 'UserName', $filter],
                     ['like', 'UserFirstName', $filter],
                     ['like', 'UserLastName', $filter],
-                    ['like', 'ProjectName', $filter]
+                    ['like', 'ProjectName', $filter],
+                    ['like', 'TimeCardApprovedFlag', $filter]
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
             }
-			$paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-            $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,ProjectID')->all();
+            $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
+            $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
 
-			if (!empty($responseArray['assets']))
-			{
-				$response->data = $responseArray;
-				$response->setStatusCode(200);
-				return $response;
-			}
-			else
-			{
-				$response->setStatusCode(404);
-				return $response;
-			}
-		}
-		catch(ForbiddenHttpException $e) {
-			throw $e;
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
+            if (!empty($responseArray['assets']))
+            {
+                $response->data = $responseArray;
+                $response->setStatusCode(200);
+                return $response;
+            }
+            else
+            {
+                $response->setStatusCode(404);
+                return $response;
+            }
+        }
+        catch(ForbiddenHttpException $e) {
+            throw $e;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+    }
 
     public function actionGetTimeCardsHistoryData($week)
     {
