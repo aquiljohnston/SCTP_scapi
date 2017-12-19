@@ -53,6 +53,7 @@ class TimeCardController extends BaseActiveController
 					'get-entries' => ['get'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
+					'show-entries' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -216,6 +217,42 @@ class TimeCardController extends BaseActiveController
 			
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
+		}
+		catch(\Exception $e)  
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}	
+
+
+
+
+
+	public function actionShowEntries($cardID)
+	{		
+		try
+		{
+			//set db target
+			TimeCard::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('timeCardGetEntries');
+			
+			$response = Yii::$app ->response;
+			$dataArray = [];
+			$timeCard = TimeCard::findOne($cardID);
+			
+
+			
+			$entriesQuery = new Query;
+			$entriesQuery->select('*')
+					->from("fnTimeEntrysByTimeCard(:cardID)")
+					->addParams([':cardID' => $cardID]);
+			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+			
+			
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $entries;
 		}
 		catch(\Exception $e)  
 		{
