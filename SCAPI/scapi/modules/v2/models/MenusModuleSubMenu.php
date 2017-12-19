@@ -17,9 +17,9 @@ use Yii;
  * @property integer $ModuleSubMenusParentID
  * @property integer $ModuleSubMenusSortSeq
  * @property string $ModuleSubMenusCreateDate
- * @property int $ModuleSubMenusCreatedBy
+ * @property string $ModuleSubMenusCreatedBy
  * @property string $ModuleSubMenusModifiedDate
- * @property int $ModuleSubMenusModifiedBy
+ * @property string $ModuleSubMenusModifiedBy
  */
 class MenusModuleSubMenu extends BaseActiveRecord
 {
@@ -37,8 +37,8 @@ class MenusModuleSubMenu extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['ModuleSubMenusModuleMenuID_FK', 'ModuleSubMenusActiveFlag', 'ModuleSubMenusParentID', 'ModuleSubMenusSortSeq',  'ModuleSubMenusCreatedBy', 'ModuleSubMenusModifiedBy'], 'integer'],
-            [['ModuleSubMenusNavMenuName', 'ModuleSubMenusPermissionName', 'ModuleSubMenusURL', 'ModuleSubMenusComments'], 'string'],
+            [['ModuleSubMenusModuleMenuID_FK', 'ModuleSubMenusActiveFlag', 'ModuleSubMenusParentID', 'ModuleSubMenusSortSeq'], 'integer'],
+            [['ModuleSubMenusNavMenuName', 'ModuleSubMenusPermissionName', 'ModuleSubMenusURL', 'ModuleSubMenusComments',  'ModuleSubMenusCreatedBy', 'ModuleSubMenusModifiedBy'], 'string'],
             [['ModuleSubMenusCreateDate', 'ModuleSubMenusModifiedDate'], 'safe']
         ];
     }

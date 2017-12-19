@@ -148,8 +148,8 @@ class UserController extends BaseActiveController
             }
 
             //created date/by
-            $userID = self::getUserFromToken()->UserID;
-            $user->UserCreatedUID = $userID;
+            $username = self::getUserFromToken()->UserName;
+            $user->UserCreatedUID = $username;
             $user->UserCreatedDate = Parent::getDate();
 
             if ($user->save()) {
@@ -186,7 +186,7 @@ class UserController extends BaseActiveController
      * @returns json body of the user data
      * @throws \yii\web\HttpException
      */
-    public function actionUpdate($id = null, $jsonData = null, $client = null, $username = null)
+    public function actionUpdate($username = null)
     {
         try {
 			//get client header
@@ -200,12 +200,8 @@ class UserController extends BaseActiveController
 
             PermissionsController::requirePermission('userUpdate');
 			
-            if ($jsonData != null) { 	
-				$data = json_decode(utf8_decode($jsonData), true);
-            } else {
-                $put = file_get_contents("php://input");
-                $data = json_decode(utf8_decode($put), true);
-            }
+			$put = file_get_contents("php://input");
+			$data = json_decode(utf8_decode($put), true);
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -216,27 +212,15 @@ class UserController extends BaseActiveController
 			{
 				BaseActiveRecord::setClient($clientHeader);
 				$userModel = BaseActiveRecord::getUserModel($clientHeader);
-				$clientUser = $userModel::findOne($id);
+				$clientUser = $userModel::find()
+					->where(['UserName' => $username])
+					->one();
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				$username = $clientUser->UserName;
-				$id = null;
 			}
-			
             //get user model to be updated
-            //check params
-            if ($id != null) {
-                $user = SCUser::findOne($id);
-                //set username for future use
-                $username = $user->UserName;
-            } elseif ($username != null) {
-                $user = SCUser::find()
-                    ->where(['UserName' => $username])
-                    ->one();
-            } else {
-				//no ID or username avaliable
-                return 'Invalid Parameters.';
-                //throw new \yii\web\HttpException(400);
-            }
+			$user = SCUser::find()
+				->where(['UserName' => $username])
+				->one();
 			
             $currentRole = $user['UserAppRoleType'];
 
@@ -277,7 +261,7 @@ class UserController extends BaseActiveController
             //pass new data to user
             $user->attributes = $data;
             // Get modified by from token
-            $user->UserModifiedUID = self::getUserFromToken()->UserID;
+            $user->UserModifiedUID = self::getUserFromToken()->UserName;
 
             //rbac check if attempting to create an admin
             if ($user['UserAppRoleType'] == 'Admin') {
@@ -318,7 +302,7 @@ class UserController extends BaseActiveController
      * @returns json body of the user data
      * @throws \yii\web\HttpException
      */
-    public function actionView($id)
+    public function actionView($username)
     {
         try {
 			//get client header
@@ -329,19 +313,22 @@ class UserController extends BaseActiveController
             $response->format = Response::FORMAT_JSON;
 			
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient($client);
 
             PermissionsController::requirePermission('userView');
 			
 			if(BaseActiveController::isSCCT($client))
 			{
-				$user = SCUser::findOne($id);
+				$user = SCUser::find()
+					->where(['UserName' => $username])
+					->one();
 			}
 			else
 			{
-				BaseActiveRecord::setClient($client);
 				$userModel = BaseActiveRecord::getUserModel($client);
-				$user = $userModel::findOne($id);
+				$user = $userModel::find
+					->where(['UserName' => $username])
+					->one();
 			}
 
 			if($user == null)
@@ -772,7 +759,7 @@ class UserController extends BaseActiveController
 		$createdByInProject = BaseActiveController::getClientUser($client);
 		if($createdByInProject != null)
 		{
-			$projectUser->UserCreatedUID = $createdByInProject->UserID;
+			$projectUser->UserCreatedUID = $createdByInProject->UserName;
 		}
 		//set comment created on addition to project
 		$projectUser->UserComments = 'User created on association to project.';
@@ -826,7 +813,7 @@ class UserController extends BaseActiveController
 			$updatedByInProject = BaseActiveController::getClientUser($project->ProjectUrlPrefix);
 			if($updatedByInProject != null)
 			{
-				$projectUser->UserModifiedUID = $updatedByInProject->UserID;
+				$projectUser->UserModifiedUID = $updatedByInProject->UserName;
 			}
 			//can't update these values
 			if (isset($projectUser['UserCreatedUID'])) {
@@ -851,21 +838,6 @@ class UserController extends BaseActiveController
 		}
 		return $responseArray;
 	}
-
-	//get comet tracker user from client user id
-	private static function getUserByClientUser($userID, $client)
-	{
-		BaseActiveRecord::setClient($client);
-		$userModel = BaseActiveRecord::getUserModel($client);
-		//get client user
-		$clientUser = $userModel::findOne($userID);
-		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-		//get ct user
-		$user = SCUser::find()
-			->where(['UserName' => $clientUser->UserName])
-			->one();
-		return $user;
-	}
 	
 	//deactivate in scct base and propagate to all associated clients
 	private static function deactivateInScct($user)
@@ -874,6 +846,7 @@ class UserController extends BaseActiveController
 			//process user deactivation in client dbs
 			$deactivatedProjects = self::deactivateInProjects($user);
 			$userID = $user->UserID;
+			$username = $user->UserName;
 			
 			 //call stored procedure to for cascading deactivation of a user
 			$connection = SCUser::getDb();
@@ -882,11 +855,12 @@ class UserController extends BaseActiveController
 			$userDeactivateCommand->execute();
 			
 			//Log out user so that they don't receive 403s if logged in or deactivating self
-			$auth = Auth::findOne(["AuthUserID" => $userID]);
+			$auth = Auth::findOne(["AuthUserID" => $username]);
 			if($auth != null) $auth->delete();
 			
 			//build response data
 			//requery user after deactivation
+			//may be able to use the function refresh() to do this.
 			$user = SCUser::findOne($userID);
 			$user->UserPassword = '';
 			$userData['User'] = $user->attributes;
