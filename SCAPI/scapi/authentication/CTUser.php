@@ -12,50 +12,41 @@ use app\modules\v1\models\BaseActiveRecord;
 
 class CTUser extends User
 {
-	public function clearTokensByUser($userID)
+	public function clearTokenByUser($username)
 	{
 		Auth::setClient(BaseActiveController::urlPrefix());
 		$session = Yii::$app->getSession();
-		Yii::trace('User is '.$userID);
 		$auth = Auth::find()
-			->where(['AuthUserID' => $userID])
+			->where(['AuthUserID' => $username])
 			->one();
 		if ($auth !== null)
 		{
-			Yii::trace('Tokens Found');
 			$auth->delete();
-			Yii::trace('Tokens Removed');
 		}
-		Yii::trace('Token has been cleared');
 	}
 	
 	public function clearTokenByToken($token)
 	{
 		Auth::setClient(BaseActiveController::urlPrefix());
 		$session = Yii::$app->getSession();
-		Yii::trace('Token is '.$token);
 		$auth = Auth::find()
 			->where(['AuthToken' => $token])
 			->one();
 		if ($auth !== null)
 		{
-			Yii::trace('Token Found');
 			$auth->delete();
-			Yii::trace('Token Removed');
 		}
-		Yii::trace('Token has been cleared');
 	}
 	 
-	public function logout($destroySession = true, $userID = null, $token = null)
+	public function logout($destroySession = true, $username = null, $token = null)
 	{
-		yii::trace('CtUserLogout');
 		if($token != null)
 		{
 			$this->clearTokenByToken($token);
 		}
-		elseif($userID != null)
+		elseif($username != null)
 		{
-			$this->clearTokensByUser($userID);
+			$this->clearTokenByUser($username);
 		}
 		parent::logout();
 	}
@@ -72,7 +63,7 @@ class CTUser extends User
 				->where(['AuthToken' => $token])
 				->one())
 		{
-			$userID = $auth->AuthUserID;
+			$username = $auth->AuthUserID;
 			//get currentTime
 			$currentTime = time();//get time
 			$timeout = $auth->AuthTimeout;
@@ -83,7 +74,7 @@ class CTUser extends User
 				$newTimeout = $currentTime + $this->authTimeout;
 				$auth->AuthTimeout = $newTimeout;
 				// set modified by
-				$auth->AuthModifiedBy = $userID;
+				$auth->AuthModifiedBy = $username;
 				$auth->update();
 			} else {
 				$this->logout(true, null, $token);

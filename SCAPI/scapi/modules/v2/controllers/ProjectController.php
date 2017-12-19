@@ -180,7 +180,7 @@ class ProjectController extends BaseActiveController
 			$model = new Project();
 
 			$model->attributes = $data;  
-			$model->ProjectCreatedBy = self::getUserFromToken()->UserID;
+			$model->ProjectCreatedBy = self::getUserFromToken()->UserName;
 
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -233,6 +233,7 @@ class ProjectController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			$model->ProjectModifiedDate = Parent::getDate();
+			$model->ProjectModifiedBy = self::getUserFromToken()->UserName;
 			
 			if($model-> update())
 			{
@@ -606,7 +607,7 @@ class ProjectController extends BaseActiveController
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
-			$userID = self::getUserFromToken()->UserID;
+			$username = self::getUserFromToken()->Username;
 
 			//create response
 			$response = Yii::$app ->response;
@@ -640,7 +641,7 @@ class ProjectController extends BaseActiveController
 				$model = new MenusProjectModule();
 				$model->ProjectModulesName = $i;
 				$model->ProjectModulesProjectID = $projectID;
-				$model->ProjectModulesCreatedBy = $userID;
+				$model->ProjectModulesCreatedBy = $username;
 				if(!$model->save()) {
 					throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
 				}

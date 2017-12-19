@@ -19,9 +19,9 @@ use Yii;
  * @property string $ProjectStartDate
  * @property string $ProjectEndDate
  * @property string $ProjectCreateDate
- * @property integer $ProjectCreatedBy
+ * @property string $ProjectCreatedBy
  * @property string $ProjectModifiedDate
- * @property integer $ProjectModifiedBy
+ * @property string $ProjectModifiedBy
  * @property double $ProjectActivityGPSInterval
  * @property double $ProjectSurveyGPSInterval
  * @property integer $ProjectSurveyGPSMinDistance
@@ -51,8 +51,9 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion', 'ProjectLandingPage'], 'string'],
-            [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID'], 'integer'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion',
+			'ProjectLandingPage', 'ProjectCreatedBy', 'ProjectModifiedBy'], 'string'],
+            [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
 			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
 			[['ProjectUrlPrefix'], 'unique']
