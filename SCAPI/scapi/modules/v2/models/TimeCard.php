@@ -45,8 +45,8 @@ class TimeCard extends BaseActiveRecord
     {
         return [
             [['TimeCardStartDate', 'TimeCardEndDate', 'TimeCardCreateDate', 'TimeCardModifiedDate'], 'safe'],
-            [['TimeCardProjectID', 'TimeCardTechID', 'TimeCardApprovedBy'], 'integer'],
-            [['TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy', 'TimeCardApprovedFlag', 'TimeCardProjectGroupID',
+            [['TimeCardProjectID', 'TimeCardTechID'], 'integer'],
+            [['TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy', 'TimeCardApprovedBy', 'TimeCardApprovedFlag', 'TimeCardProjectGroupID',
 				'TimeCardActiveFlag', 'TimeCardArchiveFlag' ], 'string']
         ];
     }

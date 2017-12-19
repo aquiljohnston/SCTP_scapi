@@ -76,9 +76,9 @@ class LoginController extends Controller
 					Yii::$app->user->login($user);
 					//Generate Auth Token
 					$auth = new Auth();
-					$userID = $user->UserID;
-					$auth->AuthUserID = $userID;
-					$auth->AuthCreatedBy = $userID;
+					$username = $user->UserName;
+					$auth->AuthUserID = $username;
+					$auth->AuthCreatedBy = $username;
 					$auth-> beforeSave(true);
 					//Store Auth Token
 					$auth-> save();
@@ -101,7 +101,7 @@ class LoginController extends Controller
 			$authArray = ArrayHelper::toArray($auth);
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
-			$authArray['UserUID'] = $user->UserUID;
+			$authArray['UserName'] = $user->UserName;
 			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
 			
 			//add auth token to response

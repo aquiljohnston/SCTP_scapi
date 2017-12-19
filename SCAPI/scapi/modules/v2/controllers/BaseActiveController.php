@@ -177,12 +177,12 @@ class BaseActiveController extends ActiveController
 	}
 	
 	//Archives incoming json records for logging and data recovery
-	public static function archiveJson($json, $type, $userUID, $client)
+	public static function archiveJson($json, $type, $username, $client)
 	{
 		TabletDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new TabletDataInsertArchive;
-		$archiveRecord->CreatedUserUID = (string)$userUID;
+		$archiveRecord->CreatedUserUID = (string)$username;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
 		
@@ -191,12 +191,12 @@ class BaseActiveController extends ActiveController
 	
 	//Archives incoming web json records for logging and data recovery
 	//TODO: potentially want to merge with archive json function, not doing this now because it would require a lot of refactoring.
-	public static function archiveWebJson($json, $type, $userUID, $client)
+	public static function archiveWebJson($json, $type, $username, $client)
 	{
 		WebDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new WebDataInsertArchive;
-		$archiveRecord->CreatedUserUID = (string)$userUID;
+		$archiveRecord->CreatedUserUID = (string)$username;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
 		
@@ -204,12 +204,12 @@ class BaseActiveController extends ActiveController
 	}
 	
 	//Archives incoming breadcrumb jsons for logging and data recovery
-	public static function archiveBreadcrumbJson($json, $userUID, $client)
+	public static function archiveBreadcrumbJson($json, $username, $client)
 	{
 		TabletDataInsertBreadcrumbArchive::setClient($client);
 		
 		$archiveBreadcrumb = new TabletDataInsertBreadcrumbArchive;
-		$archiveBreadcrumb->UserUID = $userUID;
+		$archiveBreadcrumb->UserUID = $username;
 		$archiveBreadcrumb->InsertedData = $json;
 		$archiveBreadcrumb->TransactionType = 'Breadcrumb';
 		
