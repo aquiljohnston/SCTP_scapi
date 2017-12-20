@@ -76,9 +76,9 @@ class TaskController extends Controller
 	 */
 	public function actionGetAllTask($filter = null, $listPerPage = 10, $page = 1){
         try{
-            //set db
-            $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
+            $responseArray = [];
+            //set db target
+            Task::setClient(BaseActiveController::urlPrefix());
 
             $userQuery = Task::find()
                 ->select(['TaskID', 'TaskName', 'TaskQBReferenceID']);
