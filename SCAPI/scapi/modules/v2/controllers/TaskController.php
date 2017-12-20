@@ -29,6 +29,7 @@ class TaskController extends Controller
                 'actions' => [
 					'get-project-task' => ['get'],
 					'get-project-user-task' => ['get'],
+                    'get-all-task' => ['get'],
                 ],  
             ];
 		return $behaviors;	
