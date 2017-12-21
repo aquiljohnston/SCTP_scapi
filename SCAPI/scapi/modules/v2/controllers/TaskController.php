@@ -33,10 +33,25 @@ class TaskController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetProjectTask()
+	public function actionGetProjectTask($projectID)
 	{
-		//TODO add call to db
-		return [
+		
+
+		$response = Yii::$app ->response;
+
+		$taskQuery = new Query;
+
+		$taskQuery->select('*')
+					->from("vTaskAndProject(:projectID)")
+					->addParams([':projectID' => $projectID]);
+
+		$tasks = $taskQuery->all(BaseActiveRecord::getDb());
+
+		$response -> format = Response::FORMAT_JSON;
+
+		return $response;
+
+		/*return [
 			[
 				'FilterName' => 'Training',
 				'SortSeq' => 1,
@@ -50,7 +65,7 @@ class TaskController extends Controller
 				'SortSeq' => 3,
 				'FieldDisplayValue' => 'Atmospheric Corrosion',
 			],
-		];
+		];*/
 	}
 	
 	public function actionGetProjectUserTask()
