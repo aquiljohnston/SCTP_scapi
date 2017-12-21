@@ -576,6 +576,7 @@ class UserController extends BaseActiveController
 				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
 				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
+                //$projectTask = Yii::$app->runAction('v2/task/get-project-task',['projectID'=>$projectID]);
 				$projectTask = Yii::$app->runAction('v2/task/get-project-task');
 				$projectUserTask = Yii::$app->runAction('v2/task/get-project-user-task');
 				
