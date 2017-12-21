@@ -52,7 +52,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion', 'ProjectLandingPage'], 'string'],
-            [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID','ProjectProjectTypeReferenceID'], 'integer'],
+            [['ProjectStatus', 'ProjectClientID', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
 			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
 			[['ProjectUrlPrefix'], 'unique']
@@ -87,8 +87,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
 			'ProjectLandingPage' => 'Project Landing Page',
 			'ProjectQBProjectID' => 'Project QB Project ID',
 			'ProjectReferenceID' => 'Project Reference ID',
-            'ProjectRefreshDateTime' => 'Project Refresh Date Time',
-			'ProjectProjectTypeReferenceID' => 'Project Type Reference ID',
+			'ProjectRefreshDateTime' => 'Project Refresh Date Time',
         ];
     }
 
