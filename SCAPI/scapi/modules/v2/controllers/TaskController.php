@@ -37,7 +37,7 @@ class TaskController extends Controller
 	{
 		
 
-		$response = Yii::$app ->response;
+		/*$response = Yii::$app ->response;
 
 		$taskQuery = new Query;
 
@@ -49,9 +49,11 @@ class TaskController extends Controller
 
 		$response -> format = Response::FORMAT_JSON;
 
-		return $response;
+		$response -> data = $response;
 
-		/*return [
+		return $response;*/
+
+		return [
 			[
 				'FilterName' => 'Training',
 				'SortSeq' => 1,
@@ -65,7 +67,7 @@ class TaskController extends Controller
 				'SortSeq' => 3,
 				'FieldDisplayValue' => 'Atmospheric Corrosion',
 			],
-		];*/
+		];
 	}
 	
 	public function actionGetProjectUserTask()
