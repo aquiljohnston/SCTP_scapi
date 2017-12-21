@@ -509,7 +509,7 @@ class UserController extends BaseActiveController
     public function actionGetMe()
     {
 
-        try {\
+        try {
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 
