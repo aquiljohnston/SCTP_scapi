@@ -576,7 +576,7 @@ class UserController extends BaseActiveController
 				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
 				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
-// 				$projectTask = Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
+				$projectTask = Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
 				$projectUserTask = Yii::$app->runAction('v2/task/get-project-user-task');
 				
 				//set client back to ct after external call
@@ -589,7 +589,7 @@ class UserController extends BaseActiveController
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
-// 				$projectData['ProjectTask'] = $projectTask;
+				$projectData['ProjectTask'] = $projectTask;
 				$projectData['ProjectUserTask'] = $projectUserTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
