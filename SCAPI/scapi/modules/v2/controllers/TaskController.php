@@ -38,7 +38,6 @@ class TaskController extends Controller
 	public function actionGetProjectTask($projectID)
 	{
 		
-
 		/*$response = Yii::$app ->response;
 
 		$taskQuery = new Query;
