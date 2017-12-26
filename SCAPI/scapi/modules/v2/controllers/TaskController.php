@@ -36,9 +36,8 @@ class TaskController extends Controller
 	}
 	
 	public function actionGetProjectTask($projectID)
-	{
-		
-		/*$response = Yii::$app ->response;
+	{	
+		$response = Yii::$app ->response;
 
 		$taskQuery = new Query;
 
@@ -52,23 +51,7 @@ class TaskController extends Controller
 
 		$response -> data = $response;
 
-		return $response;*/
-
-		return [
-			[
-				'FilterName' => 'Training',
-				'SortSeq' => 1,
-				'FieldDisplayValue' => 'Training',
-			],[
-				'FilterName' => 'Leak Survey',
-				'SortSeq' => 2,
-				'FieldDisplayValue' => 'Leak Survey',
-			],[
-				'FilterName' => 'Atmospheric Corrosion',
-				'SortSeq' => 3,
-				'FieldDisplayValue' => 'Atmospheric Corrosion',
-			],
-		];
+		return $response;
 	}
 	
 	public function actionGetProjectUserTask()
