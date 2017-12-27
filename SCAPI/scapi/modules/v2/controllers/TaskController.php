@@ -5,6 +5,7 @@ namespace app\modules\v2\controllers;
 use Yii;
 use yii\rest\Controller;
 use app\modules\v2\models\Task;
+use app\modules\v2\models\TaskAndProject;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\authentication\TokenAuth;
@@ -35,26 +36,22 @@ class TaskController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetProjectTask($projectID)
-	{	
-		$response = Yii::$app ->response;
+	public static function GetProjectTask($projectID)
+	{
+        //set db target
+        TaskAndProject::setClient(BaseActiveController::urlPrefix());
 
-		$taskQuery = new Query;
+        $responseArray = [];
+        $data = TaskAndProject::find()
+            ->where(['projectID' => $projectID])
+            ->asArray()
+            ->all();
 
-		$taskQuery->select('*')
-					->from("vTaskAndProject(:projectID)")
-					->addParams([':projectID' => $projectID]);
-
-		$tasks = $taskQuery->all(BaseActiveRecord::getDb());
-
-		$response -> format = Response::FORMAT_JSON;
-
-		$response -> data = $response;
-
-		return $response;
+        $responseArray['assets'] = $data != null ? $data : null;
+		return $responseArray;
 	}
 	
-	public function actionGetProjectUserTask()
+	public static function GetProjectUserTask()
 	{
 		//TODO add call to db
 		return [
