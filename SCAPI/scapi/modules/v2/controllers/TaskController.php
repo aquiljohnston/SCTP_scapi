@@ -36,23 +36,22 @@ class TaskController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetProjectTask($projectID)
+	public static function GetProjectTask($projectID)
 	{
         //set db target
-        $headers = getallheaders();
         TaskAndProject::setClient(BaseActiveController::urlPrefix());
 
-        $assetQuery = TaskAndProject::find()
+        $responseArray = [];
+        $data = TaskAndProject::find()
             ->where(['projectID' => $projectID])
+            ->asArray()
             ->all();
 
-        $response = Yii::$app ->response;
-		$response -> format = Response::FORMAT_JSON;
-		$response -> data = $assetQuery;
-		return $response;
+        $responseArray['assets'] = $data != null ? $data : null;
+		return $responseArray;
 	}
 	
-	public function actionGetProjectUserTask()
+	public static function GetProjectUserTask()
 	{
 		//TODO add call to db
 		return [
