@@ -47,7 +47,7 @@ class TaskController extends Controller
             ->asArray()
             ->all();
 
-        $responseArray['assets'] = $data != null ? $data : null;
+        $responseArray['assets'] = $data != null ? $data : [];
 		return $responseArray;
 	}
 	
