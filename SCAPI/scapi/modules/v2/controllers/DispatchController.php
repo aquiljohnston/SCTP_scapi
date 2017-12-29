@@ -126,7 +126,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType, $billingCode)
+	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null, $billingCode=null)
 	{
 		try
 		{
