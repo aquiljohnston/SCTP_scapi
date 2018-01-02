@@ -126,7 +126,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null, $billingCode=null)
 	{
 		try
 		{
@@ -137,8 +137,16 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
+
+			//handle null billing code and inspection type
+			//as they are not always set.
+			$billingCode = $billingCode != '' ? $billingCode : null;
+			$inspectionType = $inspectionType != '' ?  $inspectionType : null;
+
 			$assetQuery = AvailableWorkOrder::find()
-				->where(['MapGrid' => $mapGridSelected]);
+				->where(['MapGrid' => $mapGridSelected])
+				->andwhere(['InspectionType' => $inspectionType])
+				->andwhere(['BillingCode' => $billingCode]);
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
