@@ -48,9 +48,12 @@ use Yii;
  * @property string $Division
  * @property string $BillingCode
  * @property string $Rollup
- *  @property string $MeterLocation
+ * @property string $MeterLocation
  * @property double $PipelineFootage
  * @property string $SpecialInstructions
+ * @property string $OfficeName
+ * @property string $RollUpOfficeName
+ * @property string $BillingOfficeName
  *
  * @property TPipelinePoints[] $tPipelinePoints
  * @property UserTb $createdBy
@@ -72,7 +75,7 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Frequency', 'Division', 'BillingCode', 'Rollup', 'MeterLocation', 'SpecialInstructions'], 'string'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Frequency', 'Division', 'BillingCode', 'Rollup', 'MeterLocation', 'SpecialInstructions', 'OfficeName', 'RollUpOfficeName', 'BillingOfficeName'], 'string'],
             [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'EventIndicator', 'OrderProcessed'], 'integer'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd', 'PipelineFootage'], 'number'],
@@ -131,6 +134,9 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
             'MeterLocation' => 'Meter Location',
             'PipelineFootage' => 'Pipeline Footage',
             'SpecialInstructions' => 'Special Instructions',
+            'OfficeName' => 'Office Name',
+            'RollUpOfficeName' => 'Roll Up Office Name',
+            'BillingOfficeName' => 'Billing Office Name',
         ];
     }
 
