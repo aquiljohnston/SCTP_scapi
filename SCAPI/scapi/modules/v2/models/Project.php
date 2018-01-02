@@ -29,7 +29,8 @@ use Yii;
  * @property string $ProjectRefreshDateTime
  * @property string $ProjectLandingPage 
  * @property integer $ProjectQBProjectID 
- * @property integer $ProjectReferenceID 
+ * @property integer $ProjectReferenceID
+ * @property string $ProjectProjectTypeReferenceID
  *
  * @property ProjectUserTb[] $projectUserTbs
  * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
@@ -52,7 +53,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion',
-			'ProjectLandingPage', 'ProjectCreatedBy', 'ProjectModifiedBy'], 'string'],
+			'ProjectLandingPage', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectProjectTypeReferenceID'], 'string'],
             [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
 			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
@@ -89,6 +90,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
 			'ProjectQBProjectID' => 'Project QB Project ID',
 			'ProjectReferenceID' => 'Project Reference ID',
 			'ProjectRefreshDateTime' => 'Project Refresh Date Time',
+            'ProjectProjectTypeReferenceID' => 'Project Project Type Reference ID'
         ];
     }
 
