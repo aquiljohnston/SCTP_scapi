@@ -76,9 +76,8 @@ class LoginController extends Controller
 					Yii::$app->user->login($user);
 					//Generate Auth Token
 					$auth = new Auth();
-					$username = $user->UserName;
-					$auth->AuthUserID = $username;
-					$auth->AuthCreatedBy = $username;
+					$auth->AuthUserID = $user->UserID;
+					$auth->AuthCreatedBy = $user->UserName;
 					$auth-> beforeSave(true);
 					//Store Auth Token
 					$auth-> save();
@@ -149,7 +148,7 @@ class LoginController extends Controller
 			}
 
 			//call CTUser\logout()
-			Yii::$app->user->logout($destroySession = true, null, $token);
+			Yii::$app->user->logout($destroySession = true, $token);
 			$response->data = 'Logout Successful!';
 			return $response;
 		}
