@@ -118,11 +118,17 @@ class BaseActiveController extends ActiveController
 	{
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		$ctUser = self::getUserFromToken();
-		
-		BaseActiveRecord::setClient($client);
-		$clientUser = BaseUser::find()
-			->where(['UserName' => $ctUser->UserName])
-			->one();
+		//if token is not found(replaced by another login) ctUser will be null and throw an error in where clause
+		if($ctUser !== null)
+		{
+			BaseActiveRecord::setClient($client);
+			$clientUser = BaseUser::find()
+				->where(['UserName' => $ctUser->UserName])
+				->one();
+		}
+		else{
+			return null;
+		}
 		return $clientUser;
 	}
 	

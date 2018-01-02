@@ -12,18 +12,6 @@ use app\modules\v1\models\BaseActiveRecord;
 
 class CTUser extends User
 {
-	public function clearTokenByUser($username)
-	{
-		Auth::setClient(BaseActiveController::urlPrefix());
-		$session = Yii::$app->getSession();
-		$auth = Auth::find()
-			->where(['AuthUserID' => $username])
-			->one();
-		if ($auth !== null)
-		{
-			$auth->delete();
-		}
-	}
 	
 	public function clearTokenByToken($token)
 	{
@@ -38,15 +26,11 @@ class CTUser extends User
 		}
 	}
 	 
-	public function logout($destroySession = true, $username = null, $token = null)
+	public function logout($destroySession = true, $token = null)
 	{
 		if($token != null)
 		{
 			$this->clearTokenByToken($token);
-		}
-		elseif($username != null)
-		{
-			$this->clearTokenByUser($username);
 		}
 		parent::logout();
 	}
@@ -77,7 +61,7 @@ class CTUser extends User
 				$auth->AuthModifiedBy = $username;
 				$auth->update();
 			} else {
-				$this->logout(true, null, $token);
+				$this->logout(true, $token);
 			}
 		} else {
 			throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
