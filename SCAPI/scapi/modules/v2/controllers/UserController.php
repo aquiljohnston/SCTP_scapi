@@ -326,7 +326,7 @@ class UserController extends BaseActiveController
 			else
 			{
 				$userModel = BaseActiveRecord::getUserModel($client);
-				$user = $userModel::find
+				$user = $userModel::find()
 					->where(['UserName' => $username])
 					->one();
 			}
