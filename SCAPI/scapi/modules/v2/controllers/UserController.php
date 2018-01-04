@@ -191,10 +191,7 @@ class UserController extends BaseActiveController
         try {
 			//get client header
 			//checks to see if request was sent directly to this route or call internally from another api controller.
-			if($client == null)
-			{
-				$clientHeader = getallheaders()['X-Client'];
-			}
+			$clientHeader = getallheaders()['X-Client'];
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
@@ -233,7 +230,7 @@ class UserController extends BaseActiveController
 
             //handle the password
             //get pass from data
-            if (array_key_exists('UserPassword', $data) && $jsonData == null) {
+            if (array_key_exists('UserPassword', $data)) {
                 $securedPass = $data['UserPassword'];
 
                 //decrypt password
@@ -281,7 +278,7 @@ class UserController extends BaseActiveController
                 $responseArray = $user->attributes;
 
                 //propagate update to all associated projects
-				$updateInProjectResponse = self::updateInProject($user, $username, $client);
+				$updateInProjectResponse = self::updateInProject($user, $username);
                 $responseArray['UpdatedProjects'] = $updateInProjectResponse;
             } else {
                 return 'Failed to update base user.';
@@ -781,7 +778,7 @@ class UserController extends BaseActiveController
 		return $projectUser;
 	}
 	
-	public static function updateInProject($user, $username, $client = null)
+	public static function updateInProject($user, $username)
 	{
 		$responseArray = [];
 		
