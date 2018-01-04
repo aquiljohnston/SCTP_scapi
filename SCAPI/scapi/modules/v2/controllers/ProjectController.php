@@ -329,7 +329,11 @@ class ProjectController extends BaseActiveController
 			//create array of included user id/name pairs
 			for($i=0; $i < $assignedSize; $i++)
 			{
-				$assignedPairs[$assignedUsers[$i]->UserID] = ['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName . " (" . $assignedUsers[$i]->UserName . ")"];
+				$assignedPairs[$assignedUsers[$i]->UserID] = 
+				[
+				'userID'	=>$assignedUsers[$i]->UserID,
+				'content' 	=> $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName . " (" . $assignedUsers[$i]->UserName . ")"
+			];
 			}
 			
 			//get all users
@@ -352,7 +356,9 @@ class ProjectController extends BaseActiveController
 			//create array of all user id/name pairs
 			for($i=0; $i < $unassignedSize; $i++)
 			{
-				$unassignedPairs[$allUsers[$i]->UserID]=['content' => $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName . " (" . $allUsers[$i]->UserName . ")"];
+				$unassignedPairs[$allUsers[$i]->UserID]=[
+					'userID' 	=> $allUsers[$i]->UserID,
+					'content' 	=> $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName . " (" . $allUsers[$i]->UserName . ")"];
 			}
 			
 			//filter included pairs
@@ -410,6 +416,8 @@ class ProjectController extends BaseActiveController
 			//decode post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
+
+			//Yii::trace("DUMPSTER: ".$data);
 			
 			//check if key exist
 			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
