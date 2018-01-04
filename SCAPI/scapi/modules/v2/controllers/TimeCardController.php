@@ -121,7 +121,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//get userid
-			$approvedBy = self::getUserFromToken()->UserID;
+			$approvedBy = self::getUserFromToken()->UserName;
 			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
@@ -175,7 +175,7 @@ class TimeCardController extends BaseActiveController
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardGetEntries');
 			
-			$response = Yii::$app ->response;
+			$response = Yii::$app->response;
 			$dataArray = [];
 			$timeCard = TimeCard::findOne($cardID);
 			

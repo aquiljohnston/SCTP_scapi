@@ -38,9 +38,9 @@ class DropDown extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ProjectID', 'CreatedUserID', 'ModifiedUserID', 'SortSeq'], 'integer'],
+            [['ProjectID', 'SortSeq'], 'integer'],
             [['CreatedDTLT', 'ModifiedDTLT'], 'safe'],
-            [['Comments', 'DropDownType', 'FilterName', 'FieldDisplay', 'FieldValue', 'FieldDescription', 'ConversionValue'], 'string'],
+            [['Comments', 'DropDownType', 'FilterName', 'FieldDisplay', 'FieldValue', 'FieldDescription', 'ConversionValue', 'CreatedUserID', 'ModifiedUserID'], 'string'],
         ];
     }
 
