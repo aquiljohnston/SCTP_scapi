@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\MileageEntry;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
@@ -101,7 +102,7 @@ class MileageEntryController extends BaseActiveController
 			try
 			{
 				//create transaction
-				$connection = \Yii::$app->db;
+				$connection = BaseActiveRecord::getDb();
 				$transaction = $connection->beginTransaction(); 
 			
 				foreach($approvedEntries as $entry)
@@ -124,7 +125,6 @@ class MileageEntryController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
-			
 		}
 		catch(\Exception $e) 
 		{
