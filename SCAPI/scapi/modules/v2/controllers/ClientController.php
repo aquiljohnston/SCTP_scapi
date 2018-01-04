@@ -220,7 +220,7 @@ class ClientController extends BaseActiveController
 
 			$model = new Client(); 
 			$model->attributes = $data;  
-			$model->ClientCreatorUserID = self::getUserFromToken()->UserID;
+			$model->ClientCreatorUserID = self::getUserFromToken()->UserName;
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -262,7 +262,7 @@ class ClientController extends BaseActiveController
 			$model = Client::findOne($id);
 			
 			$model->attributes = $data;  
-			$model->ClientModifiedBy = self::getUserFromToken()->UserID;
+			$model->ClientModifiedBy = self::getUserFromToken()->UserName;
 			
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;

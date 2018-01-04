@@ -180,7 +180,7 @@ class ProjectController extends BaseActiveController
 			$model = new Project();
 
 			$model->attributes = $data;  
-			$model->ProjectCreatedBy = self::getUserFromToken()->UserID;
+			$model->ProjectCreatedBy = self::getUserFromToken()->UserName;
 
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -233,6 +233,7 @@ class ProjectController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			$model->ProjectModifiedDate = Parent::getDate();
+			$model->ProjectModifiedBy = self::getUserFromToken()->UserName;
 			
 			if($model-> update())
 			{
@@ -497,6 +498,7 @@ class ProjectController extends BaseActiveController
 		$userID = $user->UserID;
 		$projectID = $project->ProjectID;
 		//link user to project
+		//TODO add created by via third param extraColumns array if possible http://www.yiiframework.com/doc-2.0/yii-db-baseactiverecord.html#link()-detail
 		$user->link('projects',$project);
 		//call sps to create new time cards and mileage cards
 		try
@@ -597,7 +599,7 @@ class ProjectController extends BaseActiveController
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
-			$userID = self::getUserFromToken()->UserID;
+			$username = self::getUserFromToken()->Username;
 
 			//create response
 			$response = Yii::$app ->response;
@@ -631,7 +633,7 @@ class ProjectController extends BaseActiveController
 				$model = new MenusProjectModule();
 				$model->ProjectModulesName = $i;
 				$model->ProjectModulesProjectID = $projectID;
-				$model->ProjectModulesCreatedBy = $userID;
+				$model->ProjectModulesCreatedBy = $username;
 				if(!$model->save()) {
 					throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
 				}

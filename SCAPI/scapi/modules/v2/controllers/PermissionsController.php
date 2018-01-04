@@ -45,12 +45,12 @@ class PermissionsController extends Controller {
         if($token === null) {
             $token = Yii::$app->request->getAuthUser();
         }
-		$user = BaseActiveController::getClientUser($client);
 		
+		$user = BaseActiveController::getClientUser($client);
 		//handle if user could not be found
 		if ($user == null)
 		{
-			return false;
+			throw new \yii\web\HttpException(401);
 		}
 		
         $userID = $user->UserID;
