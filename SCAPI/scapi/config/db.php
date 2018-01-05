@@ -90,13 +90,13 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
-	// 'scanaStageDb' => [
-		// 'class' => 'yii\db\Connection',
-		// 'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_SCANA_GIS_STAGE',
-		// 'username' => 'ApplicationCometTracker',
-		// 'password' => '321cba',
-		// 'charset' => 'utf8',
-	// ],
+	'scanaStageDb' => [
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_SCANA_GIS_STAGE',
+		'username' => 'ApplicationCometTracker',
+		'password' => '321cba',
+		'charset' => 'utf8',
+	],
 	// 'scanaProdDb' => [
 		// 'class' => 'yii\db\Connection',
 		// 'dsn' => 'sqlsrv:Server=10.0.0.51;Database=vCAT_SCANA_GIS_PROD',
