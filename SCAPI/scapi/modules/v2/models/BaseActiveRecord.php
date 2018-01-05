@@ -149,10 +149,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->scanaDevDb;
 		}
-		// if (self::$CLIENT_ID == self::SCANA_STAGE)
-		// {
-			// return Yii::$app->scanaStageDb;
-		// }
+		if (self::$CLIENT_ID == self::SCANA_STAGE)
+		{
+			return Yii::$app->scanaStageDb;
+		}
 		// if (self::$CLIENT_ID == self::SCANA_PROD)
 		// {
 			// return Yii::$app->scanaProdDb;
