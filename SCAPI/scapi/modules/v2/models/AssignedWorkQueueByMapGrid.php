@@ -62,6 +62,8 @@ class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
             'Percent Completed' => 'Percent  Completed',
             'Total' => 'Total',
             'Remaining' => 'Remaining',
+            'InspectionType' => 'Inspection Type',
+            'BillingCode' => 'Billing Code',
         ];
     }
 }
