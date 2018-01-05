@@ -53,6 +53,7 @@ class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecor
             'Frequency' => 'Frequency',
             'Division' => 'Division',
             'BillingCode' => 'Billing Code',
+            'InspectionType' => 'Inspection Type',
         ];
     }
 }
