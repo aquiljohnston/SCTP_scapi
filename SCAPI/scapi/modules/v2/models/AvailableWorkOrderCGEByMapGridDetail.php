@@ -57,6 +57,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
             'SectionNumber' => 'Section Number',
             'ScheduleRequired' => 'Schedule Required',
             'BillingCode' => 'Billing Code',
+            'OfficeName' => 'Office Name',
         ];
     }
 }
