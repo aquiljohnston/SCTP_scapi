@@ -51,6 +51,7 @@ class AvailableWorkOrderCGEByMapGrid extends \app\modules\v2\models\BaseActiveRe
             'ScheduleRequired' => 'Schedule Required',
             'InspectionType' => 'Inspection Type',
             'BillingCode' => 'Billing Code',
+            'OfficeName' => 'Office Name',
         ];
     }
 }
