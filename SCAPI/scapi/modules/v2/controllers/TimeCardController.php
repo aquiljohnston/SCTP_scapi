@@ -424,13 +424,11 @@ class TimeCardController extends BaseActiveController
         }
     }
 
-    public function actionGetTimeCardsHistoryData($week)
+    public function actionGetTimeCardsHistoryData($selectedTimeCardIDs = [], $week = null)
     {
         // RBAC permission check is embedded in this action
-        try
-        {
+        try{
             //set db target headers
-            $headers = getallheaders();
             TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
             //format response
@@ -439,63 +437,62 @@ class TimeCardController extends BaseActiveController
 
             //response array of time cards
             $timeCardsArr = [];
-            //$responseArray = [];
+            $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
 
-            //rbac permission check
-            if (PermissionsController::can('timeCardGetAllCards'))
-            {
-                //check if week is prior or current to determine appropriate view
-                if($week == 'prior')
-                {
-                    $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                    //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
-                }
-                elseif($week == 'current')
-                {
-                    $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                    //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
-                }
-            }
-            //rbac permission check
-            elseif (PermissionsController::can('timeCardGetOwnCards'))
-            {
-                $userID = self::getUserFromToken()->UserID;
-                //get user project relations array
-                $projects = ProjectUser::find()
-                    ->where("ProjUserUserID = $userID")
-                    ->all();
-                $projectsSize = count($projects);
+            if ($selectedTimeCardIDs != null && count($selectedTimeCardIDs) > 0){
+                //build base query
+                $responseArray = new Query;
+                $responseArray  ->select('*')
+                    ->from(["fnGenerateOasisTimeCardByTimeCardID(:TimeCardID)"])
+                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
 
-                //check if week is prior or current to determine appropriate view
-                if($week == 'prior' && $projectsSize > 0)
-                {
-                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
 
-                    for($i=0; $i < $projectsSize; $i++)
-                    {
-                        $projectID = $projects[$i]->ProjUserProjectID;
-                        $timeCards->andWhere(['ProjectID'=>$projectID]);
+            } else {
+                //rbac permission check
+                if (PermissionsController::can('timeCardGetAllCards')) {
+                    //check if week is prior or current to determine appropriate view
+                    if ($week == 'prior') {
+                        $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                        //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
+                    } elseif ($week == 'current') {
+                        $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                        //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
                     }
-                    $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                } //rbac permission check
+                elseif (PermissionsController::can('timeCardGetOwnCards')) {
+                    $userID = self::getUserFromToken()->UserID;
+                    //get user project relations array
+                    $projects = ProjectUser::find()
+                        ->where("ProjUserUserID = $userID")
+                        ->all();
+                    $projectsSize = count($projects);
 
-                }
-                elseif($week == 'current' && $projectsSize > 0)
-                {
-                    $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-                    for($i=0; $i < $projectsSize; $i++)
-                    {
-                        $projectID = $projects[$i]->ProjUserProjectID;
-                        $timeCards->andWhere(['ProjectID'=>$projectID]);
+                    //check if week is prior or current to determine appropriate view
+                    if ($week == 'prior' && $projectsSize > 0) {
+                        $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+
+                        for ($i = 0; $i < $projectsSize; $i++) {
+                            $projectID = $projects[$i]->ProjUserProjectID;
+                            $timeCards->andWhere(['ProjectID' => $projectID]);
+                        }
+                        $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+
+                    } elseif ($week == 'current' && $projectsSize > 0) {
+                        $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+                        for ($i = 0; $i < $projectsSize; $i++) {
+                            $projectID = $projects[$i]->ProjUserProjectID;
+                            $timeCards->andWhere(['ProjectID' => $projectID]);
+                        }
+                        $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
+                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                     }
-                    $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                    $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                } else {
+                    throw new ForbiddenHttpException;
                 }
-            }
-            else{
-                throw new ForbiddenHttpException;
             }
 
             if (!empty($responseArray))
