@@ -246,6 +246,7 @@ class ActivityController extends BaseActiveController
 							//add activityID to corresponding time entries
 							if($timeLength > 0)
 							{
+								Activity::setClient(BaseActiveController::urlPrefix());
 								for($t = 0; $t < $timeLength; $t++)
 								{
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
@@ -299,6 +300,7 @@ class ActivityController extends BaseActiveController
 							//add activityID to corresponding mileage entries
 							if($mileageLength > 0)
 							{
+								Activity::setClient(BaseActiveController::urlPrefix());
 								for($m = 0; $m < $mileageLength; $m++)
 								{
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;

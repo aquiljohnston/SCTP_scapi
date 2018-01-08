@@ -93,6 +93,7 @@ class DispatchController extends Controller
 					['like', 'Division', $filter],
 					['like', 'InspectionType', $filter],
 					['like', 'BillingCode', $filter],
+					['like', 'OfficeName', $filter],
 					]);
 				}
 			}
@@ -170,6 +171,7 @@ class DispatchController extends Controller
 				['like', 'ComplianceEnd', $filter],
 				['like', 'SectionNumber', $filter],
                 ['like', 'Address', $filter],
+                ['like', 'OfficeName', $filter],
 				]);
 			}
 			
@@ -441,6 +443,7 @@ class DispatchController extends Controller
 				['like', 'AssignedTo', $filter],
                 ['like', 'Address', $filter],
                 ['like', 'AccountTelephoneNumber', $filter],
+                ['like', 'OfficeName', $filter],
 				]);
 			}
 			
