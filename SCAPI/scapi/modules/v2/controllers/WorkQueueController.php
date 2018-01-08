@@ -101,7 +101,7 @@ class WorkQueueController extends Controller
 	}
 	
 	//fuction called by activity to parse and accept work queues
-	public static function accept($data, $client, $modifiedBy)
+	public static function accept($data, $client)
 	{
 		try
 		{
@@ -128,7 +128,7 @@ class WorkQueueController extends Controller
 					if($workQueue != null)
 					{
 						$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
-						$workQueue->ModifiedBy = $modifiedBy;
+						$workQueue->ModifiedBy = BaseActiveController::getClientUser($client)->UserID;
 						$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
 						if($workQueue->update())
 						{
