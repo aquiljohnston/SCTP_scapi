@@ -49,6 +49,7 @@ class AvailableWorkOrderCGEByWODetails extends \app\modules\v2\models\BaseActive
             'ID' => 'ID',
             'BillingCode' => 'Billing Code',
             'InspectionType' => 'Inspection Type',
+            'OfficeName' => 'Office Name',
         ];
     }
 }
