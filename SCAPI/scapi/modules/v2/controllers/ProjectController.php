@@ -505,7 +505,8 @@ class ProjectController extends BaseActiveController
 		$userID = $user->UserID;
 		$projectID = $project->ProjectID;
 		//link user to project
-		$user->link('projects',$project);
+		//http://www.yiiframework.com/doc-2.0/yii-db-baseactiverecord.html#link()-detail
+		$user->link('projects',$project, ['ProjUserCreatedBy' => self::getUserFromToken()->UserName]);
 		//call sps to create new time cards and mileage cards
 		try
 		{
