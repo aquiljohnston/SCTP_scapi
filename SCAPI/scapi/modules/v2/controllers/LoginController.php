@@ -41,13 +41,16 @@ class LoginController extends Controller
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 
-			//archive json
-			BaseActiveController::archiveWebJson(
-				json_encode($data),
-				'Login',
-				//ternary check if username is in data set to prevent potential error on bad json
-				(array_key_exists('UserName', $data) ? $data['UserName'] : null),
-				$client);
+			if($client != null)
+			{
+				//archive json
+				BaseActiveController::archiveWebJson(
+					json_encode($data),
+					'Login',
+					//ternary check if username is in data set to prevent potential error on bad json
+					(array_key_exists('UserName', $data) ? $data['UserName'] : null),
+					$client);
+			}
 			
 			//set db target
 			SCUser::setClient(BaseActiveController::urlPrefix());
