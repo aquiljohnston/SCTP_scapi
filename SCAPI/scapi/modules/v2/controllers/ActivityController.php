@@ -385,7 +385,7 @@ class ActivityController extends BaseActiveController
 		//handle accepting work queue
 		if (array_key_exists('WorkQueue', $activityData))
 		{
-			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client, $createdBy);
+			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client);
 			$responseData['WorkQueue'] = $workQueueResponse;
 		}
 		//handle creation of new calibration records
