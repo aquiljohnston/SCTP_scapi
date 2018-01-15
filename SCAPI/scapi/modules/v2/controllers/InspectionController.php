@@ -239,14 +239,16 @@ class InspectionController extends Controller
 			$assetSuccessFlag = 0;
 			$assetID = null;
 		
+			$assetModel = BaseActiveRecord::getAssetModel($client);
+		
 			//check if Asset already exist.
-			$previousAsset = Asset::find()
+			$previousAsset = $assetModel::find()
 				->where(['AssetTabletID' => $data['AssetTabletID']])
 				//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 				->one();
 				
 			if ($previousAsset == null) {
-				$newAsset = new Asset;
+				$newAsset = new $assetModel;
 				$newAsset->attributes = $data;
 				$newAsset->InspectionID = $inspectionID;
 				if ($newAsset->save()) {
