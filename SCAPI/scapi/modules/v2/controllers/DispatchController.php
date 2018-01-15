@@ -91,6 +91,9 @@ class DispatchController extends Controller
 					['like', 'AvailableWorkOrderCount', $filter],
 					['like', 'Frequency', $filter],
 					['like', 'Division', $filter],
+					['like', 'InspectionType', $filter],
+					['like', 'BillingCode', $filter],
+					['like', 'OfficeName', $filter],
 					]);
 				}
 			}
@@ -124,7 +127,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null, $billingCode=null)
 	{
 		try
 		{
@@ -135,8 +138,16 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
+
+			//handle null billing code and inspection type
+			//as they are not always set.
+			$billingCode = $billingCode != '' ? $billingCode : null;
+			$inspectionType = $inspectionType != '' ?  $inspectionType : null;
+
 			$assetQuery = AvailableWorkOrder::find()
-				->where(['MapGrid' => $mapGridSelected]);
+				->where(['MapGrid' => $mapGridSelected])
+				->andwhere(['InspectionType' => $inspectionType])
+				->andwhere(['BillingCode' => $billingCode]);
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
@@ -160,6 +171,7 @@ class DispatchController extends Controller
 				['like', 'ComplianceEnd', $filter],
 				['like', 'SectionNumber', $filter],
                 ['like', 'Address', $filter],
+                ['like', 'OfficeName', $filter],
 				]);
 			}
 			
@@ -430,6 +442,8 @@ class DispatchController extends Controller
 				['like', 'SectionNumber', $filter],
 				['like', 'AssignedTo', $filter],
                 ['like', 'Address', $filter],
+                ['like', 'AccountTelephoneNumber', $filter],
+                ['like', 'OfficeName', $filter],
 				]);
 			}
 			
@@ -562,6 +576,7 @@ class DispatchController extends Controller
 		$results = [];
 		$workOrders = [];
 		//get status code for Assigned work
+		//TODO replace with constant
 		$assignedCode = self::statusCodeLookup('Assigned');
 		$successFlag = 1;
 		$isAsset = 0;
@@ -721,5 +736,43 @@ class DispatchController extends Controller
 			->count();
 		$flag = $divisionCount > 0 ? 1 : 0;
 		return $flag;
+	}
+	
+	
+	//route to get pipeline records for the purpose of Andre's dual dispatch test.
+	public function actionGetPipe()
+	{
+		try
+		{
+			//set dbl
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			$assetQuery = WorkOrder::find()
+				->limit(8)
+				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
+				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
+				->where(['tWorkOrder.LocationType' => 'Gas Main',
+					'tWorkOrder.CompletedFlag' => 0,
+					'tWorkOrder.InspectionAttemptCounter' => 0,
+					'tWorkOrder.EventIndicator' => null])
+				->asArray()
+				->all();
+
+			//create response object
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $assetQuery;
+			return $response;
+		}
+        catch(ForbiddenHttpException $e)
+        {
+            throw new ForbiddenHttpException;
+        }
+        catch(\Exception $e)
+        {
+			BaseActiveController::archiveWebErrorJson('actionGetPipe', $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
 	}
 }

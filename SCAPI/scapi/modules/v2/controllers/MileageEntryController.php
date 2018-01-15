@@ -1,11 +1,12 @@
 <?php
 
-namespace app\modules\v1\controllers;
+namespace app\modules\v2\controllers;
 
 use Yii;
-use app\modules\v1\models\MileageEntry;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\models\MileageEntry;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -16,7 +17,7 @@ use yii\web\Response;
  */
 class MileageEntryController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v1\models\MileageEntry'; 
+    public $modelClass = 'app\modules\v2\models\MileageEntry'; 
 
 	public function behaviors()
 	{
@@ -43,6 +44,7 @@ class MileageEntryController extends BaseActiveController
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
 	
+	//is this still in use?
 	public function actionView($id)
 	{
 		try
@@ -59,49 +61,6 @@ class MileageEntryController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			$response->data = $mileageEntry;
 			
-			return $response;
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//believe this has been replaced by use of activity create from the web
-	public function actionCreate()
-	{
-		try
-		{
-			//set db target
-			MileageEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageEntryCreate');
-			
-			$post = file_get_contents("php://input");
-			$data = json_decode($post, true);
-
-			$model = new MileageEntry(); 
-			$model->attributes = $data;
-
-			
-			$userID = self::getUserFromToken()->UserID;
-			$model->MileageEntryCreatedBy = $userID;
-
-
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-
-			if($model-> save())
-			{
-				$response->setStatusCode(201);
-				$response->data = $model; 
-			}
-			else
-			{
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
-			}
 			return $response;
 		}
 		catch(\Exception $e)
@@ -128,8 +87,9 @@ class MileageEntryController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
+			//get current user by auth token
+			$deactivatedBy =  self::getUserFromToken()->UserName;
 			//parse json
-			$deactivatedBy = $data["deactivatedBy"];
 			$entryIDs = $data["entryArray"];
 			
 			//get mileage entries
@@ -142,7 +102,7 @@ class MileageEntryController extends BaseActiveController
 			try
 			{
 				//create transaction
-				$connection = \Yii::$app->db;
+				$connection = BaseActiveRecord::getDb();
 				$transaction = $connection->beginTransaction(); 
 			
 				foreach($approvedEntries as $entry)
@@ -165,7 +125,6 @@ class MileageEntryController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
-			
 		}
 		catch(\Exception $e) 
 		{

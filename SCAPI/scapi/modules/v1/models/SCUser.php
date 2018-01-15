@@ -20,7 +20,6 @@ use app\modules\v1\models\Auth;
  * @property string $UserAppRoleType
  * @property string $UserComments
  * @property integer $UserActiveFlag
- * @property integer $UserArchiveFlag
  * @property string $UserCreatedDate
  * @property string $UserModifiedDate
  * @property string $UserCreatedUID
@@ -53,7 +52,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
         return [
             [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
 			'UserPassword', 'UserUID'], 'string'],
-            [['UserActiveFlag', 'UserArchiveFlag'], 'integer'],
+            [['UserActiveFlag'], 'integer'],
             [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserInactiveDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
         ];
     }
@@ -75,7 +74,6 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserAppRoleType' => 'User App Role Type',
             'UserComments' => 'User Comments',
             'UserActiveFlag' => 'User Active Flag',
-			'UserArchiveFlag' => 'User Archive Flag',
             'UserCreatedDate' => 'User Created Date',
             'UserModifiedDate' => 'User Modified Date',
             'UserCreatedUID' => 'User Created UID',

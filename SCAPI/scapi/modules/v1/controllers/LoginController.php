@@ -97,7 +97,7 @@ class LoginController extends Controller
 	}
 	
 	// User logout
-	public function actionUserLogout($userID)
+	public function actionUserLogout()
 	{
 		try
 		{

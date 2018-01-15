@@ -79,29 +79,23 @@ class InspectionController extends Controller
 					->where(['InspectionTabletID' => $newInspection->InspectionTabletID])
 					//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 					->one();
-				
 				//TODO move work queue completion to after event processing?
 				if ($previousInspection == null) {
 					if ($newInspection->save()) {
 						$inspectionSuccessFlag = 1;
 						$inspectionID = $newInspection->ID;
-						//set associate work queue to completed (WorkQueueStatus  = 102)
-						//moving work queue completion into work order complete function
-						//$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
-						$completeWorkResponse = self::completeWork($data);
+						//if inspection is not ad hoc handle work queue/work order updates
+						if($newInspection->IsAdHocFlag == 0)
+							$completeWorkResponse = self::completeWork($data);
 					} else {
 						throw BaseActiveController::modelValidationException($newInspection);
 					}
 				}
 				else
 				{
-					//Handle updates if applicable.
 					//send success if Inspection record was already saved previously
 					$inspectionSuccessFlag = 1;
 					$inspectionID = $previousInspection->ID;
-					//set associate work queue to completed (WorkQueueStatus  = 102)
-					//moving work queue completion into work order complete function
-					//$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
 					$completeWorkResponse = self::completeWork($data);
 				}
 				//process event data if available
@@ -119,15 +113,14 @@ class InspectionController extends Controller
 						//create ad hoc work queue
 						if($data['IsAdHocFlag'] == 1)
 						{
-							$workQueueResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
+							$completeWorkResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
 							//add new work queue id to inspection record.
-							$newInspection->WorkQueueID = $workQueueResponse['WorkQueueID'];
+							$newInspection->WorkQueueID = $completeWorkResponse['WorkQueue']->WorkQueueID;
 						}
 						//add asset ID to inspection record
 						$newInspection->AssetID = $assetResponse['ID'];
 						if(!$newInspection->update())
 							throw BaseActiveController::modelValidationException($newInspection);
-						
 					}
 				}
 				$responseArray = [
@@ -239,14 +232,16 @@ class InspectionController extends Controller
 			$assetSuccessFlag = 0;
 			$assetID = null;
 		
+			$assetModel = BaseActiveRecord::getAssetModel($client);
+		
 			//check if Asset already exist.
-			$previousAsset = Asset::find()
+			$previousAsset = $assetModel::find()
 				->where(['AssetTabletID' => $data['AssetTabletID']])
 				//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 				->one();
 				
 			if ($previousAsset == null) {
-				$newAsset = new Asset;
+				$newAsset = new $assetModel;
 				$newAsset->attributes = $data;
 				$newAsset->InspectionID = $inspectionID;
 				if ($newAsset->save()) {
@@ -295,6 +290,21 @@ class InspectionController extends Controller
 		return false;
 	}
 	
+	//used by completeWork and actionUpdate to get work order based on inspection workqueueid
+	private static function getWorkOrderByWorkQueue($workQueueID)
+	{
+		BaseActiveRecord::setClient(getallheaders()['X-Client']);
+		//build sub query
+		$subQuery = WorkQueue::find()
+			->select('WorkOrderID')
+			->where(['ID' => $workQueueID]);
+		//get work order via subQuery
+		$workOrder = WorkOrder::find()
+			->where(['ID' => $subQuery])
+			->one();
+		return $workOrder;
+	}
+	
 	//used by complete work to set work queue status to 102 completed
 	private static function updateWorkQueue($inspectionData)
 	{
@@ -316,6 +326,32 @@ class InspectionController extends Controller
 					throw BaseActiveController::modelValidationException($workQueue);
 				}
 			}	
+		}
+		catch(\Exception $e)
+		{
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+		}
+		return false;
+	}
+	
+	//used by action update to set a work order to the proper status in the event of a cge
+	private static function setWorkOrderCGE($inspectionData, $workOrder)
+	{
+		try{
+			$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
+			$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
+			$workOrder->EventIndicator = Constants::WORK_ORDER_CGE;
+			$workOrder->CompletedDate = null;
+			$workOrder->CompletedFlag = 0;
+			//update
+			if($workOrder->update())
+			{
+				return true;
+			}
+			else
+			{
+				throw BaseActiveController::modelValidationException($workOrder);
+			}
 		}
 		catch(\Exception $e)
 		{
@@ -384,14 +420,8 @@ class InspectionController extends Controller
 			//try catch to log individual errors
 			try
 			{
-				//build sub query
-				$subQuery = WorkQueue::find()
-					->select('WorkOrderID')
-					->where(['ID' => $inspectionData['WorkQueueID']]);
-				//get work order via subQuery
-				$workOrder = WorkOrder::find()
-					->where(['ID' => $subQuery])
-					->one();
+				//get workOrder by work queue id
+				$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
 				//get all work queues for work order
 				$workQueueArray = WorkQueue::find()
 					->where(['WorkOrderID' => $workOrder->ID])
@@ -430,7 +460,8 @@ class InspectionController extends Controller
 									if($workOrder->EventIndicator === 2)
 									{
 										// increment work order attempt counter
-										if(self::updateWorkOrder($inspectionData, $workOrder, false, true)) $workOrderSuccessFlag = 1;
+										//if(self::updateWorkOrder($inspectionData, $workOrder, false, true)) $workOrderSuccessFlag = 1;
+										$workOrderSuccessFlag = 1;
 									} else {
 										// set event indicator, increment work order attempt counter, close work order
 										if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
@@ -543,10 +574,26 @@ class InspectionController extends Controller
 								'InspectionTabletID' => $inspection->InspectionTabletID,
 								'SuccessFlag' => $successFlag
 							];
-							
+													
 							//process event data if available
 							if(array_key_exists('Event', $inspectionData) && $inspectionData['Event'] != null)
+							{
+								//get workOrder by work queue id
+								$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
+								if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
+								{
+									//update event indicator
+									if($inspectionData['IsCGEFlag'] == 1)
+									{
+										$responseData['activity'][0]['Inspection']['WorkOrderUpdated'] = self::setWorkOrderCGE($inspectionData, $workOrder);
+									}
+									else
+									{
+										$responseData['activity'][0]['Inspection']['WorkOrderUpdated'] = self::updateWorkOrder($inspectionData, $workOrder, true);
+									}
+								}
 								$responseData['activity'][0]['Inspection']['Event'] = self::processEvent($inspectionData['Event'], $client, $inspectionID);
+							}
 							//process asset data if available
 							if(array_key_exists('Asset', $inspectionData) && $inspectionData['Asset'] != null)
 								$responseData['activity'][0]['Inspection']['Asset'] = self::processAsset($inspectionData['Asset'], $client, $inspectionID);

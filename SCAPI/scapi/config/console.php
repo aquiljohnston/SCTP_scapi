@@ -46,7 +46,7 @@ return [
 		'dominionProdDb' => $db['dominionProdDb'],
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
-		//'scanaStageDb' => $db['scanaStageDb'],
+		'scanaStageDb' => $db['scanaStageDb'],
 		//'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],

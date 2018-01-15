@@ -105,15 +105,12 @@ class ActivityController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-
-			//get id on client db of user making request
-			$clientCreatedBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
 			
 			Activity::setClient(BaseActiveController::urlPrefix());
 			//get uid of user making request
 			$pgeCreatedBy = Parent::getUserFromToken()->UserUID;
 			//get id of user making request
-			$createdBy = Parent::getUserFromToken()->UserID;
+			$createdBy = Parent::getUserFromToken()->UserName;
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
@@ -201,7 +198,7 @@ class ActivityController extends BaseActiveController
 						}
 						else
 						{
-							$clientActivity->ActivityCreatedUserUID = (string)$clientCreatedBy;
+							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
 						}
 
 						Activity::setClient(BaseActiveController::urlPrefix());
@@ -234,7 +231,7 @@ class ActivityController extends BaseActiveController
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
 								//client data parse
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $clientActivity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 							}
 							
@@ -249,6 +246,7 @@ class ActivityController extends BaseActiveController
 							//add activityID to corresponding time entries
 							if($timeLength > 0)
 							{
+								Activity::setClient(BaseActiveController::urlPrefix());
 								for($t = 0; $t < $timeLength; $t++)
 								{
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
@@ -302,6 +300,7 @@ class ActivityController extends BaseActiveController
 							//add activityID to corresponding mileage entries
 							if($mileageLength > 0)
 							{
+								Activity::setClient(BaseActiveController::urlPrefix());
 								for($m = 0; $m < $mileageLength; $m++)
 								{
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;
@@ -379,14 +378,14 @@ class ActivityController extends BaseActiveController
 	}
 	
 	//helper method, to parse activity data and send to appropriate controller.
-	public static function parseActivityData($activityData, $client, $clientCreatedBy, $clientActivityID)
+	public static function parseActivityData($activityData, $client, $createdBy, $clientActivityID)
 	{	
 		$responseData = [];
 	
 		//handle accepting work queue
 		if (array_key_exists('WorkQueue', $activityData))
 		{
-			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client, $clientCreatedBy);
+			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client);
 			$responseData['WorkQueue'] = $workQueueResponse;
 		}
 		//handle creation of new calibration records

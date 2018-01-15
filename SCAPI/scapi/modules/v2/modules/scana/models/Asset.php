@@ -1,8 +1,9 @@
 <?php
 
-namespace app\modules\v2\models;
+namespace app\modules\v2\modules\scana\models;
 
 use Yii;
+use app\modules\v2\models\BaseUser;
 
 /**
  * This is the model class for table "tAsset".
