@@ -81,7 +81,7 @@ $config = [
 		'dominionProdDb' => $db['dominionProdDb'],
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
-		//'scanaStageDb' => $db['scanaStageDb'],
+		'scanaStageDb' => $db['scanaStageDb'],
 		//'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
@@ -98,7 +98,7 @@ $config = [
 
 if (YII_ENV_DEV) {
     // configuration adjustments for 'dev' environment
-    $config['bootstrap'][] = 'debug';
+    //$config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
 		//TO DO add dynamic IPs

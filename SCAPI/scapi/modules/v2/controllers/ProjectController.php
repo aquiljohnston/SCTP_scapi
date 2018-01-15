@@ -180,7 +180,7 @@ class ProjectController extends BaseActiveController
 			$model = new Project();
 
 			$model->attributes = $data;  
-			$model->ProjectCreatedBy = self::getUserFromToken()->UserID;
+			$model->ProjectCreatedBy = self::getUserFromToken()->UserName;
 
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -233,6 +233,7 @@ class ProjectController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			$model->ProjectModifiedDate = Parent::getDate();
+			$model->ProjectModifiedBy = self::getUserFromToken()->UserName;
 			
 			if($model-> update())
 			{
@@ -328,7 +329,11 @@ class ProjectController extends BaseActiveController
 			//create array of included user id/name pairs
 			for($i=0; $i < $assignedSize; $i++)
 			{
-				$assignedPairs[$assignedUsers[$i]->UserID] = ['content' => $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName . " (" . $assignedUsers[$i]->UserName . ")"];
+				$assignedPairs[$assignedUsers[$i]->UserID] = 
+				[
+				'userID'	=>$assignedUsers[$i]->UserID,
+				'content' 	=> $assignedUsers[$i]->UserLastName. ", ". $assignedUsers[$i]->UserFirstName . " (" . $assignedUsers[$i]->UserName . ")"
+			];
 			}
 			
 			//get all users
@@ -351,7 +356,9 @@ class ProjectController extends BaseActiveController
 			//create array of all user id/name pairs
 			for($i=0; $i < $unassignedSize; $i++)
 			{
-				$unassignedPairs[$allUsers[$i]->UserID]=['content' => $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName . " (" . $allUsers[$i]->UserName . ")"];
+				$unassignedPairs[$allUsers[$i]->UserID]=[
+					'userID' 	=> $allUsers[$i]->UserID,
+					'content' 	=> $allUsers[$i]->UserLastName. ", ". $allUsers[$i]->UserFirstName . " (" . $allUsers[$i]->UserName . ")"];
 			}
 			
 			//filter included pairs
@@ -409,6 +416,8 @@ class ProjectController extends BaseActiveController
 			//decode post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
+
+			//Yii::trace("DUMPSTER: ".$data);
 			
 			//check if key exist
 			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
@@ -497,7 +506,8 @@ class ProjectController extends BaseActiveController
 		$userID = $user->UserID;
 		$projectID = $project->ProjectID;
 		//link user to project
-		$user->link('projects',$project);
+		//TODO add created by via third param extraColumns array if possible http://www.yiiframework.com/doc-2.0/yii-db-baseactiverecord.html#link()-detail
+		$user->link('projects',$project, ['ProjUserCreatedBy' => self::getUserFromToken()->UserName]);
 		//call sps to create new time cards and mileage cards
 		try
 		{
@@ -597,7 +607,7 @@ class ProjectController extends BaseActiveController
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
-			$userID = self::getUserFromToken()->UserID;
+			$username = self::getUserFromToken()->Username;
 
 			//create response
 			$response = Yii::$app ->response;
@@ -631,7 +641,7 @@ class ProjectController extends BaseActiveController
 				$model = new MenusProjectModule();
 				$model->ProjectModulesName = $i;
 				$model->ProjectModulesProjectID = $projectID;
-				$model->ProjectModulesCreatedBy = $userID;
+				$model->ProjectModulesCreatedBy = $username;
 				if(!$model->save()) {
 					throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
 				}

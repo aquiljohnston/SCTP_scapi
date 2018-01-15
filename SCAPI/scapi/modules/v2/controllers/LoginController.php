@@ -41,13 +41,16 @@ class LoginController extends Controller
 			//decode json post input as php array:
 			$data = json_decode($post, true);
 
-			//archive json
-			BaseActiveController::archiveWebJson(
-				json_encode($data),
-				'Login',
-				//ternary check if username is in data set to prevent potential error on bad json
-				(array_key_exists('UserName', $data) ? $data['UserName'] : null),
-				$client);
+			if($client != null)
+			{
+				//archive json
+				BaseActiveController::archiveWebJson(
+					json_encode($data),
+					'Login',
+					//ternary check if username is in data set to prevent potential error on bad json
+					(array_key_exists('UserName', $data) ? $data['UserName'] : null),
+					$client);
+			}
 			
 			//set db target
 			SCUser::setClient(BaseActiveController::urlPrefix());
@@ -76,9 +79,8 @@ class LoginController extends Controller
 					Yii::$app->user->login($user);
 					//Generate Auth Token
 					$auth = new Auth();
-					$userID = $user->UserID;
-					$auth->AuthUserID = $userID;
-					$auth->AuthCreatedBy = $userID;
+					$auth->AuthUserID = $user->UserID;
+					$auth->AuthCreatedBy = $user->UserName;
 					$auth-> beforeSave(true);
 					//Store Auth Token
 					$auth-> save();
@@ -101,8 +103,9 @@ class LoginController extends Controller
 			$authArray = ArrayHelper::toArray($auth);
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
-			$authArray['UserUID'] = $user->UserUID;
+			$authArray['UserName'] = $user->UserName;
 			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
+            $authArray['UserAppRoleType'] = $user->UserAppRoleType;
 			
 			//add auth token to response
 			$response->data = $authArray;
@@ -149,7 +152,7 @@ class LoginController extends Controller
 			}
 
 			//call CTUser\logout()
-			Yii::$app->user->logout($destroySession = true, null, $token);
+			Yii::$app->user->logout($destroySession = true, $token);
 			$response->data = 'Logout Successful!';
 			return $response;
 		}

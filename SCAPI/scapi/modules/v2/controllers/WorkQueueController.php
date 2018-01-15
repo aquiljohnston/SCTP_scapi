@@ -101,7 +101,7 @@ class WorkQueueController extends Controller
 	}
 	
 	//fuction called by activity to parse and accept work queues
-	public static function accept($data, $client, $modifiedBy)
+	public static function accept($data, $client)
 	{
 		try
 		{
@@ -128,7 +128,7 @@ class WorkQueueController extends Controller
 					if($workQueue != null)
 					{
 						$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
-						$workQueue->ModifiedBy = $modifiedBy;
+						$workQueue->ModifiedBy = BaseActiveController::getClientUser($client)->UserID;
 						$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
 						if($workQueue->update())
 						{
@@ -196,10 +196,14 @@ class WorkQueueController extends Controller
 			{
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $assetID);
 			}
+			//match response structure of inspection completeWork() 
 			$responseData = [
-				'WorkQueueID' => $workQueue->ID,
-				'WorkQueueStatus' => $workQueue->WorkQueueStatus,
-				'SuccessFlag' => $successFlag
+				'WorkQueue' => (object)['WorkQueueID' => $workQueue->ID,
+										'WorkQueueStatus' => $workQueue->WorkQueueStatus,
+										'SuccessFlag' => $successFlag],
+				'WorkOrder' => (object)['WorkOrderID' => null,
+										'SuccessFlag' => 1,
+										'Comments' => 'Work Order will be created on Task Out.']
 			];
 			return $responseData;
 		}

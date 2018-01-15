@@ -1,8 +1,9 @@
 <?php
 
-namespace app\modules\v2\models;
+namespace app\modules\v2\modules\york\models;
 
 use Yii;
+use app\modules\v2\models\BaseUser;
 
 /**
  * This is the model class for table "tAsset".
@@ -45,9 +46,8 @@ use Yii;
  * @property double $Speed
  * @property integer $NumberOfGPSAttempts
  * @property integer $Zip
- * @property string $MeterLocation
  *
- * @property UserTb $createdUser
+ * @property BaseUser $createdUser
  */
 class Asset extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -65,10 +65,10 @@ class Asset extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['AssetTabletID', 'MapGrid', 'HouseNo', 'Street', 'Apt', 'City', 'State', 'ReverseGeoLocationString', 'MeterID', 'PipelineType', 'Grade1ReleaseReasonType', 'Comments', 'Photo1Path', 'Inspection', 'GPSType', 'GPSSentence', 'GPSTime', 'CheckSumData', 'Zip', 'MeterLocation'], 'string'],
+            [['AssetTabletID', 'MapGrid', 'HouseNo', 'Street', 'Apt', 'City', 'State', 'ReverseGeoLocationString', 'MeterID', 'PipelineType', 'Grade1ReleaseReasonType', 'Comments', 'Photo1Path', 'Inspection', 'GPSType', 'GPSSentence', 'GPSTime', 'CheckSumData', 'Zip'], 'string'],
             [['InspectionID', 'CreatedUserID', 'AOCs', 'NumberOfSatellites', 'NumberOfGPSAttempts'], 'integer'],
             [['Grade1ReleaseDateTime', 'SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
-            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
+            [['Latitude', 'Longitude', 'FixQuality', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['CreatedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedUserID' => 'UserID']],
         ];
     }
@@ -117,8 +117,6 @@ class Asset extends \app\modules\v2\models\BaseActiveRecord
             'Speed' => 'Speed',
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
             'Zip' => 'Zip',
-            'MeterNumber' => 'Meter Number',
-            'MeterLocation' => 'Meter Location',
         ];
     }
 

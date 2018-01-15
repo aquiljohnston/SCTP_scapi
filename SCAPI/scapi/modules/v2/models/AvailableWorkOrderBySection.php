@@ -45,6 +45,7 @@ class AvailableWorkOrderBySection extends \app\modules\v2\models\BaseActiveRecor
             'LocationType' => 'Location Type',
             'InspectionType' => 'Inspection Type',
             'BillingCode' => 'Billing Code',
+            'OfficeName' => 'Office Name',
         ];
     }
 }
