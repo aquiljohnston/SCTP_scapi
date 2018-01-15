@@ -11,9 +11,9 @@ class Module extends \yii\base\Module
 			'pge' => [
 				'class' => 'app\modules\v2\modules\pge\Module',
 			],
-			/*'scana' => [
+			'scana' => [
 				'class' => 'app\modules\v2\modules\scana\Module',
-			],*/
+			],
 			'york' => [
 				'class' => 'app\modules\v2\modules\york\Module',
 			],
