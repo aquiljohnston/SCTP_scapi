@@ -11,6 +11,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//base user
 	const BASE_USER = 'app\modules\v2\models\BaseUser';
 	const BASE_EVENT = 'app\modules\v2\models\Event';
+	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	
 	//TODO: create object/array for all clients and refactor get methods(exclude getDb) into single function
 	//that takes in client and model to retrive that will be based on client object keys
@@ -27,6 +28,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//comet tracker models
 	const CT_USER = 'app\modules\v2\models\SCUser';
 	const CT_EVENT = self::BASE_EVENT;
+	const CT_ASSET = self::BASE_ASSET;
 	//comet tracker auth manager
 	const CT_AUTH = 'app\rbac\ScDbManager';
 	
@@ -46,6 +48,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//york models
 	const YORK_USER = self::BASE_USER;
 	const YORK_EVENT = self::BASE_EVENT;
+	const YORK_ASSET = 'app\modules\v2\modules\york\models\Asset';
 	//york auth manager
 	const YORK_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -55,6 +58,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//dominion models
 	const DOMINION_USER = self::BASE_USER;
 	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
+	const DOMINION_ASSET = self::BASE_ASSET;
 	//dominion auth manager
 	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -65,6 +69,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//york models
 	const SCANA_USER = self::BASE_USER;
 	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
+	const SCANA_ASSET = 'app\modules\v2\modules\scana\models\Asset';
 	//york auth manager
 	const SCANA_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -73,6 +78,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//beta models
 	const DEMO_USER = self::BASE_USER;
 	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
+	const DEMO_ASSET = self::BASE_ASSET;
 	//beta auth manager
 	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -319,6 +325,48 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			return self::AZURE_EVENT;
 		}
 		//PGE - Does not use standard Events
+		return null;
+	}
+	
+	//TODO combine with event model function
+	//returns the file path for the asset model associated to a project based on the client header
+	public static function getAssetModel($client)
+	{
+		//CometTracker
+		if($client == self::CT_DEV
+		|| $client == self::CT_STAGE
+		|| $client == self::CT_PROD
+		|| $client == self::SCCT_DEV
+		|| $client == self::SCCT_STAGE
+		|| $client == self::SCCT_PROD)
+		{
+			return self::CT_ASSET;
+		}
+		//York
+		if($client == self::YORK_DEV
+		|| $client == self::YORK_PROD
+		|| $client == self::YORK_STAGE)
+		{
+			return self::YORK_ASSET;
+		}
+		//Dominion
+		if($client == self::DOMINION_PROD
+		|| $client == self::DOMINION_STAGE)
+		{
+			return self::DOMINION_ASSET;
+		}
+		//Scana
+		if($client == self::SCANA_DEV
+		|| $client == self::SCANA_PROD
+		|| $client == self::SCANA_STAGE)
+		{
+			return self::SCANA_ASSET;
+		}
+		//demo
+		if($client == self::DEMO_DEV)
+		{
+			return self::DEMO_ASSET;
+		}
 		return null;
 	}
 }
