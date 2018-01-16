@@ -139,18 +139,11 @@ class DispatchController extends Controller
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
 
-			//the billing code when null sometimes passes
-			// a slash or empty handle both when null
-			$pos = strpos($billingCode,'/');
-
-			if($pos!==false || $billingCode==''){
-					$billingCode == null;
-			}
-
+			
 
 			//handle null billing code and inspection type
 			//as they are not always set.
-			//$billingCode = $billingCode != '' ? $billingCode : null;
+			$billingCode = $billingCode != '' ? $billingCode : null;
 			$inspectionType = $inspectionType != '' ?  $inspectionType : null;
 
 			$assetQuery = AvailableWorkOrder::find()
