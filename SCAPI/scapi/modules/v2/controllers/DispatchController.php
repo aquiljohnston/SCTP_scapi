@@ -8,6 +8,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\data\Pagination;
 use app\authentication\TokenAuth;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\AvailableWorkOrder;
 use app\modules\v2\models\AvailableWorkOrderByMapGrid;
@@ -30,8 +31,6 @@ use yii\web\NotFoundHttpException;
 
 class DispatchController extends Controller 
 {
-    const DISPATCH_CGE_TYPE = "DISPATCH_CGE_TYPE";
-
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -518,9 +517,6 @@ class DispatchController extends Controller
 				$assetCount = count($data['unassignAsset']);
 			}
 			
-			//get assinged status code
-			$assignedCode = self::statusCodeLookup('Assigned');
-			
 			//process unassignMap
 			for($i = 0; $i < $mapCount; $i++)
 			{
@@ -611,7 +607,7 @@ class DispatchController extends Controller
 			{
 				$dataArray = [
 				'CreatedBy' => $createdBy,
-				'CreatedDate' => date(BaseActiveController::DATE_FORMAT),
+				'CreatedDate' => date(Constants::DATE_FORMAT),
 				'AssignedUserID' => $userID,
 				'WorkQueueStatus' => $assignedCode,
 				];
@@ -626,7 +622,7 @@ class DispatchController extends Controller
 				}
 				
 				if ($scheduledDate != null)
-					$dataArray['ScheduledDispatchDate'] = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
+					$dataArray['ScheduledDispatchDate'] = date(Constants::DATE_FORMAT,strtotime($scheduledDate));
 				
 				$db->createCommand()->insert('tWorkQueue', $dataArray)->execute();
 			} 

@@ -38,6 +38,7 @@ class TokenAuth extends AuthMethod
 				$identity = SCUser::findIdentityByAccessToken($token);
 				if ($identity === null) 
 				{
+					//TODO move string to constants when version is created
 					throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
 				}
 				return $identity;
