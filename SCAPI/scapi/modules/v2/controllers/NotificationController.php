@@ -4,6 +4,7 @@ namespace app\modules\v2\controllers;
 
 use Yii;
 use app\authentication\TokenAuth;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Notification;
 use app\modules\v2\models\BaseActiveRecord;
@@ -53,13 +54,14 @@ class NotificationController extends Controller
             SCUser::setClient(BaseActiveController::urlPrefix());
 
             //check current environment for york
+			//this code is bad and should feel bad
             $headers = getallheaders();
-            if ($headers['X-Client'] == BaseActiveRecord::YORK_DEV){
-                $CURRENT_PROJECT = "York Dev";
-            }elseif ($headers['X-Client'] == BaseActiveRecord::YORK_STAGE){
-                $CURRENT_PROJECT = "York Stage";
+            if ($headers['X-Client'] == Constants::YORK_DEV){
+                $currentProject = "York Dev";
+            }elseif ($headers['X-Client'] == Constants::YORK_STAGE){
+                $currentProject = "York Stage";
             }else{
-                $CURRENT_PROJECT = "York";
+                $currentProject = "York";
             }
 
             //get user
@@ -125,7 +127,7 @@ class NotificationController extends Controller
                     $mileageCardTotal += $mileageCardCount;
 
                     //check if the user associated with yorkDev
-                    if ($projectName == $CURRENT_PROJECT) {
+                    if ($projectName == $currentProject) {
                         $projectHasNotification = true;
                         $projectNameHasNotification = $projectName;
                     }

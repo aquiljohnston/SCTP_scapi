@@ -79,29 +79,23 @@ class InspectionController extends Controller
 					->where(['InspectionTabletID' => $newInspection->InspectionTabletID])
 					//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 					->one();
-				
 				//TODO move work queue completion to after event processing?
 				if ($previousInspection == null) {
 					if ($newInspection->save()) {
 						$inspectionSuccessFlag = 1;
 						$inspectionID = $newInspection->ID;
-						//set associate work queue to completed (WorkQueueStatus  = 102)
-						//moving work queue completion into work order complete function
-						//$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
-						$completeWorkResponse = self::completeWork($data);
+						//if inspection is not ad hoc handle work queue/work order updates
+						if($newInspection->IsAdHocFlag == 0)
+							$completeWorkResponse = self::completeWork($data);
 					} else {
 						throw BaseActiveController::modelValidationException($newInspection);
 					}
 				}
 				else
 				{
-					//Handle updates if applicable.
 					//send success if Inspection record was already saved previously
 					$inspectionSuccessFlag = 1;
 					$inspectionID = $previousInspection->ID;
-					//set associate work queue to completed (WorkQueueStatus  = 102)
-					//moving work queue completion into work order complete function
-					//$workQueueResponse = WorkQueueController::complete($data['WorkQueueID'], $data['WorkQueueStatus'], $client, $data['CreatedBy'], $data['CreatedDate']);
 					$completeWorkResponse = self::completeWork($data);
 				}
 				//process event data if available
@@ -119,15 +113,14 @@ class InspectionController extends Controller
 						//create ad hoc work queue
 						if($data['IsAdHocFlag'] == 1)
 						{
-							$workQueueResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
+							$completeWorkResponse = WorkQueueController::createAdHocWorkQueue($assetResponse['ID'], $data['CreatedBy'], $data['CreatedDate'], $client);
 							//add new work queue id to inspection record.
-							$newInspection->WorkQueueID = $workQueueResponse['WorkQueueID'];
+							$newInspection->WorkQueueID = $completeWorkResponse['WorkQueue']->WorkQueueID;
 						}
 						//add asset ID to inspection record
 						$newInspection->AssetID = $assetResponse['ID'];
 						if(!$newInspection->update())
 							throw BaseActiveController::modelValidationException($newInspection);
-						
 					}
 				}
 				$responseArray = [
@@ -239,14 +232,16 @@ class InspectionController extends Controller
 			$assetSuccessFlag = 0;
 			$assetID = null;
 		
+			$assetModel = BaseActiveRecord::getAssetModel($client);
+		
 			//check if Asset already exist.
-			$previousAsset = Asset::find()
+			$previousAsset = $assetModel::find()
 				->where(['AssetTabletID' => $data['AssetTabletID']])
 				//->andWhere(['DeletedFlag' => 0]) no flag exist currently
 				->one();
 				
 			if ($previousAsset == null) {
-				$newAsset = new Asset;
+				$newAsset = new $assetModel;
 				$newAsset->attributes = $data;
 				$newAsset->InspectionID = $inspectionID;
 				if ($newAsset->save()) {
