@@ -6,10 +6,11 @@ use yii;
 use app\authentication\TokenAuth;
 use yii\web\Controller;
 use yii\web\Response;
-use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\controllers\PermissionsController;
+use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\controllers\PermissionsController;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\Client;
 use app\modules\v2\models\MenusProjectModule;
@@ -17,8 +18,6 @@ use app\modules\v2\models\MenusModuleMenu;
 use app\modules\v2\models\MenusModuleSubMenu;
 
 class MenuController extends Controller {
-	
-	const PERMISSION_CONTROLLER = 'app\modules\v2\controllers\PermissionsController';
 	
 	public function behaviors()
     {
@@ -43,7 +42,7 @@ class MenuController extends Controller {
 	//$project string the current project of the user_error
 	//$permissionsController string path to class of desired permission controller to be used in call_user_func_array defaults to base permissionsController
 	//$parmArray array containing any additonal paramaters that an alternative permission controller may require
-	public function actionGet($permissionsController = MenuController::PERMISSION_CONTROLLER, $permissionCheckParmArray = [])
+	public function actionGet($permissionsController = Constants::PERMISSION_CONTROLLER, $permissionCheckParmArray = [])
 	{
 		try{
 			//set db
