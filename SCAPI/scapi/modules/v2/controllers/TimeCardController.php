@@ -512,6 +512,47 @@ class TimeCardController extends BaseActiveController
         }
     }
 
+    public function actionGetPayrollData($selectedTimeCardIDs = [])
+    {
+        // RBAC permission check is embedded in this action
+        try{
+            //set db target headers
+            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+            
+            $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
+
+            if ($selectedTimeCardIDs != null && count($selectedTimeCardIDs) > 0){
+                //build base query
+                $responseArray = new Query;
+                $responseArray  ->select('*')
+                    ->from(["fnGenerateQBDummyPayrollTimeCardID(:TimeCardID)"])
+                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
+
+                $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
+
+            }
+
+            if (!empty($responseArray))
+            {
+                $this->processAndOutputCsvResponse($responseArray);
+                return '';
+            }
+            $this->setCsvHeaders();
+            //send response
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
     // helper method for setting the csv header for tracker maps csv output
     public function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');
