@@ -10,6 +10,7 @@ namespace app\modules\v2\controllers;
 
 use Yii;
 use yii\web\Response;
+use app\modules\v2\constants\Constants;
 
 trait ViewMethodNotAllowed {
     /**
@@ -20,7 +21,7 @@ trait ViewMethodNotAllowed {
     {
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
-        $response->data = "Method Not Allowed";
+        $response->data = Constants::METHOD_NOT_ALLOWED;
         $response->setStatusCode(405);
         return $response;
     }

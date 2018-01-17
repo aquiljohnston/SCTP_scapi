@@ -4,8 +4,8 @@ namespace app\modules\v2\controllers;
 
 use app\authentication\TokenAuth;
 use Yii;
-use app\modules\v1\models\Client;
-use app\modules\v1\models\SCUser;
+use app\modules\v2\models\Client;
+use app\modules\v2\models\SCUser;
 use yii\filters\VerbFilter;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
@@ -17,7 +17,7 @@ use app\modules\v2\models\BaseActiveRecord;
  */
 class ClientController extends BaseActiveController
 {
-	public $modelClass = 'app\modules\v1\models\Client'; // TODO: Change to v2 when Michael commits the new model
+	public $modelClass = 'app\modules\v2\models\Client';
 
 	public function actions()
 	{
@@ -112,7 +112,7 @@ class ClientController extends BaseActiveController
             {
                 //pass query with pagination data to helper method
                 $paginationResponse = self::paginationProcessor($clientQuery, $page, $listPerPage);
-                //use updated query with pagination caluse to get data
+                //use updated query with pagination clause to get data
                 $clientArr = $paginationResponse['Query']->all();
                 $responseArray['pages'] = $paginationResponse['pages'];
             }

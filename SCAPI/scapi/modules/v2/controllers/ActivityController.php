@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
 use app\modules\v2\models\TimeEntry;
@@ -139,7 +140,7 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
 						{
 							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
 						}
@@ -192,7 +193,7 @@ class ActivityController extends BaseActiveController
 
 						//handle createdby
 						$activity->ActivityCreatedUserUID = (string)$createdBy;
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
 						{
 							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
 						}
@@ -218,7 +219,7 @@ class ActivityController extends BaseActiveController
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
 							//check for pge headers, pge is handled uniquely compared to a standard client
-							if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+							if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
 							{
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
@@ -336,7 +337,7 @@ class ActivityController extends BaseActiveController
 										{
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
-										else //log other errors and retrun failure
+										else //log other errors and return failure
 										{
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
@@ -353,7 +354,7 @@ class ActivityController extends BaseActiveController
 						}
 						else
 						{
-							//activiy model validation exception
+							//activity model validation exception
 							throw BaseActiveController::modelValidationException($activity);
 						}
 					}

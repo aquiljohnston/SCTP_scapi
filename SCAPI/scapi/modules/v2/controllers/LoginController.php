@@ -69,12 +69,9 @@ class LoginController extends Controller
 				$decryptedPass = BaseActiveController::decrypt($securedPass);
 
 				$hash = $user->UserPassword;
-				Yii::trace('Hash: '.$hash);
 				//Check the Hash
 				if (password_verify($decryptedPass, $hash)) 
 				{
-					Yii::trace('Password is valid.');
-					
 					//Pass
 					Yii::$app->user->login($user);
 					//Generate Auth Token

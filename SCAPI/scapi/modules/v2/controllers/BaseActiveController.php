@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\BaseUser;
@@ -20,7 +21,6 @@ use yii\data\Pagination;
 
 class BaseActiveController extends ActiveController
 {	
-	const DATE_FORMAT = 'Y-m-d H:i:s';
 	private static $IV = 'abcdefghijklmnop';
 	private static $S_KEY = 'sparusholdings12';
 	
@@ -102,7 +102,7 @@ class BaseActiveController extends ActiveController
 	
 	public function getDate()
 	{
-		return date(BaseActiveController::DATE_FORMAT);
+		return date(Constants::DATE_FORMAT);
 	}	
 	
 	public static function getUserFromToken($token = null)
@@ -286,8 +286,8 @@ class BaseActiveController extends ActiveController
 	
 	public static function isSCCT($client)
 	{
-		return ($client == BaseActiveRecord::SCCT_DEV ||
-		$client == BaseActiveRecord::SCCT_STAGE ||
-		$client == BaseActiveRecord::SCCT_PROD);
+		return ($client == Constants::SCCT_DEV ||
+		$client == Constants::SCCT_STAGE ||
+		$client == Constants::SCCT_PROD);
 	}
 }
