@@ -4,6 +4,7 @@ namespace app\modules\v2\controllers;
 
 use app\modules\v2\models\Auth;
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\Client;
@@ -40,8 +41,6 @@ use yii\data\Pagination;
 class UserController extends BaseActiveController
 {
     public $modelClass = 'app\modules\v2\models\SCUser';
-	
-	const USERNAME_EXIST_MESSAGE = 'UserName already exist.';
 
     /**
      * sets verb filters for http request
@@ -118,7 +117,7 @@ class UserController extends BaseActiveController
 
             if ($existingUser != null) {
                 $response->setStatusCode(400);
-                $response->data = self::USERNAME_EXIST_MESSAGE;
+                $response->data = Constants::USERNAME_EXIST_MESSAGE;
                 return $response;
             }
 

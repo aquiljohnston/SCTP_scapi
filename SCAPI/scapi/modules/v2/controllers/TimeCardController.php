@@ -346,7 +346,7 @@ class TimeCardController extends BaseActiveController
                 /*
                  * Check if user can get all cards
                  */
-                if (PermissionsController::can('timeCardGetAllCards'))
+                if (!PermissionsController::can('timeCardGetAllCards') && PermissionsController::can('timeCardGetOwnCards'))
                 {
                     $userID = self::getUserFromToken()->UserID;
                     //get user project relations array
@@ -372,7 +372,7 @@ class TimeCardController extends BaseActiveController
                 /*
                  * Check if user can get their own cards
                  */
-                elseif (PermissionsController::can('timeCardGetOwnCards'))
+                elseif (!PermissionsController::can('timeCardGetAllCards'))
                 {
                     throw new ForbiddenHttpException;
                 }
