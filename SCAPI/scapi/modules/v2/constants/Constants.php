@@ -29,6 +29,7 @@ final class Constants
 	//comet tracker models
 	const CT_USER = 'app\modules\v2\models\SCUser';
 	const CT_EVENT = self::BASE_EVENT;
+	const CT_ASSET = self::BASE_ASSET;
 	//comet tracker auth manager
 	const CT_AUTH = 'app\rbac\ScDbManager';
 	
@@ -48,6 +49,7 @@ final class Constants
 	//york models
 	const YORK_USER = self::BASE_USER;
 	const YORK_EVENT = self::BASE_EVENT;
+	const YORK_ASSET = 'app\modules\v2\modules\york\models\Asset';
 	//york auth manager
 	const YORK_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -57,6 +59,7 @@ final class Constants
 	//dominion models
 	const DOMINION_USER = self::BASE_USER;
 	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
+	const DOMINION_ASSET = self::BASE_ASSET;
 	//dominion auth manager
 	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -67,6 +70,7 @@ final class Constants
 	//york models
 	const SCANA_USER = self::BASE_USER;
 	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
+	const SCANA_ASSET = 'app\modules\v2\modules\scana\models\Asset';
 	//york auth manager
 	const SCANA_AUTH = 'app\rbac\ClientDbManager';
 	
@@ -75,6 +79,7 @@ final class Constants
 	//beta models
 	const DEMO_USER = self::BASE_USER;
 	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
+	const DEMO_ASSET = self::BASE_ASSET;
 	//beta auth manager
 	const DEMO_AUTH = 'app\rbac\ClientDbManager';
 	
