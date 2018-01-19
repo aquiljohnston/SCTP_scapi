@@ -15,7 +15,17 @@ $config = [
 			'class' => 'app\modules\v1\Module',
 		],
         'v2' => [
-            'class' => 'app\modules\v2\Module'
+            'class' => 'app\modules\v2\Module',
+			'components' => [
+				'user' => [
+					'class' => 'app\modules\v2\authentication\CTUser',
+					'identityClass' => 'app\modules\v2\models\SCUser',
+					'enableAutoLogin' => false,
+					'authTimeout' => 28800,
+					//'authTimeout' => 15,
+					'loginUrl' => null
+				]
+			],
         ]
     ],
     'components' => [

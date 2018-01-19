@@ -3,7 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\constants\Constants;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Notification;

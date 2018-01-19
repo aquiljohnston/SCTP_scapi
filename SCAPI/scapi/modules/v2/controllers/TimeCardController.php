@@ -13,7 +13,7 @@ use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\BadRequestHttpException;

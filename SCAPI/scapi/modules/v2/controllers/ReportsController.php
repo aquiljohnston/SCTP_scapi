@@ -2,7 +2,7 @@
 
 namespace app\modules\v2\controllers;
 
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Report;
