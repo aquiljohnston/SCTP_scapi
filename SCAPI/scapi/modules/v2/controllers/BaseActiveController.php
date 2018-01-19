@@ -12,7 +12,7 @@ use app\modules\v2\models\WebDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\modules\v2\models\WebJSONDataInsertError;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
 use yii\web\Response;
