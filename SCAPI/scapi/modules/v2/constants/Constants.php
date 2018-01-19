@@ -16,6 +16,7 @@ final class Constants
 	const BASE_USER = 'app\modules\v2\models\BaseUser';
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
+	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
 	
 	//scct databases
 	const SCCT_DEV = 'scctdev';
@@ -31,7 +32,7 @@ final class Constants
 	const CT_EVENT = self::BASE_EVENT;
 	const CT_ASSET = self::BASE_ASSET;
 	//comet tracker auth manager
-	const CT_AUTH = 'app\rbac\ScDbManager';
+	const CT_AUTH = 'app\modules\v2\rbac\ScDbManager';
 	
 	//pg&e databases
 	const PGE_DEV = 'pgedev';
@@ -40,7 +41,7 @@ final class Constants
 	//pg&e user model
 	const PGE_USER = 'app\modules\v2\modules\pge\models\PGEUser';
 	//pg&e auth manager
-	const PGE_AUTH = 'app\rbac\PgeDbManager';
+	const PGE_AUTH = 'app\modules\v2\rbac\PgeDbManager';
 	
 	//york databases
 	const YORK_DEV = 'yorkdev';
@@ -51,7 +52,7 @@ final class Constants
 	const YORK_EVENT = self::BASE_EVENT;
 	const YORK_ASSET = 'app\modules\v2\modules\york\models\Asset';
 	//york auth manager
-	const YORK_AUTH = 'app\rbac\ClientDbManager';
+	const YORK_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//dominion databases
 	const DOMINION_STAGE = 'deostage';
@@ -61,7 +62,7 @@ final class Constants
 	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
 	const DOMINION_ASSET = self::BASE_ASSET;
 	//dominion auth manager
-	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
+	const DOMINION_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//scana databases
 	const SCANA_DEV = 'scanadev';
@@ -72,16 +73,16 @@ final class Constants
 	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
 	const SCANA_ASSET = 'app\modules\v2\modules\scana\models\Asset';
 	//york auth manager
-	const SCANA_AUTH = 'app\rbac\ClientDbManager';
+	const SCANA_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//demo client database
 	const DEMO_DEV = 'demo';
-	//beta models
+	//demo models
 	const DEMO_USER = self::BASE_USER;
 	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
 	const DEMO_ASSET = self::BASE_ASSET;
-	//beta auth manager
-	const DEMO_AUTH = 'app\rbac\ClientDbManager';
+	//demo auth manager
+	const DEMO_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//azure test database
 	const AZURE_TEST = 'azure';
@@ -89,7 +90,7 @@ final class Constants
 	const AZURE_USER = self::BASE_USER;
 	const AZURE_EVENT = self::BASE_EVENT;
 	//beta auth manager
-	const AZURE_AUTH = 'app\rbac\ClientDbManager';
+	const AZURE_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//work queue status codes
 	const WORK_QUEUE_ASSIGNED = 100;
