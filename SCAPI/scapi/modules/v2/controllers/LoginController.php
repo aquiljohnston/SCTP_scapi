@@ -7,7 +7,7 @@ use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
 use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\CTUser;
+use app\modules\v2\authentication\CTUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
