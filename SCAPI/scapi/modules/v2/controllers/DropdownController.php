@@ -4,7 +4,7 @@ namespace app\modules\v2\controllers;
 
 use app\modules\v2\models\BaseActiveRecord;
 use Yii;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
 use app\modules\v2\models\EmployeeType;

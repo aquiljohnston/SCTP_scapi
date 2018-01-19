@@ -17,7 +17,7 @@ use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
 use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
