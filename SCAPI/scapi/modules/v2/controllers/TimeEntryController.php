@@ -92,8 +92,8 @@ class TimeEntryController extends BaseActiveController
 			
 		
 			$entries 			= TimeEntry::find()
-								->where(['TimeEntryTimeCardID' => 144105])
-								//->where(['TimeEntryTimeCardID' => $id])
+								//->where(['TimeEntryTimeCardID' => 144105])
+								->where(['TimeEntryTimeCardID' => $id])
 								->all();
 			
 
