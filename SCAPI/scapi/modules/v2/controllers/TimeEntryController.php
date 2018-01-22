@@ -10,6 +10,7 @@ use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use app\modules\v2\models\BaseActiveRecord;
 
 /**
  * TimeEntryController implements the CRUD actions for TimeEntry model.
@@ -71,46 +72,49 @@ class TimeEntryController extends BaseActiveController
 	{		
 		try{
 			//set db target
-			$headers = getallheaders();
+			$headers 			= getallheaders();
 			TimeEntry::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeEntryDeactivate');
 			
 			//capture put body
-			$put = file_get_contents("php://input");
-			$data = json_decode($put, true);
+			$put 				= file_get_contents("php://input");
+			$data 				= json_decode($put, true);
 			
 			//create response
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
+			$response 			= Yii::$app->response;
+			$response ->format 	= Response::FORMAT_JSON;
 			
 			//parse json
-			$deactivatedBy = self::getUserFromToken()->UserName;
-			$entryIDs = $data["entryArray"];
+			$deactivatedBy 		= self::getUserFromToken()->UserName;
+			$id					= $data["timeCardId"];
 			
-			//get mileage entries
-			foreach($entryIDs as $id)
-			{
-				$approvedEntries[]= TimeEntry::findOne($id);
-			}
+		
+			$entries 			= TimeEntry::find()
+								->where(['TimeEntryTimeCardID' => 144105])
+								//->where(['TimeEntryTimeCardID' => $id])
+								->all();
 			
+
 			try
 			{
 				//create transaction
-				$connection = \Yii::$app->db;
-				$transaction = $connection->beginTransaction(); 
+				//$connection 						= \Yii::$app->db;
+				$connection 						= BaseActiveRecord::getDb();
+				$transaction 						= $connection->beginTransaction(); 
 			
-				foreach($approvedEntries as $entry)
+				foreach($entries as $entry)
 				{
-					$entry-> TimeEntryActiveFlag = 0;
-					$entry-> TimeEntryModifiedDate = Parent::getDate();
-					$entry-> TimeEntryModifiedBy = $deactivatedBy;
+					$entry-> TimeEntryActiveFlag 	= 0;
+					$entry-> TimeEntryModifiedDate 	= Parent::getDate();
+					$entry-> TimeEntryModifiedBy 	= $deactivatedBy;
 					$entry-> update();
 				}
+
 				$transaction->commit();
 				$response->setStatusCode(200);
-				$response->data = $approvedEntries; 
+				$response->data = $entries; 
 				return $response;
 			}
 			//if transaction fails rollback changes and send error
