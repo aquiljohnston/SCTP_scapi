@@ -7,7 +7,7 @@ use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\data\Pagination;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\AssignedWorkQueue;

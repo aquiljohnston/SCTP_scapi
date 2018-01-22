@@ -3,7 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use yii;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\web\Controller;
 use yii\web\Response;
 use app\modules\v2\controllers\BaseActiveController;
