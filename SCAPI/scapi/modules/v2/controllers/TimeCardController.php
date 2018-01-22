@@ -570,11 +570,12 @@ class TimeCardController extends BaseActiveController
         $fp = fopen('php://output','w');
 
         while($row = $reader->read()){
+
             if($firstLine) {
                 $firstLine = false;
-                fputcsv($fp, array_keys($row));
+                fwrite($fp, implode(',', array_keys($row)) . "\r\n");
             }
-            fputcsv($fp, $row);
+            fwrite($fp, implode(',', $row) . "\r\n");
         }
         fclose($fp);
     }
