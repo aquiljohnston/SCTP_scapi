@@ -8,7 +8,7 @@ use app\modules\v2\models\Task;
 use app\modules\v2\models\TaskAndProject;
 use yii\web\Response;
 use yii\filters\VerbFilter;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;

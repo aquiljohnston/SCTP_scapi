@@ -2,7 +2,7 @@
 
 namespace app\modules\v2\controllers;
 
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use Yii;
 use app\modules\v2\models\Client;
 use app\modules\v2\models\SCUser;

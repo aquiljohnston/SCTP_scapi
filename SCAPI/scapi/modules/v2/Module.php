@@ -7,6 +7,7 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
+		 $this->registerComponents();
 		$this->modules = [
 			'pge' => [
 				'class' => 'app\modules\v2\modules\pge\Module',
@@ -19,4 +20,17 @@ class Module extends \yii\base\Module
 			],
 		];
     }
+	
+	public function registerComponents(){
+        \Yii::$app->setComponents([
+               'user' => [
+				'class' => 'app\modules\v2\authentication\CTUser',
+				'identityClass' => 'app\modules\v2\models\SCUser',
+				'enableAutoLogin' => false,
+				'authTimeout' => 28800,
+				//'authTimeout' => 15,
+				'loginUrl' => null
+			]
+        ]);
+	}
 }
