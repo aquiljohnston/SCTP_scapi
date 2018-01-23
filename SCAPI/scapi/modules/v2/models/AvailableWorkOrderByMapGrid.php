@@ -54,6 +54,7 @@ class AvailableWorkOrderByMapGrid extends \app\modules\v2\models\BaseActiveRecor
             'Division' => 'Division',
             'BillingCode' => 'Billing Code',
             'InspectionType' => 'Inspection Type',
+            'OfficeName' => 'Office Name',
         ];
     }
 }

@@ -111,6 +111,7 @@ class AvailableWorkOrder extends \app\modules\v2\models\BaseActiveRecord
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
             'Address' => 'Address',
+            'OfficeName' => 'Office Name',
         ];
     }
 }

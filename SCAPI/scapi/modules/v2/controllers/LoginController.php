@@ -106,6 +106,7 @@ class LoginController extends Controller
 			$authArray['UserLastName'] = $user->UserLastName;
 			$authArray['UserUID'] = $user->UserUID;
 			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
+            $authArray['UserAppRoleType'] = $user->UserAppRoleType;
 			
 			//add auth token to response
 			$response->data = $authArray;
