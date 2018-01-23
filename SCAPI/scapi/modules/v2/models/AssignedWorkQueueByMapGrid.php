@@ -64,6 +64,7 @@ class AssignedWorkQueueByMapGrid extends \app\modules\v2\models\BaseActiveRecord
             'Remaining' => 'Remaining',
             'InspectionType' => 'Inspection Type',
             'BillingCode' => 'Billing Code',
+            'OfficeName' => 'Office Name',
         ];
     }
 }
