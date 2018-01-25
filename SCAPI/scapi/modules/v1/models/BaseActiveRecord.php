@@ -20,6 +20,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
+	//azure
+	const AZURE_CT_PROD = 'azureapi';
 	//comet tracker user
 	const CT_USER = 'app\modules\v1\models\SCUser';
 	//comet tracker auth manager
@@ -40,13 +42,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	const YORK_USER = self::BASE_USER;
 	//york auth manager
 	const YORK_AUTH = 'app\rbac\YorkDbManager';
-	
-	//beta client database
-	const BETA_DEV = 'betadev';
-	//beta user model
-	const BETA_USER = self::BASE_USER;
-	//beta auth manager
-	const BETA_AUTH = 'app\rbac\BetaDbManager';
 	
 	public static function getClient()
 	{
@@ -69,7 +64,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctStageDb;
 		}
-		if (self::$CLIENT_ID == self::CT_PROD || self::$CLIENT_ID == self::SCCT_PROD)
+		if (self::$CLIENT_ID == self::CT_PROD || self::$CLIENT_ID == self::SCCT_PROD || self::$CLIENT_ID == self::AZURE_CT_PROD)
 		{
 			return Yii::$app->ctProdDb;
 		}
@@ -91,11 +86,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkDevDb;
 		}
-		//beta
-		if (self::$CLIENT_ID == self::BETA_DEV)
-		{
-			return Yii::$app->betaDb;
-		}
 	}
 	
 	//reutrns the file path for the user model associated to a project based on the client header
@@ -105,6 +95,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::CT_DEV
 		|| $client == self::CT_STAGE
 		|| $client == self::CT_PROD
+		|| $client == self::AZURE_CT_PROD//azure prod
 		|| $client == self::SCCT_DEV
 		|| $client == self::SCCT_STAGE
 		|| $client == self::SCCT_PROD)
@@ -115,11 +106,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::YORK_DEV)
 		{
 			return self::YORK_USER;
-		}
-		//Beta
-		if($client == self::BETA_DEV)
-		{
-			return self::BETA_USER;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 
@@ -138,6 +124,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::CT_DEV
 		|| $client == self::CT_STAGE
 		|| $client == self::CT_PROD
+		|| $client == self::AZURE_CT_PROD//azure prod
 		|| $client == self::SCCT_DEV
 		|| $client == self::SCCT_STAGE
 		|| $client == self::SCCT_PROD)
@@ -148,11 +135,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == self::YORK_DEV)
 		{
 			return self::YORK_AUTH;
-		}
-		//Beta
-		if($client == self::BETA_DEV)
-		{
-			return self::BETA_AUTH;
 		}
 		//PGE - Deos not use standard user propagation
 		// if($client == self::PGE_DEV 

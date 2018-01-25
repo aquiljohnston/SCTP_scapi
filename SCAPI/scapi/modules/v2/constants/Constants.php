@@ -27,6 +27,8 @@ final class Constants
 	const CT_DEV = 'apidev';	
 	const CT_STAGE = 'apistage';
 	const CT_PROD = 'api';
+	//azure prod
+	const AZURE_CT_PROD = 'azureapi';
 	//comet tracker models
 	const CT_USER = 'app\modules\v2\models\SCUser';
 	const CT_EVENT = self::BASE_EVENT;
@@ -47,6 +49,8 @@ final class Constants
 	const YORK_DEV = 'yorkdev';
 	const YORK_STAGE = 'yorkstage';
 	const YORK_PROD = 'york';
+	//azure
+	const AZURE_YORK_PROD = 'azureyork';
 	//york models
 	const YORK_USER = self::BASE_USER;
 	const YORK_EVENT = self::BASE_EVENT;
@@ -57,6 +61,8 @@ final class Constants
 	//dominion databases
 	const DOMINION_STAGE = 'deostage';
 	const DOMINION_PROD = 'deo';
+	//azure
+	const AZURE_DOMINION_PROD = 'azuredeo';
 	//dominion models
 	const DOMINION_USER = self::BASE_USER;
 	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
@@ -68,6 +74,8 @@ final class Constants
 	const SCANA_DEV = 'scanadev';
 	const SCANA_STAGE = 'scanastage';
 	const SCANA_PROD = 'scana';
+	//azure
+	const AZURE_SCANA_PROD = 'azurescana';
 	//york models
 	const SCANA_USER = self::BASE_USER;
 	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
@@ -83,14 +91,6 @@ final class Constants
 	const DEMO_ASSET = self::BASE_ASSET;
 	//demo auth manager
 	const DEMO_AUTH = self::CLIENT_DB_MANAGER;
-	
-	//azure test database
-	const AZURE_TEST = 'azure';
-	//beta models
-	const AZURE_USER = self::BASE_USER;
-	const AZURE_EVENT = self::BASE_EVENT;
-	//beta auth manager
-	const AZURE_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//work queue status codes
 	const WORK_QUEUE_ASSIGNED = 100;
