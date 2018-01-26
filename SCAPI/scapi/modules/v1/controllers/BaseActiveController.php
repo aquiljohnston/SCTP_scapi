@@ -159,8 +159,7 @@ class BaseActiveController extends ActiveController
                 || strpos($_SERVER['SERVER_NAME'],'192.168.')===0)
         )
         {
-            //$prefix = 'apidev';
-            $prefix = 'azureapi';
+            $prefix = 'apidev';
         }
 		return $prefix;
 	}
