@@ -624,7 +624,14 @@ class InspectionController extends Controller
 							if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
 							{
 								$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
-							}	
+							}
+							else
+							{
+								$responseData['activity'][0]['Inspection']['WorkOrder'] = [
+									'ID' =>$workOrder->ID,
+									'SuccessFlag' => 1
+								];
+							}
 						}
 						else
 						{
