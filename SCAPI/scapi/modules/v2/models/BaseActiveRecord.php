@@ -32,7 +32,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctStageDb;
 		}
-		if (self::$CLIENT_ID == Constants::CT_PROD || self::$CLIENT_ID == Constants::SCCT_PROD)
+		if (self::$CLIENT_ID == Constants::CT_PROD || self::$CLIENT_ID == Constants::SCCT_PROD || self::$CLIENT_ID == Constants::AZURE_CT_PROD)
 		{
 			return Yii::$app->ctProdDb;
 		}
@@ -58,7 +58,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkStageDb;
 		}
-		if (self::$CLIENT_ID == Constants::YORK_PROD)
+		if (self::$CLIENT_ID == Constants::YORK_PROD || self::$CLIENT_ID == Constants::AZURE_YORK_PROD)
 		{
 			return Yii::$app->yorkProdDb;
 		}
@@ -67,7 +67,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionStageDb;
 		}
-		if (self::$CLIENT_ID == Constants::DOMINION_PROD)
+		if (self::$CLIENT_ID == Constants::DOMINION_PROD || self::$CLIENT_ID == Constants::AZURE_DOMINION_PROD)
 		{
 			return Yii::$app->dominionProdDb;
 		}
