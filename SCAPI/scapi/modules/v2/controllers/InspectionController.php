@@ -376,7 +376,10 @@ class InspectionController extends Controller
 			//update
 			if($workOrder->update())
 			{
-				return true;
+				return [
+					'ID' =>$workOrder->ID,
+					'SuccessFlag' => 1
+				];
 			}
 			else
 			{
@@ -387,7 +390,10 @@ class InspectionController extends Controller
 		{
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 		}
-		return false;
+		return  [
+			'ID' => $workOrder->ID,
+			'SuccessFlag' => 0
+		];
 	}
 	
 	//used by completeWork to update work orders according to given params
@@ -617,7 +623,7 @@ class InspectionController extends Controller
 							//update event indicator
 							if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
 							{
-								$responseData['activity'][0]['Inspection']['WorkOrderUpdated'] = self::updateEventIndicator($inspectionData, $workOrder);
+								$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
 							}	
 						}
 						else
