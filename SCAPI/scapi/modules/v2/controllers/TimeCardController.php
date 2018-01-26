@@ -2,6 +2,7 @@
 
 namespace app\modules\v2\controllers;
 
+use app\modules\v2\models\ChartOfAccountType;
 use Yii;
 use app\modules\v2\models\TimeCard;
 use app\modules\v2\models\TimeEntry;
@@ -596,6 +597,26 @@ class TimeCardController extends BaseActiveController
             'TimeCardID' => $data['TimeCardID'],
             'SuccessFlag' => $successFlag
         ];
+    }
+
+    /**
+     * Get ChargeOfAccountType From CT DB
+     * @return array
+     */
+    public function actionGetChargeOfAccountType(){
+        //set db target
+        ChartOfAccountType::setClient(BaseActiveController::urlPrefix());
+
+        $chartOfAccountType = ChartOfAccountType::find()
+            ->all();
+
+        //load data into array
+        $dataArray = [];
+        $dataArray['assets'] = $chartOfAccountType;
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $dataArray;
     }
 
     // helper method for setting the csv header for tracker maps csv output
