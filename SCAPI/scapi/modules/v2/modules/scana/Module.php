@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v2\modules\pge;
+namespace app\modules\v2\modules\scana;
 
 class Module extends \yii\base\Module
 {
