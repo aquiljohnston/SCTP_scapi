@@ -92,11 +92,9 @@ $config = [
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
 		'scanaStageDb' => $db['scanaStageDb'],
-		//'scanaProdDb' => $db['scanaProdDb'],
+		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
-		//Azure tests
-		'azureDb' => $db['azureDb'],
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,

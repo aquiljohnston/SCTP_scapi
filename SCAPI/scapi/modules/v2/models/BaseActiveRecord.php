@@ -11,6 +11,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	
 	//TODO: create object/array for all clients and refactor get methods(exclude getDb) into single function
 	//that takes in client and model to retrive that will be based on client object keys
+	
 	public static function getClient()
 	{
 		return self::$CLIENT_ID;
@@ -32,7 +33,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctStageDb;
 		}
-		if (self::$CLIENT_ID == Constants::CT_PROD || self::$CLIENT_ID == Constants::SCCT_PROD)
+		if (self::$CLIENT_ID == Constants::CT_PROD || self::$CLIENT_ID == Constants::SCCT_PROD || self::$CLIENT_ID == Constants::AZURE_CT_PROD)
 		{
 			return Yii::$app->ctProdDb;
 		}
@@ -58,7 +59,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->yorkStageDb;
 		}
-		if (self::$CLIENT_ID == Constants::YORK_PROD)
+		if (self::$CLIENT_ID == Constants::YORK_PROD || self::$CLIENT_ID == Constants::AZURE_YORK_PROD)
 		{
 			return Yii::$app->yorkProdDb;
 		}
@@ -67,7 +68,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->dominionStageDb;
 		}
-		if (self::$CLIENT_ID == Constants::DOMINION_PROD)
+		if (self::$CLIENT_ID == Constants::DOMINION_PROD || self::$CLIENT_ID == Constants::AZURE_DOMINION_PROD)
 		{
 			return Yii::$app->dominionProdDb;
 		}
@@ -80,19 +81,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->scanaStageDb;
 		}
-		// if (self::$CLIENT_ID == Constants::SCANA_PROD)
-		// {
-			// return Yii::$app->scanaProdDb;
-		// }
+		if (self::$CLIENT_ID == Constants::SCANA_PROD || self::$CLIENT_ID == Constants::AZURE_SCANA_PROD)
+		{
+			return Yii::$app->scanaProdDb;
+		}
 		//demo
 		if (self::$CLIENT_ID == Constants::DEMO_DEV)
 		{
 			return Yii::$app->demoDb;
-		}
-		//azure test
-		if (self::$CLIENT_ID == Constants::AZURE_TEST)
-		{
-			return Yii::$app->azureDb;
 		}
 	}
 	
@@ -103,6 +99,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == Constants::CT_DEV
 		|| $client == Constants::CT_STAGE
 		|| $client == Constants::CT_PROD
+		|| $client == Constants::AZURE_CT_PROD//azure
 		|| $client == Constants::SCCT_DEV
 		|| $client == Constants::SCCT_STAGE
 		|| $client == Constants::SCCT_PROD)
@@ -112,12 +109,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == Constants::YORK_DEV
 		||$client == Constants::YORK_PROD
+		||$client == Constants::AZURE_YORK_PROD//azure
 		||$client == Constants::YORK_STAGE)
 		{
 			return Constants::YORK_USER;
 		}
 		//Dominion
 		if($client == Constants::DOMINION_PROD
+		||$client == Constants::AZURE_DOMINION_PROD//azure
 		||$client == Constants::DOMINION_STAGE)
 		{
 			return Constants::DOMINION_USER;
@@ -125,6 +124,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == Constants::SCANA_DEV
 		||$client == Constants::SCANA_PROD
+		||$client == Constants::AZURE_SCANA_PROD//azure
 		||$client == Constants::SCANA_STAGE)
 		{
 			return Constants::SCANA_USER;
@@ -133,11 +133,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == Constants::DEMO_DEV)
 		{
 			return Constants::DEMO_USER;
-		}
-		//azure test
-		if($client == Constants::AZURE_TEST)
-		{
-			return Constants::AZURE_USER;
 		}
 		return null;
 	}
@@ -149,6 +144,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == Constants::CT_DEV
 		|| $client == Constants::CT_STAGE
 		|| $client == Constants::CT_PROD
+		|| $client == Constants::AZURE_CT_PROD//azure
 		|| $client == Constants::SCCT_DEV
 		|| $client == Constants::SCCT_STAGE
 		|| $client == Constants::SCCT_PROD)
@@ -158,12 +154,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == Constants::YORK_DEV
 		|| $client == Constants::YORK_PROD
+		|| $client == Constants::AZURE_YORK_PROD//azure
 		|| $client == Constants::YORK_STAGE)
 		{
 			return Constants::YORK_AUTH;
 		}
 		//Dominion
 		if($client == Constants::DOMINION_PROD
+		|| $client == Constants::AZURE_DOMINION_PROD//azure
 		|| $client == Constants::DOMINION_STAGE)
 		{
 			return Constants::DOMINION_AUTH;
@@ -171,6 +169,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == Constants::SCANA_DEV
 		|| $client == Constants::SCANA_PROD
+		|| $client == Constants::AZURE_SCANA_PROD//azure
 		|| $client == Constants::SCANA_STAGE)
 		{
 			return Constants::SCANA_AUTH;
@@ -179,11 +178,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == Constants::DEMO_DEV)
 		{
 			return Constants::DEMO_AUTH;
-		}
-		//azure test
-		if($client == Constants::AZURE_TEST)
-		{
-			return Constants::AZURE_AUTH;
 		}
 		return null;
 	}
@@ -195,6 +189,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == Constants::CT_DEV
 		|| $client == Constants::CT_STAGE
 		|| $client == Constants::CT_PROD
+		|| $client == Constants::AZURE_CT_PROD//azure
 		|| $client == Constants::SCCT_DEV
 		|| $client == Constants::SCCT_STAGE
 		|| $client == Constants::SCCT_PROD)
@@ -204,12 +199,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == Constants::YORK_DEV
 		|| $client == Constants::YORK_PROD
+		|| $client == Constants::AZURE_YORK_PROD//azure
 		|| $client == Constants::YORK_STAGE)
 		{
 			return Constants::YORK_EVENT;
 		}
 		//Dominion
 		if($client == Constants::DOMINION_PROD
+		|| $client == Constants::AZURE_DOMINION_PROD//azure
 		|| $client == Constants::DOMINION_STAGE)
 		{
 			return Constants::DOMINION_EVENT;
@@ -217,6 +214,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == Constants::SCANA_DEV
 		|| $client == Constants::SCANA_PROD
+		|| $client == Constants::AZURE_SCANA_PROD//azure
 		|| $client == Constants::SCANA_STAGE)
 		{
 			return Constants::SCANA_EVENT;
@@ -226,12 +224,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Constants::DEMO_EVENT;
 		}
-		//azure test
-		if($client == Constants::AZURE_TEST)
-		{
-			return Constants::AZURE_EVENT;
-		}
-		//PGE - Does not use standard Events
 		return null;
 	}
 	
@@ -243,6 +235,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		if($client == Constants::CT_DEV
 		|| $client == Constants::CT_STAGE
 		|| $client == Constants::CT_PROD
+		|| $client == Constants::AZURE_CT_PROD//azure
 		|| $client == Constants::SCCT_DEV
 		|| $client == Constants::SCCT_STAGE
 		|| $client == Constants::SCCT_PROD)
@@ -252,12 +245,14 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//York
 		if($client == Constants::YORK_DEV
 		|| $client == Constants::YORK_PROD
+		|| $client == Constants::AZURE_YORK_PROD//azure
 		|| $client == Constants::YORK_STAGE)
 		{
 			return Constants::YORK_ASSET;
 		}
 		//Dominion
 		if($client == Constants::DOMINION_PROD
+		|| $client == Constants::AZURE_DOMINION_PROD//azure
 		|| $client == Constants::DOMINION_STAGE)
 		{
 			return Constants::DOMINION_ASSET;
@@ -265,6 +260,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		//Scana
 		if($client == Constants::SCANA_DEV
 		|| $client == Constants::SCANA_PROD
+		|| $client == Constants::AZURE_SCANA_PROD//azure
 		|| $client == Constants::SCANA_STAGE)
 		{
 			return Constants::SCANA_ASSET;
