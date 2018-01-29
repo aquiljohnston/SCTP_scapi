@@ -111,10 +111,8 @@ class DropdownController extends Controller
         }
     }
 	
-	//gets web dropdowns from rDropDown
-	//TODO combine this with actionGetTabletSurveyDropdowns() 
-	//by adding param DropDownType to differentiate between web and tablet dropdowns
-	public function actionGetWebDropDowns()
+	//get dropdowns from rDropDown
+	public function actionGetDropdowns($filter)
 	{
 		try
         {
@@ -125,18 +123,18 @@ class DropdownController extends Controller
 			$webDropDowns = DropDown::find()
 				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
 				->distinct()
-				->where(['DropDownType' => 'Web'])
+				->where(['DropDownType' => $filter])
 				->orderBy([
 					  'FilterName' => SORT_ASC,
 					  'SortSeq' => SORT_ASC
 					])
 				->all();
 				
-			$responseArray['WebDropDowns'] = [];
+			$responseArray['Dropdowns'] = [];
 			//loop data to format response
 			foreach($webDropDowns as $dropDown)
 			{
-				$responseArray['WebDropDowns'][$dropDown->FilterName][] = $dropDown;
+				$responseArray['Dropdowns'][$dropDown->FilterName][] = $dropDown;
 			}
 			
             $response = Yii::$app ->response;
@@ -172,43 +170,4 @@ class DropdownController extends Controller
         $response -> format = Response::FORMAT_JSON;
         $response -> data = $processedResults;
     }
-	
-	/////////////////////TABLET DROPDOWNS BEGIN////////////////////////
-	//route to provide data for all survey dropdowns on the tablet
-	public function actionGetTabletSurveyDropdowns()
-	{
-		try
-        {
-			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
-			
-			$tabletDropDowns = DropDown::find()
-				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
-				->distinct()
-				->where(['DropDownType' => 'Tablet'])
-				->orderBy([
-					  'FilterName' => SORT_ASC,
-					  'SortSeq' => SORT_ASC
-					])
-				->all();
-			$responseArray['TabletDropDowns'] = [];
-			//loop data to format response
-			foreach($tabletDropDowns as $dropDown)
-			{
-				$responseArray['TabletDropDowns'][$dropDown->FilterName][] = $dropDown;
-			}
-			
-            $response = Yii::$app ->response;
-            $response -> format = Response::FORMAT_JSON;
-            $response -> data = $responseArray;
-
-            return $response;
-		}
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
-	}
-	/////////////////////TABLET DROPDOWNS END////////////////////////
 }
