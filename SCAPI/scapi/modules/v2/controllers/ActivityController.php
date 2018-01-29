@@ -108,10 +108,11 @@ class ActivityController extends BaseActiveController
 			$headers = getallheaders();
 			
 			Activity::setClient(BaseActiveController::urlPrefix());
-			//get uid of user making request
-			$pgeCreatedBy = Parent::getUserFromToken()->UserUID;
-			//get id of user making request
-			$createdBy = Parent::getUserFromToken()->UserName;
+			//get user making the request
+			$user = Parent::getUserFromToken();
+			$pgeCreatedBy = $user->UserUID;
+			$createdBy = $user->UserName;
+			$userID = $user->ID;
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
@@ -253,6 +254,7 @@ class ActivityController extends BaseActiveController
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
+									$timeEntry->TimeEntryUserID = $userID;
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									try{
 										if($timeEntry->save())
