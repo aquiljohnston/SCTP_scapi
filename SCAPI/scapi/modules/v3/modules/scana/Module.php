@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v2\modules\york;
+namespace app\modules\v3\modules\scana;
 
 class Module extends \yii\base\Module
 {
