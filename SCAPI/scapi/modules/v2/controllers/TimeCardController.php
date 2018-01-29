@@ -593,15 +593,18 @@ class TimeCardController extends BaseActiveController
         }
 
         //build response format
-        return [
+        $dataArray =  [
             'TimeCardID' => $data['TimeCardID'],
             'SuccessFlag' => $successFlag
         ];
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $dataArray;
     }
 
     /**
      * Get ChargeOfAccountType From CT DB
-     * @return array
+     * @return mixed
      */
     public function actionGetChargeOfAccountType(){
         //set db target
@@ -611,12 +614,27 @@ class TimeCardController extends BaseActiveController
             ->all();
 
         //load data into array
-        $dataArray = [];
+        /*$dataArray = [];
         $dataArray['assets'] = $chartOfAccountType;
 
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
-        $response->data = $dataArray;
+        $response->data = $dataArray;*/
+
+        $namePairs = [];
+        $codesSize = count($chartOfAccountType);
+
+        for($i=0; $i < $codesSize; $i++)
+        {
+            $namePairs[$chartOfAccountType[$i]->ChartOfAccountID]= $chartOfAccountType[$i]->ChartOfAccountDescription;
+        }
+
+
+        $response = Yii::$app ->response;
+        $response -> format = Response::FORMAT_JSON;
+        $response -> data = $namePairs;
+
+        return $response;
     }
 
     // helper method for setting the csv header for tracker maps csv output
