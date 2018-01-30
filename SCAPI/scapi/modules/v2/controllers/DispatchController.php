@@ -138,17 +138,32 @@ class DispatchController extends Controller
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
 
-			
-
-			//handle null billing code and inspection type
-			//as they are not always set.
+			//handle null billing code
+			//as it is not always set.
 			$billingCode = $billingCode != '' ? $billingCode : null;
-			$inspectionType = $inspectionType != '' ?  $inspectionType : null;
-
+	
+			//handle potential multiple inspection types
+			$inspectionTypeArray = explode(',', $inspectionType);
+			$inspectionTypeCount = count($inspectionTypeArray);
+			if($inspectionTypeCount > 1)
+			{
+				$inspectionTypeFilter = ['or'];
+				for($i = 0; $i < $inspectionTypeCount; $i++)
+				{
+					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
+				}
+			}else{
+				//handle null inspection type
+				//as it is not always set.
+				$inspectionType = $inspectionTypeArray[0] != '' ?  $inspectionType : null;
+				$inspectionTypeFilter = ['InspectionType => $inspectionType'];
+			}
+			
 			$assetQuery = AvailableWorkOrder::find()
 				->where(['MapGrid' => $mapGridSelected])
-				->andwhere(['InspectionType' => $inspectionType])
+				//->andwhere(['InspectionType' => $inspectionType])
 				->andwhere(['BillingCode' => $billingCode]);
+
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
