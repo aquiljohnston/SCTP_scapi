@@ -494,10 +494,10 @@ class TimeCardController extends BaseActiveController
 
             if (!empty($responseArray))
             {
-                $this->processAndOutputCsvResponse($responseArray);
+                BaseActiveController::processAndOutputCsvResponse($responseArray);
                 return '';
             }
-            $this->setCsvHeaders();
+            BaseActiveController::setCsvHeaders();
             //send response
             return '';
         } catch(ForbiddenHttpException $e) {
@@ -535,10 +535,10 @@ class TimeCardController extends BaseActiveController
 
             if (!empty($responseArray))
             {
-                $this->processAndOutputCsvResponse($responseArray);
+                BaseActiveController::processAndOutputCsvResponse($responseArray);
                 return '';
             }
-            $this->setCsvHeaders();
+            BaseActiveController::setCsvHeaders();
             //send response
             return '';
         } catch(ForbiddenHttpException $e) {
@@ -635,32 +635,5 @@ class TimeCardController extends BaseActiveController
         $response -> data = $namePairs;
 
         return $response;
-    }
-
-    // helper method for setting the csv header for tracker maps csv output
-    public function setCsvHeaders(){
-        header('Content-Type: text/csv;charset=UTF-8');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-    }
-
-    // helper method for outputting csv data without storing the whole result
-    public function processAndOutputCsvResponse($reader){
-        Yii::$app->response->format = Response::FORMAT_RAW;
-
-        $this->setCsvHeaders();
-        // TODO find a way to use Yii response but without storing the whole response content in a variable
-        $firstLine = true;
-        $fp = fopen('php://output','w');
-
-        while($row = $reader->read()){
-
-            if($firstLine) {
-                $firstLine = false;
-                fwrite($fp, implode(',', array_keys($row)) . "\r\n");
-            }
-            fwrite($fp, implode(',', $row) . "\r\n");
-        }
-        fclose($fp);
     }
 }
