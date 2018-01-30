@@ -72,26 +72,26 @@ class TimeEntryController extends BaseActiveController
 	{		
 		try{
 			//set db target
-			$headers 			= getallheaders();
+			$headers 				= getallheaders();
 			TimeEntry::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeEntryDeactivate');
 			
 			//capture put body
-			$put 				= file_get_contents("php://input");
-			$data 				= json_decode($put, true);
+			$put 					= file_get_contents("php://input");
+			$entries 				= json_decode($put, true);
 			
 			//create response
-			$response 			= Yii::$app->response;
-			$response ->format 	= Response::FORMAT_JSON;
+			$response 				= Yii::$app->response;
+			$response ->format 		= Response::FORMAT_JSON;
 			
 			//parse json
-			$deactivatedBy 		= self::getUserFromToken()->UserName;
-			$id					= $data["timeCardId"];
+			//$deactivatedBy 		= self::getUserFromToken()->UserName;
+			//$id					= $data["timeCardId"];
 			
 		
-			$entries 			= TimeEntry::find()
+			/*$entries 			= TimeEntry::find()
 								//->where(['TimeEntryTimeCardID' => 144105])
 								->where(['TimeEntryTimeCardID' => $id])
 								->all();
@@ -124,7 +124,32 @@ class TimeEntryController extends BaseActiveController
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 				return $response;
-			}
+			}*/
+
+
+                foreach ($entries as $entry) {
+                	//SPROC has no return so just in case we need a flag.
+                	$success = 0;
+                   //call SPROC to deactivateTimeEntry
+                    try {
+					$connection 	= BaseActiveRecord::getDb();
+					$transaction 	= $connection->beginTransaction(); 
+                    $timeCardCommand= $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3");
+                    $timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
+                    $timeCardCommand->bindParam(':PARAMETER2', $entry['taskName'], \PDO::PARAM_INT);
+                    $timeCardCommand->bindParam(':PARAMETER3', $entry['day'], \PDO::PARAM_INT);
+                    $timeCardCommand->execute();
+     				$transaction->commit();
+     				$success = 1;
+                    } catch (Exception $e) {
+                        $transaction->rollBack();
+                    }
+                }
+
+                $response->data = $success; 
+				return $response;
+
+
 		}
 		catch(\Exception $e) 
 		{
