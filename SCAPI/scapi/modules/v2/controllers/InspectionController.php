@@ -185,6 +185,8 @@ class InspectionController extends Controller
 					$newEvent = new $eventModel;
 					$newEvent->attributes = $data[$i];
 					$newEvent->InspectionID = $inspectionID;
+					//set created by if null, current issue with tablet data 1/30/18
+					$newEvent->CreatedByUserID = ($newEvent->CreatedByUserID == null ? $data[$i]['CreatedUserID'] : $newEvent->CreatedByUserID);
 					if ($newEvent->save()) {
 						$eventSuccessFlag = 1;
 						$eventID = $newEvent->ID;
