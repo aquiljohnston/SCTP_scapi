@@ -388,7 +388,7 @@ class TimeCardController extends BaseActiveController
                 $timeCards->andFilterWhere([
                     'or',
                     //['like', 'UserName', $filter],
-                    ['like', 'UserFirstName', $filter],
+                    ['like', 'UserFullName', $filter],
                     ['like', 'UserLastName', $filter],
                     ['like', 'ProjectName', $filter],
                     ['like', 'TimeCardApprovedFlag', $filter]
