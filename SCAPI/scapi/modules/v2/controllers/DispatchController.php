@@ -752,8 +752,8 @@ class DispatchController extends Controller
 	}
 	
 	
-	//route to get pipeline records for the purpose of Andre's dual dispatch test.
-	public function actionGetPipe()
+	//route to get records for the purpose of Andre's dual dispatch test.
+	public function actionGetDualDispatch()
 	{
 		try
 		{
@@ -765,7 +765,7 @@ class DispatchController extends Controller
 				->limit(8)
 				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
 				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
-				->where(['tWorkOrder.LocationType' => 'Gas Main',
+				->where([/*'tWorkOrder.LocationType' => 'Gas Main',*/
 					'tWorkOrder.CompletedFlag' => 0,
 					'tWorkOrder.InspectionAttemptCounter' => 0,
 					'tWorkOrder.EventIndicator' => null])
