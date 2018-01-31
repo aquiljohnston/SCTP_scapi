@@ -80,74 +80,38 @@ class TimeEntryController extends BaseActiveController
 			
 			//capture put body
 			$put 					= file_get_contents("php://input");
+			yii::trace($put);
 			$entries 				= json_decode($put, true);
 			
 			//create response
 			$response 				= Yii::$app->response;
 			$response ->format 		= Response::FORMAT_JSON;
 			
-			//parse json
-			//$deactivatedBy 		= self::getUserFromToken()->UserName;
-			//$id					= $data["timeCardId"];
-			
-		
-			/*$entries 			= TimeEntry::find()
-								//->where(['TimeEntryTimeCardID' => 144105])
-								->where(['TimeEntryTimeCardID' => $id])
-								->all();
-			
+			//get current user to set deactivated by
+			$username = BaseActiveController::getUserFromToken()->UserName;
 
-			try
-			{
-				//create transaction
-				//$connection 						= \Yii::$app->db;
-				$connection 						= BaseActiveRecord::getDb();
-				$transaction 						= $connection->beginTransaction(); 
-			
-				foreach($entries as $entry)
-				{
-					$entry-> TimeEntryActiveFlag 	= 0;
-					$entry-> TimeEntryModifiedDate 	= Parent::getDate();
-					$entry-> TimeEntryModifiedBy 	= $deactivatedBy;
-					$entry-> update();
-				}
-
+			foreach ($entries as $entry) {
+				//SPROC has no return so just in case we need a flag.
+				$success = 0;
+			   //call SPROC to deactivateTimeEntry
+				try {
+				$connection 	= BaseActiveRecord::getDb();
+				$transaction 	= $connection->beginTransaction(); 
+				$timeCardCommand= $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
+				$timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
+				$timeCardCommand->bindParam(':PARAMETER2', $entry['taskName'], \PDO::PARAM_INT);
+				$timeCardCommand->bindParam(':PARAMETER3', $entry['day'], \PDO::PARAM_INT);
+				$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
+				$timeCardCommand->execute();
 				$transaction->commit();
-				$response->setStatusCode(200);
-				$response->data = $entries; 
-				return $response;
+				$success = 1;
+				} catch (Exception $e) {
+					$transaction->rollBack();
+				}
 			}
-			//if transaction fails rollback changes and send error
-			catch(Exception $e)
-			{
-				$transaction->rollBack();
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
-				return $response;
-			}*/
 
-
-                foreach ($entries as $entry) {
-                	//SPROC has no return so just in case we need a flag.
-                	$success = 0;
-                   //call SPROC to deactivateTimeEntry
-                    try {
-					$connection 	= BaseActiveRecord::getDb();
-					$transaction 	= $connection->beginTransaction(); 
-                    $timeCardCommand= $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3");
-                    $timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
-                    $timeCardCommand->bindParam(':PARAMETER2', $entry['taskName'], \PDO::PARAM_INT);
-                    $timeCardCommand->bindParam(':PARAMETER3', $entry['day'], \PDO::PARAM_INT);
-                    $timeCardCommand->execute();
-     				$transaction->commit();
-     				$success = 1;
-                    } catch (Exception $e) {
-                        $transaction->rollBack();
-                    }
-                }
-
-                $response->data = $success; 
-				return $response;
+			$response->data = $success; 
+			return $response;
 
 
 		}
