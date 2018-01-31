@@ -80,7 +80,6 @@ class TimeEntryController extends BaseActiveController
 			
 			//capture put body
 			$put 					= file_get_contents("php://input");
-			yii::trace($put);
 			$entries 				= json_decode($put, true);
 			
 			//create response
