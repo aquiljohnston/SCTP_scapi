@@ -71,7 +71,7 @@ class TaskController extends Controller
 	 * Get All Task From CT DB
 	 * @return Json Array Of All Task
 	 */
-	public function actionGetAllTask($filter = null, $listPerPage = 10, $page = 1){
+	public function actionGetAllTask(){
         try{
             $responseArray = [];
             //set db target
@@ -80,27 +80,10 @@ class TaskController extends Controller
             $userQuery = Task::find()
                 ->select(['TaskID', 'TaskName', 'TaskQBReferenceID']);
 
-            if($filter != null)
-            {
-                $userQuery->andFilterWhere([
-                    'or',
-                    ['like', 'TaskName', $filter],
-                    ['like', 'TaskQBReferenceID', $filter],
-                ]);
-            }
-
-            if($page != null)
-            {
-                //pass query with pagination data to helper method
-                $paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
-                //use updated query with pagination caluse to get data
-                $data = $paginationResponse['Query']
-                    ->orderBy(['TaskID'=>SORT_ASC, 'TaskName'=>SORT_ASC])
-                    ->asArray()
-                    ->all();
-                $responseArray['pages'] = $paginationResponse['pages'];
-                $responseArray['assets'] = $data;
-            }
+            $data = $userQuery -> orderBy(['TaskID'=>SORT_ASC, 'TaskName'=>SORT_ASC])
+                               ->asArray()
+                               ->all();
+            $responseArray['assets'] = $data;
 
             //send response
             $response = Yii::$app->response;
