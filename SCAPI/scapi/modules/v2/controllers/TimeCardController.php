@@ -397,6 +397,9 @@ class TimeCardController extends BaseActiveController
             }
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
+            // check if approved time card exist in the data
+            $approvedTimeCardExist = $this->CheckApprovedTimeCardExist($timeCardsArr);
+            $responseArray['approvedTimeCardExist'] = $approvedTimeCardExist;
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
 
@@ -635,5 +638,21 @@ class TimeCardController extends BaseActiveController
         $response -> data = $namePairs;
 
         return $response;
+    }
+
+    /**
+     * Check if there is at least one time card has been approved
+     * @param $timeCardsArr
+     * @return boolean
+     */
+    private function CheckApprovedTimeCardExist($timeCardsArr){
+        $approvedTimeCardExist = false;
+        foreach ($timeCardsArr as $item){
+            if ($item['TimeCardApprovedFlag'] == "Yes"){
+                $approvedTimeCardExist = true;
+                break;
+            }
+        }
+        return $approvedTimeCardExist;
     }
 }
