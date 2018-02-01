@@ -138,7 +138,26 @@ class DispatchController extends Controller
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
 
-			
+			//handle null billing code
+			//as it is not always set.
+			$billingCode = $billingCode != '' ? $billingCode : null;
+	
+			//handle null or multiple inspection types
+			if($inspectionType != null)
+			{
+				//handle potential multiple inspection types
+				$inspectionTypeFilter = ['or',
+				['InspectionType' => $inspectionType]];
+				$inspectionTypeArray = explode(',', $inspectionType);
+				$inspectionTypeCount = count($inspectionTypeArray);
+				for($i = 0; $i < $inspectionTypeCount; $i++)
+				{
+					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
+				}
+			}else{
+				//if null just use inspection type
+				$inspectionTypeFilter = ['InspectionType' => $inspectionType];
+			}			
 
 			//handle null billing code and inspection type
 			//as they are not always set.
@@ -147,7 +166,7 @@ class DispatchController extends Controller
 
 			$assetQuery = AvailableWorkOrder::find()
 				->where(['MapGrid' => $mapGridSelected])
-				->andwhere(['InspectionType' => $inspectionType])
+				->andwhere($inspectionTypeFilter)
 				->andwhere(['BillingCode' => $billingCode]);
 			if($sectionNumberSelected !=null)
 			{
@@ -407,7 +426,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null)
 	{
 		try
 		{
@@ -418,8 +437,27 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
+			
+			//handle null or multiple inspection types
+			if($inspectionType != null)
+			{
+				//handle potential multiple inspection types
+				$inspectionTypeFilter = ['or',
+				['InspectionType' => $inspectionType]];
+				$inspectionTypeArray = explode(',', $inspectionType);
+				$inspectionTypeCount = count($inspectionTypeArray);
+				for($i = 0; $i < $inspectionTypeCount; $i++)
+				{
+					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
+				}
+			}else{
+				//if null just use inspection type
+				$inspectionTypeFilter = ['InspectionType' => $inspectionType];
+			}
+			
 			$assetQuery = AssignedWorkQueue::find()
-				->where(['MapGrid' => $mapGridSelected]);
+				->where(['MapGrid' => $mapGridSelected])
+				->andwhere($inspectionTypeFilter);
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
