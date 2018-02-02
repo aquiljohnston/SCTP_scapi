@@ -2,6 +2,8 @@
 
 namespace app\modules\v2\controllers;
 
+use app\modules\v2\constants\Constants;
+use app\modules\v2\models\Project;
 use Yii;
 use yii\rest\Controller;
 use app\modules\v2\models\Task;
@@ -71,32 +73,40 @@ class TaskController extends Controller
 	 * Get All Task From CT DB
 	 * @return Json Array Of All Task
 	 */
-	public function actionGetAllTask(){
-        try{
+    public function actionGetAllTask($timeCardProjectID = null)
+    {
+        try {
             $responseArray = [];
             //set db target
             Task::setClient(BaseActiveController::urlPrefix());
 
-            $userQuery = Task::find()
-                ->select(['TaskID', 'TaskName', 'TaskQBReferenceID']);
+            // check if it is CT project
+            $projectUrl = Project::find()
+                ->select(['ProjectUrlPrefix'])
+                ->where(['ProjectID' => $timeCardProjectID])
+                ->one();
 
-            $data = $userQuery -> orderBy(['TaskID'=>SORT_ASC, 'TaskName'=>SORT_ASC])
-                               ->asArray()
-                               ->all();
-            $responseArray['assets'] = $data;
+            if ($projectUrl == Constants::SCCT_DEV || $projectUrl == Constants::SCCT_STAGE || $projectUrl == Constants::SCCT_PROD) {
+
+                $userQuery = Task::find()
+                    ->select(['TaskID', 'TaskName', 'TaskQBReferenceID']);
+
+                $data = $userQuery->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
+                    ->asArray()
+                    ->all();
+            } else {
+                $data = self::GetProjectTask($timeCardProjectID);
+            }
+            $responseArray['assets'] = $data['assets'];
 
             //send response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
             $response->data = $responseArray;
             return $response;
-        }
-        catch(ForbiddenHttpException $e)
-        {
+        } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson('actionGetTasks', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
