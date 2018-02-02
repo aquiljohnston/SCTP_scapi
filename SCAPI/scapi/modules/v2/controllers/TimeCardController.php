@@ -336,7 +336,9 @@ class TimeCardController extends BaseActiveController
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
-            $records = $timeCards->all(BaseActiveRecord::getDb());    
+            $records = $timeCards->all(BaseActiveRecord::getDb());  
+
+            $showFilter = true;  
 
 
             //if is scct website get all or own
@@ -385,6 +387,7 @@ class TimeCardController extends BaseActiveController
                     ->one();
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
+                $showFilter = false;
             }
 
             if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
@@ -424,6 +427,7 @@ class TimeCardController extends BaseActiveController
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
             $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['showFilter'] = $showFilter;
 
             if (!empty($responseArray['assets']))
             {
