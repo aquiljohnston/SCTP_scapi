@@ -684,4 +684,40 @@ class TimeCardController extends BaseActiveController
         }
         return $approvedTimeCardExist;
     }
+
+    /**
+     * Check if submit button should be enabled/disabled by calling DB fnSubmit function
+     * @return mixed
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionCheckSubmitButtonStatus(){
+        try{
+            //set db target
+            TimeCard::setClient(BaseActiveController::urlPrefix());
+
+            //get body data
+            $data = file_get_contents("php://input");
+
+            //build base query
+            $responseArray = new Query;
+            $responseArray  ->select('*')
+                ->from(["fnSubmit(:TimeCardJSON)"])
+                ->addParams([':TimeCardJSON' => $data]);
+            $submitButtonStatus = $responseArray->all(BaseActiveRecord::getDb());
+            $responseArray = $submitButtonStatus;
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $responseArray;
+
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
+    }
 }
