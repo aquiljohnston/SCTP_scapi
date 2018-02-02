@@ -262,7 +262,7 @@ class TimeCardController extends BaseActiveController
 		try
 		{
 			//get http headers
-			$headers = getallheaders();
+			$headers 	= getallheaders();
 			//set db target
 			AllTimeCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
 			
@@ -270,7 +270,7 @@ class TimeCardController extends BaseActiveController
 			PermissionsController::requirePermission('timeCardGetCard');
 			
 			//get project based on header
-			$project = Project::find()
+			$project 	= Project::find()
 				->where(['ProjectUrlPrefix'=>$headers['X-Client']])
 				->one();
 			
@@ -304,37 +304,41 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 
-    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null)
+    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectName = null)
     {
         $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
         // RBAC permission check is embedded in this action
         try
         {
             //get headers
-            $headers = getallheaders();
+            $headers 			= getallheaders();
             //get client header
-            $client = $headers['X-Client'];
+            $client 			= $headers['X-Client'];
 
             //url decode filter value
-            $filter = urldecode($filter);
+            $filter 			= urldecode($filter);
 
             //set db target headers
-            $headers = getallheaders();
+            $headers 			= getallheaders();
             TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
             //format response
-            $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
+            $response 			= Yii::$app->response;
+            $response-> format 	= Response::FORMAT_JSON;
 
             //response array of time cards
-            $timeCardsArr = [];
-            $responseArray = [];
+            $timeCardsArr 		= [];
+            $responseArray 		= [];
 
             //build base query
             $timeCards = new Query;
             $timeCards->select('*')
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
+
+            $records = $timeCards->all(BaseActiveRecord::getDb());  
+
+            $showFilter = true;  
 
 
             //if is scct website get all or own
@@ -351,6 +355,7 @@ class TimeCardController extends BaseActiveController
                         ->where("ProjUserUserID = $userID")
                         ->all();
                     $projectsSize = count($projects);
+
 
                     //check if week is prior or current to determine appropriate view
                     if($projectsSize > 0)
@@ -382,6 +387,7 @@ class TimeCardController extends BaseActiveController
                     ->one();
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
+                $showFilter = false;
             }
 
             if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
@@ -389,12 +395,33 @@ class TimeCardController extends BaseActiveController
                     'or',
                     //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
-                    ['like', 'UserLastName', $filter],
-                    ['like', 'ProjectName', $filter],
+                    ['like', 'Project', $filter],
                     ['like', 'TimeCardApprovedFlag', $filter]
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
             }
+
+            if($projectName!= null && isset($timeCards)) {
+                $timeCards->andFilterWhere([
+                    'or',
+                    //['like', 'UserName', $filter],
+                    ['like', 'UserFullName', $filter],
+                    ['like', 'Project', $filter],
+                    ['like', 'ProjectName', $projectName],
+                    ['like', 'TimeCardApprovedFlag', $filter]
+                ]);
+            }
+
+            //iterate and stash project name
+            $allTheProjects = [];
+            foreach ($records as $p) {
+     			$allTheProjects[$p['ProjectName']] = $p['ProjectName'];
+            }
+            //remove dupes
+            $allTheProjects = array_unique($allTheProjects);
+            //abc order for all
+            asort($allTheProjects);
+          
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
             // check if approved time card exist in the data
@@ -402,6 +429,8 @@ class TimeCardController extends BaseActiveController
             $responseArray['approvedTimeCardExist'] = $approvedTimeCardExist;
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['showFilter'] = $showFilter;
 
             if (!empty($responseArray['assets']))
             {
