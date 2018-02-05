@@ -308,8 +308,8 @@ class TimeCardController extends BaseActiveController
     {
         $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
         // RBAC permission check is embedded in this action
-        try
-        {
+        //try
+       // {
             //get headers
             $headers 			= getallheaders();
             //get client header
@@ -317,6 +317,7 @@ class TimeCardController extends BaseActiveController
 
             //url decode filter value
             $filter 			= urldecode($filter);
+            //$projectName 		= urldecode($projectName);
 
             //set db target headers
             $headers 			= getallheaders();
@@ -395,20 +396,21 @@ class TimeCardController extends BaseActiveController
                     'or',
                     //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
-                    ['like', 'Project', $filter],
-                    ['like', 'TimeCardApprovedFlag', $filter]
+                    //['like', 'Project', $filter],
+                    ['like', 'ProjectName', $projectName],
+                    //['like', 'TimeCardApprovedFlag', $filter]
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
             }
 
-            if($projectName!= null && isset($timeCards)) {
+           if($projectName!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
                     'or',
                     //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
-                    ['like', 'Project', $filter],
+                    //['like', 'Project', $filter],
                     ['like', 'ProjectName', $projectName],
-                    ['like', 'TimeCardApprovedFlag', $filter]
+                    //['like', 'TimeCardApprovedFlag', $filter]
                 ]);
             }
 
@@ -421,6 +423,9 @@ class TimeCardController extends BaseActiveController
             $allTheProjects = array_unique($allTheProjects);
             //abc order for all
             asort($allTheProjects);
+
+            //APPEND KEY VALUE PAIR TO ARRAY W/O ARRAY [PUSH]
+            $allTheProjects=array(""=>"All") + $allTheProjects; 
           
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
@@ -443,14 +448,14 @@ class TimeCardController extends BaseActiveController
                 $response->setStatusCode(404);
                 return $response;
             }
-        }
-        catch(ForbiddenHttpException $e) {
-            throw $e;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+       // }
+       // catch(ForbiddenHttpException $e) {
+      //      throw $e;
+      //  }
+       // catch(\Exception $e)
+       // {
+         //   throw new \yii\web\HttpException(400);
+       // }
     }
 
     public function actionGetTimeCardsHistoryData($selectedTimeCardIDs = [], $week = null)
