@@ -6,6 +6,7 @@ use Yii;
 use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\constants\Constants;
 use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Project;
 use app\modules\v2\models\Notification;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
@@ -50,132 +51,127 @@ class NotificationController extends Controller
     public function actionGetNotifications()
     {
         try {
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            //check current environment for york
-			//this code is bad and should feel bad
-            $headers = getallheaders();
-            if ($headers['X-Client'] == Constants::YORK_DEV){
-                $currentProject = "York Dev";
-            }elseif ($headers['X-Client'] == Constants::YORK_STAGE){
-                $currentProject = "York Stage";
-            }else{
-                $currentProject = "York";
-            }
+			//get client header 
+			$client = getallheaders()['X-Client'];
+			
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			PermissionsController::requirePermission('notificationsGet');
 
             //get user
             $userID = BaseActiveController::getUserFromToken()->UserID;
             $user = SCUser::findOne($userID);
+			
+			//build response structure and instantiate variables
+			$notifications = [];
+			$notifications['firstName'] = $user->UserFirstName;
+			$notifications['lastName'] = $user->UserLastName;
+			$notifications['notifications'] = [];
+			$notifications['timeCards'] = [];
+			$notifications['mileageCards'] = [];
+			$notificationTotal = 0;
+			$timeCardTotal = 0;
+			$mileageCardTotal = 0;
+			
+			if(BaseActiveController::isSCCT($client))
+			{
+				//get projects the user belongs to
+				$projectData = $user->projects;
+				$projectArray = array_map(function ($model) {
+					return $model->attributes;
+				}, $projectData);
+				$projectSize = count($projectArray);
+			}else{
+				$projectArray = Project::find()
+					->where(['ProjectUrlPrefix' => $client])
+					->asArray()
+					->all();
+				$projectSize = count($projectArray);
+			}
 
-            // check if login user is Engineer
-            if ($user->UserAppRoleType != "Engineer") {
+			
+			//loop projects to get data
+			for ($i = 0; $i < $projectSize; $i++) {
+				//reset db target to scct
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				
+				$projectID = $projectArray[$i]['ProjectID'];
+				$projectName = $projectArray[$i]['ProjectName'];
+				$projectUrlPrefix = $projectArray[$i]['ProjectUrlPrefix'];
 
-                PermissionsController::requirePermission('notificationsGet');
+				//cast string results from sql counts to int values
+				//get count of unapproved time cards from last week for project
+				$timeCardCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
+					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 'No'"])
+					->count();
+				
+				//get count of unapproved mileage cards from last week for project
+				$mileageCardCount = (int)MileageCardSumMilesPriorWeekWithProjectName::find()
+					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 'No'"])
+					->count();
+				
+				//get count of notifications
+				if($projectUrlPrefix != null)
+				{
+					//set db target to project db
+					BaseActiveRecord::setClient($projectUrlPrefix);
+					try{
+						//get notification for project
+						$notificationCount = (int)Notification::find()
+							->count();
+					}catch(Exception $e){
+						$notificationCount = 0;
+					}
+				}
 
-                //get projects the user belongs to
-                $projectData = $user->projects;
-                $projectArray = array_map(function ($model) {
-                    return $model->attributes;
-                }, $projectData);
-                $projectSize = count($projectArray);
+				//pass time card data for project
+				$timeCardData['Project'] = $projectName;
+				$timeCardData['Number of Items'] = $timeCardCount;
 
-                //load data into array
-                $notifications = [];
-                $notifications["firstName"] = $user->UserFirstName;
-                $notifications["lastName"] = $user->UserLastName;
-                $notifications["notification"] = [];
-                $notifications["timeCards"] = [];
-                $notifications["mileageCards"] = [];
-                $notificationTotal = 0;
-                $timeCardTotal = 0;
-                $mileageCardTotal = 0;
-                $projectHasNotification = false;
-                $projectNameHasNotification = null;
+				//pass mileage card data for project
+				$mileageCardData['Project'] = $projectName;
+				$mileageCardData['Number of Items'] = $mileageCardCount;
 
-                //loop projects to get data
-                for ($i = 0; $i < $projectSize; $i++) {
-                    $projectID = $projectArray[$i]["ProjectID"];
-                    $projectName = $projectArray[$i]["ProjectName"];
+				//pass notification data for project
+				$notificationData['Project'] = $projectName;
+				$notificationData['Number of Items'] = $notificationCount;
+				
+				//append data to response array
+				$notifications['timeCards'][] = $timeCardData;
+				$notifications['mileageCards'][] = $mileageCardData;
+				$notifications['notifications'][] = $notificationData;
 
-                    //get unapproved time cards from last week for project
-                    $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
-                        ->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 'No'"])
-                        ->all();
-                    $timeCardCount = count($timeCards);
+				//increment total counts
+				$timeCardTotal += $timeCardCount;
+				$mileageCardTotal += $mileageCardCount;
+				$notificationTotal += $notificationCount;
+			}
 
-                    //get unapproved mileage cards from last week for project
-                    $mileageCards = MileageCardSumMilesPriorWeekWithProjectName::find()
-                        ->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 'No'"])
-                        ->all();
-                    $mileageCardCount = count($mileageCards);
+			//pass time card data for total
+			$timeCardData['Project'] = 'Total';
+			$timeCardData['Number of Items'] = $timeCardTotal;
 
-                    //pass time card data for project
-                    $timeCardData["Project"] = $projectName;
-                    $timeCardData["Number of Items"] = $timeCardCount;
+			//pass mileage card data for total
+			$mileageCardData['Project'] = 'Total';
+			$mileageCardData['Number of Items'] = $mileageCardTotal;
 
-                    //pass mileage card data for project
-                    $mileageCardData["Project"] = $projectName;
-                    $mileageCardData["Number of Items"] = $mileageCardCount;
-
-                    //appened data to response array
-                    $notifications["timeCards"][] = $timeCardData;
-                    $notifications["mileageCards"][] = $mileageCardData;
-
-                    //increment total counts
-                    $timeCardTotal += $timeCardCount;
-                    $mileageCardTotal += $mileageCardCount;
-
-                    //check if the user associated with yorkDev
-                    if ($projectName == $currentProject) {
-                        $projectHasNotification = true;
-                        $projectNameHasNotification = $projectName;
-                    }
-                }
-
-                if ($projectHasNotification){
-
-                    //set db
-                    $headers = getallheaders();
-                    BaseActiveRecord::setClient($headers['X-Client']);
-
-                    //get notification for project
-                    $notificationData = Notification::find()
-                        ->all();
-                    $notificationTotal = count($notificationData);
-
-                    //pass notification data for project;
-                    $notificationReturnData["Project"] = $projectNameHasNotification;
-                    $notificationReturnData["Number of Items"] = $notificationTotal;
-
-                    //appened data to response array
-                    $notifications["notification"][] = $notificationReturnData;
-                }
-
-                //pass notification data for total
-                $notificationReturnData["Project"] = "Total";
-                $notificationReturnData["Number of Items"] = $notificationTotal;
-
-                //pass time card data for total
-                $timeCardData["Project"] = "Total";
-                $timeCardData["Number of Items"] = $timeCardTotal;
-
-                //pass mileage card data for total
-                $mileageCardData["Project"] = "Total";
-                $mileageCardData["Number of Items"] = $mileageCardTotal;
-
-                //append totals to response array
-                $notifications["notification"][] = $notificationReturnData;
-                $notifications["timeCards"][] = $timeCardData;
-                $notifications["mileageCards"][] = $mileageCardData;
+			//pass notification data for total
+			$notificationData['Project'] = 'Total';
+			$notificationData['Number of Items'] = $notificationTotal;
+			
+			//append totals to response array
+			$notifications['notifications'][] = $notificationData;
+			$notifications['timeCards'][] = $timeCardData;
+			$notifications['mileageCards'][] = $mileageCardData;
 
 
-                //send response
-                $response = Yii::$app->response;
-                $response->format = Response::FORMAT_JSON;
-                $response->data = $notifications;
-                return $response;
-            }
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $notifications;
+			return $response;
+			
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
