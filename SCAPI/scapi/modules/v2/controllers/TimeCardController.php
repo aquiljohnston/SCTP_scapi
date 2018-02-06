@@ -415,17 +415,18 @@ class TimeCardController extends BaseActiveController
             }
 
             //iterate and stash project name
-            $allTheProjects = [];
+            $allTheProjects = [""=>"All"];
             foreach ($records as $p) {
+
      			$allTheProjects[$p['ProjectName']] = $p['ProjectName'];
             }
             //remove dupes
             $allTheProjects = array_unique($allTheProjects);
             //abc order for all
-            asort($allTheProjects);
+            //asort($allTheProjects);
 
             //APPEND KEY VALUE PAIR TO ARRAY W/O ARRAY [PUSH]
-            $allTheProjects=array(""=>"All") + $allTheProjects; 
+            //$allTheProjects=array(""=>"All") + $allTheProjects; 
           
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
