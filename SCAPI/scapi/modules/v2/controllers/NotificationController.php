@@ -183,18 +183,19 @@ class NotificationController extends Controller
         }
     }
 
+	//get notification data for the active client based on urlprefix
+	//not sure if we need to change this to pass a desired project in the future
+	//notifications appear to be stored per project on the client dbs
     public function actionGetNotificationLanding($filter = null, $listPerPage = 50, $page = 1)
     {
         try {
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //get user
-            $userID = BaseActiveController::getUserFromToken()->UserID;
-            $user = SCUser::findOne($userID);
+            $user = BaseActiveController::getUserFromToken();
 
             $projectHasNotification = false;
-            $projectNameHasNotification = null;
             $notificationData = [];
 
             //get projects the user belongs to
@@ -203,62 +204,45 @@ class NotificationController extends Controller
                 return $model->attributes;
             }, $projectData);
             $projectSize = count($projectArray);
+		
+			PermissionsController::requirePermission('notificationsGet');
 
-            // check if login user is Engineer
-            if ($user->UserAppRoleType != "Engineer") {
+			//load data into array
+			$notifications = [];
+			$notifications['firstName'] = $user->UserFirstName;
+			$notifications['lastName'] = $user->UserLastName;
+			$notifications['notification'] = [];
+			$responseArray = [];
 
-                PermissionsController::requirePermission('notificationsGet');
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
 
-                //load data into array
-                $notifications = [];
-                $notifications["firstName"] = $user->UserFirstName;
-                $notifications["lastName"] = $user->UserLastName;
-                $notifications["notification"] = [];
-                $responseArray = [];
+			//get notification for project
+			$notificationData = Notification::find();
 
-                //loop projects to get data
-                for ($i = 0; $i < $projectSize; $i++) {
-                    $projectName = $projectArray[$i]["ProjectName"];
+			if ($filter != null) {
+				$notificationData->andFilterWhere([
+					'or',
+					['like', 'NotificationType', $filter],
+					['like', 'SrvDTLT', $filter],
+				]);
+			}
+			$orderBy = 'SrvDTLT';
+			//pass query with pagination data to helper method
+			$paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
+			//use updated query with pagination caluse to get data
+			$data = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
+			$responseArray['pages'] = $paginationResponse['pages'];
+			$responseArray['notification'] = $data;
 
-                    //check if the user associated with yorkDev
-                    if ($projectName == "York Dev") {
-                        $projectHasNotification = true;
-                    }
-                }
-
-                if ($projectHasNotification) {
-                    //set db
-                    $headers = getallheaders();
-                    BaseActiveRecord::setClient($headers['X-Client']);
-
-                    //get notification for project
-                    $notificationData = Notification::find();
-
-                    if ($filter != null) {
-                        $notificationData->andFilterWhere([
-                            'or',
-                            ['like', 'NotificationType', $filter],
-                            ['like', 'SrvDTLT', $filter],
-                        ]);
-                    }
-                    if ($page != null) {
-                        $orderBy = 'SrvDTLT';
-                        //pass query with pagination data to helper method
-                        $paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
-                        //use updated query with pagination caluse to get data
-                        $data = $paginationResponse['Query']->orderBy($orderBy)
-                            ->all();
-                        $responseArray['pages'] = $paginationResponse['pages'];
-                        $responseArray['notification'] = $data;
-                    }
-                }
-
-                //send response
-                $response = Yii::$app->response;
-                $response->format = Response::FORMAT_JSON;
-                $response->data = $responseArray;
-                return $response;
-            }
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+			
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
