@@ -313,8 +313,8 @@ class BaseActiveController extends ActiveController
 	
 	public static function isSCCT($client)
 	{
-		return ($client == Constants::SCCT_DEV ||
-		$client == Constants::SCCT_STAGE ||
-		$client == Constants::SCCT_PROD);
+		return ($client == Constants::SCCT_CONFIG['DEV_HEADER'] ||
+		$client == Constants::SCCT_CONFIG['STAGE_HEADER'] ||
+		$client == Constants::SCCT_CONFIG['PROD_HEADER']);
 	}
 }
