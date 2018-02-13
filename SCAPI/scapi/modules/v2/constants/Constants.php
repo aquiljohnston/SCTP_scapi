@@ -18,79 +18,89 @@ final class Constants
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
 	
-	//scct databases
-	const SCCT_DEV = 'scctdev';
-	const SCCT_STAGE = 'scctstage';
-	const SCCT_PROD = 'scct';
+	const API_CONFIG = [
+		'DEV_HEADER' => 'apidev',
+		'STAGE_HEADER' => 'apistage',
+		'PROD_HEADER' => 'api',
+		'AZURE_PROD_HEADER' => 'azureapi',
+		'DEV_DB' => 'ctDevDb',
+		'STAGE_DB' => 'ctStageDb',
+		'PROD_DB' => 'ctProdDb',
+		'AUTH' => 'app\modules\v2\rbac\ScDbManager',
+		'ASSET' => self::BASE_ASSET,
+		'EVENT' => self::BASE_EVENT,
+		'USER' => 'app\modules\v2\models\SCUser'
+	];
 	
-	//base comet tracker databases
-	const CT_DEV = 'apidev';	
-	const CT_STAGE = 'apistage';
-	const CT_PROD = 'api';
-	//azure prod
-	const AZURE_CT_PROD = 'azureapi';
-	//comet tracker models
-	const CT_USER = 'app\modules\v2\models\SCUser';
-	const CT_EVENT = self::BASE_EVENT;
-	const CT_ASSET = self::BASE_ASSET;
-	//comet tracker auth manager
-	const CT_AUTH = 'app\modules\v2\rbac\ScDbManager';
+	const SCCT_CONFIG = [
+		'DEV_HEADER' => 'scctdev',
+		'STAGE_HEADER' => 'scct',
+		'PROD_HEADER' => 'ctProdDb',
+		'DEV_DB' => 'ctDevDb',
+		'STAGE_DB' => 'ctStageDb',
+		'PROD_DB' => 'ctProdDb',
+		'AUTH' => 'app\modules\v2\rbac\ScDbManager',
+		'ASSET' => self::BASE_ASSET,
+		'EVENT' => self::BASE_EVENT,
+		'USER' => 'app\modules\v2\models\SCUser'
+	];
+
+	const PGE_CONFIG = [
+		'DEV_HEADER' => 'pgedev',
+		'STAGE_HEADER' => 'pgestage',
+		'PROD_HEADER' => 'pge',
+		'DEV_DB' => 'pgeDevDb',
+		'STAGE_DB' => 'pgeStageDb',
+		'PROD_DB' => 'pgeProdDb',
+		'AUTH' => 'app\modules\v2\rbac\PgeDbManager',
+		'USER' => 'app\modules\v2\modules\pge\models\PGEUser'
+	];
 	
-	//pg&e databases
-	const PGE_DEV = 'pgedev';
-	const PGE_STAGE = 'pgestage';
-	const PGE_PROD = 'pge';
-	//pg&e user model
-	const PGE_USER = 'app\modules\v2\modules\pge\models\PGEUser';
-	//pg&e auth manager
-	const PGE_AUTH = 'app\modules\v2\rbac\PgeDbManager';
+	const YORK_CONFIG = [
+		'DEV_HEADER' => 'yorkdev',
+		'STAGE_HEADER' => 'yorkstage',
+		'PROD_HEADER' => 'york',
+		'DEV_DB' => 'yorkDevDb',
+		'STAGE_DB' => 'yorkStageDb',
+		'PROD_DB' => 'yorkProdDb',
+		'AUTH' => self::CLIENT_DB_MANAGER,
+		'ASSET' => 'app\modules\v2\modules\york\models\Asset',
+		'EVENT' => self::BASE_EVENT,
+		'USER' => self::BASE_USER
+	];
 	
-	//york databases
-	const YORK_DEV = 'yorkdev';
-	const YORK_STAGE = 'yorkstage';
-	const YORK_PROD = 'york';
-	//azure
-	const AZURE_YORK_PROD = 'azureyork';
-	//york models
-	const YORK_USER = self::BASE_USER;
-	const YORK_EVENT = self::BASE_EVENT;
-	const YORK_ASSET = 'app\modules\v2\modules\york\models\Asset';
-	//york auth manager
-	const YORK_AUTH = self::CLIENT_DB_MANAGER;
+	const DOMINION_CONFIG = [
+		'STAGE_HEADER' => 'deostage',
+		'PROD_HEADER' => 'deo',
+		'STAGE_DB' => 'dominionStageDb',
+		'PROD_DB' => 'dominionProdDb',
+		'AUTH' => self::CLIENT_DB_MANAGER,
+		'ASSET' => self::BASE_ASSET,
+		'EVENT' => 'app\modules\v2\models\DominionEvent',
+		'USER' => self::BASE_USER
+	];
 	
-	//dominion databases
-	const DOMINION_STAGE = 'deostage';
-	const DOMINION_PROD = 'deo';
-	//azure
-	const AZURE_DOMINION_PROD = 'azuredeo';
-	//dominion models
-	const DOMINION_USER = self::BASE_USER;
-	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
-	const DOMINION_ASSET = self::BASE_ASSET;
-	//dominion auth manager
-	const DOMINION_AUTH = self::CLIENT_DB_MANAGER;
+	const SCANA_CONFIG = [
+		'DEV_HEADER' => 'scanadev',
+		'STAGE_HEADER' => 'scanastage',
+		'PROD_HEADER' => 'azurescana',
+		'DEV_DB' => 'scanaDevDb',
+		'STAGE_DB' => 'scanaStageDb',
+		'PROD_DB' => 'scanaProdDb',
+		'AUTH' => self::CLIENT_DB_MANAGER,
+		'ASSET' => 'app\modules\v2\modules\scana\models\Asset',
+		'EVENT' => 'app\modules\v2\models\ScanaEvent',
+		'USER' => self::BASE_USER
+	];
 	
-	//scana databases
-	const SCANA_DEV = 'scanadev';
-	const SCANA_STAGE = 'scanastage';
-	const SCANA_PROD = 'scana';
-	//azure
-	const AZURE_SCANA_PROD = 'azurescana';
-	//york models
-	const SCANA_USER = self::BASE_USER;
-	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
-	const SCANA_ASSET = 'app\modules\v2\modules\scana\models\Asset';
-	//york auth manager
-	const SCANA_AUTH = self::CLIENT_DB_MANAGER;
-	
-	//demo client database
-	const DEMO_DEV = 'demo';
-	//demo models
-	const DEMO_USER = self::BASE_USER;
-	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
-	const DEMO_ASSET = self::BASE_ASSET;
-	//demo auth manager
-	const DEMO_AUTH = self::CLIENT_DB_MANAGER;
+	const DEMO_CONFIG = [
+		'DEV_HEADER' => 'demo',
+		'DEV_DB' => 'demoDb',
+		'AUTH' => self::CLIENT_DB_MANAGER,
+		'ASSET' => self::BASE_ASSET,
+		'EVENT' => 'app\modules\v2\models\DemoEvent',
+		'USER' => self::BASE_USER
+	];
 	
 	//work queue status codes
 	const WORK_QUEUE_ASSIGNED = 100;
