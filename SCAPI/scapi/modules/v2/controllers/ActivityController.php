@@ -195,7 +195,7 @@ class ActivityController extends BaseActiveController
 
 						//handle createdby
 						$activity->ActivityCreatedUserUID = (string)$createdBy;
-						if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
+						if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 						{
 							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
 						}
@@ -221,7 +221,7 @@ class ActivityController extends BaseActiveController
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
 							//check for pge headers, pge is handled uniquely compared to a standard client
-							if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
+							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 							{
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
