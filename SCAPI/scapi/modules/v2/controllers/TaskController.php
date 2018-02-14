@@ -86,7 +86,7 @@ class TaskController extends Controller
                 ->where(['ProjectID' => $timeCardProjectID])
                 ->one();
 
-            if ($projectUrl == Constants::SCCT_DEV || $projectUrl == Constants::SCCT_STAGE || $projectUrl == Constants::SCCT_PROD) {
+			if(BaseActiveController::isSCCT($projectUrl)) {
 
                 $userQuery = Task::find()
                     ->select(['TaskID', 'TaskName', 'TaskQBReferenceID']);
