@@ -141,7 +141,8 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
+						//Can remove this pge check when project is finished
+						if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 						{
 							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
 						}
