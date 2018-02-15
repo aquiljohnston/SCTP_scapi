@@ -66,6 +66,7 @@ class UserController extends BaseActiveController
                     'reactivate' => ['put'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
+                    'get-inactive' => ['get'],
                     'reset-password' => ['put'],
                 ],
             ];
