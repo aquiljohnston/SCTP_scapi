@@ -571,8 +571,7 @@ class UserController extends BaseActiveController
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
-				$projectData['ProjectTask'] = $projectTask;
-				$projectData['ProjectUserTask'] = $projectUserTask;
+				$projectData['ProjectTask'] = $projectTask['assets'];
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
                 $projectData['ActivityCodes'] = $activityCodesArray;
