@@ -561,7 +561,6 @@ class UserController extends BaseActiveController
 				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
 				$projectTask = TaskController::GetProjectTask($projectID);//Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
-				$projectUserTask = TaskController::GetProjectUserTask();//Yii::$app->runAction('v2/task/get-project-user-task');
 				
 				//set client back to ct after external call
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
