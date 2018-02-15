@@ -28,7 +28,9 @@ class RouteController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'route-optimization' => ['post'],
+					//don't want to interfere with Dan Rawls if he still uses this
+					//'route-optimization-1' => ['post'],
+					//'route-optimization-2' => ['post'],
                 ],
             ];
 		return $behaviors;	

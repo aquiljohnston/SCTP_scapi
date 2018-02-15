@@ -25,9 +25,10 @@ class ReportsController extends Controller {
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'get-sp-report' => ['get'],
-					'get-view-report' => ['get'],
-					'get-Parm-DropDown' => ['get']
+                    'get-report-drop-down' => ['get'],
+                    'get-report' => ['get'],
+					'get-parm-dropdown' => ['get'],
+					'get-inspector-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;

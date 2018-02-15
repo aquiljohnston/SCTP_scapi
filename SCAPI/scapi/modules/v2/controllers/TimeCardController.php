@@ -54,7 +54,11 @@ class TimeCardController extends BaseActiveController
 					'get-entries' => ['get'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
+					'get-time-cards-history-data' => ['get'],
+					'get-payroll-data' => ['get'],
 					'show-entries' => ['get'],
+					'create-task-entry' => ['post'],
+					'get-charge-of-account-type' => ['post'],
                 ],  
             ];
 		return $behaviors;	
@@ -593,6 +597,7 @@ class TimeCardController extends BaseActiveController
      * @return mixed
      * @throws \yii\web\HttpException
      */
+	 //this should be in the task controller...
     public function actionCreateTaskEntry()
     {
         $successFlag = 0;
@@ -644,20 +649,13 @@ class TimeCardController extends BaseActiveController
      * Get ChargeOfAccountType From CT DB
      * @return mixed
      */
+	 //should be in dropdown controller or task controller...
     public function actionGetChargeOfAccountType(){
         //set db target
         ChartOfAccountType::setClient(BaseActiveController::urlPrefix());
 
         $chartOfAccountType = ChartOfAccountType::find()
             ->all();
-
-        //load data into array
-        /*$dataArray = [];
-        $dataArray['assets'] = $chartOfAccountType;
-
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
-        $response->data = $dataArray;*/
 
         $namePairs = [];
         $codesSize = count($chartOfAccountType);
