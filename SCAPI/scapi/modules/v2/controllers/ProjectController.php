@@ -32,12 +32,16 @@ class ProjectController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'view-all-users'  => ['get'],
+					'view'  => ['get'],
+					'create'  => ['post'],
+					'update'  => ['put'],
 					'get-project-dropdowns'  => ['get'],
+					'get-project-modules'  => ['get'],
 					'get-user-relationships'  => ['get'],
 					'get-all'  => ['get'],
 					'ct-get-all'  => ['get'],
 					'add-remove-users' => ['post'],
+					'add-remove-module' => ['post'],
                 ],  
             ];
 		return $behaviors;	

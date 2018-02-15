@@ -30,8 +30,6 @@ class TaskController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'get-project-task' => ['get'],
-					'get-project-user-task' => ['get'],
                     'get-all-task' => ['get'],
                 ],  
             ];
@@ -53,22 +51,6 @@ class TaskController extends Controller
 		return $responseArray;
 	}
 	
-	public static function GetProjectUserTask()
-	{
-		//TODO add call to db
-		return [
-			[
-				'FilterName' => 'Training',
-				'SortSeq' => 1,
-				'FieldDisplayValue' => 'Training',
-			],[
-				'FilterName' => 'Leak Survey',
-				'SortSeq' => 2,
-				'FieldDisplayValue' => 'Leak Survey',
-			],
-		];
-	}
-
 	/*
 	 * Get All Task From CT DB
 	 * @return Json Array Of All Task
