@@ -49,14 +49,11 @@ class MileageCardController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'create' => ['create'],
-                    'delete' => ['delete'],
-					'update' => ['put'],
 					'view' => ['get'],
 					'approve-cards'  => ['put'],
-					'get-entries' => ['get'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
+					'get-cards-export' => ['get'],
                 ],  
             ];
 		return $behaviors;	

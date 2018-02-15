@@ -49,6 +49,7 @@ class DispatchController extends Controller
 					'get-assigned' => ['get'],
 					'get-assigned-assets' => ['get'],
 					'unassign' => ['delete'],
+					'get-dual-dispatch' => ['get'],
                 ],
             ];
 		return $behaviors;	

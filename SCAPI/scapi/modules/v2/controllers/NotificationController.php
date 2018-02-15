@@ -43,6 +43,7 @@ class NotificationController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-notifications' => ['get']
+                    'get-notifications-landing' => ['get']
                 ],
             ];
         return $behaviors;
