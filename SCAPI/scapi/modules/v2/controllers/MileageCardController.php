@@ -439,10 +439,10 @@ class MileageCardController extends BaseActiveController
 			
             if (!empty($responseArray))
             {
-                $this->processAndOutputCsvResponse($responseArray);
+                self::processAndOutputCsvResponse($responseArray);
                 return '';
             }
-            $this->setCsvHeaders();
+            self::setCsvHeaders();
             //send response
             return '';
         } catch(ForbiddenHttpException $e) {
@@ -456,7 +456,7 @@ class MileageCardController extends BaseActiveController
 
 	//TODO change to use base active controller version when updates are completed to match time cards
     // helper method for setting the csv header for tracker maps csv output
-    public function setCsvHeaders(){
+    public static function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');
         header('Pragma: no-cache');
         header('Expires: 0');
@@ -464,10 +464,10 @@ class MileageCardController extends BaseActiveController
 
 	//TODO change to use base active controller version when updates are completed to match time cards
     // helper method for outputting csv data without storing the whole result
-    public function processAndOutputCsvResponse($reader){
+    public static function processAndOutputCsvResponse($reader){
         Yii::$app->response->format = Response::FORMAT_RAW;
 
-        $this->setCsvHeaders();
+        self::setCsvHeaders();
         // TODO find a way to use Yii response but without storing the whole response content in a variable
         $firstLine = true;
         $fp = fopen('php://output','w');
