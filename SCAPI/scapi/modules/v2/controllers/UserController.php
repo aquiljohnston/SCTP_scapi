@@ -736,14 +736,14 @@ class UserController extends BaseActiveController
 	{
 		//get user model based on project 
 		$userModel = BaseActiveRecord::getUserModel($client);
-		if($userModel == null) return;
+		if($userModel == null) return 'No Client User Model Found.';
         $userModel::setClient($client);
 		
 		//check if user exist in project
 		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-		if($existingUser != null) return;
+		if($existingUser != null) return 'User Already Exist in Project.';
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();
