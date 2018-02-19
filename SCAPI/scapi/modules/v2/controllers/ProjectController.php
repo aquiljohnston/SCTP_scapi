@@ -137,7 +137,6 @@ class ProjectController extends BaseActiveController
                 ['like', 'ProjectName', $filter],
                 ['like', 'ProjectType', $filter],
                 ['like', 'ProjectDescription', $filter],
-                ['like', 'ProjectType', $filter],
                 ['like', 'ProjectState', $filter],
             ]);
         }
@@ -416,8 +415,6 @@ class ProjectController extends BaseActiveController
 			//decode post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
-
-			//Yii::trace("DUMPSTER: ".$data);
 			
 			//check if key exist
 			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
@@ -439,7 +436,7 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    if(UserController::createInProject($user, $project->ProjectUrlPrefix) == null)
+                    if(UserController::createInProject($user, $project->ProjectUrlPrefix))
 					{
 						//reset target db after external call
 						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
