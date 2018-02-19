@@ -76,10 +76,10 @@ class ProjectController extends BaseActiveController
 			PermissionsController::requirePermission('projectView');
 			if($joinNames) {
 			    $sql =
-                    'SELECT CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
+                    'SELECT CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
                     ClientTb.ClientName
                     FROM ProjectTb 
-                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
+                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserName
                     LEFT JOIN [ClientTb] ON ProjectTb.ProjectClientID = ClientTb.ClientID
                     WHERE ProjectTb.ProjectId = :id';
 			    $project = Project::getDb()->createCommand($sql)->bindValue(':id', $id)
