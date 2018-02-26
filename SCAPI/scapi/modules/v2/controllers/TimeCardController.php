@@ -58,7 +58,7 @@ class TimeCardController extends BaseActiveController
 					'get-payroll-data' => ['get'],
 					'show-entries' => ['get'],
 					'create-task-entry' => ['post'],
-					'get-charge-of-account-type' => ['post'],
+					'get-charge-of-account-type' => ['get'],
                 ],  
             ];
 		return $behaviors;	
