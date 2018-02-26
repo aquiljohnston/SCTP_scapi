@@ -28,11 +28,11 @@ use Yii;
  * @property string $ClientFilesPath
  * @property string $ClientArchiveFlag
  * @property string $ClientCreateDate
- * @property integer $ClientCreatorUserID
+ * @property string $ClientCreatorUserID
  * @property string $ClientModifiedDate
- * @property integer $ClientModifiedBy
- * @property integer $QBCustomerID
- * @property integer $ReferenceID
+ * @property string $ClientModifiedBy
+ * @property string $QBCustomerID
+ * @property string $ReferenceID
  *
  * @property ProjectTb $projectTb
  */
@@ -53,8 +53,10 @@ class Client extends BaseActiveRecord
     {
         return [
             [['ClientName'], 'required'],
-            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientComment', 'ClientArchiveFlag'], 'string'],
-            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag',  'ClientCreatorUserID', 'ClientModifiedBy', 'QBCustomerID', 'ReferenceID'], 'integer'],
+            [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 
+			'ClientCreatorUserID', 'ClientModifiedBy', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientComment',
+			'ClientArchiveFlag', 'QBCustomerID', 'ReferenceID'], 'string'],
+            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
             [['ClientCreateDate', 'ClientModifiedDate'], 'safe']
         ];
     }

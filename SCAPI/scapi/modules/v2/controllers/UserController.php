@@ -4,6 +4,7 @@ namespace app\modules\v2\controllers;
 
 use app\modules\v2\models\Auth;
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\Client;
@@ -20,7 +21,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
 use app\modules\v2\controllers\DispatchController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -40,8 +41,6 @@ use yii\data\Pagination;
 class UserController extends BaseActiveController
 {
     public $modelClass = 'app\modules\v2\models\SCUser';
-	
-	const USERNAME_EXIST_MESSAGE = 'UserName already exist.';
 
     /**
      * sets verb filters for http request
@@ -118,7 +117,7 @@ class UserController extends BaseActiveController
 
             if ($existingUser != null) {
                 $response->setStatusCode(400);
-                $response->data = self::USERNAME_EXIST_MESSAGE;
+                $response->data = Constants::USERNAME_EXIST_MESSAGE;
                 return $response;
             }
 
@@ -148,8 +147,8 @@ class UserController extends BaseActiveController
             }
 
             //created date/by
-            $userID = self::getUserFromToken()->UserID;
-            $user->UserCreatedUID = $userID;
+            $username = self::getUserFromToken()->UserName;
+            $user->UserCreatedUID = $username;
             $user->UserCreatedDate = Parent::getDate();
 
             if ($user->save()) {
@@ -186,26 +185,19 @@ class UserController extends BaseActiveController
      * @returns json body of the user data
      * @throws \yii\web\HttpException
      */
-    public function actionUpdate($id = null, $jsonData = null, $client = null, $username = null)
+    public function actionUpdate($username = null)
     {
         try {
 			//get client header
 			//checks to see if request was sent directly to this route or call internally from another api controller.
-			if($client == null)
-			{
-				$clientHeader = getallheaders()['X-Client'];
-			}
+			$clientHeader = getallheaders()['X-Client'];
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             PermissionsController::requirePermission('userUpdate');
 			
-            if ($jsonData != null) { 	
-				$data = json_decode(utf8_decode($jsonData), true);
-            } else {
-                $put = file_get_contents("php://input");
-                $data = json_decode(utf8_decode($put), true);
-            }
+			$put = file_get_contents("php://input");
+			$data = json_decode(utf8_decode($put), true);
 
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -216,27 +208,15 @@ class UserController extends BaseActiveController
 			{
 				BaseActiveRecord::setClient($clientHeader);
 				$userModel = BaseActiveRecord::getUserModel($clientHeader);
-				$clientUser = $userModel::findOne($id);
+				$clientUser = $userModel::find()
+					->where(['UserName' => $username])
+					->one();
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				$username = $clientUser->UserName;
-				$id = null;
 			}
-			
             //get user model to be updated
-            //check params
-            if ($id != null) {
-                $user = SCUser::findOne($id);
-                //set username for future use
-                $username = $user->UserName;
-            } elseif ($username != null) {
-                $user = SCUser::find()
-                    ->where(['UserName' => $username])
-                    ->one();
-            } else {
-				//no ID or username avaliable
-                return 'Invalid Parameters.';
-                //throw new \yii\web\HttpException(400);
-            }
+			$user = SCUser::find()
+				->where(['UserName' => $username])
+				->one();
 			
             $currentRole = $user['UserAppRoleType'];
 
@@ -249,7 +229,7 @@ class UserController extends BaseActiveController
 
             //handle the password
             //get pass from data
-            if (array_key_exists('UserPassword', $data) && $jsonData == null) {
+            if (array_key_exists('UserPassword', $data)) {
                 $securedPass = $data['UserPassword'];
 
                 //decrypt password
@@ -277,7 +257,7 @@ class UserController extends BaseActiveController
             //pass new data to user
             $user->attributes = $data;
             // Get modified by from token
-            $user->UserModifiedUID = self::getUserFromToken()->UserID;
+            $user->UserModifiedUID = self::getUserFromToken()->UserName;
 
             //rbac check if attempting to create an admin
             if ($user['UserAppRoleType'] == 'Admin') {
@@ -297,7 +277,7 @@ class UserController extends BaseActiveController
                 $responseArray = $user->attributes;
 
                 //propagate update to all associated projects
-				$updateInProjectResponse = self::updateInProject($user, $username, $client);
+				$updateInProjectResponse = self::updateInProject($user, $username);
                 $responseArray['UpdatedProjects'] = $updateInProjectResponse;
             } else {
                 return 'Failed to update base user.';
@@ -318,7 +298,7 @@ class UserController extends BaseActiveController
      * @returns json body of the user data
      * @throws \yii\web\HttpException
      */
-    public function actionView($id)
+    public function actionView($username)
     {
         try {
 			//get client header
@@ -329,19 +309,22 @@ class UserController extends BaseActiveController
             $response->format = Response::FORMAT_JSON;
 			
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient($client);
 
             PermissionsController::requirePermission('userView');
 			
 			if(BaseActiveController::isSCCT($client))
 			{
-				$user = SCUser::findOne($id);
+				$user = SCUser::find()
+					->where(['UserName' => $username])
+					->one();
 			}
 			else
 			{
-				BaseActiveRecord::setClient($client);
 				$userModel = BaseActiveRecord::getUserModel($client);
-				$user = $userModel::findOne($id);
+				$user = $userModel::find()
+					->where(['UserName' => $username])
+					->one();
 			}
 
 			if($user == null)
@@ -754,14 +737,14 @@ class UserController extends BaseActiveController
 	{
 		//get user model based on project 
 		$userModel = BaseActiveRecord::getUserModel($client);
-		if($userModel == null) return;
+		if($userModel == null) return 'No Client User Model Found.';
         $userModel::setClient($client);
 		
 		//check if user exist in project
 		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-		if($existingUser != null) return;
+		if($existingUser != null) return 'User Already Exist in Project.';
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();
@@ -772,7 +755,7 @@ class UserController extends BaseActiveController
 		$createdByInProject = BaseActiveController::getClientUser($client);
 		if($createdByInProject != null)
 		{
-			$projectUser->UserCreatedUID = $createdByInProject->UserID;
+			$projectUser->UserCreatedUID = $createdByInProject->UserName;
 		}
 		//set comment created on addition to project
 		$projectUser->UserComments = 'User created on association to project.';
@@ -794,7 +777,7 @@ class UserController extends BaseActiveController
 		return $projectUser;
 	}
 	
-	public static function updateInProject($user, $username, $client = null)
+	public static function updateInProject($user, $username)
 	{
 		$responseArray = [];
 		
@@ -826,7 +809,7 @@ class UserController extends BaseActiveController
 			$updatedByInProject = BaseActiveController::getClientUser($project->ProjectUrlPrefix);
 			if($updatedByInProject != null)
 			{
-				$projectUser->UserModifiedUID = $updatedByInProject->UserID;
+				$projectUser->UserModifiedUID = $updatedByInProject->UserName;
 			}
 			//can't update these values
 			if (isset($projectUser['UserCreatedUID'])) {
@@ -851,21 +834,6 @@ class UserController extends BaseActiveController
 		}
 		return $responseArray;
 	}
-
-	//get comet tracker user from client user id
-	private static function getUserByClientUser($userID, $client)
-	{
-		BaseActiveRecord::setClient($client);
-		$userModel = BaseActiveRecord::getUserModel($client);
-		//get client user
-		$clientUser = $userModel::findOne($userID);
-		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-		//get ct user
-		$user = SCUser::find()
-			->where(['UserName' => $clientUser->UserName])
-			->one();
-		return $user;
-	}
 	
 	//deactivate in scct base and propagate to all associated clients
 	private static function deactivateInScct($user)
@@ -874,6 +842,7 @@ class UserController extends BaseActiveController
 			//process user deactivation in client dbs
 			$deactivatedProjects = self::deactivateInProjects($user);
 			$userID = $user->UserID;
+			$username = $user->UserName;
 			
 			 //call stored procedure to for cascading deactivation of a user
 			$connection = SCUser::getDb();
@@ -882,11 +851,12 @@ class UserController extends BaseActiveController
 			$userDeactivateCommand->execute();
 			
 			//Log out user so that they don't receive 403s if logged in or deactivating self
-			$auth = Auth::findOne(["AuthUserID" => $userID]);
+			$auth = Auth::findOne(["AuthUserID" => $username]);
 			if($auth != null) $auth->delete();
 			
 			//build response data
 			//requery user after deactivation
+			//may be able to use the function refresh() to do this.
 			$user = SCUser::findOne($userID);
 			$user->UserPassword = '';
 			$userData['User'] = $user->attributes;

@@ -13,7 +13,7 @@ use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\BadRequestHttpException;
@@ -120,7 +120,7 @@ class TimeCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			//get userid
-			$approvedBy = self::getUserFromToken()->UserID;
+			$approvedBy = self::getUserFromToken()->UserName;
 			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
@@ -174,7 +174,7 @@ class TimeCardController extends BaseActiveController
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardGetEntries');
 			
-			$response = Yii::$app ->response;
+			$response = Yii::$app->response;
 			$dataArray = [];
 			$timeCard = TimeCard::findOne($cardID);
 			

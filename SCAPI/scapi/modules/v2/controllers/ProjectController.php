@@ -70,10 +70,10 @@ class ProjectController extends BaseActiveController
 			PermissionsController::requirePermission('projectView');
 			if($joinNames) {
 			    $sql =
-                    'SELECT CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
+                    'SELECT CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
                     ClientTb.ClientName
                     FROM ProjectTb 
-                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
+                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserName
                     LEFT JOIN [ClientTb] ON ProjectTb.ProjectClientID = ClientTb.ClientID
                     WHERE ProjectTb.ProjectId = :id';
 			    $project = Project::getDb()->createCommand($sql)->bindValue(':id', $id)
@@ -137,7 +137,6 @@ class ProjectController extends BaseActiveController
                 ['like', 'ProjectName', $filter],
                 ['like', 'ProjectType', $filter],
                 ['like', 'ProjectDescription', $filter],
-                ['like', 'ProjectType', $filter],
                 ['like', 'ProjectState', $filter],
             ]);
         }
@@ -180,7 +179,7 @@ class ProjectController extends BaseActiveController
 			$model = new Project();
 
 			$model->attributes = $data;  
-			$model->ProjectCreatedBy = self::getUserFromToken()->UserID;
+			$model->ProjectCreatedBy = self::getUserFromToken()->UserName;
 
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -233,6 +232,7 @@ class ProjectController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 			
 			$model->ProjectModifiedDate = Parent::getDate();
+			$model->ProjectModifiedBy = self::getUserFromToken()->UserName;
 			
 			if($model-> update())
 			{
@@ -415,8 +415,6 @@ class ProjectController extends BaseActiveController
 			//decode post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
-
-			//Yii::trace("DUMPSTER: ".$data);
 			
 			//check if key exist
 			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
@@ -438,7 +436,7 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    if(UserController::createInProject($user, $project->ProjectUrlPrefix) == null)
+                    if(UserController::createInProject($user, $project->ProjectUrlPrefix))
 					{
 						//reset target db after external call
 						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -606,7 +604,7 @@ class ProjectController extends BaseActiveController
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
-			$userID = self::getUserFromToken()->UserID;
+			$username = self::getUserFromToken()->Username;
 
 			//create response
 			$response = Yii::$app ->response;
@@ -640,7 +638,7 @@ class ProjectController extends BaseActiveController
 				$model = new MenusProjectModule();
 				$model->ProjectModulesName = $i;
 				$model->ProjectModulesProjectID = $projectID;
-				$model->ProjectModulesCreatedBy = $userID;
+				$model->ProjectModulesCreatedBy = $username;
 				if(!$model->save()) {
 					throw new BadRequestHttpException("Could not validate and save lookup table model instance.");
 				}

@@ -18,9 +18,9 @@ return [
 	],
 	'ctProdDb' => [
 		'class' => 'yii\db\Connection',
-		'dsn' => 'sqlsrv:Server=10.0.0.51;Database=CometTracker_PROD',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2db;Database=AZCometTracker_PROD',
 		'username' => 'ApplicationCometTracker',
-		'password' => '321cba',
+		'password' => '6Iy2udrKO&Xy',
 		'charset' => 'utf8',
 	],
 //PG&E
@@ -62,9 +62,9 @@ return [
 	],
 	'yorkProdDb' => [
 		'class' => 'yii\db\Connection',
-		'dsn' => 'sqlsrv:Server=10.0.0.51;Database=vCAT_YORK_GIS_PROD',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2db01;Database=vCAT_YORK_GIS_PROD',
 		'username' => 'ApplicationCometTracker',
-		'password' => '321cba',
+		'password' => '6Iy2udrKO&Xy',
 		'charset' => 'utf8',
 	],
 //Dominion
@@ -77,9 +77,9 @@ return [
 	],
 	'dominionProdDb' => [
 		'class' => 'yii\db\Connection',
-		'dsn' => 'sqlsrv:Server=10.0.0.51;Database=vCAT_DOMINION_GIS_PROD',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2db01;Database=vCAT_DOMINION_GIS_PROD',
 		'username' => 'ApplicationCometTracker',
-		'password' => '321cba',
+		'password' => '6Iy2udrKO&Xy',
 		'charset' => 'utf8',
 	],
 //Scana
@@ -97,13 +97,13 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
-	// 'scanaProdDb' => [
-		// 'class' => 'yii\db\Connection',
-		// 'dsn' => 'sqlsrv:Server=10.0.0.51;Database=vCAT_SCANA_GIS_PROD',
-		// 'username' => 'ApplicationCometTracker',
-		// 'password' => '321cba',
-		// 'charset' => 'utf8',
-	// ],
+	'scanaProdDb' => [
+		'class' => 'yii\db\Connection',
+		'dsn' => 'sqlsrv:Server=vm-pa-ct2dbscan;Database=vCAT_SCANA_GIS_PROD',
+		'username' => 'ApplicationCometTracker',
+		'password' => '6Iy2udrKO&Xy',
+		'charset' => 'utf8',
+	],
 //Demo
 	'demoDb' => [
 		'class' => 'yii\db\Connection',
@@ -112,14 +112,5 @@ return [
 		'password' => '321cba',
 		'charset' => 'utf8',
 	],
-//Azure Test
-	'azureDb' =>[
-		'class' => 'yii\db\Connection',
-		'dsn' => 'sqlsrv:Server=10.101.3.4;Database=AzureScctTemplate',
-		'username' => 'testuser',
-		'password' => 'testuser20170823',
-		'charset' => 'utf8',
-	],
-	
 ];
 

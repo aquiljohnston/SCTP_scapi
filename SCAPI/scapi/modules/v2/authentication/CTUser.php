@@ -1,14 +1,14 @@
 <?php
 
-namespace app\authentication;
+namespace app\modules\v2\authentication;
 
 use Yii;
 use yii\web\User;
 use yii\base\ErrorException;
-use app\modules\v1\models\Auth;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\controllers\BaseActiveController;
-use app\modules\v1\models\BaseActiveRecord;
+use app\modules\v2\models\Auth;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\models\BaseActiveRecord;
 
 class CTUser extends User
 {

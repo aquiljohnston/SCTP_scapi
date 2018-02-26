@@ -7,7 +7,7 @@ use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
 use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\CTUser;
+use app\modules\v2\authentication\CTUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
@@ -69,19 +69,15 @@ class LoginController extends Controller
 				$decryptedPass = BaseActiveController::decrypt($securedPass);
 
 				$hash = $user->UserPassword;
-				Yii::trace('Hash: '.$hash);
 				//Check the Hash
 				if (password_verify($decryptedPass, $hash)) 
 				{
-					Yii::trace('Password is valid.');
-					
 					//Pass
 					Yii::$app->user->login($user);
 					//Generate Auth Token
 					$auth = new Auth();
-					$userID = $user->UserID;
-					$auth->AuthUserID = $userID;
-					$auth->AuthCreatedBy = $userID;
+					$auth->AuthUserID = $user->UserID;
+					$auth->AuthCreatedBy = $user->UserName;
 					$auth-> beforeSave(true);
 					//Store Auth Token
 					$auth-> save();
@@ -104,7 +100,7 @@ class LoginController extends Controller
 			$authArray = ArrayHelper::toArray($auth);
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
-			$authArray['UserUID'] = $user->UserUID;
+			$authArray['UserName'] = $user->UserName;
 			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
             $authArray['UserAppRoleType'] = $user->UserAppRoleType;
 			
@@ -153,7 +149,7 @@ class LoginController extends Controller
 			}
 
 			//call CTUser\logout()
-			Yii::$app->user->logout($destroySession = true, null, $token);
+			Yii::$app->user->logout($destroySession = true, $token);
 			$response->data = 'Logout Successful!';
 			return $response;
 		}

@@ -15,7 +15,17 @@ $config = [
 			'class' => 'app\modules\v1\Module',
 		],
         'v2' => [
-            'class' => 'app\modules\v2\Module'
+            'class' => 'app\modules\v2\Module',
+			'components' => [
+				'user' => [
+					'class' => 'app\modules\v2\authentication\CTUser',
+					'identityClass' => 'app\modules\v2\models\SCUser',
+					'enableAutoLogin' => false,
+					'authTimeout' => 28800,
+					//'authTimeout' => 15,
+					'loginUrl' => null
+				]
+			],
         ]
     ],
     'components' => [
@@ -82,11 +92,9 @@ $config = [
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
 		'scanaStageDb' => $db['scanaStageDb'],
-		//'scanaProdDb' => $db['scanaProdDb'],
+		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
-		//Azure tests
-		'azureDb' => $db['azureDb'],
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,
@@ -98,12 +106,12 @@ $config = [
 
 if (YII_ENV_DEV) {
     // configuration adjustments for 'dev' environment
-    //$config['bootstrap'][] = 'debug';
-    $config['modules']['debug'] = [
-        'class' => 'yii\debug\Module',
-		//TO DO add dynamic IPs
-		'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
-    ];
+    // $config['bootstrap'][] = 'debug';
+    // $config['modules']['debug'] = [
+        // 'class' => 'yii\debug\Module',
+		// //TO DO add dynamic IPs
+		// 'allowedIPs' => ['127.0.0.1', '::1', '192.168.*.*'],
+    // ];
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [

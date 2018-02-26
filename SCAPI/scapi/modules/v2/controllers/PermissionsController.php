@@ -14,8 +14,6 @@ use yii\web\Response;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
-use app\rbac\ScDbManager;
-use app\rbac\ClientDbManager;
 
 class PermissionsController extends Controller {
 
@@ -35,22 +33,19 @@ class PermissionsController extends Controller {
 
     public static function can($permissionName, $token = null, $client = null)
     {
-		$nullClient = false;
-		if($client == null)
-		{
-			$nullClient = true;
-			$client = BaseActiveController::urlPrefix();
-		}
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
         if($token === null) {
             $token = Yii::$app->request->getAuthUser();
         }
+		if($client == null)
+		{
+			$client = BaseActiveController::urlPrefix();
+		}
 		$user = BaseActiveController::getClientUser($client);
-		
 		//handle if user could not be found
 		if ($user == null)
 		{
-			return false;
+			throw new \yii\web\HttpException(401);
 		}
 		
         $userID = $user->UserID;
@@ -58,18 +53,12 @@ class PermissionsController extends Controller {
 		BaseActiveRecord::setClient($client);
 		$db = BaseActiveRecord::getDb();
 		
-		if($nullClient || BaseActiveController::isSCCT($client))
+		$authClass = BaseActiveRecord::getAuthManager($client);
+		if(($manager = new $authClass($db)) === null) 
 		{
-			if (($manager = new ScDbManager()) === null) {
-				return false;
-			}
+			return false;
 		}
-		else
-		{
-			if (($manager = new ClientDbManager($db)) === null) {
-				return false;
-			}
-		}
+		
         $access = $manager->checkAccess($userID, $permissionName);
 
         return $access;

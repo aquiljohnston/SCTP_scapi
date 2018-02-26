@@ -1,14 +1,14 @@
 <?php
 
-namespace  app\authentication;
+namespace  app\modules\v2\authentication;
 
 use Yii;
 use yii\filters\auth\AuthMethod;
-use app\modules\v1\models\SCUser;
-use app\modules\v1\models\Auth;
+use app\modules\v2\models\SCUser;
+use app\modules\v2\models\Auth;
 use yii\base\ErrorException;
 use yii\web\Response;
-use app\modules\v1\controllers\BaseActiveController;
+use app\modules\v2\controllers\BaseActiveController;
 
 class TokenAuth extends AuthMethod
 {
