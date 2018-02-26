@@ -7,7 +7,8 @@ use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\data\Pagination;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\AvailableWorkOrder;
 use app\modules\v2\models\AvailableWorkOrderByMapGrid;
@@ -30,8 +31,6 @@ use yii\web\NotFoundHttpException;
 
 class DispatchController extends Controller 
 {
-    const DISPATCH_CGE_TYPE = "DISPATCH_CGE_TYPE";
-
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -139,7 +138,26 @@ class DispatchController extends Controller
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
 
-			
+			//handle null billing code
+			//as it is not always set.
+			$billingCode = $billingCode != '' ? $billingCode : null;
+	
+			//handle null or multiple inspection types
+			if($inspectionType != null)
+			{
+				//handle potential multiple inspection types
+				$inspectionTypeFilter = ['or',
+				['InspectionType' => $inspectionType]];
+				$inspectionTypeArray = explode(',', $inspectionType);
+				$inspectionTypeCount = count($inspectionTypeArray);
+				for($i = 0; $i < $inspectionTypeCount; $i++)
+				{
+					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
+				}
+			}else{
+				//if null just use inspection type
+				$inspectionTypeFilter = ['InspectionType' => $inspectionType];
+			}			
 
 			//handle null billing code and inspection type
 			//as they are not always set.
@@ -148,7 +166,7 @@ class DispatchController extends Controller
 
 			$assetQuery = AvailableWorkOrder::find()
 				->where(['MapGrid' => $mapGridSelected])
-				->andwhere(['InspectionType' => $inspectionType])
+				->andwhere($inspectionTypeFilter)
 				->andwhere(['BillingCode' => $billingCode]);
 			if($sectionNumberSelected !=null)
 			{
@@ -408,7 +426,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null)
 	{
 		try
 		{
@@ -419,8 +437,27 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
+			
+			//handle null or multiple inspection types
+			if($inspectionType != null)
+			{
+				//handle potential multiple inspection types
+				$inspectionTypeFilter = ['or',
+				['InspectionType' => $inspectionType]];
+				$inspectionTypeArray = explode(',', $inspectionType);
+				$inspectionTypeCount = count($inspectionTypeArray);
+				for($i = 0; $i < $inspectionTypeCount; $i++)
+				{
+					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
+				}
+			}else{
+				//if null just use inspection type
+				$inspectionTypeFilter = ['InspectionType' => $inspectionType];
+			}
+			
 			$assetQuery = AssignedWorkQueue::find()
-				->where(['MapGrid' => $mapGridSelected]);
+				->where(['MapGrid' => $mapGridSelected])
+				->andwhere($inspectionTypeFilter);
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
@@ -518,9 +555,6 @@ class DispatchController extends Controller
 				$assetCount = count($data['unassignAsset']);
 			}
 			
-			//get assinged status code
-			$assignedCode = self::statusCodeLookup('Assigned');
-			
 			//process unassignMap
 			for($i = 0; $i < $mapCount; $i++)
 			{
@@ -611,7 +645,7 @@ class DispatchController extends Controller
 			{
 				$dataArray = [
 				'CreatedBy' => $createdBy,
-				'CreatedDate' => date(BaseActiveController::DATE_FORMAT),
+				'CreatedDate' => date(Constants::DATE_FORMAT),
 				'AssignedUserID' => $userID,
 				'WorkQueueStatus' => $assignedCode,
 				];
@@ -626,7 +660,7 @@ class DispatchController extends Controller
 				}
 				
 				if ($scheduledDate != null)
-					$dataArray['ScheduledDispatchDate'] = date(BaseActiveController::DATE_FORMAT,strtotime($scheduledDate));
+					$dataArray['ScheduledDispatchDate'] = date(Constants::DATE_FORMAT,strtotime($scheduledDate));
 				
 				$db->createCommand()->insert('tWorkQueue', $dataArray)->execute();
 			} 
@@ -741,8 +775,8 @@ class DispatchController extends Controller
 	}
 	
 	
-	//route to get pipeline records for the purpose of Andre's dual dispatch test.
-	public function actionGetPipe()
+	//route to get records for the purpose of Andre's dual dispatch test.
+	public function actionGetDualDispatch()
 	{
 		try
 		{
@@ -754,7 +788,7 @@ class DispatchController extends Controller
 				->limit(8)
 				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
 				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
-				->where(['tWorkOrder.LocationType' => 'Gas Main',
+				->where([/*'tWorkOrder.LocationType' => 'Gas Main',*/
 					'tWorkOrder.CompletedFlag' => 0,
 					'tWorkOrder.InspectionAttemptCounter' => 0,
 					'tWorkOrder.EventIndicator' => null])

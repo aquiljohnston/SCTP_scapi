@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\BaseUser;
@@ -11,7 +12,7 @@ use app\modules\v2\models\WebDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\modules\v2\models\WebJSONDataInsertError;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -20,7 +21,6 @@ use yii\data\Pagination;
 
 class BaseActiveController extends ActiveController
 {	
-	const DATE_FORMAT = 'Y-m-d H:i:s';
 	private static $IV = 'abcdefghijklmnop';
 	private static $S_KEY = 'sparusholdings12';
 	
@@ -102,7 +102,7 @@ class BaseActiveController extends ActiveController
 	
 	public function getDate()
 	{
-		return date(BaseActiveController::DATE_FORMAT);
+		return date(Constants::DATE_FORMAT);
 	}	
 	
 	public static function getUserFromToken($token = null)
@@ -118,11 +118,17 @@ class BaseActiveController extends ActiveController
 	{
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		$ctUser = self::getUserFromToken();
-		
-		BaseActiveRecord::setClient($client);
-		$clientUser = BaseUser::find()
-			->where(['UserName' => $ctUser->UserName])
-			->one();
+		//if token is not found(replaced by another login) ctUser will be null and throw an error in where clause
+		if($ctUser !== null)
+		{
+			BaseActiveRecord::setClient($client);
+			$clientUser = BaseUser::find()
+				->where(['UserName' => $ctUser->UserName])
+				->one();
+		}
+		else{
+			return null;
+		}
 		return $clientUser;
 	}
 	
@@ -171,18 +177,19 @@ class BaseActiveController extends ActiveController
                 || strpos($_SERVER['SERVER_NAME'],'192.168.')===0)
         )
         {
-            $prefix = 'apidev';
+            //$prefix = 'apidev';
+			$prefix = 'azureapi';
         }
 		return $prefix;
 	}
 	
 	//Archives incoming json records for logging and data recovery
-	public static function archiveJson($json, $type, $userUID, $client)
+	public static function archiveJson($json, $type, $username, $client)
 	{
 		TabletDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new TabletDataInsertArchive;
-		$archiveRecord->CreatedUserUID = (string)$userUID;
+		$archiveRecord->CreatedUserUID = (string)$username;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
 		
@@ -191,12 +198,12 @@ class BaseActiveController extends ActiveController
 	
 	//Archives incoming web json records for logging and data recovery
 	//TODO: potentially want to merge with archive json function, not doing this now because it would require a lot of refactoring.
-	public static function archiveWebJson($json, $type, $userUID, $client)
+	public static function archiveWebJson($json, $type, $username, $client)
 	{
 		WebDataInsertArchive::setClient($client);
 		
 		$archiveRecord =  new WebDataInsertArchive;
-		$archiveRecord->CreatedUserUID = (string)$userUID;
+		$archiveRecord->CreatedUserUID = (string)$username;
 		$archiveRecord->TransactionType = $type;
 		$archiveRecord->InsertedData = $json;
 		
@@ -204,12 +211,12 @@ class BaseActiveController extends ActiveController
 	}
 	
 	//Archives incoming breadcrumb jsons for logging and data recovery
-	public static function archiveBreadcrumbJson($json, $userUID, $client)
+	public static function archiveBreadcrumbJson($json, $username, $client)
 	{
 		TabletDataInsertBreadcrumbArchive::setClient($client);
 		
 		$archiveBreadcrumb = new TabletDataInsertBreadcrumbArchive;
-		$archiveBreadcrumb->UserUID = $userUID;
+		$archiveBreadcrumb->UserUID = $username;
 		$archiveBreadcrumb->InsertedData = $json;
 		$archiveBreadcrumb->TransactionType = 'Breadcrumb';
 		
@@ -280,8 +287,8 @@ class BaseActiveController extends ActiveController
 	
 	public static function isSCCT($client)
 	{
-		return ($client == BaseActiveRecord::SCCT_DEV ||
-		$client == BaseActiveRecord::SCCT_STAGE ||
-		$client == BaseActiveRecord::SCCT_PROD);
+		return ($client == Constants::SCCT_DEV ||
+		$client == Constants::SCCT_STAGE ||
+		$client == Constants::SCCT_PROD);
 	}
 }

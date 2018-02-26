@@ -6,7 +6,7 @@ use Yii;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\constants\Constants;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
@@ -185,6 +185,8 @@ class InspectionController extends Controller
 					$newEvent = new $eventModel;
 					$newEvent->attributes = $data[$i];
 					$newEvent->InspectionID = $inspectionID;
+					//set created by if null, current issue with tablet data 1/30/18
+					$newEvent->CreatedByUserID = ($newEvent->CreatedByUserID == null ? $data[$i]['CreatedUserID'] : $newEvent->CreatedByUserID);
 					if ($newEvent->save()) {
 						$eventSuccessFlag = 1;
 						$eventID = $newEvent->ID;
@@ -305,6 +307,22 @@ class InspectionController extends Controller
 		return $workOrder;
 	}
 	
+	    //used by updateEventIndicator to get all non deleted events for a given work order
+    private static function getAllEventsByWorkOrder($workOrder)
+    {
+        //get all events from workOrder 
+        $query = Event::find()
+            ->innerJoin('tInspection', 'tEvent.InspectionID = tInspection.ID')
+            ->innerJoin('tWorkQueue', 'tInspection.WorkQueueID = tWorkQueue.ID')
+            ->innerJoin('tWorkOrder', 'tWorkQueue.WorkOrderID = tWorkOrder.ID')
+            ->where(['tWorkOrder.ID' => $workOrder->ID])
+            ->andWhere(['tEvent.DeletedFlag' => 0]);
+        $eventArray = $query->asArray()->all();
+        
+        return $eventArray;
+    }
+
+	
 	//used by complete work to set work queue status to 102 completed
 	private static function updateWorkQueue($inspectionData)
 	{
@@ -334,19 +352,36 @@ class InspectionController extends Controller
 		return false;
 	}
 	
-	//used by action update to set a work order to the proper status in the event of a cge
-	private static function setWorkOrderCGE($inspectionData, $workOrder)
+	//used by actionUpdate to update work order event indicator based on new inspection data
+	private static function updateEventIndicator($inspectionData, $workOrder)
 	{
 		try{
 			$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
 			$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
-			$workOrder->EventIndicator = Constants::WORK_ORDER_CGE;
-			$workOrder->CompletedDate = null;
-			$workOrder->CompletedFlag = 0;
+			//if update is a cge set it to a cge regardless
+			if($inspectionData['IsCGEFlag'] ==1)
+			{
+				$workOrder->EventIndicator =  Constants::WORK_ORDER_CGE;
+				$workOrder->CompletedDate = null;
+				$workOrder->CompletedFlag = 0;
+			}
+			//get all events for this work order that are not marked deleted if result > 0 set as with event else set as no event
+			elseif(count(self::getAllEventsByWorkOrder($workOrder)) > 0)
+			{
+				$workOrder->EventIndicator = Constants::WORK_ORDER_COMPLETED_WITH_EVENT;
+			}
+			else
+			{
+				//get all events for this work order that are not marked completed
+				$workOrder->EventIndicator = Constants::WORK_ORDER_COMPLETED_NO_EVENT;
+			}
 			//update
 			if($workOrder->update())
 			{
-				return true;
+				return [
+					'ID' =>$workOrder->ID,
+					'SuccessFlag' => 1
+				];
 			}
 			else
 			{
@@ -357,7 +392,10 @@ class InspectionController extends Controller
 		{
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 		}
-		return false;
+		return  [
+			'ID' => $workOrder->ID,
+			'SuccessFlag' => 0
+		];
 	}
 	
 	//used by completeWork to update work orders according to given params
@@ -574,29 +612,21 @@ class InspectionController extends Controller
 								'InspectionTabletID' => $inspection->InspectionTabletID,
 								'SuccessFlag' => $successFlag
 							];
-													
 							//process event data if available
 							if(array_key_exists('Event', $inspectionData) && $inspectionData['Event'] != null)
 							{
-								//get workOrder by work queue id
-								$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
-								if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
-								{
-									//update event indicator
-									if($inspectionData['IsCGEFlag'] == 1)
-									{
-										$responseData['activity'][0]['Inspection']['WorkOrderUpdated'] = self::setWorkOrderCGE($inspectionData, $workOrder);
-									}
-									else
-									{
-										$responseData['activity'][0]['Inspection']['WorkOrderUpdated'] = self::updateWorkOrder($inspectionData, $workOrder, true);
-									}
-								}
 								$responseData['activity'][0]['Inspection']['Event'] = self::processEvent($inspectionData['Event'], $client, $inspectionID);
 							}
 							//process asset data if available
 							if(array_key_exists('Asset', $inspectionData) && $inspectionData['Asset'] != null)
 								$responseData['activity'][0]['Inspection']['Asset'] = self::processAsset($inspectionData['Asset'], $client, $inspectionID);
+							//get workOrder by work queue id
+							$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
+							//update event indicator
+							if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
+							{
+								$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
+							}	
 						}
 						else
 						{

@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
 use app\modules\v2\models\TimeEntry;
@@ -105,15 +106,13 @@ class ActivityController extends BaseActiveController
 		{
 			//set db target
 			$headers = getallheaders();
-
-			//get id on client db of user making request
-			$clientCreatedBy = BaseActiveController::getClientUser($headers['X-Client'])->UserID;
 			
 			Activity::setClient(BaseActiveController::urlPrefix());
-			//get uid of user making request
-			$pgeCreatedBy = Parent::getUserFromToken()->UserUID;
-			//get id of user making request
-			$createdBy = Parent::getUserFromToken()->UserID;
+			//get user making the request
+			$user = Parent::getUserFromToken();
+			$pgeCreatedBy = $user->UserUID;
+			$createdBy = $user->UserName;
+			$userID = $user->ID;
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
@@ -142,7 +141,7 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
 						{
 							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
 						}
@@ -195,13 +194,13 @@ class ActivityController extends BaseActiveController
 
 						//handle createdby
 						$activity->ActivityCreatedUserUID = (string)$createdBy;
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
 						{
 							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
 						}
 						else
 						{
-							$clientActivity->ActivityCreatedUserUID = (string)$clientCreatedBy;
+							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
 						}
 
 						Activity::setClient(BaseActiveController::urlPrefix());
@@ -221,7 +220,7 @@ class ActivityController extends BaseActiveController
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
 							//check for pge headers, pge is handled uniquely compared to a standard client
-							if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+							if($headers['X-Client'] == Constants::PGE_DEV || $headers['X-Client'] == Constants::PGE_STAGE ||$headers['X-Client'] == Constants::PGE_PROD)
 							{
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
@@ -234,7 +233,7 @@ class ActivityController extends BaseActiveController
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
 								//client data parse
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$clientCreatedBy, $clientActivity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 							}
 							
@@ -255,6 +254,7 @@ class ActivityController extends BaseActiveController
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
+									$timeEntry->TimeEntryUserID = $userID;
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									try{
 										if($timeEntry->save())
@@ -339,7 +339,7 @@ class ActivityController extends BaseActiveController
 										{
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
-										else //log other errors and retrun failure
+										else //log other errors and return failure
 										{
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
@@ -356,7 +356,7 @@ class ActivityController extends BaseActiveController
 						}
 						else
 						{
-							//activiy model validation exception
+							//activity model validation exception
 							throw BaseActiveController::modelValidationException($activity);
 						}
 					}
@@ -381,14 +381,14 @@ class ActivityController extends BaseActiveController
 	}
 	
 	//helper method, to parse activity data and send to appropriate controller.
-	public static function parseActivityData($activityData, $client, $clientCreatedBy, $clientActivityID)
+	public static function parseActivityData($activityData, $client, $createdBy, $clientActivityID)
 	{	
 		$responseData = [];
 	
 		//handle accepting work queue
 		if (array_key_exists('WorkQueue', $activityData))
 		{
-			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client, $clientCreatedBy);
+			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client);
 			$responseData['WorkQueue'] = $workQueueResponse;
 		}
 		//handle creation of new calibration records

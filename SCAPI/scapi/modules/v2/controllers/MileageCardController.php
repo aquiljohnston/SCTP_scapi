@@ -17,7 +17,7 @@ use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
 use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
@@ -125,7 +125,7 @@ class MileageCardController extends BaseActiveController
 			$response ->format = Response::FORMAT_JSON;
 
 			//get user id
-			$approvedBy = self::getUserFromToken()->UserID;
+			$approvedBy = self::getUserFromToken()->UserName;
 
 			//parse json
 			$cardIDs = $data["cardIDArray"];
@@ -149,16 +149,10 @@ class MileageCardController extends BaseActiveController
 					$card-> MileageCardApprovedFlag = "Yes";
 					$card-> MileageCardApprovedBy = $approvedBy;
 					$card-> MileageCardModifiedDate = Parent::getDate();
-					//$card-> MileageCardModifiedBy = $approvedBy;
 					$card-> update();
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
-				//Response format previously modified by Josh Patton for unknown reason
-				// $data = [];
-                // $data['cards'] = $approvedCards;
-                // $data['success'] = true;
-                // $response->data = $data;
 				$response->data = $approvedCards; 
 				return $response;
 			}
@@ -167,27 +161,12 @@ class MileageCardController extends BaseActiveController
 			{
 				$transaction->rollBack();
 				$response->setStatusCode(400);
-				//Response format previously modified by Josh Patton for unknown reason
-				// $data = [];
-                // $data['cards'] = null;
-                // $data['status'] = "400 Bad Request";
-                // $data['success'] = false;
-                // $response->data = $data;
 				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
 		}
 		catch(\Exception $e) 
 		{
-			//Response format previously modified by Josh Patton for unknown reason
-			// throw $e;
-            // $response->setStatusCode(400);
-            // $data = [];
-            // $data['cards'] = null;
-            // $data['status'] = "400 Bad Request";
-            // $data['success'] = false;
-            // $response->data = $data;
-            // return $response;
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -251,6 +230,8 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
+	//is this route even used? seems like it would not work with multiple project structure.
+	//appears time card version of this is still in use, this will probably need to be altered that new structure
 	public function actionGetCard($userID)
 	{		
 		try
