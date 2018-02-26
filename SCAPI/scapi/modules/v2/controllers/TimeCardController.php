@@ -409,7 +409,7 @@ class TimeCardController extends BaseActiveController
 
            if($projectName!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
-                    'or',
+                    'and',
                     //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
                     //['like', 'Project', $filter],
