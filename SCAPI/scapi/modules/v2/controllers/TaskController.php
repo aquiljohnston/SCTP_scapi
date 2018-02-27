@@ -47,7 +47,7 @@ class TaskController extends Controller
             ->asArray()
             ->all();
 
-        $responseArray['assets'] = $data != null ? $data : [];
+        $responseArray = $data != null ? $data : [];
 		return $responseArray;
 	}
 	
@@ -60,7 +60,7 @@ class TaskController extends Controller
         try {
             $responseArray = [];
             //set db target
-            Task::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             // check if it is CT project
             $projectUrl = Project::find()
@@ -68,18 +68,16 @@ class TaskController extends Controller
                 ->where(['ProjectID' => $timeCardProjectID])
                 ->one();
 
-			if(BaseActiveController::isSCCT($projectUrl)) {
-
-                $userQuery = Task::find()
-                    ->select(['TaskID', 'TaskName', 'TaskQBReferenceID']);
-
-                $data = $userQuery->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
+			if(BaseActiveController::isSCCT($projectUrl['ProjectUrlPrefix'])) {
+                $data = Task::find()
+                    ->select(['TaskID', 'TaskName', 'TaskQBReferenceID'])
+					->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
                     ->asArray()
                     ->all();
             } else {
                 $data = self::GetProjectTask($timeCardProjectID);
             }
-            $responseArray['assets'] = $data['assets'];
+            $responseArray['assets'] = $data;
 
             //send response
             $response = Yii::$app->response;
