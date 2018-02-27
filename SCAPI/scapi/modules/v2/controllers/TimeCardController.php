@@ -711,13 +711,18 @@ class TimeCardController extends BaseActiveController
 
             //get body data
             $data = file_get_contents("php://input");
+			$submitCheckData = json_decode($data, true)['submitCheck'];
 
             //build base query
-            $responseArray = new Query;
-            $responseArray  ->select('*')
-                ->from(["fnSubmit(:TimeCardJSON)"])
-                ->addParams([':TimeCardJSON' => $data]);
-            $submitButtonStatus = $responseArray->all(BaseActiveRecord::getDb());
+			$responseArray = new Query;
+            $responseArray->select('*')
+                ->from(["fnSubmitV2(:ProjectName, :StartDate , :EndDate)"])
+                ->addParams([
+					':ProjectName' => json_encode($submitCheckData['ProjectName']), 
+					':StartDate' => $submitCheckData['StartDate'], 
+					':EndDate' => $submitCheckData['EndDate']
+					]);
+            $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
             $responseArray = $submitButtonStatus;
 
             $response = Yii::$app ->response;
