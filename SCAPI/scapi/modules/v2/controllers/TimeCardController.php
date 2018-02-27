@@ -312,8 +312,8 @@ class TimeCardController extends BaseActiveController
     {
         $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
         // RBAC permission check is embedded in this action
-        //try
-       // {
+        try
+        {
             //get headers
             $headers 			= getallheaders();
             //get client header
@@ -343,7 +343,14 @@ class TimeCardController extends BaseActiveController
 
             $records = $timeCards->all(BaseActiveRecord::getDb());  
 
-            $showFilter = true;  
+            $userID = self::getUserFromToken()->UserID;
+                    //get user project relations array
+                    $projects = ProjectUser::find()
+                        ->where("ProjUserUserID = $userID")
+                        ->all();
+                    $projectsSize = count($projects);
+
+           
 
 
             //if is scct website get all or own
@@ -392,7 +399,8 @@ class TimeCardController extends BaseActiveController
                     ->one();
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
-                $showFilter = false;
+                $projectsSize = count($project);
+              
             }
 
             if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
@@ -440,7 +448,8 @@ class TimeCardController extends BaseActiveController
             $responseArray['assets'] = $timeCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
             $responseArray['projectDropDown'] = $allTheProjects;
-            $responseArray['showFilter'] = $showFilter;
+            $responseArray['projectsSize'] = $projectsSize;
+           // $responseArray['showFilter'] = $showFilter;
 
             if (!empty($responseArray['assets']))
             {
@@ -453,14 +462,14 @@ class TimeCardController extends BaseActiveController
                 $response->setStatusCode(404);
                 return $response;
             }
-       // }
-       // catch(ForbiddenHttpException $e) {
-      //      throw $e;
-      //  }
-       // catch(\Exception $e)
-       // {
-         //   throw new \yii\web\HttpException(400);
-       // }
+        }
+       catch(ForbiddenHttpException $e) {
+           throw $e;
+       }
+       catch(\Exception $e)
+       {
+           throw new \yii\web\HttpException(400);
+       }
     }
 
     public function actionGetTimeCardsHistoryData($selectedTimeCardIDs = [], $week = null)
