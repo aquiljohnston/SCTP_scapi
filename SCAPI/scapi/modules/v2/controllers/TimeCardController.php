@@ -83,15 +83,29 @@ class TimeCardController extends BaseActiveController
 	 */
     public function actionView($id)
     {
+		//may want to move this into show entries because I belive that is the only location it is called from
 		try
 		{
 			//set db target
-			TimeCard::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardView');
 			
-			$timeCard = TimeCard::findOne($id);
+			$timeCard = TimeCard::find()
+				->select([
+					'TimeCardID',
+					'TimeCardProjectID',
+					'TimeCardApprovedBy',
+					'TimeCardApprovedFlag',
+					'ProjectName',
+					'UserFirstName',
+					'UserLastName'])
+				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
+				->innerJoin('UserTb', 'UserTb.UserID = TimeCardTb.TimeCardTechID')
+				->where(['TimeCardID' => $id])
+				->asArray()
+				->one();
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $timeCard;
