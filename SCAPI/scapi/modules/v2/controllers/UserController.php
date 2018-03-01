@@ -743,7 +743,12 @@ class UserController extends BaseActiveController
 		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-		if($existingUser != null) return 'User Already Exist in Project.';
+		if($existingUser != null) 
+		{
+			//need to confirm association to project here as well
+			ProjectController::addToProject($existingUser);
+			return 'User Already Exist in Project.';
+		}
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();
