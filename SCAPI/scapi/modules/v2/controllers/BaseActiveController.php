@@ -292,7 +292,7 @@ class BaseActiveController extends ActiveController
     }
 
     // helper method for outputting csv data without storing the whole result
-    public static function processAndOutputCsvResponse($reader){
+    public static function processAndOutputCsvResponse($reader,$timeCardName){
         Yii::$app->response->format = Response::FORMAT_RAW;
 
         self::setCsvHeaders();
@@ -309,6 +309,34 @@ class BaseActiveController extends ActiveController
             fwrite($fp, implode(',', $row) . "\r\n");
         }
         fclose($fp);
+    }
+
+     public static function processAndWriteCsv($reader,$timeCardName){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+         if(YII_ENV_DEV && (strpos($_SERVER['SERVER_NAME'],'local')!==false
+                ||  $_SERVER['SERVER_NAME'] === '0.0.0.0'
+                || strpos($_SERVER['SERVER_NAME'],'192.168.')===0))
+        {
+           $filePath = Constants::DEV_DEFAULT_FTP_PATH;
+        } else {
+        	$filePath = Constants::PROD_DEFAULT_FTP_PATH;
+        }
+
+        $firstLine 	= true;
+        $fp2 		= fopen($filePath.$timeCardName.".csv",'w+');
+
+        while($row2 = $reader->read()){
+
+            if($firstLine) {
+                $firstLine = false;
+                fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+            }
+            fwrite($fp2, implode(',', $row2) . "\r\n");
+        }
+
+        fclose($fp2);
+        chmod($filePath.$timeCardName.".csv", 0777);
     }
 	
 	public static function isSCCT($client)
