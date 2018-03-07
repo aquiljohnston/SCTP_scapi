@@ -83,15 +83,29 @@ class TimeCardController extends BaseActiveController
 	 */
     public function actionView($id)
     {
+		//may want to move this into show entries because I belive that is the only location it is called from
 		try
 		{
 			//set db target
-			TimeCard::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardView');
 			
-			$timeCard = TimeCard::findOne($id);
+			$timeCard = TimeCard::find()
+				->select([
+					'TimeCardID',
+					'TimeCardProjectID',
+					'TimeCardApprovedBy',
+					'TimeCardApprovedFlag',
+					'ProjectName',
+					'UserFirstName',
+					'UserLastName'])
+				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
+				->innerJoin('UserTb', 'UserTb.UserID = TimeCardTb.TimeCardTechID')
+				->where(['TimeCardID' => $id])
+				->asArray()
+				->one();
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $timeCard;
@@ -638,19 +652,35 @@ class TimeCardController extends BaseActiveController
      */
     public function actionCheckSubmitButtonStatus(){
         try{
+			//get headers
+            $headers = getallheaders();
+            //get client header
+            $client = $headers['X-Client'];
+			
             //set db target
             TimeCard::setClient(BaseActiveController::urlPrefix());
 
             //get body data
             $data = file_get_contents("php://input");
 			$submitCheckData = json_decode($data, true)['submitCheck'];
+			
+			//if is not scct project name will always be the current client
+			if(BaseActiveController::isSCCT($client))
+			{
+				$projectName  = $submitCheckData['ProjectName'];
+			}else{
+				$project = Project::find()
+					->where(['ProjectUrlPrefix' => $client])
+					->one();
+				$projectName = array($project->ProjectName);
+			}
 
             //build base query
 			$responseArray = new Query;
             $responseArray->select('*')
                 ->from(["fnSubmitV2(:ProjectName, :StartDate , :EndDate)"])
                 ->addParams([
-					':ProjectName' => json_encode($submitCheckData['ProjectName']), 
+					':ProjectName' => json_encode($projectName), 
 					':StartDate' => $submitCheckData['StartDate'], 
 					':EndDate' => $submitCheckData['EndDate']
 					]);
