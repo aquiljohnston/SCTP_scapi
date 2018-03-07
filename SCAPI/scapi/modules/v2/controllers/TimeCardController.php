@@ -469,7 +469,7 @@ class TimeCardController extends BaseActiveController
        }
     }
 
-    public function actionGetTimeCardsHistoryData($selectedTimeCardIDs = [], $week = null)
+    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null, $download=false)
     {
         // RBAC permission check is embedded in this action
         try{
@@ -482,16 +482,22 @@ class TimeCardController extends BaseActiveController
 
             //response array of time cards
             $timeCardsArr = [];
-            $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
+            //$selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
 
-            if ($selectedTimeCardIDs != null && count($selectedTimeCardIDs) > 0){
+            if ($projectName){
                 //build base query
                 $responseArray = new Query;
-                $responseArray  ->select('*')
+                /*$responseArray  ->select('*')
                     ->from(["fnGenerateOasisTimeCardByTimeCardID(:TimeCardID)"])
-                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
+                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);*/
+
+                  $responseArray  ->select('*')
+                    ->from(["fnGenerateOasisTimeCardByProject(:projectName)"])
+                    ->addParams([':projectName' => $projectName]);    
 
                 $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
+
+                //var_dump($responseArray);exit();
 
             } else {
                 //rbac permission check
@@ -499,11 +505,11 @@ class TimeCardController extends BaseActiveController
                     //check if week is prior or current to determine appropriate view
                     if ($week == 'prior') {
                         $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                       // $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                         //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
                     } elseif ($week == 'current') {
                         $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                        //$responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                         //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
                     }
                 } //rbac permission check
@@ -524,7 +530,7 @@ class TimeCardController extends BaseActiveController
                             $timeCards->andWhere(['ProjectID' => $projectID]);
                         }
                         $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                       // $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
 
                     } elseif ($week == 'current' && $projectsSize > 0) {
                         $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
@@ -533,7 +539,7 @@ class TimeCardController extends BaseActiveController
                             $timeCards->andWhere(['ProjectID' => $projectID]);
                         }
                         $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
+                        //$responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                     }
                 } else {
                     throw new ForbiddenHttpException;
@@ -542,7 +548,17 @@ class TimeCardController extends BaseActiveController
 
             if (!empty($responseArray))
             {
-                BaseActiveController::processAndOutputCsvResponse($responseArray);
+                if(!$download){
+                	BaseActiveController::processAndOutputCsvResponse($responseArray,$timeCardName);
+                } else {
+                	BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
+                	$response->data = 'SUCCESS';
+                	return $response;
+                }
+                
+                //BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
+                //var_dump
+               
                 return '';
             }
             BaseActiveController::setCsvHeaders();
@@ -552,8 +568,8 @@ class TimeCardController extends BaseActiveController
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
+           Yii::trace('Exception '.$e->getMessage());
+          throw new \yii\web\HttpException(400);
         }
     }
 
