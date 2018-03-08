@@ -292,7 +292,7 @@ class BaseActiveController extends ActiveController
     }
 
     // helper method for outputting csv data without storing the whole result
-    public static function processAndOutputCsvResponse($reader,$timeCardName){
+    public static function processAndOutputCsvResponse($reader){
         Yii::$app->response->format = Response::FORMAT_RAW;
 
         self::setCsvHeaders();
@@ -311,20 +311,22 @@ class BaseActiveController extends ActiveController
         fclose($fp);
     }
 
-     public static function processAndWriteCsv($reader,$timeCardName){
+     public static function processAndWriteCsv($reader,$cardName){
         Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $success = false;
 
          if(YII_ENV_DEV && (strpos($_SERVER['SERVER_NAME'],'local')!==false
                 ||  $_SERVER['SERVER_NAME'] === '0.0.0.0'
                 || strpos($_SERVER['SERVER_NAME'],'192.168.')===0))
         {
-           $filePath = Constants::DEV_DEFAULT_FTP_PATH;
+           	$filePath = Constants::DEV_DEFAULT_FTP_PATH;
         } else {
         	$filePath = Constants::PROD_DEFAULT_FTP_PATH;
         }
 
         $firstLine 	= true;
-        $fp2 		= fopen($filePath.$timeCardName.".csv",'w+');
+        $fp2 		= fopen($filePath.$cardName.".csv",'w+');
 
         while($row2 = $reader->read()){
 
@@ -336,7 +338,18 @@ class BaseActiveController extends ActiveController
         }
 
         fclose($fp2);
-        chmod($filePath.$timeCardName.".csv", 0777);
+        chmod($filePath.$cardName.".csv", 0777);
+
+        if (file_exists($filePath.$cardName.".csv")) {
+                     Yii::trace("SKITTLE ".$filePath.$cardName.".csv" ."exists");
+             } else {
+                    Yii::trace("SKITTLE".$filePath.$cardName.".csv" ."exists");
+             }
+
+        $success = true;
+        Yii::trace("DOOK: ".$success);
+        return $success;
+
     }
 	
 	public static function isSCCT($client)
