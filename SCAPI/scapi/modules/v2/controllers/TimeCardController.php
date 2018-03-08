@@ -500,16 +500,23 @@ class TimeCardController extends BaseActiveController
 
             if ($projectName){
                 //build base query
-                $responseArray = new Query;
+                //$responseArray = new Query;
                 /*$responseArray  ->select('*')
                     ->from(["fnGenerateOasisTimeCardByTimeCardID(:TimeCardID)"])
                     ->addParams([':TimeCardID' => $selectedTimeCardIDs]);*/
 
-                  $responseArray  ->select('*')
+                /*  $responseArray  ->select('*')
                     ->from(["fnGenerateOasisTimeCardByProject(:projectName)"])
-                    ->addParams([':projectName' => $projectName]);    
+                    ->addParams([':projectName' => $projectName]);  */
 
-                $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
+	            $responseArray = BaseActiveRecord::getDb();
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
+				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
+				$responseArray = $getEventsCommand->query();      
+
+                //$responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
 
                 //var_dump($responseArray);exit();
 
@@ -563,11 +570,10 @@ class TimeCardController extends BaseActiveController
             if (!empty($responseArray))
             {
                 if(!$download){
-                	BaseActiveController::processAndOutputCsvResponse($responseArray,$timeCardName);
+                	BaseActiveController::processAndOutputCsvResponse($responseArray);
                 } else {
-                	BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
-                	$response->data = 'SUCCESS';
-                	return $response;
+                	$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
+                	return $fileWritten;
                 }
                 
                 //BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
@@ -587,10 +593,11 @@ class TimeCardController extends BaseActiveController
         }
     }
 
-    public function actionGetPayrollData($selectedTimeCardIDs = [])
+    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$download=false)
     {
+
         // RBAC permission check is embedded in this action
-        try{
+       // try{
             //set db target headers
             TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
@@ -598,9 +605,9 @@ class TimeCardController extends BaseActiveController
             $response = Yii::$app->response;
             $response-> format = Response::FORMAT_JSON;
             
-            $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
+           /* $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
 
-            if ($selectedTimeCardIDs != null && count($selectedTimeCardIDs) > 0){
+           
                 //build base query
                 $responseArray = new Query;
                 $responseArray  ->select('*')
@@ -608,24 +615,38 @@ class TimeCardController extends BaseActiveController
                     ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
 
                 $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
+           */     
+ 				if ($projectName != null){
+                $responseArray = BaseActiveRecord::getDb();
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
+				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
+				$responseArray = $getEventsCommand->query();     
 
             }
 
             if (!empty($responseArray))
             {
-                BaseActiveController::processAndOutputCsvResponse($responseArray);
+            	if(!$download){
+            		 BaseActiveController::processAndOutputCsvResponse($responseArray);
+            		} else {
+            			$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$cardName);
+            			return $fileWritten;
+            		}
+               
                 return '';
             }
             BaseActiveController::setCsvHeaders();
             //send response
             return '';
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
-        }
+       // } catch(ForbiddenHttpException $e) {
+         //   Yii::trace('ForbiddenHttpException '.$e->getMessage());
+         //   throw new ForbiddenHttpException;
+       // } catch(\Exception $e) {
+      //      Yii::trace('Exception '.$e->getMessage());
+       ////     throw new \yii\web\HttpException(400);
+       // }
     }
 
     /**
