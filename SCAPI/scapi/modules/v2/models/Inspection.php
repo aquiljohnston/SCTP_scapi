@@ -47,6 +47,9 @@ use Yii;
  * @property string $PipelineType
  * @property string $Comments
  * @property integer $HardToLocateFlag
+ * @property string $MeterNumberPhoto1Path
+ * @property string $MeterNumberPhoto2Path
+ * @property string $MeterNumberPhoto3Path
  *
  * @property UserTb $createdBy
  */
@@ -66,11 +69,11 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType', 'Comments'], 'string'],
+            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType', 'Comments', 'MeterNumberPhoto1Path', 'MeterNumberPhoto2Path', 'MeterNumberPhoto3Path'], 'string'],
             [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated', 'HardToLocateFlag'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
-            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
-            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
+            [['Latitude', 'Longitude', 'FixQuality', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
+            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => UserTb::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
         ];
     }
 
@@ -120,6 +123,9 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             'PipelineType' => 'Pipeline Type',
             'Comments' => 'Comments',
             'HardToLocateFlag' => 'Hard To Locate Flag',
+            'MeterNumberPhoto1Path' => 'Meter Number Photo1 Path',
+            'MeterNumberPhoto2Path' => 'Meter Number Photo2 Path',
+            'MeterNumberPhoto3Path' => 'Meter Number Photo3 Path',
         ];
     }
 
