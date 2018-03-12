@@ -128,7 +128,6 @@ class TaskController extends Controller
      * @return mixed
      * @throws \yii\web\HttpException
      */
-	 //this should be in the task controller...
     public function actionCreateTaskEntry()
     {
         $successFlag = 0;
