@@ -17,7 +17,7 @@ final class Constants
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
-	const DEV_DEFAULT_FTP_PATH = "/Users/Shared/";
+	const DEV_DEFAULT_FTP_PATH = "C:\\Inetpub\\wwwroot\\";
 	const PROD_DEFAULT_FTP_PATH = "C:\\Inetpub\\wwwroot\\";
 
 	
