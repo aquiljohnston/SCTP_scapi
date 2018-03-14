@@ -483,7 +483,7 @@ class TimeCardController extends BaseActiveController
        }
     }
 
-    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null, $download=false)
+    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false)
     {
         // RBAC permission check is embedded in this action
         try{
@@ -497,6 +497,19 @@ class TimeCardController extends BaseActiveController
             //response array of time cards
             $timeCardsArr = [];
             //$selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
+            $arrayProjectName = [];
+            $arrayProjectName[] = $projectName;
+
+
+           // var_dump(json_encode($arrayProjectName)); exit();
+
+            $arrayProjectName = json_encode($arrayProjectName);
+
+            Yii::trace("JSONESSEX-TIMECARDHIS");            
+            Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
+            Yii::trace("JSONESSEX-WS ".$weekStart);
+            Yii::trace("JSONESSEX-WE ".$weekEnd);
+            Yii::trace("JSONESSEX-CN ".$timeCardName);
 
             if ($projectName){
                 //build base query
@@ -509,12 +522,15 @@ class TimeCardController extends BaseActiveController
                     ->from(["fnGenerateOasisTimeCardByProject(:projectName)"])
                     ->addParams([':projectName' => $projectName]);  */
 
+
 	            $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':projectName',$arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();      
+
+				//Yii::trace('DIGGYDATA:'.$responseArray);    
 
                 //$responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
 
@@ -572,6 +588,7 @@ class TimeCardController extends BaseActiveController
                 if(!$download){
                 	BaseActiveController::processAndOutputCsvResponse($responseArray);
                 } else {
+
                 	$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
                 	return $fileWritten;
                 }
@@ -604,6 +621,20 @@ class TimeCardController extends BaseActiveController
             //format response
             $response = Yii::$app->response;
             $response-> format = Response::FORMAT_JSON;
+
+            $arrayProjectName = [];
+            $arrayProjectName[] = $projectName;
+
+
+           // var_dump(json_encode($arrayProjectName)); exit();
+
+            $arrayProjectName = json_encode($arrayProjectName);
+
+            Yii::trace("JSONESSEX-PAYCARDHIS");  
+            Yii::trace("JSONESSEX-PR ".$arrayProjectName);
+            Yii::trace("JSONESSEX-WS ".$weekStart);
+            Yii::trace("JSONESSEX-WE ".$weekEnd);
+            Yii::trace("JSONESSEX-CN ".$cardName);
             
            /* $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
 
@@ -619,7 +650,7 @@ class TimeCardController extends BaseActiveController
  				if ($projectName != null){
                 $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();     
