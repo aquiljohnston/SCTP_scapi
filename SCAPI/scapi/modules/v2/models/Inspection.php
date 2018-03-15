@@ -73,7 +73,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated', 'HardToLocateFlag'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'FixQuality', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
-            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => UserTb::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
+            [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
         ];
     }
 
