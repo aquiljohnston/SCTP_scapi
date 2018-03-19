@@ -117,10 +117,16 @@ class InspectionController extends Controller
 							//add new work queue id to inspection record.
 							$newInspection->WorkQueueID = $completeWorkResponse['WorkQueue']->WorkQueueID;
 						}
-						//add asset ID to inspection record
-						$newInspection->AssetID = $assetResponse['ID'];
-						if(!$newInspection->update())
-							throw BaseActiveController::modelValidationException($newInspection);
+						//if previous inspection exist asset id will already be set
+						if($previousInspection == null)
+						{
+							//add asset ID to inspection record
+							$newInspection->AssetID = $assetResponse['ID'];
+							if(!$newInspection->update())
+							{
+								throw BaseActiveController::modelValidationException($newInspection);
+							}
+						}
 					}
 				}
 				$responseArray = [
