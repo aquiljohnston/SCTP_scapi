@@ -725,7 +725,7 @@ class TimeCardController extends BaseActiveController
 				$project = Project::find()
 					->where(['ProjectUrlPrefix' => $client])
 					->one();
-				$projectName = array($project->ProjectName);
+				$projectName = array($project->ProjectID);
 			}
 
             //build base query
