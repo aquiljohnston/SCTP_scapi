@@ -311,18 +311,26 @@ class BaseActiveController extends ActiveController
         fclose($fp);
     }
 
-     public static function processAndWriteCsv($reader,$cardName){
+     public static function processAndWriteCsv($reader,$cardName,$type=null){
         Yii::$app->response->format = Response::FORMAT_RAW;
 
         $success = false;
 
-         if(YII_ENV_DEV && (strpos($_SERVER['SERVER_NAME'],'local')!==false
-                ||  $_SERVER['SERVER_NAME'] === '0.0.0.0'
-                || strpos($_SERVER['SERVER_NAME'],'192.168.')===0))
+         if(YII_ENV_DEV)
         {
-           	$filePath = Constants::DEV_DEFAULT_FTP_PATH;
+        	if($type == Constants::OASIS){
+        			$filePath = Constants::DEV_DEFAULT_OASIS_PATH;
+        	} if($type == Constants::QUICKBOOKS){
+				$filePath = Constants::DEV_DEFAULT_QB_PATH;
+       		}
+           
+           
         } else {
-        	$filePath = Constants::PROD_DEFAULT_FTP_PATH;
+        	if($type == Constants::OASIS){
+        			$filePath = Constants::PROD_DEFAULT_OASIS_PATH;
+        	} if($type == Constants::QUICKBOOKS){
+				$filePath = Constants::PROD_DEFAULT_QB_PATH;
+       		}
         }
 
         $firstLine 	= true;

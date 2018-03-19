@@ -420,7 +420,7 @@ class TimeCardController extends BaseActiveController
                     //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
                     //['like', 'Project', $filter],
-                    ['like', 'ProjectName', $projectName],
+                    ['like', 'TimeCardProjectID', $projectName],
                     //['like', 'TimeCardApprovedFlag', $filter]
                     // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
                 ]);
@@ -432,7 +432,7 @@ class TimeCardController extends BaseActiveController
                     //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
                     //['like', 'Project', $filter],
-                    ['like', 'ProjectName', $projectName],
+                    ['like', 'TimeCardProjectID', $projectName],
                     //['like', 'TimeCardApprovedFlag', $filter]
                 ]);
             }
@@ -441,7 +441,8 @@ class TimeCardController extends BaseActiveController
             $allTheProjects = [""=>"All"];
             foreach ($records as $p) {
 
-     			$allTheProjects[$p['ProjectName']] = $p['ProjectName'];
+     			//$allTheProjects[$p['ProjectName']] = $p['ProjectName'];
+     			$allTheProjects[$p['TimeCardProjectID']] = $p['ProjectName'];
             }
             //remove dupes
             $allTheProjects = array_unique($allTheProjects);
@@ -483,10 +484,10 @@ class TimeCardController extends BaseActiveController
        }
     }
 
-    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false)
+    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
     {
         // RBAC permission check is embedded in this action
-        try{
+        //try{
             //set db target headers
             TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
@@ -589,7 +590,7 @@ class TimeCardController extends BaseActiveController
                 	BaseActiveController::processAndOutputCsvResponse($responseArray);
                 } else {
 
-                	$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
+                	$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
                 	return $fileWritten;
                 }
                 
@@ -601,16 +602,16 @@ class TimeCardController extends BaseActiveController
             BaseActiveController::setCsvHeaders();
             //send response
             return '';
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-           Yii::trace('Exception '.$e->getMessage());
-          throw new \yii\web\HttpException(400);
-        }
+       // } catch(ForbiddenHttpException $e) {
+       // //    Yii::trace('ForbiddenHttpException '.$e->getMessage());
+       //     throw new ForbiddenHttpException;
+      //  } catch(\Exception $e) {
+       //    Yii::trace('Exception '.$e->getMessage());
+       //   throw new \yii\web\HttpException(400);
+       // }
     }
 
-    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$download=false)
+    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
     {
 
         // RBAC permission check is embedded in this action
@@ -662,7 +663,7 @@ class TimeCardController extends BaseActiveController
             	if(!$download){
             		 BaseActiveController::processAndOutputCsvResponse($responseArray);
             		} else {
-            			$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$cardName);
+            			$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
             			return $fileWritten;
             		}
                
