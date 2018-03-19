@@ -17,8 +17,13 @@ final class Constants
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
-	const DEV_DEFAULT_FTP_PATH = "C:\\inetpub\\ftproot\\temp\\";
-	const PROD_DEFAULT_FTP_PATH = "C:\\inetpub\\ftproot\\temp\\";
+	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
+	const DEV_DEFAULT_QB_PATH = "C:\\ClientShare\\QuickBooks\\";
+	const DEV_DEFAULT_OASIS_PATH = "C:\\ClientShare\\Oasis\\";
+	const PROD_DEFAULT_OASIS_PATH = "K:\\Oasis\\";
+	const PROD_DEFAULT_QB_PATH = "K:\\QuickBooks\\";
+	const OASIS = "OASIS";
+	const QUICKBOOKS = "QB";
 
 	
 	const API_CONFIG = [
