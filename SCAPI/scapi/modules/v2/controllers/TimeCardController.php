@@ -487,7 +487,7 @@ class TimeCardController extends BaseActiveController
     public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
     {
         // RBAC permission check is embedded in this action
-        //try{
+        try{
             //set db target headers
             TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
@@ -602,20 +602,20 @@ class TimeCardController extends BaseActiveController
             BaseActiveController::setCsvHeaders();
             //send response
             return '';
-       // } catch(ForbiddenHttpException $e) {
-       // //    Yii::trace('ForbiddenHttpException '.$e->getMessage());
-       //     throw new ForbiddenHttpException;
-      //  } catch(\Exception $e) {
-       //    Yii::trace('Exception '.$e->getMessage());
-       //   throw new \yii\web\HttpException(400);
-       // }
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+       } catch(\Exception $e) {
+           Yii::trace('Exception '.$e->getMessage());
+          throw new \yii\web\HttpException(400);
+        }
     }
 
     public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
     {
 
         // RBAC permission check is embedded in this action
-       // try{
+        try{
             //set db target headers
             TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
 
@@ -672,13 +672,13 @@ class TimeCardController extends BaseActiveController
             BaseActiveController::setCsvHeaders();
             //send response
             return '';
-       // } catch(ForbiddenHttpException $e) {
-         //   Yii::trace('ForbiddenHttpException '.$e->getMessage());
-         //   throw new ForbiddenHttpException;
-       // } catch(\Exception $e) {
-      //      Yii::trace('Exception '.$e->getMessage());
-       ////     throw new \yii\web\HttpException(400);
-       // }
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+       }
     }
 
     /**
