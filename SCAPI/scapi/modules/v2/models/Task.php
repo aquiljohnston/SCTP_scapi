@@ -27,7 +27,7 @@ class Task extends \app\modules\v2\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'TaskTb';
+        return 'refTask';
     }
 
     /**

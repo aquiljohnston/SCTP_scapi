@@ -24,7 +24,7 @@ class ChartOfAccountType extends BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'ChartOfAccountTb';
+        return 'refChartOfAccount';
     }
 
     /**
