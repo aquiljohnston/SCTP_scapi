@@ -235,6 +235,7 @@ class BaseActiveController extends ActiveController
 		$archiveError->InsertedData5 = json_encode($data5);
 		$archiveError->ErrorNumber = $error->getCode();
 		$archiveError->ErrorMessage = $error->getMessage();
+		//may want to add error->getFile, error->getLine to this log to narrow down cause as ErrorLocation?
 		
 		$archiveError->save();
 	}

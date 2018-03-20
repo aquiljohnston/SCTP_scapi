@@ -466,13 +466,13 @@ class InspectionController extends Controller
 			{
 				//get workOrder by work queue id
 				$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
-				//get all work queues for work order
-				$workQueueArray = WorkQueue::find()
-					->where(['WorkOrderID' => $workOrder->ID])
-					->all();
 				// check if work order was found and not completed yet
 				if($workOrder !== null && $workOrder->CompletedFlag != 1)
 				{
+					//get all work queues for work order
+					$workQueueArray = WorkQueue::find()
+						->where(['WorkOrderID' => $workOrder->ID])
+						->all();
 					//set work order id for response
 					$workOrderID = $workOrder->ID;
 					if(count($workQueueArray) > 1) {
