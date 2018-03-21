@@ -319,9 +319,8 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 
-    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectName = null)
+    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
     {
-        $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
         // RBAC permission check is embedded in this action
         try
         {
@@ -332,7 +331,6 @@ class TimeCardController extends BaseActiveController
 
             //url decode filter value
             $filter 			= urldecode($filter);
-            //$projectName 		= urldecode($projectName);
 
             //set db target headers
             $headers 			= getallheaders();
@@ -360,9 +358,6 @@ class TimeCardController extends BaseActiveController
                         ->where("ProjUserUserID = $userID")
                         ->all();
                     $projectsSize = count($projects);
-
-           
-
 
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client))
@@ -417,31 +412,21 @@ class TimeCardController extends BaseActiveController
             if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
                 $timeCards->andFilterWhere([
                     'or',
-                    //['like', 'UserName', $filter],
                     ['like', 'UserFullName', $filter],
-                    //['like', 'Project', $filter],
-                    ['like', 'TimeCardProjectID', $projectName],
-                    //['like', 'TimeCardApprovedFlag', $filter]
-                    // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
+                    ['like', 'ProjectName', $filter],
                 ]);
             }
-
-           if($projectName!= null && isset($timeCards)) {
+			
+            if($projectID!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
                     'and',
-                    //['like', 'UserName', $filter],
-                    ['like', 'UserFullName', $filter],
-                    //['like', 'Project', $filter],
-                    ['like', 'TimeCardProjectID', $projectName],
-                    //['like', 'TimeCardApprovedFlag', $filter]
+                    ['TimeCardProjectID' => $projectID],
                 ]);
             }
 
             //iterate and stash project name
             $allTheProjects = [""=>"All"];
             foreach ($records as $p) {
-
-     			//$allTheProjects[$p['ProjectName']] = $p['ProjectName'];
      			$allTheProjects[$p['TimeCardProjectID']] = $p['ProjectName'];
             }
             //remove dupes
