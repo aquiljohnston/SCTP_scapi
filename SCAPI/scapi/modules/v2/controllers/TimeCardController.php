@@ -456,11 +456,13 @@ class TimeCardController extends BaseActiveController
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
             // check if approved time card exist in the data
             $approvedTimeCardExist = $this->CheckApprovedTimeCardExist($timeCardsArr);
+            $projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCardsArr);
             $responseArray['approvedTimeCardExist'] = $approvedTimeCardExist;
-            $responseArray['assets'] = $timeCardsArr;
-            $responseArray['pages'] = $paginationResponse['pages'];
-            $responseArray['projectDropDown'] = $allTheProjects;
-            $responseArray['projectsSize'] = $projectsSize;
+            $responseArray['assets'] 				= $timeCardsArr;
+            $responseArray['pages'] 				= $paginationResponse['pages'];
+            $responseArray['projectDropDown'] 		= $allTheProjects;
+            $responseArray['projectsSize'] 			= $projectsSize;
+            $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
            // $responseArray['showFilter'] = $showFilter;
 
             if (!empty($responseArray['assets']))
@@ -695,6 +697,32 @@ class TimeCardController extends BaseActiveController
             }
         }
         return $approvedTimeCardExist;
+    }
+
+
+
+     /**
+     * Check if project was submitted to Oasis and QB
+     * @param $timeCardsArr
+     * @return boolean
+     */
+    private function CheckAllAssetsSubmitted($timeCardsArr){
+        $allAssetsCount = count($timeCardsArr);
+        $submittedCount = 0;
+        $allSubmitted   = FALSE;
+
+        foreach ($timeCardsArr as $item){
+            if ($item['TimeCardOasisSubmitted'] == "Yes" && $item['TimeCardQBSubmitted'] == "Yes" ){
+                $submittedCount++;
+            }
+        }
+
+        if ($allAssetsCount == $submittedCount){
+        	$allSubmitted = TRUE;
+        }
+
+        return $allSubmitted;
+         
     }
 
     /**
