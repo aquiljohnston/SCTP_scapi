@@ -42,8 +42,8 @@ final class Constants
 	
 	const SCCT_CONFIG = [
 		'DEV_HEADER' => 'scctdev',
-		'STAGE_HEADER' => 'scct',
-		'PROD_HEADER' => 'ctProdDb',
+		'STAGE_HEADER' => 'scctstage',
+		'PROD_HEADER' => 'scct',
 		'DEV_DB' => 'ctDevDb',
 		'STAGE_DB' => 'ctStageDb',
 		'PROD_DB' => 'ctProdDb',
