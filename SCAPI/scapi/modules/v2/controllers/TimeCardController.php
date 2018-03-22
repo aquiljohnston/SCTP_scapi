@@ -331,6 +331,9 @@ class TimeCardController extends BaseActiveController
 
             //url decode filter value
             $filter 			= urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
 
             //set db target headers
             $headers 			= getallheaders();
@@ -409,12 +412,20 @@ class TimeCardController extends BaseActiveController
               
             }
 
-            if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
-                $timeCards->andFilterWhere([
-                    'or',
-                    ['like', 'UserFullName', $filter],
-                    ['like', 'ProjectName', $filter],
-                ]);
+            if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++)
+				{
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'UserFullName', $trimmedFilter],
+						['like', 'ProjectName', $trimmedFilter]
+					);
+				}
+				$timeCards->andFilterWhere($filterQueryArray);
             }
 			
             if($projectID!= null && isset($timeCards)) {
@@ -462,13 +473,13 @@ class TimeCardController extends BaseActiveController
                 return $response;
             }
         }
-       catch(ForbiddenHttpException $e) {
-           throw $e;
-       }
-       catch(\Exception $e)
-       {
-           throw new \yii\web\HttpException(400);
-       }
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+		   throw new \yii\web\HttpException(400);
+		}
     }
 
     public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
