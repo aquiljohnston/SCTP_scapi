@@ -66,14 +66,10 @@ class NotificationController extends Controller
 			
 			//build response structure and instantiate variables
 			$notifications = [];
-			$notifications['firstName'] = $user->UserFirstName;
-			$notifications['lastName'] = $user->UserLastName;
 			$notifications['notifications'] = [];
 			$notifications['timeCards'] = [];
-			$notifications['mileageCards'] = [];
 			$notificationTotal = 0;
 			$timeCardTotal = 0;
-			$mileageCardTotal = 0;
 			
 			if(BaseActiveController::isSCCT($client))
 			{
@@ -106,12 +102,7 @@ class NotificationController extends Controller
 				$timeCardCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
 					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 'No'"])
 					->count();
-				
-				//get count of unapproved mileage cards from last week for project
-				$mileageCardCount = (int)MileageCardSumMilesPriorWeekWithProjectName::find()
-					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 'No'"])
-					->count();
-				
+
 				//get count of notifications
 				if($projectUrlPrefix != null)
 				{
@@ -128,34 +119,26 @@ class NotificationController extends Controller
 
 				//pass time card data for project
 				$timeCardData['Project'] = $projectName;
+				$timeCardData['ProjectID'] = $projectID;
 				$timeCardData['Number of Items'] = $timeCardCount;
-
-				//pass mileage card data for project
-				$mileageCardData['Project'] = $projectName;
-				$mileageCardData['Number of Items'] = $mileageCardCount;
 
 				//pass notification data for project
 				$notificationData['Project'] = $projectName;
+				$notificationData['ProjectID'] = $projectID;
 				$notificationData['Number of Items'] = $notificationCount;
 				
 				//append data to response array
 				$notifications['timeCards'][] = $timeCardData;
-				$notifications['mileageCards'][] = $mileageCardData;
 				$notifications['notifications'][] = $notificationData;
 
 				//increment total counts
 				$timeCardTotal += $timeCardCount;
-				$mileageCardTotal += $mileageCardCount;
 				$notificationTotal += $notificationCount;
 			}
 
 			//pass time card data for total
 			$timeCardData['Project'] = 'Total';
 			$timeCardData['Number of Items'] = $timeCardTotal;
-
-			//pass mileage card data for total
-			$mileageCardData['Project'] = 'Total';
-			$mileageCardData['Number of Items'] = $mileageCardTotal;
 
 			//pass notification data for total
 			$notificationData['Project'] = 'Total';
@@ -164,7 +147,6 @@ class NotificationController extends Controller
 			//append totals to response array
 			$notifications['notifications'][] = $notificationData;
 			$notifications['timeCards'][] = $timeCardData;
-			$notifications['mileageCards'][] = $mileageCardData;
 
 
 			//send response
