@@ -155,7 +155,7 @@ class TimeCardController extends BaseActiveController
 				$transaction = $connection->beginTransaction();
 
 				foreach ($approvedCards as $card) {
-					$card->TimeCardApprovedFlag = "Yes";
+					$card->TimeCardApprovedFlag = 1;
 					$card->TimeCardApprovedBy = $approvedBy;
 					$card->update();
 				}
@@ -687,7 +687,7 @@ class TimeCardController extends BaseActiveController
     private function CheckApprovedTimeCardExist($timeCardsArr){
         $approvedTimeCardExist = false;
         foreach ($timeCardsArr as $item){
-            if ($item['TimeCardApprovedFlag'] == "Yes"){
+            if ($item['TimeCardApprovedFlag'] == 1){
                 $approvedTimeCardExist = true;
                 break;
             }
