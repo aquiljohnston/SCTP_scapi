@@ -100,7 +100,7 @@ class NotificationController extends Controller
 				//cast string results from sql counts to int values
 				//get count of unapproved time cards from last week for project
 				$timeCardCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
-					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 'No'"])
+					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 0"])
 					->count();
 
 				//get count of notifications
