@@ -66,6 +66,7 @@ class UserController extends BaseActiveController
                     'reactivate' => ['put'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
+                    'get-inactive' => ['get'],
                     'reset-password' => ['put'],
                 ],
             ];
@@ -560,7 +561,6 @@ class UserController extends BaseActiveController
 				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
 				$projectTask = Yii::$app->runAction('v2/task/get-project-task');
-				$projectUserTask = Yii::$app->runAction('v2/task/get-project-user-task');
 				
 				//set client back to ct after external call
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -573,7 +573,6 @@ class UserController extends BaseActiveController
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
 				$projectData['ProjectTask'] = $projectTask;
-				$projectData['ProjectUserTask'] = $projectUserTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
                 $projectData['ActivityCodes'] = $activityCodesArray;
@@ -744,7 +743,12 @@ class UserController extends BaseActiveController
 		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-		if($existingUser != null) return 'User Already Exist in Project.';
+		if($existingUser != null) 
+		{
+			//need to confirm association to project here as well
+			ProjectController::addToProject($existingUser);
+			return 'User Already Exist in Project.';
+		}
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();

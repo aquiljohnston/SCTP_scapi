@@ -1,18 +1,18 @@
 <?php
 
-namespace app\modules\v2\controllers;
+namespace app\modules\v3\controllers;
 
 use Yii;
-use app\modules\v2\constants\Constants;
-use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\models\SCUser;
-use app\modules\v2\models\BaseUser;
-use app\modules\v2\models\TabletDataInsertArchive;
-use app\modules\v2\models\WebDataInsertArchive;
-use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
-use app\modules\v2\models\TabletJSONDataInsertError;
-use app\modules\v2\models\WebJSONDataInsertError;
-use app\modules\v2\authentication\TokenAuth;
+use app\modules\v3\constants\Constants;
+use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\SCUser;
+use app\modules\v3\models\BaseUser;
+use app\modules\v3\models\TabletDataInsertArchive;
+use app\modules\v3\models\WebDataInsertArchive;
+use app\modules\v3\models\TabletDataInsertBreadcrumbArchive;
+use app\modules\v3\models\TabletJSONDataInsertError;
+use app\modules\v3\models\WebJSONDataInsertError;
+use app\modules\v3\authentication\TokenAuth;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -177,8 +177,7 @@ class BaseActiveController extends ActiveController
                 || strpos($_SERVER['SERVER_NAME'],'192.168.')===0)
         )
         {
-            //$prefix = 'apidev';
-			$prefix = 'azureapi';
+            $prefix = 'apidev';
         }
 		return $prefix;
 	}
@@ -285,37 +284,10 @@ class BaseActiveController extends ActiveController
         return $asset;
     }
 	
-	 // helper method for setting the csv header for tracker maps csv output
-    public static function setCsvHeaders(){
-        header('Content-Type: text/csv;charset=UTF-8');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-    }
-
-    // helper method for outputting csv data without storing the whole result
-    public static function processAndOutputCsvResponse($reader){
-        Yii::$app->response->format = Response::FORMAT_RAW;
-
-        self::setCsvHeaders();
-        // TODO find a way to use Yii response but without storing the whole response content in a variable
-        $firstLine = true;
-        $fp = fopen('php://output','w');
-
-        while($row = $reader->read()){
-
-            if($firstLine) {
-                $firstLine = false;
-                fwrite($fp, implode(',', array_keys($row)) . "\r\n");
-            }
-            fwrite($fp, implode(',', $row) . "\r\n");
-        }
-        fclose($fp);
-    }
-	
 	public static function isSCCT($client)
 	{
-		return ($client == Constants::SCCT_CONFIG['DEV_HEADER'] ||
-		$client == Constants::SCCT_CONFIG['STAGE_HEADER'] ||
-		$client == Constants::SCCT_CONFIG['PROD_HEADER']);
+		return ($client == Constants::SCCT_DEV ||
+		$client == Constants::SCCT_STAGE ||
+		$client == Constants::SCCT_PROD);
 	}
 }
