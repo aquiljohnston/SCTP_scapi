@@ -71,6 +71,9 @@ use Yii;
  * @property integer $NumberOfGPSAttempts
  * @property integer $InspectionID
  * @property integer $DeletedFlag
+ * @property string $EnergyDiversionPhoto1Path
+ * @property string $EnergyDiversionPhoto2Path
+ * @property string $EnergyDiversionPhoto3Path
  *
  * @property UserTb $createdByUser
  */
@@ -90,10 +93,10 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'CGEReason', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData'], 'string'],
-            [['LeakMeterInspected', 'EventType', 'CreatedByUserID', 'RiserOnly', 'MultiMeter', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
+            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'EnergyDiversionPhoto1Path', 'EnergyDiversionPhoto2Path', 'EnergyDiversionPhoto3Path'], 'string'],
+            [['EventType', 'CreatedByUserID', 'LeakMeterInspected', 'RiserOnly', 'MultiMeter', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
-            [['Latitude', 'Longitude', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed', 'FixQuality'], 'number'],
+            [['Latitude', 'Longitude', 'FixQuality', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
             [['CreatedByUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedByUserID' => 'UserID']],
         ];
@@ -169,6 +172,9 @@ class Event extends \app\modules\v2\models\BaseActiveRecord
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
             'InspectionID' => 'Inspection ID',
             'DeletedFlag' => 'Deleted Flag',
+            'EnergyDiversionPhoto1Path' => 'Energy Diversion Photo1 Path',
+            'EnergyDiversionPhoto2Path' => 'Energy Diversion Photo2 Path',
+            'EnergyDiversionPhoto3Path' => 'Energy Diversion Photo3 Path',
         ];
     }
 

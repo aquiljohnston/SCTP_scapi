@@ -25,6 +25,7 @@ class TimeEntryController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'view' => ['get'],
 					'deactivate' => ['put'],
                 ],  
             ];

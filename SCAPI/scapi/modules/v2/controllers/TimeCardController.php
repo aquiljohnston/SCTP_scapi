@@ -53,6 +53,11 @@ class TimeCardController extends BaseActiveController
 					'get-entries' => ['get'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
+					'get-time-cards-history-data' => ['get'],
+					'get-payroll-data' => ['get'],
+					'show-entries' => ['get'],
+					'create-task-entry' => ['post'],
+					'get-charge-of-account-type' => ['post'],
                 ],  
             ];
 		return $behaviors;	
@@ -457,16 +462,12 @@ class TimeCardController extends BaseActiveController
                     $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
                 }
             }
-            else{
-                throw new ForbiddenHttpException;
-            }
-
             if (!empty($responseArray))
             {
-                $this->processAndOutputCsvResponse($responseArray);
+                BaseActiveController::processAndOutputCsvResponse($responseArray);
                 return '';
             }
-            $this->setCsvHeaders();
+            BaseActiveController::setCsvHeaders();
             //send response
             return '';
         } catch(ForbiddenHttpException $e) {
@@ -478,29 +479,124 @@ class TimeCardController extends BaseActiveController
         }
     }
 
-    // helper method for setting the csv header for tracker maps csv output
-    public function setCsvHeaders(){
-        header('Content-Type: text/csv;charset=UTF-8');
-        header('Pragma: no-cache');
-        header('Expires: 0');
+    public function actionGetPayrollData($selectedTimeCardIDs = [])
+    {
+        // RBAC permission check is embedded in this action
+        try{
+            //set db target headers
+            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+            
+            $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
+
+            if ($selectedTimeCardIDs != null && count($selectedTimeCardIDs) > 0){
+                //build base query
+                $responseArray = new Query;
+                $responseArray  ->select('*')
+                    ->from(["fnGenerateQBDummyPayrollTimeCardID(:TimeCardID)"])
+                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
+
+                $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
+            }
+
+            if (!empty($responseArray))
+            {
+                BaseActiveController::processAndOutputCsvResponse($responseArray);
+                return '';
+            }
+            BaseActiveController::setCsvHeaders();
+            //send response
+            return '';
+        } catch(ForbiddenHttpException $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+        }
     }
 
-    // helper method for outputting csv data without storing the whole result
-    public function processAndOutputCsvResponse($reader){
-        Yii::$app->response->format = Response::FORMAT_RAW;
+    /**
+     * Create New Task Entry in CT DB
+     * @return mixed
+     * @throws \yii\web\HttpException
+     */
+	 //this should be in the task controller...
+    public function actionCreateTaskEntry()
+    {
+        $successFlag = 0;
+        try {
+            //set db target
+            TimeCard::setClient(BaseActiveController::urlPrefix());
 
-        $this->setCsvHeaders();
-        // TODO find a way to use Yii response but without storing the whole response content in a variable
-        $firstLine = true;
-        $fp = fopen('php://output','w');
+            //get body data
+            $body = file_get_contents("php://input");
+            $data = json_decode($body, true);
 
-        while($row = $reader->read()){
-            if($firstLine) {
-                $firstLine = false;
-                fputcsv($fp, array_keys($row));
-            }
-            fputcsv($fp, $row);
+            // set up db connection
+            $connection = BaseActiveRecord::getDb();
+            $processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType");
+            $processJSONCommand->bindParam(':TimeCardID', $data['TimeCardID'], \PDO::PARAM_STR);
+            $processJSONCommand->bindParam(':TaskName', $data['TaskName'], \PDO::PARAM_STR);
+            $processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
+            $processJSONCommand->bindParam(':StartTime', $data['StartTime'], \PDO::PARAM_STR);
+            $processJSONCommand->bindParam(':EndTime', $data['EndTime'], \PDO::PARAM_STR);
+            $processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
+            $processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
+            $processJSONCommand->execute();
+            $successFlag = 1;
+
+        } catch (\Exception $e) {
+            BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
+                'TimeCardID' => $data['TimeCardID'],
+                'TaskName' => $data['TaskName'],
+                'Date' => $data['Date'],
+                'StartTime' => $data['StartTime'],
+                'EndTime' => $data['EndTime'],
+                'CreatedByUserName' => $data['CreatedByUserName'],
+                'ChargeOfAccountType' => $data['ChargeOfAccountType'],
+                'SuccessFlag' => $successFlag
+            ]);
         }
-        fclose($fp);
+
+        //build response format
+        $dataArray =  [
+            'TimeCardID' => $data['TimeCardID'],
+            'SuccessFlag' => $successFlag
+        ];
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $dataArray;
+    }
+
+    /**
+     * Get ChargeOfAccountType From CT DB
+     * @return mixed
+     */
+	 //should be in dropdown controller or task controller...
+    public function actionGetChargeOfAccountType(){
+        //set db target
+        ChartOfAccountType::setClient(BaseActiveController::urlPrefix());
+
+        $chartOfAccountType = ChartOfAccountType::find()
+            ->all();
+
+        $namePairs = [];
+        $codesSize = count($chartOfAccountType);
+
+        for($i=0; $i < $codesSize; $i++)
+        {
+            $namePairs[$chartOfAccountType[$i]->ChartOfAccountID]= $chartOfAccountType[$i]->ChartOfAccountDescription;
+        }
+
+
+        $response = Yii::$app ->response;
+        $response -> format = Response::FORMAT_JSON;
+        $response -> data = $namePairs;
+
+        return $response;
     }
 }
