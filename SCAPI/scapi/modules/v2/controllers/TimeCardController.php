@@ -32,6 +32,8 @@ use yii\db\Query;
 class TimeCardController extends BaseActiveController
 {
 	public $modelClass = 'app\modules\v2\models\TimeCard';
+
+	public $fileWritten = false;
 	
 	public function behaviors()
 	{
@@ -522,18 +524,19 @@ class TimeCardController extends BaseActiveController
                     ->addParams([':projectName' => $projectName]);  */
 
 
-	            $responseArray = BaseActiveRecord::getDb();
+             	  $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName',$arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$responseArray = $getEventsCommand->query();      
-
-				//Yii::trace('DIGGYDATA:'.$responseArray);    
+				$responseArray = $getEventsCommand->query();  
+             	
+				  
 
                 //$responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
 
                 //var_dump($responseArray);exit();
+
 
             } else {
                 //rbac permission check
@@ -588,8 +591,8 @@ class TimeCardController extends BaseActiveController
                 	BaseActiveController::processAndOutputCsvResponse($responseArray);
                 } else {
 
-                	$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
-                	return $fileWritten;
+                	$this->fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
+                	return $this->fileWritten;
                 }
                 
                 //BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
