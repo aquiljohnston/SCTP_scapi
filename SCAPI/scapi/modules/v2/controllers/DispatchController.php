@@ -306,7 +306,13 @@ class DispatchController extends Controller
 					$results = self::processDispatch(
 						$data['dispatchMap'][$i]['AssignedUserID'],
 						$createdBy,
-						$data['dispatchMap'][$i]['MapGrid']
+						$data['dispatchMap'][$i]['MapGrid'],
+						null,
+						null,
+						null,
+						//pass inspection type and billing code if available
+						array_key_exists('InspectionType', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['InspectionType'] : null,
+						array_key_exists('BillingCode', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['BillingCode'] : null
 					);
 					$responseData['dispatchMap'][] = $results;
 				}
@@ -322,7 +328,12 @@ class DispatchController extends Controller
                         $data['dispatchSection'][$i]['AssignedUserID'],
                         $createdBy,
                         $data['dispatchSection'][$i]['MapGrid'],
-                        $data['dispatchSection'][$i]['SectionNumber']
+                        $data['dispatchSection'][$i]['SectionNumber'],
+						null,
+						null,
+						//pass inspection type and billing code if available
+						array_key_exists('InspectionType', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['InspectionType'] : null,
+						array_key_exists('BillingCode', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['BillingCode'] : null
                     );
                     $responseData['dispatchSection'][] = $results;
                 }
@@ -341,6 +352,7 @@ class DispatchController extends Controller
 						$data['dispatchAsset'][$i]['AssignedUserID'],
 						$createdBy,
 						null,
+						//dont think we need section number to be passed here
 						$data['dispatchAsset'][$i]['SectionNumber'],
 						$data['dispatchAsset'][$i]['WorkOrderID'],
 						$scheduledDate
@@ -556,7 +568,12 @@ class DispatchController extends Controller
 			for($i = 0; $i < $mapCount; $i++)
 			{
 				$results = self::processUnassigned(
-					$data['unassignMap'][$i]['MapGrid']
+					$data['unassignMap'][$i]['MapGrid'],
+					null, //section
+					null, //wo id
+					null, //user id
+					(array_key_exists('InspectionType', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['InspectionType'] : null),
+					(array_key_exists('BillingCode', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['BillingCode'] : null)
 				);
 				$responseData['unassignMap'][] = $results;
 			}
@@ -566,7 +583,11 @@ class DispatchController extends Controller
 			{
 				$results = self::processUnassigned(
 					$data['unassignSection'][$i]['MapGrid'],
-					$data['unassignSection'][$i]['SectionNumber']
+					$data['unassignSection'][$i]['SectionNumber'],
+					null, //wo id
+					null, //user id
+					(array_key_exists('InspectionType', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['InspectionType'] : null),
+					(array_key_exists('BillingCode', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['BillingCode'] : null)
 				);
 				$responseData['unassignSection'][] = $results;
 			}
@@ -575,10 +596,10 @@ class DispatchController extends Controller
 			for($i = 0; $i < $assetCount; $i++)
 			{
 				$results = self::processUnassigned(
-					null,
-					null,
+					null, //map grid
+					null, //section
 					$data['unassignAsset'][$i]['WorkOrderID'],
-					//ternary check if user id is present
+					//ternary check for optional params
 					(array_key_exists('AssignedUserID', $data['unassignAsset'][$i]) ? $data['unassignAsset'][$i]['AssignedUserID'] : null)
 				);
 				$responseData['unassignAsset'][] = $results;
@@ -604,7 +625,8 @@ class DispatchController extends Controller
 	**Then checks for existing assigned work queue records and removes any from 
 	**results that already exist. Finally creates new records and returns results.
 	*/
-	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null, $scheduledDate = null)
+	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null,
+		$scheduledDate = null, $inspectionType = null, $billingCode = null)
 	{
 		$results = [];
 		$workOrders = [];
@@ -622,6 +644,12 @@ class DispatchController extends Controller
                     ->where(['MapGrid' => $mapGrid]);
                 if ($section != null) {
                     $workOrdersQuery->andWhere(['SectionNumber' => $section]);
+                }
+				if ($inspectionType != null) {
+                    $workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
+                }
+				if ($billingCode != null) {
+                    $workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
                 }
 				 $workOrders = $workOrdersQuery->all();
 				 $workOrdersCount = count($workOrders);
@@ -673,20 +701,24 @@ class DispatchController extends Controller
 			'AssignedUserID' => $userID,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
-			'SuccessFlag' => $successFlag
+			'InspectionType' => $inspectionType,
+			'BillingCode' => $billingCode,
+			'SuccessFlag' => $successFlag,
 		];
 	}
 	
-	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null, $assignedUserID = null)
+	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null, $assignedUserID = null, $inspectionType = null, $billingCode = null)
 	{
 		$successFlag = 0;
 		try{
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID, :AssignedUserID");
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID, :AssignedUserID, :InspectionType, :BillingCode");
 			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':AssignedUserID', $assignedUserID,  \PDO::PARAM_INT);
+			$processJSONCommand->bindParam(':InspectionType', $inspectionType,  \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':BillingCode', $billingCode,  \PDO::PARAM_STR);
 			$processJSONCommand->execute();
 			$successFlag = 1;
 		}
@@ -697,6 +729,8 @@ class DispatchController extends Controller
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
 			'UserID' => $assignedUserID,
+			'InspectionType' => $inspectionType,
+			'BillingCode' => $billingCode,
 			'SuccessFlag' => $successFlag
 			]);
 		}
@@ -707,6 +741,8 @@ class DispatchController extends Controller
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
 			'UserID' => $assignedUserID,
+			'InspectionType' => $inspectionType,
+			'BillingCode' => $billingCode,
 			'SuccessFlag' => $successFlag
 		];
 	}
