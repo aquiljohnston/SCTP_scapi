@@ -20,6 +20,7 @@ final class Constants
 	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
 	const DEV_DEFAULT_QB_PATH = "C:\\ClientShare\\QuickBooks\\";
 	const DEV_DEFAULT_OASIS_PATH = "C:\\ClientShare\\Oasis\\";
+	//const DEV_DEFAULT_OASIS_PATH = "/Users/Shared/";
 	const PROD_DEFAULT_OASIS_PATH = "K:\\Oasis\\";
 	const PROD_DEFAULT_QB_PATH = "K:\\QuickBooks\\";
 	const OASIS = "OASIS";
