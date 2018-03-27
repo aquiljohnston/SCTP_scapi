@@ -55,7 +55,7 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetAvailable($mapGridSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -74,6 +74,15 @@ class DispatchController extends Controller
 				$envelope = 'sections';
 				$assetQuery = AvailableWorkOrderBySection::find()
 					->where(['MapGrid' => $mapGridSelected]);
+					
+				if($inspectionType != null)
+				{
+					$assetQuery->andWhere(['InspectionType' => $inspectionType]);
+				}
+				if($billingCode != null)
+				{
+					$assetQuery->andWhere(['BillingCode' => $billingCode]);
+				}
 			}
 			else
 			{
@@ -378,7 +387,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($mapGridSelected = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAssigned($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1)
 	{
 		try
 		{
@@ -393,6 +402,15 @@ class DispatchController extends Controller
 				$envelope = 'sections';
 				$assetQuery = AssignedWorkQueueBySection::find()
 					->where(['MapGrid' => $mapGridSelected]);
+					
+				if($inspectionType != null)
+				{
+					$assetQuery->andWhere(['InspectionType' => $inspectionType]);
+				}
+				if($billingCode != null)
+				{
+					$assetQuery->andWhere(['BillingCode' => $billingCode]);
+				}
 			}
 			else
 			{
