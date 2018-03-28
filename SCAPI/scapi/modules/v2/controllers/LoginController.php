@@ -101,7 +101,8 @@ class LoginController extends Controller
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
 			$authArray['UserName'] = $user->UserName;
-			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
+			$authArray['ProjectLandingPage'] = self::getProjectValues($client)['ProjectLandingPage'];
+			$authArray['ProjectID'] = self::getProjectValues($client)['ProjectID'];
             $authArray['UserAppRoleType'] = $user->UserAppRoleType;
 			
 			//add auth token to response
@@ -159,13 +160,13 @@ class LoginController extends Controller
 		}
 	}
 	
-	private static function getProjectLandingPage($client)
+	private static function getProjectValues($client)
 	{
-		$projectLandingPage = Project::find()
-			->select('ProjectLandingPage')
+		$projectValues = Project::find()
+			->select('ProjectLandingPage, ProjectID')
 			->where(['ProjectUrlPrefix' => $client])
 			->one();
 		
-		return $projectLandingPage['ProjectLandingPage'];
+		return $projectValues;
 	}
 }
