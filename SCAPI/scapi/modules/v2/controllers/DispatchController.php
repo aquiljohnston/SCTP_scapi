@@ -75,7 +75,7 @@ class DispatchController extends Controller
 				$assetQuery = AvailableWorkOrderBySection::find()
 					->where(['MapGrid' => $mapGridSelected]);
 					
-				if($inspectionType != null)
+				if($inspectionType != null && strpos($inspectionType, ',') === false)
 				{
 					$assetQuery->andWhere(['InspectionType' => $inspectionType]);
 				}
@@ -403,7 +403,7 @@ class DispatchController extends Controller
 				$assetQuery = AssignedWorkQueueBySection::find()
 					->where(['MapGrid' => $mapGridSelected]);
 					
-				if($inspectionType != null)
+				if($inspectionType != null && strpos($inspectionType, ',') === false)
 				{
 					$assetQuery->andWhere(['InspectionType' => $inspectionType]);
 				}
