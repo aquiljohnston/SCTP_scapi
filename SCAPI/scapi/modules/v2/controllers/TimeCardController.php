@@ -506,7 +506,7 @@ class TimeCardController extends BaseActiveController
 
             $arrayProjectName 				= json_encode($arrayProjectName);
             $fileResponse 					= [];
-            $fileResponse['was_written'] 	=  FALSE;
+            $fileResponse['was_written'] 	=  false;
             $fileResponse['message']		=  'Empty TimeCard File'; 
 
             Yii::trace("JSONESSEX-TIMECARDHIS");            
@@ -525,9 +525,8 @@ class TimeCardController extends BaseActiveController
                 /*  $responseArray  ->select('*')
                     ->from(["fnGenerateOasisTimeCardByProject(:projectName)"])
                     ->addParams([':projectName' => $projectName]);  */
-
-
-             	  $responseArray = BaseActiveRecord::getDb();
+ 			
+ 					  $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName',$arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
@@ -535,19 +534,13 @@ class TimeCardController extends BaseActiveController
 				$responseArray = $getEventsCommand->query();  
             
 
-
-                //if we don't have an array from the response; we have empty file set;
-                //so leave and indicate failure - no file write.
-				if(!is_array($responseArray)){
+                //if we have an empty file set
+                //send emtpy file message
+				if(!count($responseArray) > 0){
 
 					$response -> data = $fileResponse;
 
-				}
-            
-
-
-           // }
-            else {
+				} else {
                 //rbac permission check
                 if (PermissionsController::can('timeCardGetAllCards')) {
                     //check if week is prior or current to determine appropriate view
@@ -598,7 +591,7 @@ class TimeCardController extends BaseActiveController
    
             }
 
-        } catch(ForbiddenHttpException $e) {
+        } catch(\Exception $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
        } catch(\Exception $e) {
@@ -658,18 +651,22 @@ class TimeCardController extends BaseActiveController
 
 				    //if we don't have an array from the response; we have empty file set;
                 //so leave and indicate failure - no file write.
-				if(!is_array($responseArray->read())){
+				  //if we have an empty file set
+                //send emtpy file message
+				if(!count($responseArray) > 0){
 
-				$response -> data = $fileResponse;
+					$response -> data = $fileResponse;
 
-				}  else {
+				} else {
+
              	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
              	$fileResponse['message']		=  'Successfully wrote file payroll file'; 	
              	$response -> data = $fileResponse;
+
           	  }
 
       	
-        } catch(ForbiddenHttpException $e) {
+        } catch(\Exception $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
