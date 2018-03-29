@@ -33,7 +33,6 @@ class TimeCardController extends BaseActiveController
 {
 	public $modelClass = 'app\modules\v2\models\TimeCard';
 
-	public $fileWritten = false;
 	
 	public function behaviors()
 	{
@@ -494,17 +493,21 @@ class TimeCardController extends BaseActiveController
             //format response
             $response = Yii::$app->response;
             $response-> format = Response::FORMAT_JSON;
+            $responseArray = [];
 
             //response array of time cards
-            $timeCardsArr = [];
+            $timeCardsArr 					= [];
             //$selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
-            $arrayProjectName = [];
-            $arrayProjectName[] = $projectName;
+            $arrayProjectName 				= [];
+            $arrayProjectName[] 			= $projectName;
 
 
            // var_dump(json_encode($arrayProjectName)); exit();
 
-            $arrayProjectName = json_encode($arrayProjectName);
+            $arrayProjectName 				= json_encode($arrayProjectName);
+            $fileResponse 					= [];
+            $fileResponse['was_written'] 	=  FALSE;
+            $fileResponse['message']		=  'Empty TimeCard File'; 
 
             Yii::trace("JSONESSEX-TIMECARDHIS");            
             Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
@@ -512,7 +515,7 @@ class TimeCardController extends BaseActiveController
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$timeCardName);
 
-            if ($projectName){
+           // if ($projectName){
                 //build base query
                 //$responseArray = new Query;
                 /*$responseArray  ->select('*')
@@ -530,15 +533,21 @@ class TimeCardController extends BaseActiveController
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();  
-             	
-				  
-
-                //$responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
-
-                //var_dump($responseArray);exit();
+            
 
 
-            } else {
+                //if we don't have an array from the response; we have empty file set;
+                //so leave and indicate failure - no file write.
+				if(!is_array($responseArray)){
+
+					$response -> data = $fileResponse;
+
+				}
+            
+
+
+           // }
+            else {
                 //rbac permission check
                 if (PermissionsController::can('timeCardGetAllCards')) {
                     //check if week is prior or current to determine appropriate view
@@ -583,26 +592,12 @@ class TimeCardController extends BaseActiveController
                 } else {
                     throw new ForbiddenHttpException;
                 }
+              $fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
+              $fileResponse['message']		=  'Successfully wrote file time file'; 	
+                	$response -> data = $fileResponse;
+   
             }
 
-            if (!empty($responseArray))
-            {
-                if(!$download){
-                	BaseActiveController::processAndOutputCsvResponse($responseArray);
-                } else {
-
-                	$this->fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
-                	return $this->fileWritten;
-                }
-                
-                //BaseActiveController::processAndWriteCsv($responseArray,$timeCardName);
-                //var_dump
-               
-                return '';
-            }
-            BaseActiveController::setCsvHeaders();
-            //send response
-            return '';
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -626,11 +621,15 @@ class TimeCardController extends BaseActiveController
 
             $arrayProjectName = [];
             $arrayProjectName[] = $projectName;
+            $responseArray = [];
 
 
            // var_dump(json_encode($arrayProjectName)); exit();
 
-            $arrayProjectName = json_encode($arrayProjectName);
+            $arrayProjectName 				= json_encode($arrayProjectName);
+            $fileResponse 					= [];
+            $fileResponse['was_written'] 	=  FALSE;
+            $fileResponse['message']		=  'Empty Payroll File'; 	
 
             Yii::trace("JSONESSEX-PAYCARDHIS");  
             Yii::trace("JSONESSEX-PR ".$arrayProjectName);
@@ -649,30 +648,27 @@ class TimeCardController extends BaseActiveController
 
                 $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
            */     
- 				if ($projectName != null){
+ 		
                 $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$responseArray = $getEventsCommand->query();     
+				$responseArray = $getEventsCommand->query();  
 
-            }
+				    //if we don't have an array from the response; we have empty file set;
+                //so leave and indicate failure - no file write.
+				if(!is_array($responseArray->read())){
 
-            if (!empty($responseArray))
-            {
-            	if(!$download){
-            		 BaseActiveController::processAndOutputCsvResponse($responseArray);
-            		} else {
-            			$fileWritten = BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
-            			return $fileWritten;
-            		}
-               
-                return '';
-            }
-            BaseActiveController::setCsvHeaders();
-            //send response
-            return '';
+				$response -> data = $fileResponse;
+
+				}  else {
+             	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
+             	$fileResponse['message']		=  'Successfully wrote file payroll file'; 	
+             	$response -> data = $fileResponse;
+          	  }
+
+      	
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
