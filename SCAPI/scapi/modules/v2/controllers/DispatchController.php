@@ -663,7 +663,7 @@ class DispatchController extends Controller
                 if ($section != null) {
                     $workOrdersQuery->andWhere(['SectionNumber' => $section]);
                 }
-				if ($inspectionType != null) {
+				if ($inspectionType != null && strpos($inspectionType, ',') === false) {
                     $workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
                 }
 				if ($billingCode != null) {
