@@ -628,17 +628,20 @@ class InspectionController extends Controller
 								$responseData['activity'][0]['Inspection']['Asset'] = self::processAsset($inspectionData['Asset'], $client, $inspectionID);
 							//get workOrder by work queue id
 							$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
-							//update event indicator
-							if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
+							if($workOrder != null)
 							{
-								$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
-							}
-							else
-							{
-								$responseData['activity'][0]['Inspection']['WorkOrder'] = [
-									'ID' =>$workOrder->ID,
-									'SuccessFlag' => 1
-								];
+								//update event indicator
+								if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
+								{
+									$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
+								}
+								else
+								{
+									$responseData['activity'][0]['Inspection']['WorkOrder'] = [
+										'ID' =>$workOrder->ID,
+										'SuccessFlag' => 1
+									];
+								}
 							}
 						}
 						else
