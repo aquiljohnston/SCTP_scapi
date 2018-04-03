@@ -505,9 +505,10 @@ class TimeCardController extends BaseActiveController
            // var_dump(json_encode($arrayProjectName)); exit();
 
             $arrayProjectName 				= json_encode($arrayProjectName);
+            $writeTimeCardFile				= false;
             $fileResponse 					= [];
             $fileResponse['was_written'] 	=  false;
-            $fileResponse['message']		=  'Empty TimeCard File'; 
+            $fileResponse['type']		=  'Exception'; 
 
             Yii::trace("JSONESSEX-TIMECARDHIS");            
             Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
@@ -515,32 +516,27 @@ class TimeCardController extends BaseActiveController
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$timeCardName);
 
-           // if ($projectName){
-                //build base query
-                //$responseArray = new Query;
-                /*$responseArray  ->select('*')
-                    ->from(["fnGenerateOasisTimeCardByTimeCardID(:TimeCardID)"])
-                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);*/
-
-                /*  $responseArray  ->select('*')
-                    ->from(["fnGenerateOasisTimeCardByProject(:projectName)"])
-                    ->addParams([':projectName' => $projectName]);  */
+       
  			
- 					  $responseArray = BaseActiveRecord::getDb();
+ 				$responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName',$arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();  
+
+				//error_log(print_r($responseArray->count(),true));
             
 
                 //if we have an empty file set
                 //send emtpy file message
-				if(!count($responseArray) > 0){
+				if($responseArray->count() !=0){
 
-					$response -> data = $fileResponse;
+					$writeTimeCardFile = true;
 
-				} else {
+				}
+
+				if($writeTimeCardFile){
                 //rbac permission check
                 if (PermissionsController::can('timeCardGetAllCards')) {
                     //check if week is prior or current to determine appropriate view
@@ -585,10 +581,14 @@ class TimeCardController extends BaseActiveController
                 } else {
                     throw new ForbiddenHttpException;
                 }
-              $fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
-              $fileResponse['message']		=  'Successfully wrote file time file'; 	
-                	$response -> data = $fileResponse;
+              	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
+              	$fileResponse['type']			=  'Success'; 	
+              	$response -> data 				= $fileResponse;
    
+            }else{
+            	$fileResponse['was_written'] 	=  false;
+              	$fileResponse['type']			=  'Nothing to do.'; 	
+                $response -> data 				= $fileResponse;
             }
 
         } catch(\Exception $e) {
@@ -620,27 +620,17 @@ class TimeCardController extends BaseActiveController
            // var_dump(json_encode($arrayProjectName)); exit();
 
             $arrayProjectName 				= json_encode($arrayProjectName);
+            $writePayrollFile				= false;
             $fileResponse 					= [];
             $fileResponse['was_written'] 	=  FALSE;
-            $fileResponse['message']		=  'Empty Payroll File'; 	
+            $fileResponse['type']		=  'Exception'; 	
 
             Yii::trace("JSONESSEX-PAYCARDHIS");  
             Yii::trace("JSONESSEX-PR ".$arrayProjectName);
             Yii::trace("JSONESSEX-WS ".$weekStart);
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$cardName);
-            
-           /* $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
-
-           
-                //build base query
-                $responseArray = new Query;
-                $responseArray  ->select('*')
-                    ->from(["fnGenerateQBDummyPayrollTimeCardID(:TimeCardID)"])
-                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
-
-                $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
-           */     
+    
  		
                 $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
@@ -649,20 +639,87 @@ class TimeCardController extends BaseActiveController
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();  
 
-				    //if we don't have an array from the response; we have empty file set;
-                //so leave and indicate failure - no file write.
-				  //if we have an empty file set
-                //send emtpy file message
-				if(!count($responseArray) > 0){
+			//error_log(print_r($responseArray->count(),true));
+				if($responseArray->count() !=0){
 
-					$response -> data = $fileResponse;
+					$writePayrollFile	= true;
 
-				} else {
+				} 
 
+				if($writePayrollFile) {
              	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
-             	$fileResponse['message']		=  'Successfully wrote file payroll file'; 	
+             	$fileResponse['type']		=  'Successfully wrote file payroll file'; 	
              	$response -> data = $fileResponse;
 
+          	  } else {
+          	  	$fileResponse['was_written'] 	=  false;
+             	$fileResponse['type']		=  'nothing to do'; 	
+             	$response -> data = $fileResponse;
+          	  }
+
+      	
+        } catch(\Exception $e) {
+            Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+       }
+    }
+
+     public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
+    {
+
+        // RBAC permission check is embedded in this action
+        try{
+            //set db target headers
+            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response-> format = Response::FORMAT_JSON;
+
+            $arrayProjectName = [];
+            $writeADPFile	= false;
+            $arrayProjectName[] = $projectName;
+            $responseArray = [];
+
+            $arrayProjectName 				= json_encode($arrayProjectName);
+            $fileResponse 					= [];
+            $fileResponse['was_written'] 	=  FALSE;
+            $fileResponse['message']		=  'Empty ADP File'; 	
+
+            Yii::trace("JSONESSEX-ADPHIS");  
+            Yii::trace("JSONESSEX-PR ".$arrayProjectName);
+            Yii::trace("JSONESSEX-WS ".$weekStart);
+            Yii::trace("JSONESSEX-WE ".$weekEnd);
+            Yii::trace("JSONESSEX-CN ".$adpFileName);
+            
+   
+ 		
+                $responseArray = BaseActiveRecord::getDb();
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject_Dev201804 :projectName,:weekStart,:weekEnd");
+				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
+				$responseArray = $getEventsCommand->query();  
+				
+
+				if($responseArray->count() !=0){
+
+					$writeADPFile	= true;
+
+				} 
+
+				if($writeADPFile) {
+             	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$adpFileName,$type);
+             	$fileResponse['type']		=  'Successfully wrote adp file'; 	
+             	$response -> data = $fileResponse;
+
+          	  } else {
+          	  	$fileResponse['was_written'] 	=  false;
+             	$fileResponse['type']		=  'nothing to do'; 	
+             	$response -> data = $fileResponse;
           	  }
 
       	
