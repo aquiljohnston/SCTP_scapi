@@ -17,14 +17,20 @@ final class Constants
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
-	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
 	const DEV_DEFAULT_QB_PATH = "C:\\ClientShare\\QuickBooks\\";
 	const DEV_DEFAULT_OASIS_PATH = "C:\\ClientShare\\Oasis\\";
+	const DEV_DEFAULT_ADP_PATH = "C:\\ClientShare\\ADP\\";
 	//const DEV_DEFAULT_OASIS_PATH = "/Users/Shared/";
+	//const DEV_DEFAULT_ADP_PATH = "/Users/Shared/";
+	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
+	
 	const PROD_DEFAULT_OASIS_PATH = "K:\\Oasis\\";
 	const PROD_DEFAULT_QB_PATH = "K:\\QuickBooks\\";
+	const PROD_DEFAULT_ADP_PATH = "K:\\ADP\\";
+
 	const OASIS = "OASIS";
 	const QUICKBOOKS = "QB";
+	const ADP = "ADP";
 
 	
 	const API_CONFIG = [

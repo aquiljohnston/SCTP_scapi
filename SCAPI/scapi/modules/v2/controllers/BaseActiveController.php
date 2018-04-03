@@ -319,19 +319,30 @@ class BaseActiveController extends ActiveController
 
          if(YII_ENV_DEV)
         {
-        	if($type == Constants::OASIS){
-        			$filePath = Constants::DEV_DEFAULT_OASIS_PATH;
-        	} if($type == Constants::QUICKBOOKS){
-				$filePath = Constants::DEV_DEFAULT_QB_PATH;
-       		}
-           
+        		switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::DEV_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::DEV_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+			       $filePath = Constants::DEV_DEFAULT_ADP_PATH;
+			        break;
+			}
            
         } else {
-        	if($type == Constants::OASIS){
-        			$filePath = Constants::PROD_DEFAULT_OASIS_PATH;
-        	} if($type == Constants::QUICKBOOKS){
-				$filePath = Constants::PROD_DEFAULT_QB_PATH;
-       		}
+        		switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::PROD_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+			       $filePath = Constants::PROD_DEFAULT_ADP_PATH;
+			        break;
+			}
         }
 
         $firstLine 	= true;
