@@ -84,7 +84,7 @@ class TimeCardController extends BaseActiveController
 	 */
     public function actionView($id)
     {
-		//may want to move this into show entries because I belive that is the only location it is called from
+		//may want to move this into show entries because I believe that is the only location it is called from
 		try
 		{
 			//set db target
@@ -336,9 +336,8 @@ class TimeCardController extends BaseActiveController
 			$delimiter = ',';
 			$filterArray = explode($delimiter, $filter);
 
-            //set db target headers
-            $headers 			= getallheaders();
-            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //format response
             $response 			= Yii::$app->response;
@@ -347,27 +346,29 @@ class TimeCardController extends BaseActiveController
             //response array of time cards
             $timeCardsArr 		= [];
             $responseArray 		= [];
+			$allTheProjects = [];
+			$showProjectDropDown = false;
 
             //build base query
             $timeCards = new Query;
             $timeCards->select('*')
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
-                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]); 
 
-            $records = $timeCards->all(BaseActiveRecord::getDb());  
-
+			//get current user
             $userID = self::getUserFromToken()->UserID;
-                    //get user project relations array
-                    $projects = ProjectUser::find()
-                        ->where("ProjUserUserID = $userID")
-                        ->all();
-                    $projectsSize = count($projects);
+			//get user project relations array
+			$projects = ProjectUser::find()
+				->where("ProjUserUserID = $userID")
+				->all();
+			$projectsSize = count($projects);
 
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client))
             {
-                /*
-                 * Check if user can get all cards
+				$showProjectDropDown = true;
+				/*
+                 * Check if user can get their own cards
                  */
                 if (!PermissionsController::can('timeCardGetAllCards') && PermissionsController::can('timeCardGetOwnCards'))
                 {
@@ -377,29 +378,38 @@ class TimeCardController extends BaseActiveController
                         ->where("ProjUserUserID = $userID")
                         ->all();
                     $projectsSize = count($projects);
-
-
-                    //check if week is prior or current to determine appropriate view
                     if($projectsSize > 0)
                     {
                         $timeCards->where(['TimeCardProjectID' => $projects[0]->ProjUserProjectID]);
                     }
+					else
+					{
+						//can only get own but has no project relations
+						throw new ForbiddenHttpException;
+					}
                     if($projectsSize > 1)
                     {
+						//add all option to project dropdown if there will be more than one option
+						$allTheProjects = [""=>"All"];
                         for($i=1; $i < $projectsSize; $i++)
                         {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $timeCards->orWhere(['TimeCardProjectID'=>$projectID]);
+                            $relatedProjectID = $projects[$i]->ProjUserProjectID;
+                            $timeCards->orWhere(['TimeCardProjectID'=>$relatedProjectID]);
                         }
                     }
                 }
-                /*
-                 * Check if user can get their own cards
+				/*
+                 * Check if user can get all cards
                  */
-                elseif (!PermissionsController::can('timeCardGetAllCards'))
+                elseif (PermissionsController::can('timeCardGetAllCards'))
                 {
-                    throw new ForbiddenHttpException;
+					$allTheProjects = [""=>"All"];
                 }
+				else
+				{
+					//no permissions to get cards
+                    throw new ForbiddenHttpException;
+				}
             }
             else // get only cards for the current project.
             {
@@ -410,9 +420,11 @@ class TimeCardController extends BaseActiveController
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
                 $projectsSize = count($project);
-              
             }
 
+			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
+			$dropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			
             if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
@@ -428,27 +440,23 @@ class TimeCardController extends BaseActiveController
 				}
 				$timeCards->andFilterWhere($filterQueryArray);
             }
-			
+
             if($projectID!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
                     'and',
                     ['TimeCardProjectID' => $projectID],
                 ]);
             }
-
+			
             //iterate and stash project name
-            $allTheProjects = [""=>"All"];
-            foreach ($records as $p) {
+            foreach ($dropdownRecords as $p) {
      			$allTheProjects[$p['TimeCardProjectID']] = $p['ProjectName'];
             }
             //remove dupes
             $allTheProjects = array_unique($allTheProjects);
             //abc order for all
-            //asort($allTheProjects);
-
-            //APPEND KEY VALUE PAIR TO ARRAY W/O ARRAY [PUSH]
-            //$allTheProjects=array(""=>"All") + $allTheProjects; 
-          
+            asort($allTheProjects);
+		  
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
             // check if approved time card exist in the data
@@ -458,9 +466,8 @@ class TimeCardController extends BaseActiveController
             $responseArray['assets'] 				= $timeCardsArr;
             $responseArray['pages'] 				= $paginationResponse['pages'];
             $responseArray['projectDropDown'] 		= $allTheProjects;
-            $responseArray['projectsSize'] 			= $projectsSize;
+            $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
             $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
-           // $responseArray['showFilter'] = $showFilter;
 
             if (!empty($responseArray['assets']))
             {

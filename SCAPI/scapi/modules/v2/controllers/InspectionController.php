@@ -587,7 +587,7 @@ class InspectionController extends Controller
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($client)->UserID, $client);
+			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($client)->UserName, $client);
 			
 			$inspectionData = $data['activity'][0]['Inspection'];
 			
@@ -693,7 +693,7 @@ class InspectionController extends Controller
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($client)->UserID, $client);
+			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($client)->UserName, $client);
 			
 			//create response format
 			$responseData = [];
