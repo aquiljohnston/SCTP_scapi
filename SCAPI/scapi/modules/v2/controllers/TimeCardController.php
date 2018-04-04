@@ -674,7 +674,8 @@ class TimeCardController extends BaseActiveController
        }
     }
 
-     public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
+     
+public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
     {
 
         // RBAC permission check is embedded in this action
@@ -733,6 +734,43 @@ class TimeCardController extends BaseActiveController
         } catch(\Exception $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            Yii::trace('Exception '.$e->getMessage());
+            throw new \yii\web\HttpException(400);
+       }
+    }
+
+    public function actionResetCometTrackerProcess($projectName,$weekStart=null,$weekEnd=null,$process)
+    {
+
+        // RBAC permission check is embedded in this action
+        try{
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response 			= Yii::$app->response;
+            $response-> format 	= Response::FORMAT_JSON;
+
+            $arrayProjectName[] = $projectName;
+            $responseArray 		= [];
+
+            $arrayProjectName 	= json_encode($arrayProjectName);
+
+            Yii::trace("RESETPROCESSCALLED");  
+
+ 		
+                $responseArray = BaseActiveRecord::getDb();
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetSubmitFlag :projectName,:weekStart,:weekEnd,:process");
+				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':process', $process,  \PDO::PARAM_STR);
+				$responseArray 	  	= $getEventsCommand->query();  
+
+				$status['success']	= true;	
+             	$response -> data 	= $status;	
+
         } catch(\Exception $e) {
             Yii::trace('Exception '.$e->getMessage());
             throw new \yii\web\HttpException(400);
