@@ -112,7 +112,7 @@ final class Constants
 		'DEV_HEADER' => 'demo',
 		'DEV_DB' => 'demoDb',
 		'AUTH' => self::CLIENT_DB_MANAGER,
-		'ASSET' => self::BASE_ASSET,
+		'ASSET' => 'app\modules\v2\models\DemoAsset',
 		'EVENT' => 'app\modules\v2\models\DemoEvent',
 		'USER' => self::BASE_USER
 	];
