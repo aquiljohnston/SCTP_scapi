@@ -453,7 +453,7 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null)
+	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType = null, $billingCode = null)
 	{
 		try
 		{
@@ -464,6 +464,9 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
+			
+			//handle null billing code, as it is not always set.
+			$billingCode = $billingCode != '' ? $billingCode : null;
 			
 			//handle null or multiple inspection types
 			if($inspectionType != null)
@@ -484,7 +487,8 @@ class DispatchController extends Controller
 			
 			$assetQuery = AssignedWorkQueue::find()
 				->where(['MapGrid' => $mapGridSelected])
-				->andwhere($inspectionTypeFilter);
+				->andwhere($inspectionTypeFilter)
+				->andwhere(['BillingCode' => $billingCode]);
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
