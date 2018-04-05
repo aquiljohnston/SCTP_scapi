@@ -458,7 +458,7 @@ class TimeCardController extends BaseActiveController
             //abc order for all
             asort($allTheProjects);
 			//appened all option to the front
-			$allTheProjects = array_merge($projectAllOption, $allTheProjects);
+			$allTheProjects = $projectAllOption + $allTheProjects;
 		  
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
