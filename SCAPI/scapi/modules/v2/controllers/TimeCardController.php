@@ -856,9 +856,9 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
             //build base query
 			$responseArray = new Query;
             $responseArray->select('*')
-                ->from(["fnSubmitAccountant(:ProjectName, :StartDate , :EndDate)"])
+                ->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
                 ->addParams([
-					':ProjectName' => json_encode($projectName), 
+					//':ProjectName' => json_encode($projectName), 
 					':StartDate' => $submitCheckData['StartDate'], 
 					':EndDate' => $submitCheckData['EndDate']
 					]);
