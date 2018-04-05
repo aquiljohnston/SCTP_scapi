@@ -346,6 +346,7 @@ class TimeCardController extends BaseActiveController
             //response array of time cards
             $timeCardsArr 		= [];
             $responseArray 		= [];
+			$projectAllOption = [];
 			$allTheProjects = [];
 			$showProjectDropDown = false;
 
@@ -390,7 +391,7 @@ class TimeCardController extends BaseActiveController
                     if($projectsSize > 1)
                     {
 						//add all option to project dropdown if there will be more than one option
-						$allTheProjects = [""=>"All"];
+						$projectAllOption = [""=>"All"];
                         for($i=1; $i < $projectsSize; $i++)
                         {
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
@@ -403,7 +404,7 @@ class TimeCardController extends BaseActiveController
                  */
                 elseif (PermissionsController::can('timeCardGetAllCards'))
                 {
-					$allTheProjects = [""=>"All"];
+					$projectAllOption = [""=>"All"];
                 }
 				else
 				{
@@ -456,6 +457,8 @@ class TimeCardController extends BaseActiveController
             $allTheProjects = array_unique($allTheProjects);
             //abc order for all
             asort($allTheProjects);
+			//appened all option to the front
+			$allTheProjects = array_merge($projectAllOption, $allTheProjects);
 		  
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
