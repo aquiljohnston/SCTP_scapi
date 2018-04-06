@@ -526,20 +526,20 @@ class TimeCardController extends BaseActiveController
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$timeCardName);
 
-       
- 			
- 				$responseArray = BaseActiveRecord::getDb();
+
+            //WRAP DB IN ITS OWN TRY CATCH SINCE IT IS A GENERAL "CATCH-ALL" EXCEPTION TYPE
+       		try{
+       			$responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName',$arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();  
-
-				//error_log(print_r($responseArray->count(),true));
-            
-
-                //if we have an empty file set
-                //send emtpy file message
+       			} catch(\Exception $e) {
+    	        Yii::trace('PDO EXCEPTION'.$e->getMessage());
+        	    throw new yii\db\Exception;
+ 	       }
+ 	
 				if($responseArray->count() !=0){
 
 					$writeTimeCardFile = true;
@@ -601,7 +601,7 @@ class TimeCardController extends BaseActiveController
                 $response -> data 				= $fileResponse;
             }
 
-        } catch(\Exception $e) {
+        } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
        } catch(\Exception $e) {
@@ -640,14 +640,21 @@ class TimeCardController extends BaseActiveController
             Yii::trace("JSONESSEX-WS ".$weekStart);
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$cardName);
-    
- 		
-                $responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$responseArray = $getEventsCommand->query();  
+    		
+    		//
+ 			try{
+	                $responseArray = BaseActiveRecord::getDb();
+					$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
+					$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
+					$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
+					$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
+					$responseArray = $getEventsCommand->query(); 
+				} catch(\Exception $e) {
+	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
+	            	throw new yii\db\Exception;
+        	}
+
+
 
 			//error_log(print_r($responseArray->count(),true));
 				if($responseArray->count() !=0){
@@ -668,7 +675,7 @@ class TimeCardController extends BaseActiveController
           	  }
 
       	
-        } catch(\Exception $e) {
+        } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
@@ -707,13 +714,18 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
             Yii::trace("JSONESSEX-CN ".$adpFileName);
             
    
- 		
+ 			try{
                 $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject_Dev201804 :projectName,:weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$responseArray = $getEventsCommand->query();  
+				$responseArray = $getEventsCommand->query();
+				} catch(\Exception $e) {
+	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
+	            	throw new yii\db\Exception;
+        	}
+  
 				
 
 				if($responseArray->count() !=0){
@@ -734,7 +746,7 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
           	  }
 
       	
-        } catch(\Exception $e) {
+        } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
@@ -762,7 +774,6 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
 
             Yii::trace("RESETPROCESSCALLED");  
 
- 		
                 $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetSubmitFlag :projectName,:weekStart,:weekEnd,:process");
 				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
@@ -775,7 +786,7 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
              	$response -> data 	= $status;	
 
         } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
+            Yii::trace('PDO EXCEPTION: '.$e->getMessage());
             throw new \yii\web\HttpException(400);
        }
     }
