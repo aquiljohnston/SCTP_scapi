@@ -640,7 +640,7 @@ class RbacController extends Controller
         $accountant = $auth->createRole('Accountant');
         $auth->add($accountant);
 		//add child roles
-		//$auth->addChild($supervisor, $technician);
+		$auth->addChild($accountant, $technician);
 		//add permissions
 		$auth->addChild($accountant, $mileageCardView);
 		$auth->addChild($accountant, $mileageCardApprove);
