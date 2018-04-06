@@ -658,6 +658,8 @@ class RbacController extends Controller
 		$auth->addChild($accountant, $timeEntryView);
 		$auth->addChild($accountant, $timeEntryCreate);
 		$auth->addChild($accountant, $timeEntryDeactivate);
+		$auth->addChild($accountant, $mileageCardGetAllCards);
+		$auth->addChild($accountant, $timeCardGetAllCards);
 		// menu permissions
 		$auth->addChild($accountant, $viewAdministrationMenu);
 		$auth->addChild($accountant, $viewHomeMenu);
