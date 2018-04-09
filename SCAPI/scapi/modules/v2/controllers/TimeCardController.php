@@ -13,6 +13,7 @@ use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
 use app\modules\v2\models\TimeCardEventHistory;
+use app\modules\v2\models\AccountantSubmit;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\authentication\TokenAuth;
@@ -59,6 +60,7 @@ class TimeCardController extends BaseActiveController
 					'get-time-cards-history-data' => ['get'],
 					'get-payroll-data' => ['get'],
 					'show-entries' => ['get'],
+					'get-accountant-view' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -368,14 +370,6 @@ class TimeCardController extends BaseActiveController
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]); 
 
-			//get current user
-            $userID = self::getUserFromToken()->UserID;
-			//get user project relations array
-			$projects = ProjectUser::find()
-				->where("ProjUserUserID = $userID")
-				->all();
-			$projectsSize = count($projects);
-
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client))
             {
@@ -460,17 +454,9 @@ class TimeCardController extends BaseActiveController
                     ['TimeCardProjectID' => $projectID],
                 ]);
             }
-			
-            //iterate and stash project name
-            foreach ($dropdownRecords as $p) {
-     			$allTheProjects[$p['TimeCardProjectID']] = $p['ProjectName'];
-            }
-            //remove dupes
-            $allTheProjects = array_unique($allTheProjects);
-            //abc order for all
-            asort($allTheProjects);
-			//appened all option to the front
-			$allTheProjects = $projectAllOption + $allTheProjects;
+
+			//get project list for dropdown based on time cards available
+			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $projectAllOption);
 		  
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
@@ -504,6 +490,88 @@ class TimeCardController extends BaseActiveController
 		   throw new \yii\web\HttpException(400);
 		}
     }
+	
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
+	{
+		try{
+			//url decode filter value
+            $filter = urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
+			
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			//response array of time cards
+            $timeCards = [];
+            $responseArray = [];
+			$allTheProjects = [""=>"All"];
+			$showProjectDropDown = true;
+			//used to get current week if date range falls in the middle of the week
+			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
+			
+			//build base query
+            $cardQuery = AccountantSubmit::find()
+				->where(['between', 'StartDate', $startDate, $endDate])
+                ->orWhere(['between', 'EndDate', $startDate, $endDate])                
+                ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);              
+			
+			//get records for project dropdown(timing for this execution is very important)
+			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+			
+			//add project filter
+			if($projectID!= null) 
+			{
+                $cardQuery->andFilterWhere([
+                    'and',
+                    ['ProjectID' => $projectID],
+                ]);
+            }
+			
+			//add search filter
+			if($filter != null) 
+			{
+                $cardQuery->andFilterWhere([
+                    'or',
+                    ['like', 'ProjectName', $filter],
+                    ['like', 'ProjectManager', $filter],
+                    ['like', 'ApprovedBy', $filter],
+                ]);
+            }
+			
+			//get project list for dropdown based on time cards available
+			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $allTheProjects);
+			
+			//paginate
+			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
+            $timeCards = $paginationResponse['Query']->orderBy('ProjectName, StartDate')->all(BaseActiveRecord::getDb());
+			
+			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
+			//this check seems to have some issue and is only currently being applied to the post filter data set.
+			$projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCards);
+
+            $responseArray['assets'] = $timeCards;
+            $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
+
+			$response->data = $responseArray;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
 
     public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
     {
@@ -820,9 +888,13 @@ class TimeCardController extends BaseActiveController
         $allAssetsCount = count($timeCardsArr);
         $submittedCount = 0;
         $allSubmitted   = FALSE;
-
-        foreach ($timeCardsArr as $item){
-            if ($item['TimeCardOasisSubmitted'] == "Yes" && $item['TimeCardQBSubmitted'] == "Yes" ){
+		
+        foreach ($timeCardsArr as $item)
+		{
+			$oasisKey = array_key_exists('TimeCardOasisSubmitted', $item) ? 'TimeCardOasisSubmitted' : 'OasisSubmitted';
+			$qbKey = array_key_exists('TimeCardQBSubmitted', $item) ? 'TimeCardQBSubmitted' : 'QBSubmitted';
+			
+            if ($item[$oasisKey] == "Yes" && $item[$qbKey] == "Yes" ){
                 $submittedCount++;
             }
         }
@@ -891,6 +963,25 @@ class TimeCardController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	private function extractProjectsFromTimeCards($dropdownRecords, $projectAllOption)
+	{
+		//iterate and stash project name $p['TimeCardProjectID']
+		foreach ($dropdownRecords as $p) {
+			//currently only two option exist for key would have to update this if more views/tables/functions use this function
+			$key = array_key_exists('TimeCardProjectID', $p) ? $p['TimeCardProjectID'] : $p['ProjectID'];
+			$value = $p['ProjectName'];
+			$allTheProjects[$key] = $value;
+		}
+		//remove dupes
+		$allTheProjects = array_unique($allTheProjects);
+		//abc order for all
+		asort($allTheProjects);
+		//appened all option to the front
+		$allTheProjects = $projectAllOption + $allTheProjects;
+		
+		return $allTheProjects;
+	}
 	
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null)
 	{
