@@ -520,20 +520,15 @@ class TimeCardController extends BaseActiveController
             //response array of time cards
             $timeCardsArr 					= [];
             //$selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
-            $arrayProjectName 				= [];
-            $arrayProjectName[] 			= $projectName;
 
-
-           // var_dump(json_encode($arrayProjectName)); exit();
-
-            $arrayProjectName 				= json_encode($arrayProjectName);
+            $arrayProjectName 				= $projectName;
             $writeTimeCardFile				= false;
             $fileResponse 					= [];
             $fileResponse['was_written'] 	=  false;
             $fileResponse['type']		=  'Exception'; 
 
             Yii::trace("JSONESSEX-TIMECARDHIS");            
-            Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
+           // Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
             Yii::trace("JSONESSEX-WS ".$weekStart);
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$timeCardName);
@@ -542,14 +537,14 @@ class TimeCardController extends BaseActiveController
             //WRAP DB IN ITS OWN TRY CATCH SINCE IT IS A GENERAL "CATCH-ALL" EXCEPTION TYPE
        		try{
        			$responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName,:weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName',$arrayProjectName,  \PDO::PARAM_STR);
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName, :weekStart,:weekEnd");
+				$getEventsCommand->bindParam(':projectName',$projectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();  
        			} catch(\Exception $e) {
     	        Yii::trace('PDO EXCEPTION'.$e->getMessage());
-        	    throw new yii\db\Exception;
+        	    throw new \yii\web\HttpException(400);
  	       }
  	
 				if($responseArray->count() !=0){
@@ -635,22 +630,16 @@ class TimeCardController extends BaseActiveController
             //format response
             $response = Yii::$app->response;
             $response-> format = Response::FORMAT_JSON;
-
-            $arrayProjectName = [];
-            $arrayProjectName[] = $projectName;
             $responseArray = [];
 
 
-           // var_dump(json_encode($arrayProjectName)); exit();
-
-            $arrayProjectName 				= json_encode($arrayProjectName);
             $writePayrollFile				= false;
             $fileResponse 					= [];
             $fileResponse['was_written'] 	=  FALSE;
             $fileResponse['type']		=  'Exception'; 	
 
             Yii::trace("JSONESSEX-PAYCARDHIS");  
-            Yii::trace("JSONESSEX-PR ".$arrayProjectName);
+            //Yii::trace("JSONESSEX-PR ".$arrayProjectName);
             Yii::trace("JSONESSEX-WS ".$weekStart);
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$cardName);
@@ -658,14 +647,14 @@ class TimeCardController extends BaseActiveController
     		//
  			try{
 	                $responseArray = BaseActiveRecord::getDb();
-					$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName,:weekStart,:weekEnd");
-					$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
+					$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName, :weekStart,:weekEnd");
+					$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
 					$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 					$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 					$responseArray = $getEventsCommand->query(); 
 				} catch(\Exception $e) {
 	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
-	            	throw new yii\db\Exception;
+	            	throw new \yii\web\HttpException(400);
         	}
 
 
@@ -712,18 +701,14 @@ class TimeCardController extends BaseActiveController
             $response = Yii::$app->response;
             $response-> format = Response::FORMAT_JSON;
 
-            $arrayProjectName = [];
             $writeADPFile	= false;
-            $arrayProjectName[] = $projectName;
             $responseArray = [];
-
-            $arrayProjectName 				= json_encode($arrayProjectName);
             $fileResponse 					= [];
             $fileResponse['was_written'] 	=  FALSE;
             $fileResponse['message']		=  'Empty ADP File'; 	
 
             Yii::trace("JSONESSEX-ADPHIS");  
-            Yii::trace("JSONESSEX-PR ".$arrayProjectName);
+            //Yii::trace("JSONESSEX-PR ".$arrayProjectName);
             Yii::trace("JSONESSEX-WS ".$weekStart);
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$adpFileName);
@@ -731,14 +716,14 @@ class TimeCardController extends BaseActiveController
    
  			try{
                 $responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject_Dev201804 :projectName,:weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject_Dev201804 :projectName, :weekStart,:weekEnd");
+				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$responseArray = $getEventsCommand->query();
 				} catch(\Exception $e) {
 	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
-	            	throw new yii\db\Exception;
+	            	throw new \yii\web\HttpException(400);
         	}
   
 				
@@ -783,16 +768,14 @@ class TimeCardController extends BaseActiveController
             $response 			= Yii::$app->response;
             $response-> format 	= Response::FORMAT_JSON;
 
-            $arrayProjectName[] = $projectName;
             $responseArray 		= [];
 
-            $arrayProjectName 	= json_encode($arrayProjectName);
 
             Yii::trace("RESETPROCESSCALLED");  
 
                 $responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetSubmitFlag :projectName,:weekStart,:weekEnd,:process");
-				$getEventsCommand->bindParam(':projectName', $arrayProjectName,  \PDO::PARAM_STR);
+				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':process', $process,  \PDO::PARAM_STR);
