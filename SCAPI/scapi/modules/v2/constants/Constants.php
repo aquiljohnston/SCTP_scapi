@@ -31,7 +31,13 @@ final class Constants
 	const OASIS = "OASIS";
 	const QUICKBOOKS = "QB";
 	const ADP = "ADP";
-
+	
+	//Time Card Event History Types
+	const TIME_CARD_APPROVAL = 'Approval';
+	const TIME_CARD_SUBMISSION_OASIS = 'Oasis Submission';
+	const TIME_CARD_SUBMISSION_QB = 'QB Submission';
+	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
+	const TIME_CARD_SUBMISSION_RESET = 'RESET Submission';
 	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',

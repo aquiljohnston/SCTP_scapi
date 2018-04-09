@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\TimeCard;
 use app\modules\v2\models\TimeEntry;
 use app\modules\v2\models\SCUser;
@@ -11,6 +12,7 @@ use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
+use app\modules\v2\models\TimeCardEventHistory;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\authentication\TokenAuth;
@@ -140,6 +142,9 @@ class TimeCardController extends BaseActiveController
 			//get userid
 			$approvedBy = self::getUserFromToken()->UserName;
 			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Time Card Approve', $approvedBy, BaseActiveController::urlPrefix());
+			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
 			$approvedCards = []; // Prevents empty array from causing crash
@@ -159,8 +164,11 @@ class TimeCardController extends BaseActiveController
 					$card->TimeCardApprovedFlag = 1;
 					$card->TimeCardApprovedBy = $approvedBy;
 					$card->update();
+					//log approvals
+					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card->TimeCardID);
 				}
 				$transaction->commit();
+				//log approval of cards
 				$response->setStatusCode(200);
 				$response->data = $approvedCards;
 				return $response;
@@ -170,6 +178,8 @@ class TimeCardController extends BaseActiveController
 			catch(\Exception $e) //if transaction fails rollback changes and send error
 			{
 				$transaction->rollBack();
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 				return $response;
@@ -178,6 +188,8 @@ class TimeCardController extends BaseActiveController
 		}
 		catch(\Exception $e)  
 		{
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -600,6 +612,8 @@ class TimeCardController extends BaseActiveController
               	$fileResponse['type']			=  'Nothing to do.'; 	
                 $response -> data 				= $fileResponse;
             }
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_OASIS, null, $weekStart, $weekEnd);
 
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
@@ -673,7 +687,8 @@ class TimeCardController extends BaseActiveController
              	$fileResponse['type']		=  'nothing to do'; 	
              	$response -> data = $fileResponse;
           	  }
-
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_QB, null, $weekStart, $weekEnd);
       	
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
@@ -685,7 +700,7 @@ class TimeCardController extends BaseActiveController
     }
 
      
-public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
+	public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
     {
 
         // RBAC permission check is embedded in this action
@@ -744,7 +759,8 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
              	$fileResponse['type']		=  'nothing to do'; 	
              	$response -> data = $fileResponse;
           	  }
-
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_ADP, null, $weekStart, $weekEnd);
       	
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
@@ -784,7 +800,10 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
 
 				$status['success']	= true;	
              	$response -> data 	= $status;	
-
+			
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_RESET, null, $weekStart, $weekEnd);
+			
         } catch(\Exception $e) {
             Yii::trace('PDO EXCEPTION: '.$e->getMessage());
             throw new \yii\web\HttpException(400);
@@ -889,4 +908,31 @@ public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$week
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null)
+	{
+		try
+		{
+			//create and populate model
+			$historyRecord = new TimeCardEventHistory;
+			$historyRecord->Date = BaseActiveController::getDate();
+			$historyRecord->Name = self::getUserFromToken()->UserName;
+			$historyRecord->Type = $type;
+			$historyRecord->TimeCardID = $timeCardID;
+			$historyRecord->StartDate = $startDate;
+			$historyRecord->EndDate = $endDate;
+			
+			//save
+			if(!$historyRecord->save())
+			{
+				//throw error on failure
+				throw BaseActiveController::modelValidationException($newInspection);
+			}
+		}
+		catch(\Exception $e)
+		{
+			//catch and log errors
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+		}
+	}
 }
