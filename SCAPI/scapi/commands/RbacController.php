@@ -665,6 +665,7 @@ class RbacController extends Controller
 		$auth->addChild($accountant, $viewHomeMenu);
 		$auth->addChild($accountant, $viewTimeCardMgmt);
 		$auth->addChild($accountant, $viewMileageCardMgmt);
+		$auth->addChild($accountant, $viewReportsMenu);
 
 
 
