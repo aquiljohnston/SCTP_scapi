@@ -21,6 +21,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
 use app\modules\v2\controllers\DispatchController;
+use app\modules\v2\controllers\TaskController;
 use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
