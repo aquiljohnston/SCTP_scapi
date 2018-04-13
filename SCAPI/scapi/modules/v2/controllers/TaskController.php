@@ -53,7 +53,6 @@ class TaskController extends Controller
 
 			return $data;
 		}catch(\Exception $e){
-			BaseActiveController::archiveWebErrorJson('GetProjectTask', $e, getallheaders()['X-Client']);
             return [];
 		}
 	}
