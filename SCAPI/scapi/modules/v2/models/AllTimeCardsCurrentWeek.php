@@ -15,7 +15,7 @@ use Yii;
  * @property string $TimeCardStartDate
  * @property string $TimeCardEndDate
  * @property string $TimeCardApprovedBy
- * @property string $TimeCardApproved
+ * @property integer $TimeCardApproved
  * @property string $UserStatus
  * @property integer $TimeCardProjectID
  */
@@ -36,8 +36,8 @@ class AllTimeCardsCurrentWeek extends BaseActiveRecord
     {
         return [
             [['UserID', 'TimeCardID', 'UserStatus'], 'required'],
-            [['UserID', 'TimeCardID', 'TimeCardProjectID'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedBy', 'TimeCardApproved', 'UserStatus'], 'string'],
+            [['UserID', 'TimeCardID', 'TimeCardProjectID', 'TimeCardApproved'], 'integer'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedBy', 'UserStatus'], 'string'],
             [['TimeCardStartDate', 'TimeCardEndDate'], 'safe'],
         ];
     }
