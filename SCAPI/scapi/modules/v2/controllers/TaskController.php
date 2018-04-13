@@ -39,20 +39,23 @@ class TaskController extends Controller
 		return $behaviors;	
 	}
 	
-	//does this need to be public?
+	//want to make get lowercase..
 	public static function GetProjectTask($projectID)
 	{
-        //set db target
-        TaskAndProject::setClient(BaseActiveController::urlPrefix());
+		try{
+			//set db target
+			TaskAndProject::setClient(BaseActiveController::urlPrefix());
 
-        $responseArray = [];
-        $data = TaskAndProject::find()
-            ->where(['projectID' => $projectID])
-            ->asArray()
-            ->all();
+			$data = TaskAndProject::find()
+				->where(['projectID' => $projectID])
+				->asArray()
+				->all();
 
-        $responseArray = $data != null ? $data : [];
-		return $responseArray;
+			return $data;
+		}catch(\Exception $e){
+			BaseActiveController::archiveWebErrorJson('GetProjectTask', $e, getallheaders()['X-Client']);
+            return [];
+		}
 	}
 	
 	/*
