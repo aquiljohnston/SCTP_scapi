@@ -572,6 +572,35 @@ class TimeCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	{
+		try
+		{
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			$detailsQuery = new Query;
+            $timeCards = $detailsQuery->select('*')
+                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+				->where(['TimeCardProjectID' => $projectID])
+				->all(BaseActiveRecord::getDb());
+				
+			//format response
+			$responseArray['details'] = $timeCards;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
 
     public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
     {
