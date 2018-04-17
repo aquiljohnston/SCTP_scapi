@@ -267,9 +267,6 @@ class TimeCardController extends BaseActiveController
 			
 			$response = Yii::$app ->response;
 			$dataArray = [];
-			$timeCard = TimeCard::findOne($cardID);
-			
-
 			
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')

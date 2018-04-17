@@ -31,6 +31,7 @@ final class Constants
 	const OASIS = "OASIS";
 	const QUICKBOOKS = "QB";
 	const ADP = "ADP";
+	const OT_PAYROLL_HOURS_ID = 5110;
 	
 	//Time Card Event History Types
 	const TIME_CARD_APPROVAL = 'Approval';
