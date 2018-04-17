@@ -102,11 +102,15 @@ class TaskController extends Controller
      * Get ChargeOfAccountType From CT DB
      * @return mixed
      */
-    public function actionGetChargeOfAccountType(){
+    public function actionGetChargeOfAccountType($inOvertime = 'false'){
         //set db target
         ChartOfAccountType::setClient(BaseActiveController::urlPrefix());
-
-        $chartOfAccountType = ChartOfAccountType::find()
+		
+		$chartOfAccountQuery = ChartOfAccountType::find();
+		
+		if($inOvertime == 'true') $chartOfAccountQuery->where(['ChartOfAccountID' => Constants::OT_PAYROLL_HOURS_ID]);
+        
+		$chartOfAccountType = $chartOfAccountQuery
             ->all();
 
         $namePairs = [];
