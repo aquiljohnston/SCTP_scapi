@@ -177,8 +177,7 @@ class BaseActiveController extends ActiveController
                 || strpos($_SERVER['SERVER_NAME'],'192.168.')===0)
         )
         {
-            //$prefix = 'apidev';
-			$prefix = 'azureapi';
+            $prefix = 'apidev';
         }
 		return $prefix;
 	}
@@ -236,6 +235,7 @@ class BaseActiveController extends ActiveController
 		$archiveError->InsertedData5 = json_encode($data5);
 		$archiveError->ErrorNumber = $error->getCode();
 		$archiveError->ErrorMessage = $error->getMessage();
+		//may want to add error->getFile, error->getLine to this log to narrow down cause as ErrorLocation?
 		
 		$archiveError->save();
 	}
@@ -310,6 +310,66 @@ class BaseActiveController extends ActiveController
             fwrite($fp, implode(',', $row) . "\r\n");
         }
         fclose($fp);
+    }
+
+     public static function processAndWriteCsv($reader,$cardName,$type=null){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $success = false;
+
+         if(YII_ENV_DEV)
+        {
+        		switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::DEV_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::DEV_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+			       $filePath = Constants::DEV_DEFAULT_ADP_PATH;
+			        break;
+			}
+           
+        } else {
+        		switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::PROD_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+			       $filePath = Constants::PROD_DEFAULT_ADP_PATH;
+			        break;
+			}
+        }
+
+        $firstLine 	= true;
+        $fp2 		= fopen($filePath.$cardName.".csv",'w+');
+
+        while($row2 = $reader->read()){
+
+            if($firstLine) {
+                $firstLine = false;
+                fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+            }
+            fwrite($fp2, implode(',', $row2) . "\r\n");
+        }
+
+        fclose($fp2);
+        chmod($filePath.$cardName.".csv", 0777);
+
+        if (file_exists($filePath.$cardName.".csv")) {
+                     Yii::trace("SKITTLE ".$filePath.$cardName.".csv" ."exists");
+             } else {
+                    Yii::trace("SKITTLE".$filePath.$cardName.".csv" ."exists");
+             }
+
+        $success = true;
+        Yii::trace("DOOK: ".$success);
+        return $success;
+
     }
 	
 	public static function isSCCT($client)

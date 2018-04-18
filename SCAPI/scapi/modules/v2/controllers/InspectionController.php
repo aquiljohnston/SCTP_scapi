@@ -466,13 +466,13 @@ class InspectionController extends Controller
 			{
 				//get workOrder by work queue id
 				$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
-				//get all work queues for work order
-				$workQueueArray = WorkQueue::find()
-					->where(['WorkOrderID' => $workOrder->ID])
-					->all();
 				// check if work order was found and not completed yet
 				if($workOrder !== null && $workOrder->CompletedFlag != 1)
 				{
+					//get all work queues for work order
+					$workQueueArray = WorkQueue::find()
+						->where(['WorkOrderID' => $workOrder->ID])
+						->all();
 					//set work order id for response
 					$workOrderID = $workOrder->ID;
 					if(count($workQueueArray) > 1) {
@@ -587,7 +587,7 @@ class InspectionController extends Controller
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($client)->UserID, $client);
+			BaseActiveController::archiveJson($body, 'InspectionUpdate', BaseActiveController::getClientUser($client)->UserName, $client);
 			
 			$inspectionData = $data['activity'][0]['Inspection'];
 			
@@ -628,11 +628,21 @@ class InspectionController extends Controller
 								$responseData['activity'][0]['Inspection']['Asset'] = self::processAsset($inspectionData['Asset'], $client, $inspectionID);
 							//get workOrder by work queue id
 							$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
-							//update event indicator
-							if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
+							if($workOrder != null)
 							{
-								$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
-							}	
+								//update event indicator
+								if($workOrder->EventIndicator != Constants::WORK_ORDER_CGE)
+								{
+									$responseData['activity'][0]['Inspection']['WorkOrder'] = self::updateEventIndicator($inspectionData, $workOrder);
+								}
+								else
+								{
+									$responseData['activity'][0]['Inspection']['WorkOrder'] = [
+										'ID' =>$workOrder->ID,
+										'SuccessFlag' => 1
+									];
+								}
+							}
 						}
 						else
 						{
@@ -683,7 +693,7 @@ class InspectionController extends Controller
 			$data = json_decode($body, true);
 			
 			//archive json data
-			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($client)->UserID, $client);
+			BaseActiveController::archiveJson($body, 'ClearEvent', BaseActiveController::getClientUser($client)->UserName, $client);
 			
 			//create response format
 			$responseData = [];

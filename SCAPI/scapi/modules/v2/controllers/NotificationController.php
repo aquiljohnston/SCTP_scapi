@@ -42,8 +42,8 @@ class NotificationController extends Controller
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'get-notifications' => ['get']
-                    'get-notifications-landing' => ['get']
+                    'get-notifications' => ['get'],
+                    'get-notifications-landing' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -66,14 +66,10 @@ class NotificationController extends Controller
 			
 			//build response structure and instantiate variables
 			$notifications = [];
-			$notifications['firstName'] = $user->UserFirstName;
-			$notifications['lastName'] = $user->UserLastName;
 			$notifications['notifications'] = [];
 			$notifications['timeCards'] = [];
-			$notifications['mileageCards'] = [];
 			$notificationTotal = 0;
 			$timeCardTotal = 0;
-			$mileageCardTotal = 0;
 			
 			if(BaseActiveController::isSCCT($client))
 			{
@@ -104,14 +100,9 @@ class NotificationController extends Controller
 				//cast string results from sql counts to int values
 				//get count of unapproved time cards from last week for project
 				$timeCardCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
-					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 'No'"])
+					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 0"])
 					->count();
-				
-				//get count of unapproved mileage cards from last week for project
-				$mileageCardCount = (int)MileageCardSumMilesPriorWeekWithProjectName::find()
-					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 'No'"])
-					->count();
-				
+
 				//get count of notifications
 				if($projectUrlPrefix != null)
 				{
@@ -128,34 +119,26 @@ class NotificationController extends Controller
 
 				//pass time card data for project
 				$timeCardData['Project'] = $projectName;
+				$timeCardData['ProjectID'] = $projectID;
 				$timeCardData['Number of Items'] = $timeCardCount;
-
-				//pass mileage card data for project
-				$mileageCardData['Project'] = $projectName;
-				$mileageCardData['Number of Items'] = $mileageCardCount;
 
 				//pass notification data for project
 				$notificationData['Project'] = $projectName;
+				$notificationData['ProjectID'] = $projectID;
 				$notificationData['Number of Items'] = $notificationCount;
 				
 				//append data to response array
 				$notifications['timeCards'][] = $timeCardData;
-				$notifications['mileageCards'][] = $mileageCardData;
 				$notifications['notifications'][] = $notificationData;
 
 				//increment total counts
 				$timeCardTotal += $timeCardCount;
-				$mileageCardTotal += $mileageCardCount;
 				$notificationTotal += $notificationCount;
 			}
 
 			//pass time card data for total
 			$timeCardData['Project'] = 'Total';
 			$timeCardData['Number of Items'] = $timeCardTotal;
-
-			//pass mileage card data for total
-			$mileageCardData['Project'] = 'Total';
-			$mileageCardData['Number of Items'] = $mileageCardTotal;
 
 			//pass notification data for total
 			$notificationData['Project'] = 'Total';
@@ -164,7 +147,6 @@ class NotificationController extends Controller
 			//append totals to response array
 			$notifications['notifications'][] = $notificationData;
 			$notifications['timeCards'][] = $timeCardData;
-			$notifications['mileageCards'][] = $mileageCardData;
 
 
 			//send response
@@ -180,18 +162,19 @@ class NotificationController extends Controller
         }
     }
 
+	//get notification data for the active client based on urlprefix
+	//not sure if we need to change this to pass a desired project in the future
+	//notifications appear to be stored per project on the client dbs
     public function actionGetNotificationLanding($filter = null, $listPerPage = 50, $page = 1)
     {
         try {
             //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //get user
-            $userID = BaseActiveController::getUserFromToken()->UserID;
-            $user = SCUser::findOne($userID);
+            $user = BaseActiveController::getUserFromToken();
 
             $projectHasNotification = false;
-            $projectNameHasNotification = null;
             $notificationData = [];
 
             //get projects the user belongs to
@@ -200,62 +183,45 @@ class NotificationController extends Controller
                 return $model->attributes;
             }, $projectData);
             $projectSize = count($projectArray);
+		
+			PermissionsController::requirePermission('notificationsGet');
 
-            // check if login user is Engineer
-            if ($user->UserAppRoleType != "Engineer") {
+			//load data into array
+			$notifications = [];
+			$notifications['firstName'] = $user->UserFirstName;
+			$notifications['lastName'] = $user->UserLastName;
+			$notifications['notification'] = [];
+			$responseArray = [];
 
-                PermissionsController::requirePermission('notificationsGet');
+			//set db
+			$headers = getallheaders();
+			BaseActiveRecord::setClient($headers['X-Client']);
 
-                //load data into array
-                $notifications = [];
-                $notifications["firstName"] = $user->UserFirstName;
-                $notifications["lastName"] = $user->UserLastName;
-                $notifications["notification"] = [];
-                $responseArray = [];
+			//get notification for project
+			$notificationData = Notification::find();
 
-                //loop projects to get data
-                for ($i = 0; $i < $projectSize; $i++) {
-                    $projectName = $projectArray[$i]["ProjectName"];
+			if ($filter != null) {
+				$notificationData->andFilterWhere([
+					'or',
+					['like', 'NotificationType', $filter],
+					['like', 'SrvDTLT', $filter],
+				]);
+			}
+			$orderBy = 'SrvDTLT';
+			//pass query with pagination data to helper method
+			$paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
+			//use updated query with pagination caluse to get data
+			$data = $paginationResponse['Query']->orderBy($orderBy)
+				->all();
+			$responseArray['pages'] = $paginationResponse['pages'];
+			$responseArray['notification'] = $data;
 
-                    //check if the user associated with yorkDev
-                    if ($projectName == "York Dev") {
-                        $projectHasNotification = true;
-                    }
-                }
-
-                if ($projectHasNotification) {
-                    //set db
-                    $headers = getallheaders();
-                    BaseActiveRecord::setClient($headers['X-Client']);
-
-                    //get notification for project
-                    $notificationData = Notification::find();
-
-                    if ($filter != null) {
-                        $notificationData->andFilterWhere([
-                            'or',
-                            ['like', 'NotificationType', $filter],
-                            ['like', 'SrvDTLT', $filter],
-                        ]);
-                    }
-                    if ($page != null) {
-                        $orderBy = 'SrvDTLT';
-                        //pass query with pagination data to helper method
-                        $paginationResponse = BaseActiveController::paginationProcessor($notificationData, $page, $listPerPage);
-                        //use updated query with pagination caluse to get data
-                        $data = $paginationResponse['Query']->orderBy($orderBy)
-                            ->all();
-                        $responseArray['pages'] = $paginationResponse['pages'];
-                        $responseArray['notification'] = $data;
-                    }
-                }
-
-                //send response
-                $response = Yii::$app->response;
-                $response->format = Response::FORMAT_JSON;
-                $response->data = $responseArray;
-                return $response;
-            }
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+			
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
