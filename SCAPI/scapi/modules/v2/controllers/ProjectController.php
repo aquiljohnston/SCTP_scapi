@@ -399,8 +399,8 @@ class ProjectController extends BaseActiveController
     */	
 	public function actionAddRemoveUsers($projectID)
 	{
-		//try
-		//{
+		try
+		{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
@@ -442,10 +442,11 @@ class ProjectController extends BaseActiveController
                     //create user in project db
                     if(UserController::createInProject($user,$project->ProjectUrlPrefix,$projectID))
 					{
-						//reset target db after external call
-						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+						
 						//fucntion call to add to project
 						self::addToProject($user, $project);
+						//reset target db after external call
+						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					}
                 }
             }
@@ -483,7 +484,7 @@ class ProjectController extends BaseActiveController
 			$response -> data = $data;
 			
 			return $response;
-		/*}
+		}
 		catch(ForbiddenHttpException $e)
 		{
 			throw new ForbiddenHttpException;
@@ -491,7 +492,7 @@ class ProjectController extends BaseActiveController
 		catch(\Exception $e)  
 		{
 			throw new \yii\web\HttpException(400);
-		}*/
+		}
 	}
 	
 	public static function addToProject($user, $project = null)
