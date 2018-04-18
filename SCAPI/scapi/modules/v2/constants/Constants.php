@@ -17,6 +17,27 @@ final class Constants
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
+	const DEV_DEFAULT_QB_PATH = "C:\\ClientShare\\QuickBooks\\";
+	const DEV_DEFAULT_OASIS_PATH = "C:\\ClientShare\\Oasis\\";
+	const DEV_DEFAULT_ADP_PATH = "C:\\ClientShare\\ADP\\";
+	//const DEV_DEFAULT_OASIS_PATH = "/Users/Shared/";
+	//const DEV_DEFAULT_ADP_PATH = "/Users/Shared/";
+	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
+	
+	const PROD_DEFAULT_OASIS_PATH = "K:\\Oasis\\";
+	const PROD_DEFAULT_QB_PATH = "K:\\QuickBooks\\";
+	const PROD_DEFAULT_ADP_PATH = "K:\\ADP\\";
+
+	const OASIS = "OASIS";
+	const QUICKBOOKS = "QB";
+	const ADP = "ADP";
+	
+	//Time Card Event History Types
+	const TIME_CARD_APPROVAL = 'Approval';
+	const TIME_CARD_SUBMISSION_OASIS = 'Oasis Submission';
+	const TIME_CARD_SUBMISSION_QB = 'QB Submission';
+	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
+	const TIME_CARD_SUBMISSION_RESET = 'Reset Submission';
 	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',
@@ -97,18 +118,10 @@ final class Constants
 		'DEV_HEADER' => 'demo',
 		'DEV_DB' => 'demoDb',
 		'AUTH' => self::CLIENT_DB_MANAGER,
-		'ASSET' => self::BASE_ASSET,
+		'ASSET' => 'app\modules\v2\models\DemoAsset',
 		'EVENT' => 'app\modules\v2\models\DemoEvent',
 		'USER' => self::BASE_USER
 	];
-	
-	//azure test database
-	const AZURE_TEST = 'azure';
-	//beta models
-	const AZURE_USER = self::BASE_USER;
-	const AZURE_EVENT = self::BASE_EVENT;
-	//beta auth manager
-	const AZURE_AUTH = self::CLIENT_DB_MANAGER;
 	
 	//work queue status codes
 	const WORK_QUEUE_ASSIGNED = 100;

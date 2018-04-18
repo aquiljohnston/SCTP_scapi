@@ -21,6 +21,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
 use app\modules\v2\controllers\DispatchController;
+use app\modules\v2\controllers\TaskController;
 use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -560,7 +561,7 @@ class UserController extends BaseActiveController
 				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
 				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
-				$projectTask = Yii::$app->runAction('v2/task/get-project-task');
+				$projectTask = TaskController::GetProjectTask($projectID);//Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
 				
 				//set client back to ct after external call
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -572,6 +573,7 @@ class UserController extends BaseActiveController
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
+				$projectData['ProjectMinimumAppVersion'] = $projectModel->ProjectMinimumAppVersion;
 				$projectData['ProjectTask'] = $projectTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
