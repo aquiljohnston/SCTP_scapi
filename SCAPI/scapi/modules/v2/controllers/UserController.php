@@ -737,23 +737,42 @@ class UserController extends BaseActiveController
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
 	returns ???*/
-	public static function createInProject($user, $client)
+	public static function createInProject($user, $client,$projectID=null)
 	{
+
+
+            if($projectID != null){
+            $project = Project::findOne($projectID);
+            $userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+            $userModel::setClient($project->ProjectUrlPrefix);
+        }
+        else{
+            $userModel = BaseActiveRecord::getUserModel($client);
+            $userModel::setClient($client);
+        }
+       
+
 		//get user model based on project 
-		$userModel = BaseActiveRecord::getUserModel($client);
+		//$userModel = BaseActiveRecord::getUserModel($client);
 		if($userModel == null) return 'No Client User Model Found.';
-        $userModel::setClient($client);
-		
+        
+
+        $isAssigned = $project->getUsers()
+                ->where(['ProjUserUserID' => $user->UserID ]);
+
 		//check if user exist in project
-		$existingUser = $userModel::find()
+		$userToAdd= $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-		if($existingUser != null) 
-		{
+         
+		if($isAssigned == null) 
+		{ 
 			//need to confirm association to project here as well
-			ProjectController::addToProject($existingUser);
-			return 'User Already Exist in Project.';
-		}
+			ProjectController::addToProject($userToAdd,$project);
+		
+		} else {
+                return 'User Already Exist in Project.';
+        }
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();
