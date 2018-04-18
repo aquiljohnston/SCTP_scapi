@@ -574,6 +574,9 @@ class UserController extends BaseActiveController
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
 				$projectData['ProjectMinimumAppVersion'] = $projectModel->ProjectMinimumAppVersion;
+				$projectData['ProjectActivityGPSInterval'] = $projectModel->ProjectActivityGPSInterval;
+				$projectData['ProjectSurveyGPSInterval'] = $projectModel->ProjectSurveyGPSInterval;
+				$projectData['ProjectSurveyGPSMinDistance'] = $projectModel->ProjectSurveyGPSMinDistance;
 				$projectData['ProjectTask'] = $projectTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
