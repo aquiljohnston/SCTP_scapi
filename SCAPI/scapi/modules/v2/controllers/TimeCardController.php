@@ -599,7 +599,7 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 
-    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
+    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $write=false,$type=null, $data=null)
     {
         // RBAC permission check is embedded in this action
         try{
@@ -619,7 +619,7 @@ class TimeCardController extends BaseActiveController
             $writeTimeCardFile				= false;
             $fileResponse 					= [];
             $fileResponse['was_written'] 	=  false;
-            $fileResponse['type']		=  'Exception'; 
+            $fileResponse['type']			=  'Exception'; 
 
             Yii::trace("JSONESSEX-TIMECARDHIS");            
            // Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
@@ -640,6 +640,8 @@ class TimeCardController extends BaseActiveController
     	        Yii::trace('PDO EXCEPTION'.$e->getMessage());
         	    throw new \yii\web\HttpException(400);
  	       }
+
+ 	       error_log(print_r($responseArray->count(),true));
  	
 				if($responseArray->count() !=0){
 
@@ -692,14 +694,28 @@ class TimeCardController extends BaseActiveController
                 } else {
                     throw new ForbiddenHttpException;
                 }
-              	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
-              	$fileResponse['type']			=  'Success'; 	
-              	$response -> data 				= $fileResponse;
-   
+                if($write){
+                	try {	
+                		BaseActiveController::processAndWriteCsv($data,$timeCardName,$type);
+                		$fileResponse['was_written'] = 'file_written';
+                	 	$fileResponse['type']		 = 'Success'; 	
+              			$response -> data 			 = $fileResponse;
+               		}catch(\Exception $e) {
+          			 	Yii::trace('Exception '.$e->getMessage());
+          				throw new \yii\web\HttpException(800);
+      				}  
+             
+                } else {
+        	 			$fileResponse['was_written'] 	=  'ready_to_write';
+         				$fileResponse['type']			=  'Success';	
+         				$fileResponse['data']			=  $responseArray;	
+         				$response -> data = $fileResponse;
+            	 	}
             }else{
-            	$fileResponse['was_written'] 	=  false;
-              	$fileResponse['type']			=  'Nothing to do.'; 	
-                $response -> data 				= $fileResponse;
+            	$fileResponse['was_written'] 	=  'nothing_to_write';
+              	$fileResponse['type']			=  'Success'; 	
+              	$fileResponse['data']			=  'nothing_to_write'; 	
+                $response -> data 				=  $fileResponse;
             }
 			//log submission
 			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_OASIS, null, $weekStart, $weekEnd);
@@ -713,7 +729,7 @@ class TimeCardController extends BaseActiveController
         }
     }
 
-    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
+    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$write=false,$type=null,$data=null)
     {
 
         // RBAC permission check is embedded in this action
@@ -751,23 +767,33 @@ class TimeCardController extends BaseActiveController
 	            	throw new \yii\web\HttpException(400);
         	}
 
-
-
-			//error_log(print_r($responseArray->count(),true));
 				if($responseArray->count() !=0){
-
 					$writePayrollFile	= true;
-
 				} 
 
-				if($writePayrollFile) {
-             	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
-             	$fileResponse['type']		=  'Successfully wrote file payroll file'; 	
-             	$response -> data = $fileResponse;
+					if($writePayrollFile) {
+					 	 if($write){
+                			try {	
+		                		BaseActiveController::processAndWriteCsv($data,$cardName,$type);
+		                		$fileResponse['was_written'] = 'file_written';
+		                	 	$fileResponse['type']		 = 'Success'; 	
+		              			$response -> data 			 = $fileResponse;
+               				}catch(\Exception $e) {
+          			 			Yii::trace('Exception '.$e->getMessage());
+          						throw new \yii\web\HttpException(800);
+      						}  
+             
+              	 		 } else {
+	        	 			$fileResponse['was_written'] 	=  'ready_to_write';
+	         				$fileResponse['type']			=  'Success';	
+	         				$fileResponse['data']			=  $responseArray;	
+	         				$response -> data = $fileResponse;
+            	 		}
 
           	  } else {
-          	  	$fileResponse['was_written'] 	=  false;
-             	$fileResponse['type']		=  'nothing to do'; 	
+          	  	$fileResponse['was_written'] 	=  'nothing_to_write';
+             	$fileResponse['type']			=  'Success';
+             	$fileResponse['data']			=  'nothing_to_write';  	
              	$response -> data = $fileResponse;
           	  }
 			//log submission
@@ -783,7 +809,7 @@ class TimeCardController extends BaseActiveController
     }
 
      
-	public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
+	public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$write=false,$type=null,$data=null)
     {
 
         // RBAC permission check is embedded in this action
@@ -810,7 +836,7 @@ class TimeCardController extends BaseActiveController
    
  			try{
                 $responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject_Dev201804 :projectName, :weekStart,:weekEnd");
+				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject :projectName, :weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
 				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
@@ -819,8 +845,6 @@ class TimeCardController extends BaseActiveController
 	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
 	            	throw new \yii\web\HttpException(400);
         	}
-  
-				
 
 				if($responseArray->count() !=0){
 
@@ -829,13 +853,27 @@ class TimeCardController extends BaseActiveController
 				} 
 
 				if($writeADPFile) {
-             	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$adpFileName,$type);
-             	$fileResponse['type']		=  'Successfully wrote adp file'; 	
-             	$response -> data = $fileResponse;
-
+					 if($write){
+                			try {	
+		                		BaseActiveController::processAndWriteCsv($data,$adpFileName,$type);
+		                		$fileResponse['was_written'] = 'file_written';
+		                	 	$fileResponse['type']		 = 'Success'; 	
+		              			$response -> data 			 = $fileResponse;
+               				}catch(\Exception $e) {
+          			 			Yii::trace('Exception '.$e->getMessage());
+          						throw new \yii\web\HttpException(800);
+      						}  
+             
+              	 		 } else {
+	        	 			$fileResponse['was_written'] 	=  'ready_to_write';
+	         				$fileResponse['type']			=  'Success';	
+	         				$fileResponse['data']			=  $responseArray;	
+	         				$response -> data = $fileResponse;
+            	 		}
           	  } else {
-          	  	$fileResponse['was_written'] 	=  false;
-             	$fileResponse['type']		=  'nothing to do'; 	
+          	  	$fileResponse['was_written'] 		=  'nothing_to_write';
+             	$fileResponse['type']				=  'Success'; 
+             	$fileResponse['data']				=  'nothing_to_write'; 	
              	$response -> data = $fileResponse;
           	  }
 			//log submission
