@@ -599,7 +599,7 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 
-    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $write=false,$type=null, $data=null)
+    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $write=false,$type=null, array $data=null)
     {
         // RBAC permission check is embedded in this action
         try{
@@ -627,9 +627,9 @@ class TimeCardController extends BaseActiveController
             Yii::trace("JSONESSEX-WE ".$weekEnd);
             Yii::trace("JSONESSEX-CN ".$timeCardName);
 
+            if(!$write){
 
-            //WRAP DB IN ITS OWN TRY CATCH SINCE IT IS A GENERAL "CATCH-ALL" EXCEPTION TYPE
-       		try{
+            	try{
        			$responseArray = BaseActiveRecord::getDb();
 				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName, :weekStart,:weekEnd");
 				$getEventsCommand->bindParam(':projectName',$projectName,  \PDO::PARAM_STR);
@@ -639,17 +639,21 @@ class TimeCardController extends BaseActiveController
        			} catch(\Exception $e) {
     	        Yii::trace('PDO EXCEPTION'.$e->getMessage());
         	    throw new \yii\web\HttpException(400);
- 	       }
+ 	      		 }
 
- 	       error_log(print_r($responseArray->count(),true));
- 	
+
 				if($responseArray->count() !=0){
 
 					$writeTimeCardFile = true;
 
 				}
+            }
+            //WRAP DB IN ITS OWN TRY CATCH SINCE IT IS A GENERAL "CATCH-ALL" EXCEPTION TYPE
+       		
+ 	       error_log(print_r($data,true));
+ 	
 
-				if($writeTimeCardFile){
+				if($writeTimeCardFile || $write){
                 //rbac permission check
                 if (PermissionsController::can('timeCardGetAllCards')) {
                     //check if week is prior or current to determine appropriate view
@@ -729,7 +733,7 @@ class TimeCardController extends BaseActiveController
         }
     }
 
-    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$write=false,$type=null,$data=null)
+    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$write=false,$type=null,array $data=null)
     {
 
         // RBAC permission check is embedded in this action
@@ -809,7 +813,7 @@ class TimeCardController extends BaseActiveController
     }
 
      
-	public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$write=false,$type=null,$data=null)
+	public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$write=false,$type=null,array $data=null)
     {
 
         // RBAC permission check is embedded in this action
