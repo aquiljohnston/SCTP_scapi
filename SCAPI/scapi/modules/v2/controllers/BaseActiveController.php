@@ -313,6 +313,7 @@ class BaseActiveController extends ActiveController
     }
 
      public static function processAndWriteCsv($reader,$cardName,$type=null){
+        
         Yii::$app->response->format = Response::FORMAT_RAW;
 
         $success = false;
@@ -348,6 +349,8 @@ class BaseActiveController extends ActiveController
         $firstLine 	= true;
         $fp2 		= fopen($filePath.$cardName.".csv",'w+');
 
+        if(is_object($reader)){
+
         while($row2 = $reader->read()){
 
             if($firstLine) {
@@ -356,6 +359,19 @@ class BaseActiveController extends ActiveController
             }
             fwrite($fp2, implode(',', $row2) . "\r\n");
         }
+
+        } else {
+        	foreach($reader as $row2){
+
+            if($firstLine) {
+                $firstLine = false;
+                fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+            }
+            fwrite($fp2, implode(',', $row2) . "\r\n");
+        }
+       }
+
+
 
         fclose($fp2);
         chmod($filePath.$cardName.".csv", 0777);
