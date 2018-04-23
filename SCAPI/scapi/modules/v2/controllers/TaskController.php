@@ -16,6 +16,7 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use yii\db\Query;
 
 class TaskController extends Controller 
 {
@@ -136,27 +137,43 @@ class TaskController extends Controller
      */
     public function actionCreateTaskEntry()
     {
-        $successFlag = 0;
         try {
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
+			$successFlag = 0;
+			$warningMessage = '';
+			
             //get body data
             $body = file_get_contents("php://input");
             $data = json_decode($body, true);
-
-            // set up db connection
-            $connection = BaseActiveRecord::getDb();
-            $processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType");
-            $processJSONCommand->bindParam(':TimeCardID', $data['TimeCardID'], \PDO::PARAM_STR);
-            $processJSONCommand->bindParam(':TaskName', $data['TaskName'], \PDO::PARAM_STR);
-            $processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
-            $processJSONCommand->bindParam(':StartTime', $data['StartTime'], \PDO::PARAM_STR);
-            $processJSONCommand->bindParam(':EndTime', $data['EndTime'], \PDO::PARAM_STR);
-            $processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
-            $processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
-            $processJSONCommand->execute();
-            $successFlag = 1;
+			
+			yii::trace('JSON BODY ' . $body);
+			
+			//check time overlap on new entry
+			$startDateTime = $data['Date'] . ' ' . $data['StartTime'];
+			$endDateTime = $data['Date'] . ' ' . $data['EndTime'];
+			$isOverlap = self::checkTimeOverlap($data['TimeCardID'], $startDateTime, $endDateTime);
+			
+			if($isOverlap ==0)
+			{
+				// set up db connection
+				$connection = BaseActiveRecord::getDb();
+				$processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType");
+				$processJSONCommand->bindParam(':TimeCardID', $data['TimeCardID'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':TaskName', $data['TaskName'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':StartTime', $data['StartTime'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':EndTime', $data['EndTime'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
+				$processJSONCommand->execute();
+				$successFlag = 1;
+			}
+			else
+			{
+				$warningMessage = 'Failed to save, new entry overlaps with existing time.';
+			}
 
         } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
@@ -174,10 +191,28 @@ class TaskController extends Controller
         //build response format
         $dataArray =  [
             'TimeCardID' => $data['TimeCardID'],
-            'SuccessFlag' => $successFlag
+            'SuccessFlag' => $successFlag,
+			'warningMessage' => $warningMessage
         ];
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
         $response->data = $dataArray;
     }
+	
+	private static function checkTimeOverlap($cardID, $startTime, $endTime)
+	{
+		$overlapCheck = new Query;
+		$overlapCheck->select('*')
+					->from(["fnIsTimeEntryOverlap(:cardID, :startTime, :endTime)"])
+					->addParams([
+					':cardID' => $cardID,
+					':startTime' => $startTime,
+					':endTime' => $endTime
+					]);
+		$isOverlap = $overlapCheck->one(BaseActiveRecord::getDb())['IsOverLap'];
+		
+		yii::trace('IS OVERLAP ' . json_encode($isOverlap));
+		
+		return $isOverlap;
+	}
 }
