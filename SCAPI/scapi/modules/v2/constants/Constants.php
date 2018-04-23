@@ -29,9 +29,15 @@ final class Constants
 	const PROD_DEFAULT_ADP_PATH = "K:\\ADP\\";
 
 	const OASIS = "OASIS";
+	//need to change to payroll instead of quickbooks
 	const QUICKBOOKS = "QB";
 	const ADP = "ADP";
 	const OT_PAYROLL_HOURS_ID = 5110;
+	
+	//Time Card Submission file namespace
+	const OASIS_FILE_NAME = 'oasis_history_';
+	const PAYROLL_FILE_NAME = 'payroll_history_';
+	const ADP_FILE_NAME = 'adp_history';
 	
 	//Time Card Event History Types
 	const TIME_CARD_APPROVAL = 'Approval';
