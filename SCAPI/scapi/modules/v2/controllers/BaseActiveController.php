@@ -349,17 +349,16 @@ class BaseActiveController extends ActiveController
         $firstLine 	= true;
         $fp2 		= fopen($filePath.$cardName.".csv",'w+');
 
-        if(is_object($reader)){
+        if(is_object($reader))
+		{
+			while($row2 = $reader->read()){
 
-        while($row2 = $reader->read()){
-
-            if($firstLine) {
-                $firstLine = false;
-                fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
-            }
-            fwrite($fp2, implode(',', $row2) . "\r\n");
-        }
-
+				if($firstLine) {
+					$firstLine = false;
+					fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+				}
+				fwrite($fp2, implode(',', $row2) . "\r\n");
+			}
         } else {
         	foreach($reader as $row2){
 
