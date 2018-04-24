@@ -4,7 +4,7 @@ namespace app\modules\v2\controllers;
 
 use app\modules\v2\models\BaseActiveRecord;
 use Yii;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\filters\VerbFilter;
 use yii\rest\Controller;
 use app\modules\v2\models\EmployeeType;
@@ -35,7 +35,8 @@ class DropdownController extends Controller
                     'get-employee-type-dropdown' => ['get'],
                     'get-tablet-survey-dropdowns' => ['get'],
                     'get-state-codes-dropdown' => ['get'],
-                    'get-web-drop-downs' => ['get']
+                    'get-web-drop-downs' => ['get'],
+                    'get-tracker-map-grids' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -154,9 +155,6 @@ class DropdownController extends Controller
     public function actionGetTrackerMapGrids() {
         $headers = getallheaders();
         BaseActiveRecord::setClient($headers['X-Client']);
-//        $sql =    "SELECT DISTINCT MapGrid FROM tWorkQueue "
-//                . "JOIN tWorkOrder ON tWorkQueue.WorkOrderID = tWorkOrder.ID "
-//                . "WHERE tWorkQueue.WorkQueueStatus = 101 OR tWorkQueue.WorkQueueStatus = 102";
         $sql = "SELECT DISTINCT [Mapgrid] FROM [ScctTemplate].[dbo].[vRptCompletedWorkOrders]";
         $connection = BaseActiveRecord::getDb();
         $results = $connection->createCommand($sql)->queryAll();

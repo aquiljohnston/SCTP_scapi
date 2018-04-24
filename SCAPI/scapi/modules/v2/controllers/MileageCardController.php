@@ -17,7 +17,7 @@ use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
 use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\debug\components\search\matchers\Base;
@@ -49,14 +49,11 @@ class MileageCardController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'create' => ['create'],
-                    'delete' => ['delete'],
-					'update' => ['put'],
 					'view' => ['get'],
 					'approve-cards'  => ['put'],
-					'get-entries' => ['get'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
+					'get-cards-export' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -439,10 +436,10 @@ class MileageCardController extends BaseActiveController
 			
             if (!empty($responseArray))
             {
-                $this->processAndOutputCsvResponse($responseArray);
+                self::processAndOutputCsvResponse($responseArray);
                 return '';
             }
-            $this->setCsvHeaders();
+            self::setCsvHeaders();
             //send response
             return '';
         } catch(ForbiddenHttpException $e) {
@@ -454,18 +451,20 @@ class MileageCardController extends BaseActiveController
         }
     }
 
+	//TODO change to use base active controller version when updates are completed to match time cards
     // helper method for setting the csv header for tracker maps csv output
-    public function setCsvHeaders(){
+    public static function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');
         header('Pragma: no-cache');
         header('Expires: 0');
     }
 
+	//TODO change to use base active controller version when updates are completed to match time cards
     // helper method for outputting csv data without storing the whole result
-    public function processAndOutputCsvResponse($reader){
+    public static function processAndOutputCsvResponse($reader){
         Yii::$app->response->format = Response::FORMAT_RAW;
 
-        $this->setCsvHeaders();
+        self::setCsvHeaders();
         // TODO find a way to use Yii response but without storing the whole response content in a variable
         $firstLine = true;
         $fp = fopen('php://output','w');

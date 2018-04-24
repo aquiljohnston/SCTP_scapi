@@ -20,7 +20,7 @@ use Yii;
  * @property string $SumHours
  * @property integer $RemainderMinutes
  * @property integer $Sums
- * @property string $TimeCardApprovedFlag
+ * @property integer $TimeCardApprovedFlag
  * @property string $TimeCardApprovedBy
  * @property string $TimeCardSupervisorName
  */
@@ -40,9 +40,9 @@ class TimeCardSumHoursWorkedPriorWeekWithProjectName extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['TimeCardID', 'UserID', 'TimeCardProjectID', 'TimeCardTechID', 'RemainderMinutes', 'Sums', 'ProjectID'], 'integer'],
+            [['TimeCardID', 'UserID', 'TimeCardProjectID', 'TimeCardTechID', 'RemainderMinutes', 'Sums', 'ProjectID', 'TimeCardApprovedFlag'], 'integer'],
             [['UserID'], 'required'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedFlag', 'TimeCardApprovedBy', 'TimeCardSupervisorName'], 'string'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedBy', 'TimeCardSupervisorName'], 'string'],
             [['TimeCardStartDate', 'TimeCardEndDate'], 'safe'],
             [['SumHours'], 'number']
         ];

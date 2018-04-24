@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
 use app\modules\v2\models\TimeEntry;
@@ -107,10 +108,11 @@ class ActivityController extends BaseActiveController
 			$headers = getallheaders();
 			
 			Activity::setClient(BaseActiveController::urlPrefix());
-			//get uid of user making request
-			$pgeCreatedBy = Parent::getUserFromToken()->UserUID;
-			//get id of user making request
-			$createdBy = Parent::getUserFromToken()->UserName;
+			//get user making the request
+			$user = Parent::getUserFromToken();
+			$pgeCreatedBy = $user->UserUID;
+			$createdBy = $user->UserName;
+			$userID = $user->ID;
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
@@ -131,7 +133,7 @@ class ActivityController extends BaseActiveController
 			if ($data != null)
 			{
 				//get number of activities
-				$activitySize = count($data);
+				$activitySize = count($data['activity']);
 				
 				for($i = 0; $i < $activitySize; $i++)
 				{
@@ -139,7 +141,8 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						//Can remove this pge check when project is finished
+						if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 						{
 							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
 						}
@@ -192,7 +195,7 @@ class ActivityController extends BaseActiveController
 
 						//handle createdby
 						$activity->ActivityCreatedUserUID = (string)$createdBy;
-						if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+						if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 						{
 							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
 						}
@@ -218,7 +221,7 @@ class ActivityController extends BaseActiveController
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
 							//check for pge headers, pge is handled uniquely compared to a standard client
-							if($headers['X-Client'] == BaseActiveRecord::PGE_DEV || $headers['X-Client'] == BaseActiveRecord::PGE_STAGE ||$headers['X-Client'] == BaseActiveRecord::PGE_PROD)
+							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 							{
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
@@ -246,12 +249,13 @@ class ActivityController extends BaseActiveController
 							//add activityID to corresponding time entries
 							if($timeLength > 0)
 							{
-								Activity::setClient(BaseActiveController::urlPrefix());
 								for($t = 0; $t < $timeLength; $t++)
 								{
+									Activity::setClient(BaseActiveController::urlPrefix());
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
+									$timeEntry->TimeEntryUserID = $userID;
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									try{
 										if($timeEntry->save())
@@ -299,10 +303,10 @@ class ActivityController extends BaseActiveController
 							
 							//add activityID to corresponding mileage entries
 							if($mileageLength > 0)
-							{
-								Activity::setClient(BaseActiveController::urlPrefix());
+							{	
 								for($m = 0; $m < $mileageLength; $m++)
 								{
+									Activity::setClient(BaseActiveController::urlPrefix());
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
@@ -336,7 +340,7 @@ class ActivityController extends BaseActiveController
 										{
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
 										}
-										else //log other errors and retrun failure
+										else //log other errors and return failure
 										{
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
@@ -353,7 +357,7 @@ class ActivityController extends BaseActiveController
 						}
 						else
 						{
-							//activiy model validation exception
+							//activity model validation exception
 							throw BaseActiveController::modelValidationException($activity);
 						}
 					}

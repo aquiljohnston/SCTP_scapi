@@ -2,7 +2,7 @@
 
 namespace app\modules\v2\controllers;
 
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Report;
@@ -25,9 +25,10 @@ class ReportsController extends Controller {
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'get-sp-report' => ['get'],
-					'get-view-report' => ['get'],
-					'get-Parm-DropDown' => ['get']
+                    'get-report-drop-down' => ['get'],
+                    'get-report' => ['get'],
+					'get-parm-dropdown' => ['get'],
+					'get-inspector-dropdown' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -72,7 +73,7 @@ class ReportsController extends Controller {
         }
      */
 	 //TODO inspector filter for views
-    public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null, $ParmInspector = null)
+    public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null, $ParmInspector = null,$isAccountant=null)
 	{
 		$headers = getallheaders();
         BaseActiveRecord::setClient($headers['X-Client']);
@@ -88,6 +89,7 @@ class ReportsController extends Controller {
 			if($startDate == null && $endDate != null)
 			{
                 $queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
+                 Yii::trace("DB QUERY 0: ".$queryString);
 				
 				$queryResults = $connection->createCommand($queryString)
 				->queryAll();
@@ -96,12 +98,24 @@ class ReportsController extends Controller {
 			{
 			    if ($ParmInspector == "none") {
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
-
+                     Yii::trace("DB QUERY 1: ".$queryString);
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
                 }elseif ($ParmInspector == null){
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . " " . $ParmInspector;
-
+                     Yii::trace("DB QUERY 2: ".$queryString);
+                    $queryResults = $connection->createCommand($queryString)
+                        ->queryAll();
+                }elseif ($isAccountant){
+                    if($ParmInspector != "< ALL >"){
+                        $project[] = $ParmInspector;
+                        $project = json_encode($project);
+                    } else{
+                        $project = $ParmInspector;
+                    }
+                    
+                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $project . "'" . ", " . "'" . $startDate . "'" . "," . "'".$endDate. "'";
+                     Yii::trace("DB QUERY 3: ".$queryString);
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
                 }else{

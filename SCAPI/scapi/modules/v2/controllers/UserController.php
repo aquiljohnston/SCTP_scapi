@@ -4,6 +4,7 @@ namespace app\modules\v2\controllers;
 
 use app\modules\v2\models\Auth;
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\Client;
@@ -20,7 +21,8 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\PermissionsController;
 use app\modules\v2\controllers\ProjectController;
 use app\modules\v2\controllers\DispatchController;
-use app\authentication\TokenAuth;
+use app\modules\v2\controllers\TaskController;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -40,8 +42,6 @@ use yii\data\Pagination;
 class UserController extends BaseActiveController
 {
     public $modelClass = 'app\modules\v2\models\SCUser';
-	
-	const USERNAME_EXIST_MESSAGE = 'UserName already exist.';
 
     /**
      * sets verb filters for http request
@@ -67,6 +67,7 @@ class UserController extends BaseActiveController
                     'reactivate' => ['put'],
                     'get-me' => ['get'],
                     'get-active' => ['get'],
+                    'get-inactive' => ['get'],
                     'reset-password' => ['put'],
                 ],
             ];
@@ -118,7 +119,7 @@ class UserController extends BaseActiveController
 
             if ($existingUser != null) {
                 $response->setStatusCode(400);
-                $response->data = self::USERNAME_EXIST_MESSAGE;
+                $response->data = Constants::USERNAME_EXIST_MESSAGE;
                 return $response;
             }
 
@@ -561,7 +562,6 @@ class UserController extends BaseActiveController
 				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
 				
 				$projectTask = TaskController::GetProjectTask($projectID);//Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
-				$projectUserTask = TaskController::GetProjectUserTask();//Yii::$app->runAction('v2/task/get-project-user-task');
 				
 				//set client back to ct after external call
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -573,8 +573,11 @@ class UserController extends BaseActiveController
                 $projectData['ProjectClientPath'] = $clientModel->ClientFilesPath;
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
-				$projectData['ProjectTask'] = $projectTask['assets'];
-				$projectData['ProjectUserTask'] = $projectUserTask;
+				$projectData['ProjectMinimumAppVersion'] = $projectModel->ProjectMinimumAppVersion;
+				$projectData['ProjectActivityGPSInterval'] = $projectModel->ProjectActivityGPSInterval;
+				$projectData['ProjectSurveyGPSInterval'] = $projectModel->ProjectSurveyGPSInterval;
+				$projectData['ProjectSurveyGPSMinDistance'] = $projectModel->ProjectSurveyGPSMinDistance;
+				$projectData['ProjectTask'] = $projectTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
                 $projectData['ActivityCodes'] = $activityCodesArray;
@@ -734,18 +737,42 @@ class UserController extends BaseActiveController
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
 	returns ???*/
-	public static function createInProject($user, $client)
+	public static function createInProject($user, $client,$projectID=null)
 	{
+
+
+            if($projectID != null){
+            $project = Project::findOne($projectID);
+            $userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+            $userModel::setClient($project->ProjectUrlPrefix);
+        }
+        else{
+            $userModel = BaseActiveRecord::getUserModel($client);
+            $userModel::setClient($client);
+        }
+       
+
 		//get user model based on project 
-		$userModel = BaseActiveRecord::getUserModel($client);
-		if($userModel == null) return;
-        $userModel::setClient($client);
-		
+		//$userModel = BaseActiveRecord::getUserModel($client);
+		if($userModel == null) return 'No Client User Model Found.';
+        
+
+        $isAssigned = $project->getUsers()
+                ->where(['ProjUserUserID' => $user->UserID ]);
+
 		//check if user exist in project
-		$existingUser = $userModel::find()
+		$userToAdd= $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-		if($existingUser != null) return;
+         
+		if($isAssigned == null) 
+		{ 
+			//need to confirm association to project here as well
+			ProjectController::addToProject($userToAdd,$project);
+		
+		} else {
+                return 'User Already Exist in Project.';
+        }
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();

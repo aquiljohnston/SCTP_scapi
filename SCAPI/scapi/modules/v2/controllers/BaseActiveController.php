@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\BaseUser;
@@ -11,7 +12,7 @@ use app\modules\v2\models\WebDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\modules\v2\models\WebJSONDataInsertError;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -20,7 +21,6 @@ use yii\data\Pagination;
 
 class BaseActiveController extends ActiveController
 {	
-	const DATE_FORMAT = 'Y-m-d H:i:s';
 	private static $IV = 'abcdefghijklmnop';
 	private static $S_KEY = 'sparusholdings12';
 	
@@ -102,7 +102,7 @@ class BaseActiveController extends ActiveController
 	
 	public function getDate()
 	{
-		return date(BaseActiveController::DATE_FORMAT);
+		return date(Constants::DATE_FORMAT);
 	}	
 	
 	public static function getUserFromToken($token = null)
@@ -235,6 +235,7 @@ class BaseActiveController extends ActiveController
 		$archiveError->InsertedData5 = json_encode($data5);
 		$archiveError->ErrorNumber = $error->getCode();
 		$archiveError->ErrorMessage = $error->getMessage();
+		//may want to add error->getFile, error->getLine to this log to narrow down cause as ErrorLocation?
 		
 		$archiveError->save();
 	}
@@ -284,10 +285,112 @@ class BaseActiveController extends ActiveController
         return $asset;
     }
 	
+	 // helper method for setting the csv header for tracker maps csv output
+    public static function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    // helper method for outputting csv data without storing the whole result
+    public static function processAndOutputCsvResponse($reader){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        self::setCsvHeaders();
+        // TODO find a way to use Yii response but without storing the whole response content in a variable
+        $firstLine = true;
+        $fp = fopen('php://output','w');
+
+        while($row = $reader->read()){
+
+            if($firstLine) {
+                $firstLine = false;
+                fwrite($fp, implode(',', array_keys($row)) . "\r\n");
+            }
+            fwrite($fp, implode(',', $row) . "\r\n");
+        }
+        fclose($fp);
+    }
+
+     public static function processAndWriteCsv($reader,$cardName,$type=null){
+        
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $success = false;
+
+         if(YII_ENV_DEV)
+        {
+        		switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::DEV_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::DEV_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+			       $filePath = Constants::DEV_DEFAULT_ADP_PATH;
+			        break;
+			}
+           
+        } else {
+        		switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::PROD_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+			       $filePath = Constants::PROD_DEFAULT_ADP_PATH;
+			        break;
+			}
+        }
+
+        $firstLine 	= true;
+        $fp2 		= fopen($filePath.$cardName.".csv",'w+');
+
+        if(is_object($reader))
+		{
+			while($row2 = $reader->read()){
+
+				if($firstLine) {
+					$firstLine = false;
+					fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+				}
+				fwrite($fp2, implode(',', $row2) . "\r\n");
+			}
+        } else {
+        	foreach($reader as $row2){
+
+            if($firstLine) {
+                $firstLine = false;
+                fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+            }
+            fwrite($fp2, implode(',', $row2) . "\r\n");
+        }
+       }
+
+
+
+        fclose($fp2);
+        chmod($filePath.$cardName.".csv", 0777);
+
+        if (file_exists($filePath.$cardName.".csv")) {
+                     Yii::trace("SKITTLE ".$filePath.$cardName.".csv" ."exists");
+             } else {
+                    Yii::trace("SKITTLE".$filePath.$cardName.".csv" ."exists");
+             }
+
+        $success = true;
+        Yii::trace("DOOK: ".$success);
+        return $success;
+
+    }
+	
 	public static function isSCCT($client)
 	{
-		return ($client == BaseActiveRecord::SCCT_DEV ||
-		$client == BaseActiveRecord::SCCT_STAGE ||
-		$client == BaseActiveRecord::SCCT_PROD);
+		return ($client == Constants::SCCT_CONFIG['DEV_HEADER'] ||
+		$client == Constants::SCCT_CONFIG['STAGE_HEADER'] ||
+		$client == Constants::SCCT_CONFIG['PROD_HEADER']);
 	}
 }

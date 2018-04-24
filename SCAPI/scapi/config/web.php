@@ -15,7 +15,29 @@ $config = [
 			'class' => 'app\modules\v1\Module',
 		],
         'v2' => [
-            'class' => 'app\modules\v2\Module'
+            'class' => 'app\modules\v2\Module',
+			'components' => [
+				'user' => [
+					'class' => 'app\modules\v2\authentication\CTUser',
+					'identityClass' => 'app\modules\v2\models\SCUser',
+					'enableAutoLogin' => false,
+					'authTimeout' => 28800,
+					'loginUrl' => null
+				]
+			],
+        ],
+		'v3' => [
+            'class' => 'app\modules\v3\Module',
+			//not sure this component piece works I think you need the component overwrite in the module class.
+			'components' => [
+				'user' => [
+					'class' => 'app\modules\v3\authentication\CTUser',
+					'identityClass' => 'app\modules\v3\models\SCUser',
+					'enableAutoLogin' => false,
+					'authTimeout' => 28800,
+					'loginUrl' => null
+				]
+			],
         ]
     ],
     'components' => [
@@ -34,7 +56,6 @@ $config = [
             'identityClass' => 'app\modules\v1\models\SCUser',
             'enableAutoLogin' => false,
 			'authTimeout' => 28800,
-			//'authTimeout' => 15,
 			'loginUrl' => null
         ],
 		'authManager' => [
@@ -82,11 +103,9 @@ $config = [
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
 		'scanaStageDb' => $db['scanaStageDb'],
-		//'scanaProdDb' => $db['scanaProdDb'],
+		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
-		//Azure tests
-		'azureDb' => $db['azureDb'],
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,

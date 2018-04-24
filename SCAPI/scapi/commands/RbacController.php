@@ -634,6 +634,45 @@ class RbacController extends Controller
 		//$auth->addChild($supervisor, $viewAOC);
 		$auth->addChild($supervisor, $viewDispatch);
 		$auth->addChild($supervisor, $viewAssigned);
+
+
+		 // add "accountant" role and give this role CRUD permissions
+        $accountant = $auth->createRole('Accountant');
+        $auth->add($accountant);
+		//add child roles
+		$auth->addChild($accountant, $technician);
+		//add permissions
+		$auth->addChild($accountant, $mileageCardView);
+		$auth->addChild($accountant, $mileageCardApprove);
+		$auth->addChild($accountant, $mileageCardGetEntries);
+		$auth->addChild($accountant, $mileageCardGetOwnCards);
+		$auth->addChild($accountant, $mileageEntryView);
+		$auth->addChild($accountant, $mileageEntryCreate);
+		$auth->addChild($accountant, $mileageEntryDeactivate);
+		$auth->addChild($accountant, $notificationsGet);
+		$auth->addChild($accountant, $payCodeGetDropdown);
+		$auth->addChild($accountant, $timeCardView);
+		$auth->addChild($accountant, $timeCardApproveCards);
+		$auth->addChild($accountant, $timeCardGetEntries);
+		$auth->addChild($accountant, $timeCardGetOwnCards);
+		$auth->addChild($accountant, $timeEntryView);
+		$auth->addChild($accountant, $timeEntryCreate);
+		$auth->addChild($accountant, $timeEntryDeactivate);
+		$auth->addChild($accountant, $mileageCardGetAllCards);
+		$auth->addChild($accountant, $timeCardGetAllCards);
+		$auth->addChild($accountant, $projectView);
+		$auth->addChild($accountant, $projectGetOwnProjects);
+		$auth->addChild($accountant, $projectGetDropdown);
+		$auth->addChild($accountant, $projectGetUserRelationships);
+		// menu permissions
+		$auth->addChild($accountant, $viewAdministrationMenu);
+		$auth->addChild($accountant, $viewHomeMenu);
+		$auth->addChild($accountant, $viewTimeCardMgmt);
+		$auth->addChild($accountant, $viewMileageCardMgmt);
+		$auth->addChild($accountant, $viewReportsMenu);
+
+
+
 		
 		//assign roles to existing users////////////////////////////////////////
 		$users = SCUser::find()
