@@ -7,7 +7,7 @@ use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
 use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\CTUser;
+use app\modules\v2\authentication\CTUser;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
@@ -69,12 +69,9 @@ class LoginController extends Controller
 				$decryptedPass = BaseActiveController::decrypt($securedPass);
 
 				$hash = $user->UserPassword;
-				Yii::trace('Hash: '.$hash);
 				//Check the Hash
 				if (password_verify($decryptedPass, $hash)) 
 				{
-					Yii::trace('Password is valid.');
-					
 					//Pass
 					Yii::$app->user->login($user);
 					//Generate Auth Token
@@ -104,7 +101,8 @@ class LoginController extends Controller
 			$authArray['UserFirstName'] = $user->UserFirstName;
 			$authArray['UserLastName'] = $user->UserLastName;
 			$authArray['UserName'] = $user->UserName;
-			$authArray['ProjectLandingPage'] = self::getProjectLandingPage($client);
+			$authArray['ProjectLandingPage'] = self::getProjectValues($client)['ProjectLandingPage'];
+			$authArray['ProjectID'] = self::getProjectValues($client)['ProjectID'];
             $authArray['UserAppRoleType'] = $user->UserAppRoleType;
 			
 			//add auth token to response
@@ -162,13 +160,13 @@ class LoginController extends Controller
 		}
 	}
 	
-	private static function getProjectLandingPage($client)
+	private static function getProjectValues($client)
 	{
-		$projectLandingPage = Project::find()
-			->select('ProjectLandingPage')
+		$projectValues = Project::find()
+			->select('ProjectLandingPage, ProjectID')
 			->where(['ProjectUrlPrefix' => $client])
 			->one();
 		
-		return $projectLandingPage['ProjectLandingPage'];
+		return $projectValues;
 	}
 }

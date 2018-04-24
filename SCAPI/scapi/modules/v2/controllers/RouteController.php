@@ -8,7 +8,7 @@ use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\data\Pagination;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\ForbiddenHttpException;
@@ -28,7 +28,9 @@ class RouteController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'route-optimization' => ['post'],
+					//don't want to interfere with Dan Rawls if he still uses this
+					//'route-optimization-1' => ['post'],
+					//'route-optimization-2' => ['post'],
                 ],
             ];
 		return $behaviors;	

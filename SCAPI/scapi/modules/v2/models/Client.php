@@ -31,8 +31,8 @@ use Yii;
  * @property string $ClientCreatorUserID
  * @property string $ClientModifiedDate
  * @property string $ClientModifiedBy
- * @property integer $QBCustomerID
- * @property integer $ReferenceID
+ * @property string $QBCustomerID
+ * @property string $ReferenceID
  *
  * @property ProjectTb $projectTb
  */
@@ -54,8 +54,9 @@ class Client extends BaseActiveRecord
         return [
             [['ClientName'], 'required'],
             [['ClientName', 'ClientContactTitle', 'ClientContactFName', 'ClientContactMI', 'ClientContactLName', 'ClientPhone', 'ClientEmail', 'ClientAddr1', 
-			'ClientCreatorUserID', 'ClientModifiedBy', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientComment', 'ClientArchiveFlag'], 'string'],
-            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag', 'QBCustomerID', 'ReferenceID'], 'integer'],
+			'ClientCreatorUserID', 'ClientModifiedBy', 'ClientAddr2', 'ClientCity', 'ClientState', 'ClientZip4', 'ClientTerritory', 'ClientComment', 'ClientComment',
+			'ClientArchiveFlag', 'QBCustomerID', 'ReferenceID'], 'string'],
+            [['ClientAccountID', 'ClientActiveFlag', 'ClientDivisionsFlag'], 'integer'],
             [['ClientCreateDate', 'ClientModifiedDate'], 'safe']
         ];
     }

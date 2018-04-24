@@ -2,10 +2,10 @@
 
 namespace app\modules\v2\controllers;
 
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use Yii;
-use app\modules\v1\models\Client;
-use app\modules\v1\models\SCUser;
+use app\modules\v2\models\Client;
+use app\modules\v2\models\SCUser;
 use yii\filters\VerbFilter;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
@@ -17,7 +17,7 @@ use app\modules\v2\models\BaseActiveRecord;
  */
 class ClientController extends BaseActiveController
 {
-	public $modelClass = 'app\modules\v1\models\Client'; // TODO: Change to v2 when Michael commits the new model
+	public $modelClass = 'app\modules\v2\models\Client';
 
 	public function actions()
 	{
@@ -112,7 +112,7 @@ class ClientController extends BaseActiveController
             {
                 //pass query with pagination data to helper method
                 $paginationResponse = self::paginationProcessor($clientQuery, $page, $listPerPage);
-                //use updated query with pagination caluse to get data
+                //use updated query with pagination clause to get data
                 $clientArr = $paginationResponse['Query']->all();
                 $responseArray['pages'] = $paginationResponse['pages'];
             }
@@ -169,15 +169,15 @@ class ClientController extends BaseActiveController
 			PermissionsController::requirePermission('clientView');
 			
             if($joinNames) {
-                $sql = "IF EXISTS (SELECT * FROM ClientTb WHERE ClientTb.ClientModifiedBy != 0 AND ClientTb.ClientId = :id1 )"
-                . " BEGIN SELECT ModifiedUser.UserName as ModifiedUserName, ModifiedUser.UserID as ModifiedUserID, CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ClientTb.*"
-			    . " FROM dbo.ClientTb JOIN [UserTb] ModifiedUser ON ClientTb.ClientModifiedBy = ModifiedUser.UserID"
-                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserID"
+                $sql = "IF EXISTS (SELECT * FROM ClientTb WHERE ClientTb.ClientModifiedBy != '' AND ClientTb.ClientId = :id1 )"
+                . " BEGIN SELECT ModifiedUser.UserName as ModifiedUserName, CreatedUser.UserName as CreatedUserName, ClientTb.*"
+			    . " FROM dbo.ClientTb JOIN [UserTb] ModifiedUser ON ClientTb.ClientModifiedBy = ModifiedUser.UserName"
+                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
                 . " WHERE ClientTb.ClientId = :id2 END ELSE"
-                . " SELECT CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ClientTb.*,"
-                . " 'Not Modified' as ModifiedUserName, 0 as ModifiedUserID"
+                . " SELECT CreatedUser.UserName as CreatedUserName, ClientTb.*,"
+                . " 'Not Modified' as ModifiedUserName"
 				. " FROM dbo.ClientTb"
-                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserID"
+                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
                 . " WHERE ClientTb.ClientId = :id3";
                 $client = Client::getDb()->createCommand($sql)->bindValue(':id1', $id)->bindValue(':id2', $id)->bindValue(':id3', $id);
                 Yii::trace("This is the client controller SQL " . $client->getSql());

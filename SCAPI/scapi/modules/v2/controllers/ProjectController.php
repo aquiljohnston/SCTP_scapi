@@ -32,10 +32,16 @@ class ProjectController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'view-all-users'  => ['get'],
+					'view'  => ['get'],
+					'create'  => ['post'],
+					'update'  => ['put'],
 					'get-project-dropdowns'  => ['get'],
+					'get-project-modules'  => ['get'],
 					'get-user-relationships'  => ['get'],
+					'get-all'  => ['get'],
+					'ct-get-all'  => ['get'],
 					'add-remove-users' => ['post'],
+					'add-remove-module' => ['post'],
                 ],  
             ];
 		return $behaviors;	
@@ -70,10 +76,10 @@ class ProjectController extends BaseActiveController
 			PermissionsController::requirePermission('projectView');
 			if($joinNames) {
 			    $sql =
-                    'SELECT CreatedUser.UserID as CreatedUserID, CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
+                    'SELECT CreatedUser.UserName as CreatedUserName, ProjectTb.*, 
                     ClientTb.ClientName
                     FROM ProjectTb 
-                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserID
+                    LEFT JOIN [UserTb] CreatedUser ON ProjectTb.ProjectCreatedBy = CreatedUser.UserName
                     LEFT JOIN [ClientTb] ON ProjectTb.ProjectClientID = ClientTb.ClientID
                     WHERE ProjectTb.ProjectId = :id';
 			    $project = Project::getDb()->createCommand($sql)->bindValue(':id', $id)
@@ -100,19 +106,15 @@ class ProjectController extends BaseActiveController
 	* @throws \yii\web\HttpException 400 if any exceptions are thrown
 	* @throws ForbiddenHttpException If permissions are not granted for request
 	*/
-    public function actionGetAll($limitToUser = null, $listPerPage = null,
-                                $page = 1, $filter = null)
+    public function actionGetAll($listPerPage = null, $page = 1, $filter = null)
 	{
-		if(($limitToUser != "true" && $limitToUser != "1") && PermissionsController::can("projectGetAll")) {
+		if(PermissionsController::can("projectGetAll")) {
 			try
 			{
 				//set db target
 				Project::setClient(BaseActiveController::urlPrefix());
 
 				$projects = Project::find();
-
-
-
 			}
 			catch(\Exception $e)
 			{
@@ -137,7 +139,6 @@ class ProjectController extends BaseActiveController
                 ['like', 'ProjectName', $filter],
                 ['like', 'ProjectType', $filter],
                 ['like', 'ProjectDescription', $filter],
-                ['like', 'ProjectType', $filter],
                 ['like', 'ProjectState', $filter],
             ]);
         }
@@ -417,7 +418,7 @@ class ProjectController extends BaseActiveController
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
 
-			//Yii::trace("DUMPSTER: ".$data);
+			
 			
 			//check if key exist
 			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
@@ -439,12 +440,13 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    if(UserController::createInProject($user, $project->ProjectUrlPrefix) == null)
+                    if(UserController::createInProject($user,$project->ProjectUrlPrefix,$projectID))
 					{
-						//reset target db after external call
-						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+						
 						//fucntion call to add to project
 						self::addToProject($user, $project);
+						//reset target db after external call
+						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					}
                 }
             }
@@ -495,6 +497,8 @@ class ProjectController extends BaseActiveController
 	
 	public static function addToProject($user, $project = null)
 	{
+
+
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		if($project == null)
 		{
@@ -671,4 +675,69 @@ class ProjectController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	/**
+	* Gets all of the subclass's model's records
+	*
+	* @return Response The records in a JSON format
+	* @throws \yii\web\HttpException 400 if any exceptions are thrown
+	* @throws ForbiddenHttpException If permissions are not granted for request
+	*/
+    public function actionCtGetAll($listPerPage = null,
+                                $page = 1, $filter = null)
+	{
+		if(PermissionsController::can("projectGetAll")) {
+			try
+			{
+				//set db target
+				Project::setClient(BaseActiveController::urlPrefix());
+
+				$projects = Project::find();
+			}
+			catch(\Exception $e)
+			{
+				throw new \yii\web\HttpException(400);
+			}
+		} else if (PermissionsController::can("projectGetOwnProjects")) {
+			//this doesnt seem like the right user to be using, would have to investigate.
+			$userID = self::getUserFromToken()->UserID;
+
+		    $projects = Project::find()->select('ProjectTb.*')
+                ->leftJoin('Project_User_Tb', "[ProjectTb].[ProjectID] = [Project_User_Tb].[ProjUserProjectID]")
+                ->where(['[Project_User_Tb].[ProjUserUserID]' => $userID])
+                ->with('projectUserTbs');
+		} else {
+			throw new ForbiddenHttpException;
+		}
+
+		//remove pge project by url prefix
+		$projects->andWhere(['not like', 'ProjectUrlPrefix', 'pge']);
+		
+        //apply filter to query
+        if($filter != null)
+        {
+            $projects->andFilterWhere([
+                'or',
+                ['like', 'ProjectName', $filter],
+                ['like', 'ProjectType', $filter],
+                ['like', 'ProjectDescription', $filter],
+                ['like', 'ProjectType', $filter],
+                ['like', 'ProjectState', $filter],
+            ]);
+        }
+
+        //pass query with pagination data to helper method
+        $paginationResponse = BaseActiveController::paginationProcessor($projects, $page, $listPerPage);
+        //use updated query with pagination
+        $projectArr = $paginationResponse['Query']->all();
+        $responseArray['pages'] = $paginationResponse['pages'];
+
+        //populate response array
+        $responseArray['assets'] = $projectArr;
+
+		$response = Yii::$app->response;
+		$response->format = Response::FORMAT_JSON;
+		$response->setStatusCode(200);
+		$response->data = $responseArray;
+    }
 }

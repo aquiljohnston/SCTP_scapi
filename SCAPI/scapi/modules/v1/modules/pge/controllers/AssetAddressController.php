@@ -483,6 +483,8 @@ class AssetAddressController extends Controller
 		$assetAddress->ActivityUID = $additionalData['ActivityUID'];                     //from general variables
 		$assetAddress->SrcOpenDTLT = $assetAddress->SrcDTLT;
 		$assetAddress->Revision = $revision;
+		//remove leading space from city name
+		$assetAddress->City = ltrim($dataArray['City'], ' ');
 		return $assetAddress;
 	}
 	

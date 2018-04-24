@@ -3,6 +3,7 @@
 namespace app\modules\v2\controllers;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\TimeCard;
 use app\modules\v2\models\TimeEntry;
 use app\modules\v2\models\SCUser;
@@ -11,9 +12,11 @@ use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\AllTimeCardsCurrentWeek;
 use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeekWithProjectName;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
+use app\modules\v2\models\TimeCardEventHistory;
+use app\modules\v2\models\AccountantSubmit;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
 use yii\web\BadRequestHttpException;
@@ -32,6 +35,7 @@ use yii\db\Query;
 class TimeCardController extends BaseActiveController
 {
 	public $modelClass = 'app\modules\v2\models\TimeCard';
+
 	
 	public function behaviors()
 	{
@@ -54,6 +58,8 @@ class TimeCardController extends BaseActiveController
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
 					'show-entries' => ['get'],
+					'get-accountant-view' => ['get'],
+					'submit-time-cards' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -81,15 +87,29 @@ class TimeCardController extends BaseActiveController
 	 */
     public function actionView($id)
     {
+		//may want to move this into show entries because I believe that is the only location it is called from
 		try
 		{
 			//set db target
-			TimeCard::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardView');
 			
-			$timeCard = TimeCard::findOne($id);
+			$timeCard = TimeCard::find()
+				->select([
+					'TimeCardID',
+					'TimeCardProjectID',
+					'TimeCardApprovedBy',
+					'TimeCardApprovedFlag',
+					'ProjectName',
+					'UserFirstName',
+					'UserLastName'])
+				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
+				->innerJoin('UserTb', 'UserTb.UserID = TimeCardTb.TimeCardTechID')
+				->where(['TimeCardID' => $id])
+				->asArray()
+				->one();
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $timeCard;
@@ -123,6 +143,9 @@ class TimeCardController extends BaseActiveController
 			//get userid
 			$approvedBy = self::getUserFromToken()->UserName;
 			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Time Card Approve', $approvedBy, BaseActiveController::urlPrefix());
+			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
 			$approvedCards = []; // Prevents empty array from causing crash
@@ -139,11 +162,14 @@ class TimeCardController extends BaseActiveController
 				$transaction = $connection->beginTransaction();
 
 				foreach ($approvedCards as $card) {
-					$card->TimeCardApprovedFlag = "Yes";
+					$card->TimeCardApprovedFlag = 1;
 					$card->TimeCardApprovedBy = $approvedBy;
 					$card->update();
+					//log approvals
+					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card->TimeCardID);
 				}
 				$transaction->commit();
+				//log approval of cards
 				$response->setStatusCode(200);
 				$response->data = $approvedCards;
 				return $response;
@@ -153,6 +179,8 @@ class TimeCardController extends BaseActiveController
 			catch(\Exception $e) //if transaction fails rollback changes and send error
 			{
 				$transaction->rollBack();
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 				return $response;
@@ -161,6 +189,8 @@ class TimeCardController extends BaseActiveController
 		}
 		catch(\Exception $e)  
 		{
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -222,11 +252,7 @@ class TimeCardController extends BaseActiveController
 		{
 			throw new \yii\web\HttpException(400);
 		}
-	}	
-
-
-
-
+	}
 
 	public function actionShowEntries($cardID)
 	{		
@@ -240,9 +266,6 @@ class TimeCardController extends BaseActiveController
 			
 			$response = Yii::$app ->response;
 			$dataArray = [];
-			$timeCard = TimeCard::findOne($cardID);
-			
-
 			
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
@@ -265,7 +288,7 @@ class TimeCardController extends BaseActiveController
 		try
 		{
 			//get http headers
-			$headers = getallheaders();
+			$headers 	= getallheaders();
 			//set db target
 			AllTimeCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
 			
@@ -273,7 +296,7 @@ class TimeCardController extends BaseActiveController
 			PermissionsController::requirePermission('timeCardGetCard');
 			
 			//get project based on header
-			$project = Project::find()
+			$project 	= Project::find()
 				->where(['ProjectUrlPrefix'=>$headers['X-Client']])
 				->one();
 			
@@ -307,46 +330,50 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 
-    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null)
+    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
     {
-        $weekParameterIsInvalidString = "The acceptable values for week are 'prior' and 'current'";
         // RBAC permission check is embedded in this action
         try
         {
             //get headers
-            $headers = getallheaders();
+            $headers 			= getallheaders();
             //get client header
-            $client = $headers['X-Client'];
+            $client 			= $headers['X-Client'];
 
             //url decode filter value
-            $filter = urldecode($filter);
+            $filter 			= urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
 
-            //set db target headers
-            $headers = getallheaders();
-            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //format response
-            $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
+            $response 			= Yii::$app->response;
+            $response-> format 	= Response::FORMAT_JSON;
 
             //response array of time cards
-            $timeCardsArr = [];
-            $responseArray = [];
+            $timeCardsArr 		= [];
+            $responseArray 		= [];
+			$projectAllOption = [];
+			$allTheProjects = [];
+			$showProjectDropDown = false;
 
             //build base query
             $timeCards = new Query;
             $timeCards->select('*')
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
-                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
-
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]); 
 
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client))
             {
-                /*
-                 * Check if user can get all cards
+				$showProjectDropDown = true;
+				/*
+                 * Check if user can get their own cards
                  */
-                if (PermissionsController::can('timeCardGetAllCards'))
+                if (!PermissionsController::can('timeCardGetAllCards') && PermissionsController::can('timeCardGetOwnCards'))
                 {
                     $userID = self::getUserFromToken()->UserID;
                     //get user project relations array
@@ -354,28 +381,38 @@ class TimeCardController extends BaseActiveController
                         ->where("ProjUserUserID = $userID")
                         ->all();
                     $projectsSize = count($projects);
-
-                    //check if week is prior or current to determine appropriate view
                     if($projectsSize > 0)
                     {
                         $timeCards->where(['TimeCardProjectID' => $projects[0]->ProjUserProjectID]);
                     }
+					else
+					{
+						//can only get own but has no project relations
+						throw new ForbiddenHttpException;
+					}
                     if($projectsSize > 1)
                     {
+						//add all option to project dropdown if there will be more than one option
+						$projectAllOption = [""=>"All"];
                         for($i=1; $i < $projectsSize; $i++)
                         {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $timeCards->orWhere(['TimeCardProjectID'=>$projectID]);
+                            $relatedProjectID = $projects[$i]->ProjUserProjectID;
+                            $timeCards->orWhere(['TimeCardProjectID'=>$relatedProjectID]);
                         }
                     }
                 }
-                /*
-                 * Check if user can get their own cards
+				/*
+                 * Check if user can get all cards
                  */
-                elseif (PermissionsController::can('timeCardGetOwnCards'))
+                elseif (PermissionsController::can('timeCardGetAllCards'))
                 {
-                    throw new ForbiddenHttpException;
+					$projectAllOption = [""=>"All"];
                 }
+				else
+				{
+					//no permissions to get cards
+                    throw new ForbiddenHttpException;
+				}
             }
             else // get only cards for the current project.
             {
@@ -385,23 +422,49 @@ class TimeCardController extends BaseActiveController
                     ->one();
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
+                $projectsSize = count($project);
             }
 
-            if($filter!= null && isset($timeCards)) { //Empty strings or nulls will result in false
+			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
+			$dropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			
+            if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++)
+				{
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'UserFullName', $trimmedFilter],
+						['like', 'ProjectName', $trimmedFilter]
+					);
+				}
+				$timeCards->andFilterWhere($filterQueryArray);
+            }
+
+            if($projectID!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
-                    'or',
-                    //['like', 'UserName', $filter],
-                    ['like', 'UserFirstName', $filter],
-                    ['like', 'UserLastName', $filter],
-                    ['like', 'ProjectName', $filter],
-                    ['like', 'TimeCardApprovedFlag', $filter]
-                    // TODO: Add TimeCardTechID -> name and username to DB view and add to filtered fields
+                    'and',
+                    ['TimeCardProjectID' => $projectID],
                 ]);
             }
+
+			//get project list for dropdown based on time cards available
+			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $projectAllOption);
+		  
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
-            $responseArray['assets'] = $timeCardsArr;
-            $responseArray['pages'] = $paginationResponse['pages'];
+            // check if approved time card exist in the data
+            $approvedTimeCardExist = $this->CheckApprovedTimeCardExist($timeCardsArr);
+            $projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCardsArr);
+            $responseArray['approvedTimeCardExist'] = $approvedTimeCardExist;
+            $responseArray['assets'] 				= $timeCardsArr;
+            $responseArray['pages'] 				= $paginationResponse['pages'];
+            $responseArray['projectDropDown'] 		= $allTheProjects;
+            $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
+            $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
 
             if (!empty($responseArray['assets']))
             {
@@ -415,94 +478,410 @@ class TimeCardController extends BaseActiveController
                 return $response;
             }
         }
-        catch(ForbiddenHttpException $e) {
-            throw $e;
-        }
-        catch(\Exception $e)
-        {
-            throw new \yii\web\HttpException(400);
-        }
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+		   throw new \yii\web\HttpException(400);
+		}
     }
-
-    public function actionGetTimeCardsHistoryData($selectedTimeCardIDs = [], $week = null)
-    {
-        // RBAC permission check is embedded in this action
-        try{
-            //set db target headers
-            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
+	
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
+	{
+		try{
+			//url decode filter value
+            $filter = urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
+			
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //format response
             $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
-
-            //response array of time cards
-            $timeCardsArr = [];
-            $selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
-
-            if ($selectedTimeCardIDs != null && count($selectedTimeCardIDs) > 0){
-                //build base query
-                $responseArray = new Query;
-                $responseArray  ->select('*')
-                    ->from(["fnGenerateOasisTimeCardByTimeCardID(:TimeCardID)"])
-                    ->addParams([':TimeCardID' => $selectedTimeCardIDs]);
-
-                $responseArray = $responseArray->createCommand(BaseActiveRecord::getDb())->query();
-
-            } else {
-                //rbac permission check
-                if (PermissionsController::can('timeCardGetAllCards')) {
-                    //check if week is prior or current to determine appropriate view
-                    if ($week == 'prior') {
-                        $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                        //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
-                    } elseif ($week == 'current') {
-                        $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                        //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
-                    }
-                } //rbac permission check
-                elseif (PermissionsController::can('timeCardGetOwnCards')) {
-                    $userID = self::getUserFromToken()->UserID;
-                    //get user project relations array
-                    $projects = ProjectUser::find()
-                        ->where("ProjUserUserID = $userID")
-                        ->all();
-                    $projectsSize = count($projects);
-
-                    //check if week is prior or current to determine appropriate view
-                    if ($week == 'prior' && $projectsSize > 0) {
-                        $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-
-                        for ($i = 0; $i < $projectsSize; $i++) {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $timeCards->andWhere(['ProjectID' => $projectID]);
-                        }
-                        $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-
-                    } elseif ($week == 'current' && $projectsSize > 0) {
-                        $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-                        for ($i = 0; $i < $projectsSize; $i++) {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $timeCards->andWhere(['ProjectID' => $projectID]);
-                        }
-                        $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                    }
-                } else {
-                    throw new ForbiddenHttpException;
-                }
+            $response->format = Response::FORMAT_JSON;
+			
+			//response array of time cards
+            $timeCards = [];
+            $responseArray = [];
+			$allTheProjects = [""=>"All"];
+			$showProjectDropDown = true;
+			//used to get current week if date range falls in the middle of the week
+			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
+			
+			//build base query
+            $cardQuery = AccountantSubmit::find()
+				->where(['between', 'StartDate', $startDate, $endDate])
+                ->orWhere(['between', 'EndDate', $startDate, $endDate])                
+                ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);              
+			
+			//get records for project dropdown(timing for this execution is very important)
+			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+			
+			//add project filter
+			if($projectID!= null) 
+			{
+                $cardQuery->andFilterWhere([
+                    'and',
+                    ['ProjectID' => $projectID],
+                ]);
             }
-
-            if (!empty($responseArray))
-            {
-                $this->processAndOutputCsvResponse($responseArray);
-                return '';
+			
+			//add search filter
+			if($filter != null) 
+			{
+                $cardQuery->andFilterWhere([
+                    'or',
+                    ['like', 'ProjectName', $filter],
+                    ['like', 'ProjectManager', $filter],
+                    ['like', 'ApprovedBy', $filter],
+                ]);
             }
-            $this->setCsvHeaders();
-            //send response
-            return '';
+			
+			//get project list for dropdown based on time cards available
+			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $allTheProjects);
+			
+			//paginate
+			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
+            $timeCards = $paginationResponse['Query']->orderBy('ProjectName, StartDate')->all(BaseActiveRecord::getDb());
+			
+			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
+			//this check seems to have some issue and is only currently being applied to the post filter data set.
+			$projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCards);
+
+            $responseArray['assets'] = $timeCards;
+            $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
+
+			$response->data = $responseArray;
+			return $response;
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	{
+		try
+		{
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			$detailsQuery = new Query;
+            $timeCards = $detailsQuery->select('*')
+                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+				->where(['TimeCardProjectID' => $projectID])
+				->all(BaseActiveRecord::getDb());
+				
+			//format response
+			$responseArray['details'] = $timeCards;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	/**
+	*Call sp to process time card data and generate account files for OASIS, QB, and ADP
+	*Looks for JSON PUT body containing date range and project IDs to process
+	*@RETURNS JSON w/success flag and comment
+	*/
+	public function actionSubmitTimeCards()
+	{
+		try
+		{
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get put data
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			
+			//format response
+			$responseData = [];
+			$responseData['success'] = 0;
+			$responseData['comments'] = '';
+			
+			//call function to get file data, check after each file for failure
+			$oasisData = self::getSubmissionFileData($params, Constants::OASIS);
+			if($oasisData === false)
+			{
+				self::resetSubmission($params);
+				$responseData['comments'] = 'Failed to get Oasis Data.';
+				$response->data = $responseData;
+				return $response;
+			}
+			$payrollData = self::getSubmissionFileData($params, Constants::QUICKBOOKS);
+			if($payrollData === false)
+			{
+				self::resetSubmission($params);
+				$responseData['comments'] = 'Failed to get Payroll Data.';
+				$response->data = $responseData;
+				return $response;
+			}
+			$adpData = self::getSubmissionFileData($params, Constants::ADP);
+			if($adpData === false)
+			{
+				self::resetSubmission($params);
+				$responseData['comments'] = 'Failed to get ADP Data.';
+				$response->data = $responseData;
+				return $response;
+			}
+			
+			//call function to write files, check after each file for failure
+			$oasisWriteStatus = count($oasisData) != 0 ? self::writeFileData($oasisData, Constants::OASIS) : true;
+			if(!$oasisWriteStatus)
+			{
+				self::resetSubmission($params);
+				$responseData['comments'] = 'Failed to write Oasis file.';
+				$response->data = $responseData;
+				return $response;
+			}
+			$payrollWriteStatus = count($payrollData) != 0 ? self::writeFileData($payrollData, Constants::QUICKBOOKS) : true;
+			if(!$payrollWriteStatus)
+			{
+				self::resetSubmission($params);
+				$responseData['comments'] = 'Failed to write Payroll file.';
+				$response->data = $responseData;
+				return $response;
+			}
+			$adpWriteStatus = count($adpData) != 0 ? self::writeFileData($adpData, Constants::ADP) : true;
+			if(!$adpWriteStatus)
+			{
+				self::resetSubmission($params);
+				$responseData['comments'] = 'Failed to write ADP file.';
+				$response->data = $responseData;
+				return $response;
+			}
+			
+			//if all process run successfully return success
+			$responseData['success'] = 1;
+			$responseData['comments'] = 'Time Card submission processed successfully.';
+			$response = Yii::$app->response;
+			$response->data = $responseData;
+			$response->format = Response::FORMAT_JSON;
+			return $response;
+			
+		} catch(ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+        }	
+	}
+	
+	private static function getSubmissionFileData($params, $type)
+	{
+		try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			switch ($type) {
+				case Constants::OASIS:
+					$spName = 'spGenerateOasisTimeCardByProject';
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_OASIS;
+					break;
+				case Constants::QUICKBOOKS:
+					$spName = 'spGenerateQBDummyPayrollByProject';
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_QB;
+					break;
+				case Constants::ADP:
+					$spName = 'spGenerateADPTimeCardByProject';
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_ADP;
+					break;
+			}
+			
+			//if sp call fails concat sp name instead
+			$db = BaseActiveRecord::getDb();
+			$getFileDataCommand = $db->createCommand("SET NOCOUNT ON EXECUTE $spName :projectIDs, :startDate, :endDate");
+			$getFileDataCommand->bindParam(':projectIDs', $projectIDs, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':startDate', $startDate, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':endDate', $endDate, \PDO::PARAM_STR);
+			$fileData = $getFileDataCommand->query();
+
+			//log submission
+			self::logTimeCardHistory($tcEventHistoryType, null, $startDate, $endDate);
+			
+			return $fileData;
+		} catch(\Exception $e) {
+			//TODO: log exception here
+			return false;
+		}
+	}
+	
+	private static function writeFileData($data, $type)
+	{
+		try {
+			switch ($type) {
+				case Constants::OASIS:
+					$fileNamePrefix = Constants::OASIS_FILE_NAME;
+					break;
+				case Constants::QUICKBOOKS:
+					$fileNamePrefix = Constants::PAYROLL_FILE_NAME;
+					break;
+				case Constants::ADP:
+					$fileNamePrefix = Constants::ADP_FILE_NAME;
+					break;
+			}
+			//get date and format for file name
+			$date = BaseActiveController::getDate();
+			$formatedDate = str_replace([' ', ':'], '_', $date);
+			$fileName = $fileNamePrefix . $formatedDate;
+			
+			//data is the sp response for the given file, file name payroll_history_2018-03-27_9_36_36.csv, type is type of file being written
+			BaseActiveController::processAndWriteCsv($data,$fileName,$type);
+			return true;
+		}catch(\Exception $e) {
+			//TODO: log exception here
+			return false;
+		}
+	}
+	
+	private static function resetSubmission($params, $process = 'ALL')
+    {
+        try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+            $responseArray = [];
+
+			$responseArray = BaseActiveRecord::getDb();
+			$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetSubmitFlag :projectIDs, :startDate, :endDate, :process");
+			$getEventsCommand->bindParam(':projectIDs', $projectIDs,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':process', $process,  \PDO::PARAM_STR);
+			$responseArray = $getEventsCommand->query();  
+
+			$status['success'] = true;	
+			$response->data = $status;	
+			
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_RESET, null, $startDate, $endDate);
+			
+		} catch(\Exception $e) {
+			//add error log for archive
+			throw new \yii\web\HttpException(400);
+		}
+    }
+
+    /**
+     * Check if there is at least one time card has been approved
+     * @param $timeCardsArr
+     * @return boolean
+     */
+    private function CheckApprovedTimeCardExist($timeCardsArr){
+        $approvedTimeCardExist = false;
+        foreach ($timeCardsArr as $item){
+            if ($item['TimeCardApprovedFlag'] == 1){
+                $approvedTimeCardExist = true;
+                break;
+            }
+        }
+        return $approvedTimeCardExist;
+    }
+
+
+
+     /**
+     * Check if project was submitted to Oasis and QB
+     * @param $timeCardsArr
+     * @return boolean
+     */
+    private function CheckAllAssetsSubmitted($timeCardsArr){
+        $allAssetsCount = count($timeCardsArr);
+        $submittedCount = 0;
+        $allSubmitted   = FALSE;
+		
+        foreach ($timeCardsArr as $item)
+		{
+			$oasisKey = array_key_exists('TimeCardOasisSubmitted', $item) ? 'TimeCardOasisSubmitted' : 'OasisSubmitted';
+			$qbKey = array_key_exists('TimeCardQBSubmitted', $item) ? 'TimeCardQBSubmitted' : 'QBSubmitted';
+			
+            if ($item[$oasisKey] == "Yes" && $item[$qbKey] == "Yes" ){
+                $submittedCount++;
+            }
+        }
+
+        if ($allAssetsCount == $submittedCount){
+        	$allSubmitted = TRUE;
+        }
+
+        return $allSubmitted;
+         
+    }
+
+    /**
+     * Check if submit button should be enabled/disabled by calling DB fnSubmit function
+     * @return mixed
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionCheckSubmitButtonStatus(){
+        try{
+			//get headers
+            $headers = getallheaders();
+            //get client header
+            $client = $headers['X-Client'];
+			
+            //set db target
+            TimeCard::setClient(BaseActiveController::urlPrefix());
+
+            //get body data
+            $data = file_get_contents("php://input");
+			$submitCheckData = json_decode($data, true)['submitCheck'];
+			
+			//if is not scct project name will always be the current client
+			if(BaseActiveController::isSCCT($client))
+			{
+				$projectName  = $submitCheckData['ProjectName'];
+			}else{
+				$project = Project::find()
+					->where(['ProjectUrlPrefix' => $client])
+					->one();
+				$projectName = array($project->ProjectID);
+			}
+
+            //build base query
+			$responseArray = new Query;
+            $responseArray->select('*')
+                ->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+                ->addParams([
+					//':ProjectName' => json_encode($projectName), 
+					':StartDate' => $submitCheckData['StartDate'], 
+					':EndDate' => $submitCheckData['EndDate']
+					]);
+            $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
+            $responseArray = $submitButtonStatus;
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $responseArray;
+
+            return $response;
         } catch(ForbiddenHttpException $e) {
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
@@ -511,30 +890,50 @@ class TimeCardController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
-
-    // helper method for setting the csv header for tracker maps csv output
-    public function setCsvHeaders(){
-        header('Content-Type: text/csv;charset=UTF-8');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-    }
-
-    // helper method for outputting csv data without storing the whole result
-    public function processAndOutputCsvResponse($reader){
-        Yii::$app->response->format = Response::FORMAT_RAW;
-
-        $this->setCsvHeaders();
-        // TODO find a way to use Yii response but without storing the whole response content in a variable
-        $firstLine = true;
-        $fp = fopen('php://output','w');
-
-        while($row = $reader->read()){
-            if($firstLine) {
-                $firstLine = false;
-                fputcsv($fp, array_keys($row));
-            }
-            fputcsv($fp, $row);
-        }
-        fclose($fp);
-    }
+	
+	private function extractProjectsFromTimeCards($dropdownRecords, $projectAllOption)
+	{
+		//iterate and stash project name $p['TimeCardProjectID']
+		foreach ($dropdownRecords as $p) {
+			//currently only two option exist for key would have to update this if more views/tables/functions use this function
+			$key = array_key_exists('TimeCardProjectID', $p) ? $p['TimeCardProjectID'] : $p['ProjectID'];
+			$value = $p['ProjectName'];
+			$allTheProjects[$key] = $value;
+		}
+		//remove dupes
+		$allTheProjects = array_unique($allTheProjects);
+		//abc order for all
+		asort($allTheProjects);
+		//appened all option to the front
+		$allTheProjects = $projectAllOption + $allTheProjects;
+		
+		return $allTheProjects;
+	}
+	
+	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null)
+	{
+		try
+		{
+			//create and populate model
+			$historyRecord = new TimeCardEventHistory;
+			$historyRecord->Date = BaseActiveController::getDate();
+			$historyRecord->Name = self::getUserFromToken()->UserName;
+			$historyRecord->Type = $type;
+			$historyRecord->TimeCardID = $timeCardID;
+			$historyRecord->StartDate = $startDate;
+			$historyRecord->EndDate = $endDate;
+			
+			//save
+			if(!$historyRecord->save())
+			{
+				//throw error on failure
+				throw BaseActiveController::modelValidationException($newInspection);
+			}
+		}
+		catch(\Exception $e)
+		{
+			//catch and log errors
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+		}
+	}
 }

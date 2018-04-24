@@ -7,7 +7,8 @@ use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\data\Pagination;
-use app\authentication\TokenAuth;
+use app\modules\v2\authentication\TokenAuth;
+use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\AssignedWorkQueue;
 use app\modules\v2\models\WorkQueue;
@@ -18,9 +19,6 @@ use yii\db\Connection;
 
 class WorkQueueController extends Controller 
 {
-	public static $inProgress = 101;
-	public static $completed = 102;
-	
 	public function behaviors()
 	{
 		$behaviors = parent::behaviors();
@@ -123,7 +121,7 @@ class WorkQueueController extends Controller
 					$successFlag = 0;
 					$workQueue = WorkQueue::find()
 						->where(['ID' => $data[$i]['WorkQueueID']])
-						->andWhere(['not in', 'WorkQueueStatus', [self::$inProgress, self::$completed]])
+						->andWhere(['not in', 'WorkQueueStatus', [Constants::WORK_QUEUE_IN_PROGRESS, Constants::WORK_QUEUE_COMPLETED]])
 						->one();
 					if($workQueue != null)
 					{
@@ -179,7 +177,7 @@ class WorkQueueController extends Controller
 				$successFlag = 0;
 				$workQueue = new WorkQueue;
 				$workQueue->AssignedUserID = $createdBy;
-				$workQueue->WorkQueueStatus = self::$completed;
+				$workQueue->WorkQueueStatus = Constants::WORK_QUEUE_COMPLETED;
 				$workQueue->CreatedBy = $createdBy;
 				$workQueue->CreatedDate = $createdDate;
 				$workQueue->tAssetID = $assetID;

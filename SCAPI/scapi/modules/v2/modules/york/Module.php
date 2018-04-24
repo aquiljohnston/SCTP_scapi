@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v2\modules\pge;
+namespace app\modules\v2\modules\york;
 
 class Module extends \yii\base\Module
 {

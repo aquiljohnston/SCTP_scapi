@@ -3,92 +3,14 @@
 namespace app\modules\v2\models;
 
 use Yii;
+use app\modules\v2\constants\Constants;
 
 class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	private static $CLIENT_ID = '';
 	
-	//base user
-	const BASE_USER = 'app\modules\v2\models\BaseUser';
-	const BASE_EVENT = 'app\modules\v2\models\Event';
-	const BASE_ASSET = 'app\modules\v2\models\Asset';
-	
 	//TODO: create object/array for all clients and refactor get methods(exclude getDb) into single function
-	//that takes in client and model to retrive that will be based on client object keys
-	
-	//scct databases
-	const SCCT_DEV = 'scctdev';
-	const SCCT_STAGE = 'scctstage';
-	const SCCT_PROD = 'scct';
-	
-	//base comet tracker databases
-	const CT_DEV = 'apidev';	
-	const CT_STAGE = 'apistage';
-	const CT_PROD = 'api';
-	//comet tracker models
-	const CT_USER = 'app\modules\v2\models\SCUser';
-	const CT_EVENT = self::BASE_EVENT;
-	const CT_ASSET = self::BASE_ASSET;
-	//comet tracker auth manager
-	const CT_AUTH = 'app\rbac\ScDbManager';
-	
-	//pg&e databases
-	const PGE_DEV = 'pgedev';
-	const PGE_STAGE = 'pgestage';
-	const PGE_PROD = 'pge';
-	//pg&e user model
-	const PGE_USER = 'app\modules\v2\modules\pge\models\PGEUser';
-	//pg&e auth manager
-	const PGE_AUTH = 'app\rbac\PgeDbManager';
-	
-	//york databases
-	const YORK_DEV = 'yorkdev';
-	const YORK_STAGE = 'yorkstage';
-	const YORK_PROD = 'york';
-	//york models
-	const YORK_USER = self::BASE_USER;
-	const YORK_EVENT = self::BASE_EVENT;
-	const YORK_ASSET = 'app\modules\v2\modules\york\models\Asset';
-	//york auth manager
-	const YORK_AUTH = 'app\rbac\ClientDbManager';
-	
-	//dominion databases
-	const DOMINION_STAGE = 'deostage';
-	const DOMINION_PROD = 'deo';
-	//dominion models
-	const DOMINION_USER = self::BASE_USER;
-	const DOMINION_EVENT = 'app\modules\v2\models\DominionEvent';
-	const DOMINION_ASSET = self::BASE_ASSET;
-	//dominion auth manager
-	const DOMINION_AUTH = 'app\rbac\ClientDbManager';
-	
-	//scana databases
-	const SCANA_DEV = 'scanadev';
-	const SCANA_STAGE = 'scanastage';
-	const SCANA_PROD = 'scana';
-	//york models
-	const SCANA_USER = self::BASE_USER;
-	const SCANA_EVENT = 'app\modules\v2\models\ScanaEvent';
-	const SCANA_ASSET = 'app\modules\v2\modules\scana\models\Asset';
-	//york auth manager
-	const SCANA_AUTH = 'app\rbac\ClientDbManager';
-	
-	//demo client database
-	const DEMO_DEV = 'demo';
-	//beta models
-	const DEMO_USER = self::BASE_USER;
-	const DEMO_EVENT = 'app\modules\v2\models\DemoEvent';
-	const DEMO_ASSET = self::BASE_ASSET;
-	//beta auth manager
-	const DEMO_AUTH = 'app\rbac\ClientDbManager';
-	
-	//azure test database
-	const AZURE_TEST = 'azure';
-	//beta models
-	const AZURE_USER = self::BASE_USER;
-	const AZURE_EVENT = self::BASE_EVENT;
-	//beta auth manager
-	const AZURE_AUTH = 'app\rbac\ClientDbManager';
+	//that takes in client and model to retrieve that will be based on client object keys
 	
 	public static function getClient()
 	{
@@ -102,271 +24,81 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	
 	public static function getDb()
 	{
-		//comet tracker
-		if (self::$CLIENT_ID == self::CT_DEV || self::$CLIENT_ID == self::SCCT_DEV)
-		{
-			return Yii::$app->ctDevDb;
-		}
-		if (self::$CLIENT_ID == self::CT_STAGE || self::$CLIENT_ID == self::SCCT_STAGE)
-		{
-			return Yii::$app->ctStageDb;
-		}
-		if (self::$CLIENT_ID == self::CT_PROD || self::$CLIENT_ID == self::SCCT_PROD)
-		{
-			return Yii::$app->ctProdDb;
-		}
-		//pge
-		if (self::$CLIENT_ID == self::PGE_DEV)
-		{
-			return Yii::$app->pgeDevDb;
-		}
-		if (self::$CLIENT_ID == self::PGE_STAGE)
-		{
-			return Yii::$app->pgeStageDb;
-		}
-		if (self::$CLIENT_ID == self::PGE_PROD)
-		{
-			return Yii::$app->pgeProdDb;
-		}
-		//york
-		if (self::$CLIENT_ID == self::YORK_DEV)
-		{
-			return Yii::$app->yorkDevDb;
-		}
-		if (self::$CLIENT_ID == self::YORK_STAGE)
-		{
-			return Yii::$app->yorkStageDb;
-		}
-		if (self::$CLIENT_ID == self::YORK_PROD)
-		{
-			return Yii::$app->yorkProdDb;
-		}
-		//dominion
-		if (self::$CLIENT_ID == self::DOMINION_STAGE)
-		{
-			return Yii::$app->dominionStageDb;
-		}
-		if (self::$CLIENT_ID == self::DOMINION_PROD)
-		{
-			return Yii::$app->dominionProdDb;
-		}
-		//scana
-		if (self::$CLIENT_ID == self::SCANA_DEV)
-		{
-			return Yii::$app->scanaDevDb;
-		}
-		if (self::$CLIENT_ID == self::SCANA_STAGE)
-		{
-			return Yii::$app->scanaStageDb;
-		}
-		// if (self::$CLIENT_ID == self::SCANA_PROD)
-		// {
-			// return Yii::$app->scanaProdDb;
-		// }
-		//demo
-		if (self::$CLIENT_ID == self::DEMO_DEV)
-		{
-			return Yii::$app->demoDb;
-		}
-		//azure test
-		if (self::$CLIENT_ID == self::AZURE_TEST)
-		{
-			return Yii::$app->azureDb;
+		$clientConfigObj = self::getClientObj(self::$CLIENT_ID);
+		
+		//try and do this in a better way to avoid a second switch if possible
+		switch(self::$CLIENT_ID){
+			case array_key_exists('DEV_HEADER', $clientConfigObj) ? $clientConfigObj['DEV_HEADER']: null:
+				return Yii::$app->{$clientConfigObj['DEV_DB']};
+			case array_key_exists('STAGE_HEADER', $clientConfigObj) ? $clientConfigObj['STAGE_HEADER']: null:
+				return Yii::$app->{$clientConfigObj['STAGE_DB']};
+			case array_key_exists('PROD_HEADER', $clientConfigObj) ? $clientConfigObj['PROD_HEADER']: null:
+			case array_key_exists('AZURE_PROD_HEADER', $clientConfigObj) ? $clientConfigObj['AZURE_PROD_HEADER']: null:
+				return Yii::$app->{$clientConfigObj['PROD_DB']};		
 		}
 	}
 	
-	//reutrns the file path for the user model associated to a project based on the client header
+	//returns the file path for the user model associated to a project based on the client header
 	public static function getUserModel($client)
 	{
-		//CometTracker
-		if($client == self::CT_DEV
-		|| $client == self::CT_STAGE
-		|| $client == self::CT_PROD
-		|| $client == self::SCCT_DEV
-		|| $client == self::SCCT_STAGE
-		|| $client == self::SCCT_PROD)
-		{
-			return self::CT_USER;
-		}
-		//York
-		if($client == self::YORK_DEV
-		||$client == self::YORK_PROD
-		||$client == self::YORK_STAGE)
-		{
-			return self::YORK_USER;
-		}
-		//Dominion
-		if($client == self::DOMINION_PROD
-		||$client == self::DOMINION_STAGE)
-		{
-			return self::DOMINION_USER;
-		}
-		//Scana
-		if($client == self::SCANA_DEV
-		||$client == self::SCANA_PROD
-		||$client == self::SCANA_STAGE)
-		{
-			return self::SCANA_USER;
-		}
-		//demo
-		if($client == self::DEMO_DEV)
-		{
-			return self::DEMO_USER;
-		}
-		//azure test
-		if($client == self::AZURE_TEST)
-		{
-			return self::AZURE_USER;
-		}
-		//PGE - Deos not use standard user propagation
-		// if($client == self::PGE_DEV 
-		// || $client == self::PGE_STAGE
-		// || $client == self::PGE_PROD)
-		// {
-			// return self::PGE_USER;
-		// }
-		return null;
+		return self::getClientObj($client)['USER'];
 	}
 	
 	//returns the file path for the auth manager associated to a project based on the client header
 	public static function getAuthManager($client)
 	{
-		//CometTracker
-		if($client == self::CT_DEV
-		|| $client == self::CT_STAGE
-		|| $client == self::CT_PROD
-		|| $client == self::SCCT_DEV
-		|| $client == self::SCCT_STAGE
-		|| $client == self::SCCT_PROD)
-		{
-			return self::CT_AUTH;
-		}
-		//York
-		if($client == self::YORK_DEV
-		|| $client == self::YORK_PROD
-		|| $client == self::YORK_STAGE)
-		{
-			return self::YORK_AUTH;
-		}
-		//Dominion
-		if($client == self::DOMINION_PROD
-		|| $client == self::DOMINION_STAGE)
-		{
-			return self::DOMINION_AUTH;
-		}
-		//Scana
-		if($client == self::SCANA_DEV
-		|| $client == self::SCANA_PROD
-		|| $client == self::SCANA_STAGE)
-		{
-			return self::SCANA_AUTH;
-		}
-		//demo
-		if($client == self::DEMO_DEV)
-		{
-			return self::DEMO_AUTH;
-		}
-		//azure test
-		if($client == self::AZURE_TEST)
-		{
-			return self::AZURE_AUTH;
-		}
-		//PGE - Deos not use standard Auth
-		// if($client == self::PGE_DEV 
-		// || $client == self::PGE_STAGE
-		// || $client == self::PGE_PROD)
-		// {
-			// return self::PGE_USER;
-		// }
-		return null;
+		return self::getClientObj($client)['AUTH'];
 	}
 	
 	//returns the file path for the event model associated to a project based on the client header
 	public static function getEventModel($client)
 	{
-		//CometTracker
-		if($client == self::CT_DEV
-		|| $client == self::CT_STAGE
-		|| $client == self::CT_PROD
-		|| $client == self::SCCT_DEV
-		|| $client == self::SCCT_STAGE
-		|| $client == self::SCCT_PROD)
-		{
-			return self::CT_EVENT;
-		}
-		//York
-		if($client == self::YORK_DEV
-		|| $client == self::YORK_PROD
-		|| $client == self::YORK_STAGE)
-		{
-			return self::YORK_EVENT;
-		}
-		//Dominion
-		if($client == self::DOMINION_PROD
-		|| $client == self::DOMINION_STAGE)
-		{
-			return self::DOMINION_EVENT;
-		}
-		//Scana
-		if($client == self::SCANA_DEV
-		|| $client == self::SCANA_PROD
-		|| $client == self::SCANA_STAGE)
-		{
-			return self::SCANA_EVENT;
-		}
-		//demo
-		if($client == self::DEMO_DEV)
-		{
-			return self::DEMO_EVENT;
-		}
-		//azure test
-		if($client == self::AZURE_TEST)
-		{
-			return self::AZURE_EVENT;
-		}
-		//PGE - Does not use standard Events
-		return null;
+		return self::getClientObj($client)['EVENT'];
 	}
 	
-	//TODO combine with event model function
 	//returns the file path for the asset model associated to a project based on the client header
 	public static function getAssetModel($client)
 	{
-		//CometTracker
-		if($client == self::CT_DEV
-		|| $client == self::CT_STAGE
-		|| $client == self::CT_PROD
-		|| $client == self::SCCT_DEV
-		|| $client == self::SCCT_STAGE
-		|| $client == self::SCCT_PROD)
-		{
-			return self::CT_ASSET;
+		return self::getClientObj($client)['ASSET'];
+	}
+	
+	private static function getClientObj($client)
+	{
+		//matches given client to associated client configuration 
+		switch($client){
+			//API
+			case Constants::API_CONFIG['DEV_HEADER']:
+			case Constants::API_CONFIG['STAGE_HEADER']:
+			case Constants::API_CONFIG['PROD_HEADER']:
+			case Constants::API_CONFIG['AZURE_PROD_HEADER']:
+				return Constants::API_CONFIG;
+			//SCCT
+			case Constants::SCCT_CONFIG['DEV_HEADER']:
+			case Constants::SCCT_CONFIG['STAGE_HEADER']:
+			case Constants::SCCT_CONFIG['PROD_HEADER']:
+				return Constants::SCCT_CONFIG;
+			//PGE
+			case Constants::PGE_CONFIG['DEV_HEADER']:
+			case Constants::PGE_CONFIG['STAGE_HEADER']:
+			case Constants::PGE_CONFIG['PROD_HEADER']:
+				return Constants::PGE_CONFIG;
+			//YORK
+			case Constants::YORK_CONFIG['DEV_HEADER']:
+			case Constants::YORK_CONFIG['STAGE_HEADER']:
+			case Constants::YORK_CONFIG['PROD_HEADER']:
+				return Constants::YORK_CONFIG;
+			//DEO
+			case Constants::DOMINION_CONFIG['STAGE_HEADER']:
+			case Constants::DOMINION_CONFIG['PROD_HEADER']:
+				return Constants::DOMINION_CONFIG;
+			//SCANA
+			case Constants::SCANA_CONFIG['DEV_HEADER']:
+			case Constants::SCANA_CONFIG['STAGE_HEADER']:
+			case Constants::SCANA_CONFIG['PROD_HEADER']:
+				return Constants::SCANA_CONFIG;
+			//DEMO
+			case Constants::DEMO_CONFIG['DEV_HEADER']:
+				return Constants::DEMO_CONFIG;
 		}
-		//York
-		if($client == self::YORK_DEV
-		|| $client == self::YORK_PROD
-		|| $client == self::YORK_STAGE)
-		{
-			return self::YORK_ASSET;
-		}
-		//Dominion
-		if($client == self::DOMINION_PROD
-		|| $client == self::DOMINION_STAGE)
-		{
-			return self::DOMINION_ASSET;
-		}
-		//Scana
-		if($client == self::SCANA_DEV
-		|| $client == self::SCANA_PROD
-		|| $client == self::SCANA_STAGE)
-		{
-			return self::SCANA_ASSET;
-		}
-		//demo
-		if($client == self::DEMO_DEV)
-		{
-			return self::DEMO_ASSET;
-		}
-		return null;
 	}
 }
