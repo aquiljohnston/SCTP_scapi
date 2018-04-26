@@ -65,7 +65,7 @@ class MenuController extends Controller {
 				->where(['ProjectUrlPrefix' => $client]);	
 			if(BaseActiveController::isSCCT($client))
 			{
-				$projectQuery->andwhere(['ProjectName' => 'SOUTHERN CROSS:CT2']);
+				$projectQuery->andwhere(['ProjectName' => Constants::SCCT_CONFIG['BASE_PROJECT']]);
 			}
 			$projectObj = $projectQuery->one();
 			
