@@ -11,6 +11,7 @@ use app\modules\v2\controllers\PermissionsController;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use app\modules\v2\constants\Constants;
+use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\Client;
 use app\modules\v2\models\MenusProjectModule;
@@ -47,9 +48,9 @@ class MenuController extends Controller {
 		try{
 			//set db
 			$headers = getallheaders();
-			//BaseActiveRecord::setClient($headers['X-Client']);
+			$client = $headers['X-Client'];
 			//set db target
-			Project::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
 			//build menu array for project Id
 			//create data arrays
@@ -59,10 +60,15 @@ class MenuController extends Controller {
 			$subNavigationArray = [];
 			
 			//get project data
-			$projectObj = Project::find()
-				->where(['ProjectUrlPrefix' => $headers['X-Client']])
-				->one();
-
+			//$projectObj
+			$projectQuery = Project::find()
+				->where(['ProjectUrlPrefix' => $client]);	
+			if(BaseActiveController::isSCCT($client))
+			{
+				$projectQuery->andwhere(['ProjectName' => 'SOUTHERN CROSS:CT2']);
+			}
+			$projectObj = $projectQuery->one();
+			
 			$projectID = $projectObj->ProjectID;
 			//get client data
 			if($projectObj != null)
