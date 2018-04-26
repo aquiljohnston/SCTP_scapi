@@ -54,6 +54,7 @@ final class Constants
 	];
 	
 	const SCCT_CONFIG = [
+		'BASE_PROJECT' => 'SOUTHERN CROSS:CT2',
 		'DEV_HEADER' => 'scctdev',
 		'STAGE_HEADER' => 'scctstage',
 		'PROD_HEADER' => 'scct',
