@@ -102,6 +102,8 @@ class TimeCardController extends BaseActiveController
 					'TimeCardProjectID',
 					'TimeCardApprovedBy',
 					'TimeCardApprovedFlag',
+					'TimeCardSubmittedOasis',
+					'TimeCardSubmttedQuickBooks',
 					'ProjectName',
 					'UserFirstName',
 					'UserLastName'])
