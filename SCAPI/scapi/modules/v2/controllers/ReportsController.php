@@ -86,7 +86,14 @@ class ReportsController extends Controller {
 		//handle stored procedure based report
 		if ($reportType == 'SP')
 		{	
-			if($startDate == null && $endDate != null)
+			if($startDate == null && $endDate == null)
+			{
+				$queryString = "SET NOCOUNT ON; EXEC " . $reportName ;
+				
+				$queryResults = $connection->createCommand($queryString)
+				->queryAll();
+			}
+			elseif($startDate == null && $endDate != null)
 			{
                 $queryString = "EXEC " . $reportName . " " . $reportID . "," . "'" . $parm . "'" . ", " . "'" . $endDate . "'";
                  Yii::trace("DB QUERY 0: ".$queryString);
@@ -106,32 +113,13 @@ class ReportsController extends Controller {
                      Yii::trace("DB QUERY 2: ".$queryString);
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
-                }elseif ($isAccountant){
-                    if($ParmInspector != "< ALL >"){
-                        $project[] = $ParmInspector;
-                        $project = json_encode($project);
-                    } else{
-                        $project = $ParmInspector;
-                    }
-                    
-                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $project . "'" . ", " . "'" . $startDate . "'" . "," . "'".$endDate. "'";
-                     Yii::trace("DB QUERY 3: ".$queryString);
-                    $queryResults = $connection->createCommand($queryString)
-                        ->queryAll();
-                }else{
+                } else{
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . ", " . "'" . $ParmInspector . "'";
                     Yii::trace("DB QUERY: ".$queryString);
 
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
                 }
-			}
-			elseif($startDate == null && $endDate == null)
-			{
-				$queryString = "SET NOCOUNT ON; EXEC " . $reportName ;
-				
-				$queryResults = $connection->createCommand($queryString)
-				->queryAll();
 			}
 		}
 		//handle view based report
