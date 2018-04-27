@@ -469,18 +469,9 @@ class TimeCardController extends BaseActiveController
             $responseArray['projectDropDown'] 		= $allTheProjects;
             $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
             $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
-
-            if (!empty($responseArray['assets']))
-            {
-                $response->data = $responseArray;
-                $response->setStatusCode(200);
-                return $response;
-            }
-            else
-            {
-                $response->setStatusCode(404);
-                return $response;
-            }
+			$response->data = $responseArray;
+			$response->setStatusCode(200);
+			return $response;
         }
 		catch(ForbiddenHttpException $e) {
 			throw $e;
@@ -966,6 +957,7 @@ class TimeCardController extends BaseActiveController
 	
 	private function extractProjectsFromTimeCards($dropdownRecords, $projectAllOption)
 	{
+		$allTheProjects = [];
 		//iterate and stash project name $p['TimeCardProjectID']
 		foreach ($dropdownRecords as $p) {
 			//currently only two option exist for key would have to update this if more views/tables/functions use this function
