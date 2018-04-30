@@ -73,7 +73,7 @@ class ReportsController extends Controller {
         }
      */
 	 //TODO inspector filter for views
-    public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null, $ParmInspector = null,$isAccountant=null)
+    public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null, $ParmInspector = null)
 	{
 		$headers = getallheaders();
         BaseActiveRecord::setClient($headers['X-Client']);
