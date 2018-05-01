@@ -108,11 +108,6 @@ class ReportsController extends Controller {
                      Yii::trace("DB QUERY 1: ".$queryString);
                     $queryResults = $connection->createCommand($queryString)
                         ->queryAll();
-                }elseif ($ParmInspector == null){
-                    $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . " " . $ParmInspector;
-                     Yii::trace("DB QUERY 2: ".$queryString);
-                    $queryResults = $connection->createCommand($queryString)
-                        ->queryAll();
                 } else{
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'" . ", " . "'" . $ParmInspector . "'";
                     Yii::trace("DB QUERY: ".$queryString);
