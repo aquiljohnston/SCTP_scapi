@@ -103,7 +103,7 @@ class ReportsController extends Controller {
 			}
 			elseif ($startDate != null && $endDate != null)
 			{
-			    if ($ParmInspector == "none") {
+			    if ($ParmInspector == null) {
                     $queryString = "SET NOCOUNT ON; EXEC " . $reportName . " " . "'" . $startDate . "'" . ", " . "'" . $endDate . "'";
                      Yii::trace("DB QUERY 1: ".$queryString);
                     $queryResults = $connection->createCommand($queryString)
