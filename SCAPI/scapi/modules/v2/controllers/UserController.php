@@ -159,7 +159,15 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
-				$projectUser = self::createInProject($user, $client);
+				//create user record in project db if necessary and generate user project relationship
+				if(BaseActiveController::isSCCT($client))
+				{
+					ProjectController::addToProject($user);
+					$projectUser = 'SCCT User';
+				}
+				else{
+					$projectUser = self::createInProject($user, $client);
+				}
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
                 $responseData = [];
@@ -737,41 +745,23 @@ class UserController extends BaseActiveController
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
 	returns ???*/
-	public static function createInProject($user, $client,$projectID=null)
+	public static function createInProject($user, $client)
 	{
-
-
-            if($projectID != null){
-            $project = Project::findOne($projectID);
-            $userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
-            $userModel::setClient($project->ProjectUrlPrefix);
-        }
-        else{
-            $userModel = BaseActiveRecord::getUserModel($client);
-            $userModel::setClient($client);
-        }
-       
-
 		//get user model based on project 
-		//$userModel = BaseActiveRecord::getUserModel($client);
+		$userModel = BaseActiveRecord::getUserModel($client);
 		if($userModel == null) return 'No Client User Model Found.';
-        
+		$userModel::setClient($client);    
 
-        $isAssigned = $project->getUsers()
-                ->where(['ProjUserUserID' => $user->UserID ]);
-
-		//check if user exist in project
-		$userToAdd= $userModel::find()
+		//check if user exist in project db
+		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
-         
-		if($isAssigned == null) 
-		{ 
-			//need to confirm association to project here as well
-			ProjectController::addToProject($userToAdd,$project);
 		
-		} else {
-                return 'User Already Exist in Project.';
+		//if user record already exist in the project db, return
+		if($existingUser != null) 
+		{
+			//need to confirm association to project here as well
+            return true;
         }
 		
 		//create a new user model based on project 
