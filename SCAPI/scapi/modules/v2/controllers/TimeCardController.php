@@ -615,24 +615,27 @@ class TimeCardController extends BaseActiveController
 			$oasisData = self::getSubmissionFileData($params, Constants::OASIS);
 			if($oasisData === false)
 			{
-				self::resetSubmission($params);
-				$responseData['comments'] = 'Failed to get Oasis Data.';
+				$comments = 'Failed to get Oasis Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
 				$response->data = $responseData;
 				return $response;
 			}
 			$payrollData = self::getSubmissionFileData($params, Constants::QUICKBOOKS);
 			if($payrollData === false)
 			{
-				self::resetSubmission($params);
-				$responseData['comments'] = 'Failed to get Payroll Data.';
+				$comments = 'Failed to get Payroll Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
 				$response->data = $responseData;
 				return $response;
 			}
 			$adpData = self::getSubmissionFileData($params, Constants::ADP);
 			if($adpData === false)
 			{
-				self::resetSubmission($params);
-				$responseData['comments'] = 'Failed to get ADP Data.';
+				$comments = 'Failed to get ADP Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
 				$response->data = $responseData;
 				return $response;
 			}
@@ -641,24 +644,27 @@ class TimeCardController extends BaseActiveController
 			$oasisWriteStatus = count($oasisData) != 0 ? self::writeFileData($oasisData, Constants::OASIS) : true;
 			if(!$oasisWriteStatus)
 			{
-				self::resetSubmission($params);
-				$responseData['comments'] = 'Failed to write Oasis file.';
+				$comments = 'Failed to write Oasis file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
 				$response->data = $responseData;
 				return $response;
 			}
 			$payrollWriteStatus = count($payrollData) != 0 ? self::writeFileData($payrollData, Constants::QUICKBOOKS) : true;
 			if(!$payrollWriteStatus)
 			{
-				self::resetSubmission($params);
-				$responseData['comments'] = 'Failed to write Payroll file.';
+				$comments = 'Failed to write Payroll file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
 				$response->data = $responseData;
 				return $response;
 			}
 			$adpWriteStatus = count($adpData) != 0 ? self::writeFileData($adpData, Constants::ADP) : true;
 			if(!$adpWriteStatus)
 			{
-				self::resetSubmission($params);
-				$responseData['comments'] = 'Failed to write ADP file.';
+				$comments = 'Failed to write ADP file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
 				$response->data = $responseData;
 				return $response;
 			}
@@ -712,7 +718,13 @@ class TimeCardController extends BaseActiveController
 			
 			return $fileData;
 		} catch(\Exception $e) {
-			//TODO: log exception here
+			BaseActiveController::archiveWebErrorJson(
+				'getSubmissionFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Type: ' . $type
+			);
 			return false;
 		}
 	}
@@ -740,12 +752,18 @@ class TimeCardController extends BaseActiveController
 			BaseActiveController::processAndWriteCsv($data,$fileName,$type);
 			return true;
 		}catch(\Exception $e) {
-			//TODO: log exception here
+			BaseActiveController::archiveWebErrorJson(
+				'writeFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Data: ' . json_encode($data),
+				'Type: ' . $type
+			);
 			return false;
 		}
 	}
 	
-	private static function resetSubmission($params, $process = 'ALL')
+	private static function resetSubmission($params, $process = 'ALL', $comments = null)
     {
         try{
 			$projectIDs = $params['params']['projectIDArray'];
@@ -773,10 +791,16 @@ class TimeCardController extends BaseActiveController
 			$response->data = $status;	
 			
 			//log submission
-			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_RESET, null, $startDate, $endDate);
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_RESET, null, $startDate, $endDate, $comments);
 			
 		} catch(\Exception $e) {
-			//add error log for archive
+			BaseActiveController::archiveWebErrorJson(
+				'resetSubmission',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Comments: ' . $comments
+			);
 			throw new \yii\web\HttpException(400);
 		}
     }
@@ -904,7 +928,7 @@ class TimeCardController extends BaseActiveController
 		return $allTheProjects;
 	}
 	
-	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null)
+	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
 	{
 		try
 		{
@@ -916,6 +940,7 @@ class TimeCardController extends BaseActiveController
 			$historyRecord->TimeCardID = $timeCardID;
 			$historyRecord->StartDate = $startDate;
 			$historyRecord->EndDate = $endDate;
+			$historyRecord->Comments = $comments;
 			
 			//save
 			if(!$historyRecord->save())
