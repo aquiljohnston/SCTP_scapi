@@ -3,6 +3,7 @@
 namespace app\modules\v2\models;
 
 use Yii;
+use app\modules\v2\models\BaseUser;
 
 /**
  * This is the model class for table "tWorkOrder".

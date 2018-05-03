@@ -17,20 +17,30 @@ final class Constants
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
-	const DEV_DEFAULT_QB_PATH = "C:\\ClientShare\\QuickBooks\\";
-	const DEV_DEFAULT_OASIS_PATH = "C:\\ClientShare\\Oasis\\";
-	const DEV_DEFAULT_ADP_PATH = "C:\\ClientShare\\ADP\\";
-	//const DEV_DEFAULT_OASIS_PATH = "/Users/Shared/";
-	//const DEV_DEFAULT_ADP_PATH = "/Users/Shared/";
-	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
 	
-	const PROD_DEFAULT_OASIS_PATH = "K:\\Oasis\\";
-	const PROD_DEFAULT_QB_PATH = "K:\\QuickBooks\\";
-	const PROD_DEFAULT_ADP_PATH = "K:\\ADP\\";
+	//time card submission file locations
+	const DEV_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooksDev\\';
+	const DEV_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\OasisDev\\';
+	const DEV_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADPDev\\';
+	
+	const STAGE_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooksStage\\';
+	const STAGE_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\OasisStage\\';
+	const STAGE_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADPStage\\';
+	
+	const PROD_DEFAULT_OASIS_PATH = 'K:\\Oasis\\';
+	const PROD_DEFAULT_QB_PATH = 'K:\\QuickBooks\\';
+	const PROD_DEFAULT_ADP_PATH = 'K:\\ADP\\';
 
-	const OASIS = "OASIS";
-	const QUICKBOOKS = "QB";
-	const ADP = "ADP";
+	const OASIS = 'OASIS';
+	//need to change to payroll instead of quickbooks
+	const QUICKBOOKS = 'QB';
+	const ADP = 'ADP';
+	const OT_PAYROLL_HOURS_ID = 5110;
+	
+	//Time Card Submission file namespace
+	const OASIS_FILE_NAME = 'oasis_history_';
+	const PAYROLL_FILE_NAME = 'payroll_history_';
+	const ADP_FILE_NAME = 'adp_history';
 	
 	//Time Card Event History Types
 	const TIME_CARD_APPROVAL = 'Approval';
