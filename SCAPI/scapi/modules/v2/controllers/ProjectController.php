@@ -610,7 +610,7 @@ class ProjectController extends BaseActiveController
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
-			$username = self::getUserFromToken()->Username;
+			$username = self::getUserFromToken()->UserName;
 
 			//create response
 			$response = Yii::$app ->response;
