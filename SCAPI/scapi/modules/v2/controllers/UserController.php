@@ -34,6 +34,7 @@ use yii\db\mssql\PDO;
 use yii\base\ErrorException;
 use yii\db\Exception;
 use yii\data\Pagination;
+use yii\db\Query;
 
 
 /**
@@ -633,11 +634,20 @@ class UserController extends BaseActiveController
 			//initialize response array
 			$responseArray['assets'] = [];
 			$responseArray['pages'] = [];
-			
+
 			if(BaseActiveController::isSCCT($client))
 			{
 				//create base of user query
-				$userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+				// $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+				
+				//get user id from auth token
+				$userID = self::getUserFromToken()->UserID;
+				//get user
+				$user = SCUser::findOne($userID);
+				//create base of user query
+				$userQuery = SCUser::find()->select('*')
+						->where(['in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')->where(['in','ProjUserProjectID', (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')->where(['ProjUserUserID' => $user->UserID])])])
+						->andWhere(['[UserTb].UserActiveFlag' => 1]);
 			}
 			else
 			{
