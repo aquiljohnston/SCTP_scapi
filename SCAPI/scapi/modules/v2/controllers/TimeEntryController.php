@@ -73,19 +73,19 @@ class TimeEntryController extends BaseActiveController
 	{		
 		try{
 			//set db target
-			$headers 				= getallheaders();
+			$headers = getallheaders();
 			TimeEntry::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('timeEntryDeactivate');
 			
 			//capture put body
-			$put 					= file_get_contents("php://input");
-			$entries 				= json_decode($put, true);
-			
+			$put = file_get_contents("php://input");
+			$entries = json_decode($put, true)['entries'];
+
 			//create response
-			$response 				= Yii::$app->response;
-			$response ->format 		= Response::FORMAT_JSON;
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
 			
 			//get current user to set deactivated by
 			$username = BaseActiveController::getUserFromToken()->UserName;
@@ -93,14 +93,14 @@ class TimeEntryController extends BaseActiveController
 			foreach ($entries as $entry) {
 				//SPROC has no return so just in case we need a flag.
 				$success = 0;
-			   //call SPROC to deactivateTimeEntry
+				//call SPROC to deactivateTimeEntry
 				try {
-				$connection 	= BaseActiveRecord::getDb();
-				$transaction 	= $connection->beginTransaction(); 
-				$timeCardCommand= $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
+				$connection = BaseActiveRecord::getDb();
+				$transaction = $connection->beginTransaction(); 
+				$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
 				$timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
-				$timeCardCommand->bindParam(':PARAMETER2', $entry['taskName'], \PDO::PARAM_INT);
-				$timeCardCommand->bindParam(':PARAMETER3', $entry['day'], \PDO::PARAM_INT);
+				$timeCardCommand->bindParam(':PARAMETER2', json_encode($entry['taskName']), \PDO::PARAM_INT);
+				$timeCardCommand->bindParam(':PARAMETER3', array_key_exists('day', $entry) ? $entry['day'] : null, \PDO::PARAM_INT);
 				$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
 				$timeCardCommand->execute();
 				$transaction->commit();
@@ -109,11 +109,8 @@ class TimeEntryController extends BaseActiveController
 					$transaction->rollBack();
 				}
 			}
-
 			$response->data = $success; 
 			return $response;
-
-
 		}
 		catch(\Exception $e) 
 		{

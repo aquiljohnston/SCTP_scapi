@@ -57,10 +57,9 @@ class TimeCardController extends BaseActiveController
 					'get-entries' => ['get'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
-					'get-time-cards-history-data' => ['get'],
-					'get-payroll-data' => ['get'],
 					'show-entries' => ['get'],
 					'get-accountant-view' => ['get'],
+					'submit-time-cards' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -103,6 +102,8 @@ class TimeCardController extends BaseActiveController
 					'TimeCardProjectID',
 					'TimeCardApprovedBy',
 					'TimeCardApprovedFlag',
+					'TimeCardSubmittedOasis',
+					'TimeCardSubmttedQuickBooks',
 					'ProjectName',
 					'UserFirstName',
 					'UserLastName'])
@@ -267,9 +268,6 @@ class TimeCardController extends BaseActiveController
 			
 			$response = Yii::$app ->response;
 			$dataArray = [];
-			$timeCard = TimeCard::findOne($cardID);
-			
-
 			
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
@@ -563,293 +561,248 @@ class TimeCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-
-    public function actionGetTimeCardsHistoryData($projectName,$timeCardName,$week = null,$weekStart=null,$weekEnd=null, $download=false,$type=null)
-    {
-        // RBAC permission check is embedded in this action
-        try{
-            //set db target headers
-            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
-
-            //format response
-            $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
-            $responseArray = [];
-
-            //response array of time cards
-            $timeCardsArr 					= [];
-            //$selectedTimeCardIDs = json_decode($selectedTimeCardIDs, true);
-
-            $arrayProjectName 				= $projectName;
-            $writeTimeCardFile				= false;
-            $fileResponse 					= [];
-            $fileResponse['was_written'] 	=  false;
-            $fileResponse['type']		=  'Exception'; 
-
-            Yii::trace("JSONESSEX-TIMECARDHIS");            
-           // Yii::trace("JSONESSEX-TC ".$arrayProjectName);            
-            Yii::trace("JSONESSEX-WS ".$weekStart);
-            Yii::trace("JSONESSEX-WE ".$weekEnd);
-            Yii::trace("JSONESSEX-CN ".$timeCardName);
-
-
-            //WRAP DB IN ITS OWN TRY CATCH SINCE IT IS A GENERAL "CATCH-ALL" EXCEPTION TYPE
-       		try{
-       			$responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateOasisTimeCardByProject :projectName, :weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName',$projectName,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$responseArray = $getEventsCommand->query();  
-       			} catch(\Exception $e) {
-    	        Yii::trace('PDO EXCEPTION'.$e->getMessage());
-        	    throw new \yii\web\HttpException(400);
- 	       }
- 	
-				if($responseArray->count() !=0){
-
-					$writeTimeCardFile = true;
-
-				}
-
-				if($writeTimeCardFile){
-                //rbac permission check
-                if (PermissionsController::can('timeCardGetAllCards')) {
-                    //check if week is prior or current to determine appropriate view
-                    if ($week == 'prior') {
-                        $responseArray = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                       // $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                        //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCardsArr);
-                    } elseif ($week == 'current') {
-                        $responseArray = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        //$responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                        //$timeCardArray = array_map(function ($model) {return $model->attributes;},$timeCards);
-                    }
-                } //rbac permission check
-                elseif (PermissionsController::can('timeCardGetOwnCards')) {
-                    $userID = self::getUserFromToken()->UserID;
-                    //get user project relations array
-                    $projects = ProjectUser::find()
-                        ->where("ProjUserUserID = $userID")
-                        ->all();
-                    $projectsSize = count($projects);
-
-                    //check if week is prior or current to determine appropriate view
-                    if ($week == 'prior' && $projectsSize > 0) {
-                        $timeCards = TimeCardSumHoursWorkedPriorWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-
-                        for ($i = 0; $i < $projectsSize; $i++) {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $timeCards->andWhere(['ProjectID' => $projectID]);
-                        }
-                        $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                       // $responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-
-                    } elseif ($week == 'current' && $projectsSize > 0) {
-                        $timeCards = TimeCardSumHoursWorkedCurrentWeekWithProjectName::find()->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-                        for ($i = 0; $i < $projectsSize; $i++) {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $timeCards->andWhere(['ProjectID' => $projectID]);
-                        }
-                        $responseArray = $timeCards->orderBy('UserID,TimeCardStartDate,ProjectID')->createCommand();//->all();
-                        //$responseArray = $responseArray->query(); // creates a reader so that information can be processed one row at a time
-                    }
-                } else {
-                    throw new ForbiddenHttpException;
-                }
-              	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$timeCardName,$type);
-              	$fileResponse['type']			=  'Success'; 	
-              	$response -> data 				= $fileResponse;
-   
-            }else{
-            	$fileResponse['was_written'] 	=  false;
-              	$fileResponse['type']			=  'Nothing to do.'; 	
-                $response -> data 				= $fileResponse;
-            }
-			//log submission
-			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_OASIS, null, $weekStart, $weekEnd);
-
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-       } catch(\Exception $e) {
-           Yii::trace('Exception '.$e->getMessage());
-          throw new \yii\web\HttpException(400);
-        }
-    }
-
-    public function actionGetPayrollData($cardName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
-    {
-
-        // RBAC permission check is embedded in this action
-        try{
-            //set db target headers
-            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
-
-            //format response
-            $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
-            $responseArray = [];
-
-
-            $writePayrollFile				= false;
-            $fileResponse 					= [];
-            $fileResponse['was_written'] 	=  FALSE;
-            $fileResponse['type']		=  'Exception'; 	
-
-            Yii::trace("JSONESSEX-PAYCARDHIS");  
-            //Yii::trace("JSONESSEX-PR ".$arrayProjectName);
-            Yii::trace("JSONESSEX-WS ".$weekStart);
-            Yii::trace("JSONESSEX-WE ".$weekEnd);
-            Yii::trace("JSONESSEX-CN ".$cardName);
-    		
-    		//
- 			try{
-	                $responseArray = BaseActiveRecord::getDb();
-					$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateQBDummyPayrollByProject :projectName, :weekStart,:weekEnd");
-					$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
-					$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
-					$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-					$responseArray = $getEventsCommand->query(); 
-				} catch(\Exception $e) {
-	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
-	            	throw new \yii\web\HttpException(400);
-        	}
-
-
-
-			//error_log(print_r($responseArray->count(),true));
-				if($responseArray->count() !=0){
-
-					$writePayrollFile	= true;
-
-				} 
-
-				if($writePayrollFile) {
-             	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$cardName,$type);
-             	$fileResponse['type']		=  'Successfully wrote file payroll file'; 	
-             	$response -> data = $fileResponse;
-
-          	  } else {
-          	  	$fileResponse['was_written'] 	=  false;
-             	$fileResponse['type']		=  'nothing to do'; 	
-             	$response -> data = $fileResponse;
-          	  }
-			//log submission
-			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_QB, null, $weekStart, $weekEnd);
-      	
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
-       }
-    }
-
-     
-	public function actionGetAdpData($adpFileName,$projectName,$weekStart=null,$weekEnd=null,$download=false,$type=null)
-    {
-
-        // RBAC permission check is embedded in this action
-        try{
-            //set db target headers
-            TimeCardSumHoursWorkedCurrentWeekWithProjectName::setClient(BaseActiveController::urlPrefix());
-
-            //format response
-            $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
-
-            $writeADPFile	= false;
-            $responseArray = [];
-            $fileResponse 					= [];
-            $fileResponse['was_written'] 	=  FALSE;
-            $fileResponse['message']		=  'Empty ADP File'; 	
-
-            Yii::trace("JSONESSEX-ADPHIS");  
-            //Yii::trace("JSONESSEX-PR ".$arrayProjectName);
-            Yii::trace("JSONESSEX-WS ".$weekStart);
-            Yii::trace("JSONESSEX-WE ".$weekEnd);
-            Yii::trace("JSONESSEX-CN ".$adpFileName);
-            
-   
- 			try{
-                $responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spGenerateADPTimeCardByProject_Dev201804 :projectName, :weekStart,:weekEnd");
-				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$responseArray = $getEventsCommand->query();
-				} catch(\Exception $e) {
-	            	Yii::trace('PDO EXCEPTION '.$e->getMessage());
-	            	throw new \yii\web\HttpException(400);
-        	}
-  
+	
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	{
+		try
+		{
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			$detailsQuery = new Query;
+            $timeCards = $detailsQuery->select('*')
+                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+				->where(['TimeCardProjectID' => $projectID])
+				->all(BaseActiveRecord::getDb());
 				
+			//format response
+			$responseArray['details'] = $timeCards;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+		}
+		catch(ForbiddenHttpException $e) {
+			throw $e;
+		}
+		catch(\Exception $e)
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	/**
+	*Call sp to process time card data and generate account files for OASIS, QB, and ADP
+	*Looks for JSON PUT body containing date range and project IDs to process
+	*@RETURNS JSON w/success flag and comment
+	*/
+	public function actionSubmitTimeCards()
+	{
+		try
+		{
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get put data
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			
+			//format response
+			$responseData = [];
+			$responseData['success'] = 0;
+			$responseData['comments'] = '';
+			
+			//call function to get file data, check after each file for failure
+			$oasisData = self::getSubmissionFileData($params, Constants::OASIS);
+			if($oasisData === false)
+			{
+				$comments = 'Failed to get Oasis Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			$payrollData = self::getSubmissionFileData($params, Constants::QUICKBOOKS);
+			if($payrollData === false)
+			{
+				$comments = 'Failed to get Payroll Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			$adpData = self::getSubmissionFileData($params, Constants::ADP);
+			if($adpData === false)
+			{
+				$comments = 'Failed to get ADP Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			
+			//call function to write files, check after each file for failure
+			$oasisWriteStatus = count($oasisData) != 0 ? self::writeFileData($oasisData, Constants::OASIS) : true;
+			if(!$oasisWriteStatus)
+			{
+				$comments = 'Failed to write Oasis file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			$payrollWriteStatus = count($payrollData) != 0 ? self::writeFileData($payrollData, Constants::QUICKBOOKS) : true;
+			if(!$payrollWriteStatus)
+			{
+				$comments = 'Failed to write Payroll file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			$adpWriteStatus = count($adpData) != 0 ? self::writeFileData($adpData, Constants::ADP) : true;
+			if(!$adpWriteStatus)
+			{
+				$comments = 'Failed to write ADP file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			
+			//if all process run successfully return success
+			$responseData['success'] = 1;
+			$responseData['comments'] = 'Time Card submission processed successfully.';
+			$response = Yii::$app->response;
+			$response->data = $responseData;
+			$response->format = Response::FORMAT_JSON;
+			return $response;
+			
+		} catch(ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+        }	
+	}
+	
+	private static function getSubmissionFileData($params, $type)
+	{
+		try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			switch ($type) {
+				case Constants::OASIS:
+					$spName = 'spGenerateOasisTimeCardByProject';
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_OASIS;
+					break;
+				case Constants::QUICKBOOKS:
+					$spName = 'spGenerateQBDummyPayrollByProject';
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_QB;
+					break;
+				case Constants::ADP:
+					$spName = 'spGenerateADPTimeCardByProject';
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_ADP;
+					break;
+			}
+			
+			//if sp call fails concat sp name instead
+			$db = BaseActiveRecord::getDb();
+			$getFileDataCommand = $db->createCommand("SET NOCOUNT ON EXECUTE $spName :projectIDs, :startDate, :endDate");
+			$getFileDataCommand->bindParam(':projectIDs', $projectIDs, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':startDate', $startDate, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':endDate', $endDate, \PDO::PARAM_STR);
+			$fileData = $getFileDataCommand->query();
 
-				if($responseArray->count() !=0){
-
-					$writeADPFile	= true;
-
-				} 
-
-				if($writeADPFile) {
-             	$fileResponse['was_written'] 	=  BaseActiveController::processAndWriteCsv($responseArray,$adpFileName,$type);
-             	$fileResponse['type']		=  'Successfully wrote adp file'; 	
-             	$response -> data = $fileResponse;
-
-          	  } else {
-          	  	$fileResponse['was_written'] 	=  false;
-             	$fileResponse['type']		=  'nothing to do'; 	
-             	$response -> data = $fileResponse;
-          	  }
 			//log submission
-			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_ADP, null, $weekStart, $weekEnd);
-      	
-        } catch(ForbiddenHttpException $e) {
-            Yii::trace('ForbiddenHttpException '.$e->getMessage());
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
-            Yii::trace('Exception '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
-       }
-    }
-
-    public function actionResetCometTrackerProcess($projectName,$weekStart=null,$weekEnd=null,$process)
+			self::logTimeCardHistory($tcEventHistoryType, null, $startDate, $endDate);
+			
+			return $fileData;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'getSubmissionFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Type: ' . $type
+			);
+			return false;
+		}
+	}
+	
+	private static function writeFileData($data, $type)
+	{
+		try {
+			switch ($type) {
+				case Constants::OASIS:
+					$fileNamePrefix = Constants::OASIS_FILE_NAME;
+					break;
+				case Constants::QUICKBOOKS:
+					$fileNamePrefix = Constants::PAYROLL_FILE_NAME;
+					break;
+				case Constants::ADP:
+					$fileNamePrefix = Constants::ADP_FILE_NAME;
+					break;
+			}
+			//get date and format for file name
+			$date = BaseActiveController::getDate();
+			$formatedDate = str_replace([' ', ':'], '_', $date);
+			$fileName = $fileNamePrefix . $formatedDate;
+			
+			//data is the sp response for the given file, file name payroll_history_2018-03-27_9_36_36.csv, type is type of file being written
+			BaseActiveController::processAndWriteCsv($data,$fileName,$type);
+			return true;
+		}catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'writeFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Data: ' . json_encode($data),
+				'Type: ' . $type
+			);
+			return false;
+		}
+	}
+	
+	private static function resetSubmission($params, $process = 'ALL', $comments = null)
     {
-
-        // RBAC permission check is embedded in this action
         try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			
             //set db target headers
           	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //format response
-            $response 			= Yii::$app->response;
-            $response-> format 	= Response::FORMAT_JSON;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
 
-            $responseArray 		= [];
+            $responseArray = [];
 
+			$responseArray = BaseActiveRecord::getDb();
+			$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetSubmitFlag :projectIDs, :startDate, :endDate, :process");
+			$getEventsCommand->bindParam(':projectIDs', $projectIDs,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':process', $process,  \PDO::PARAM_STR);
+			$responseArray = $getEventsCommand->query();  
 
-            Yii::trace("RESETPROCESSCALLED");  
-
-                $responseArray = BaseActiveRecord::getDb();
-				$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetSubmitFlag :projectName,:weekStart,:weekEnd,:process");
-				$getEventsCommand->bindParam(':projectName', $projectName,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekStart', $weekStart,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':weekEnd', $weekEnd,  \PDO::PARAM_STR);
-				$getEventsCommand->bindParam(':process', $process,  \PDO::PARAM_STR);
-				$responseArray 	  	= $getEventsCommand->query();  
-
-				$status['success']	= true;	
-             	$response -> data 	= $status;	
+			$status['success'] = true;	
+			$response->data = $status;	
 			
 			//log submission
-			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_RESET, null, $weekStart, $weekEnd);
+			self::logTimeCardHistory(Constants::TIME_CARD_SUBMISSION_RESET, null, $startDate, $endDate, $comments);
 			
-        } catch(\Exception $e) {
-            Yii::trace('PDO EXCEPTION: '.$e->getMessage());
-            throw new \yii\web\HttpException(400);
-       }
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'resetSubmission',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Comments: ' . $comments
+			);
+			throw new \yii\web\HttpException(400);
+		}
     }
 
     /**
@@ -975,7 +928,7 @@ class TimeCardController extends BaseActiveController
 		return $allTheProjects;
 	}
 	
-	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null)
+	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
 	{
 		try
 		{
@@ -987,6 +940,7 @@ class TimeCardController extends BaseActiveController
 			$historyRecord->TimeCardID = $timeCardID;
 			$historyRecord->StartDate = $startDate;
 			$historyRecord->EndDate = $endDate;
+			$historyRecord->Comments = $comments;
 			
 			//save
 			if(!$historyRecord->save())

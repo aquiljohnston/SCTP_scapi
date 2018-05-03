@@ -204,6 +204,10 @@ class MenuController extends Controller {
 			$response->data = $menuArray;
 			return $response;
 		}
+		catch(ForbiddenHttpException $e) 
+		{
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
