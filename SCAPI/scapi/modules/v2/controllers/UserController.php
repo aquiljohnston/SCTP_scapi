@@ -755,7 +755,7 @@ class UserController extends BaseActiveController
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
 	returns ???*/
-	public static function createInProject($user, $client)
+	public static function createInProject($user, $client, $project = null)
 	{
 		//get user model based on project 
 		$userModel = BaseActiveRecord::getUserModel($client);
@@ -770,7 +770,8 @@ class UserController extends BaseActiveController
 		//if user record already exist in the project db, return
 		if($existingUser != null) 
 		{
-			//need to confirm association to project here as well
+			//add user to project to generate time/mileage cards
+			ProjectController::addToProject($user, $project);
             return true;
         }
 		
@@ -800,7 +801,7 @@ class UserController extends BaseActiveController
 				$auth->assign($userRole, $projectUser['UserID']);
 			}
 			//add user to project to generate time/mileage cards
-			ProjectController::addToProject($user);
+			ProjectController::addToProject($user, $project);
 		}
 		return $projectUser;
 	}

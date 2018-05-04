@@ -440,10 +440,8 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    if(UserController::createInProject($user, $project->ProjectUrlPrefix))
+                    if(UserController::createInProject($user, $project->ProjectUrlPrefix, $project))
 					{
-						//fucntion call to add to project
-						self::addToProject($user, $project);
 						//reset target db after external call
 						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					}
