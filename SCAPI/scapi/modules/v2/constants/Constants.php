@@ -37,6 +37,10 @@ final class Constants
 	const ADP = 'ADP';
 	const OT_PAYROLL_HOURS_ID = 5110;
 	
+	//Payment Method
+	const PAY_METHOD_SALARY = 'S';
+	const PAY_METHOD_HOURLY = 'H';
+	
 	//Time Card Submission file namespace
 	const OASIS_FILE_NAME = 'oasis_history_';
 	const PAYROLL_FILE_NAME = 'payroll_history_';

@@ -148,6 +148,13 @@ class UserController extends BaseActiveController
             if ($user['UserAppRoleType'] == 'Admin') {
                 PermissionsController::requirePermission('userCreateAdmin');
             }
+			
+			//set payment method
+			if($user->UserAppRoleType == 'Technician'){
+				$user->UserPayMethod = Constants::PAY_METHOD_HOURLY;
+			} else {
+				$user->UserPayMethod = Constants::PAY_METHOD_SALARY;
+			}
 
             //created date/by
             $username = self::getUserFromToken()->UserName;
