@@ -942,7 +942,7 @@ class TimeCardController extends BaseActiveController
             //get body data
             $data = file_get_contents("php://input");
 			$submitCheckData = json_decode($data, true)['submitCheck'];
-			$isAccountant = array_key_exists($submitCheckData['isAccountant']);
+			$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
 			//if is not scct project name will always be the current client
 			if(BaseActiveController::isSCCT($client))
 			{
