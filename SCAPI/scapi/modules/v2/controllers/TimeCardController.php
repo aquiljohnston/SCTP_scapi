@@ -591,6 +591,78 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
+	public function actionPMSubmitTimeCards()
+	{
+		try
+		{
+			Yii::Trace("actionPMSubmitTimeCards started");
+			
+			//set db target
+			TimeCard::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('timeCardApproveCards');
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//get userid
+			$approvedBy = self::getUserFromToken()->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Time Card Submittal', $approvedBy, BaseActiveController::urlPrefix());
+			
+			//parse json
+			$cardIDs = $data["cardIDArray"];
+			$approvedCards = []; // Prevents empty array from causing crash
+			//get timecards
+			foreach($cardIDs as $id)
+			{
+				$approvedCards[]= TimeCard::findOne($id);
+			}
+			
+			//try to approve time cards
+			try {
+				//create transaction
+				$connection = TimeCard::getDb();
+				$transaction = $connection->beginTransaction();
+
+				foreach ($approvedCards as $card) {
+					$card->TimeCardPMApprovedFlag = 1;
+					$card->TimeCardApprovedBy = $approvedBy;
+					$card->update();
+					//log approvals
+					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card->TimeCardID);
+				}
+				$transaction->commit();
+				//log approval of cards
+				$response->setStatusCode(200);
+				$response->data = $approvedCards;
+				return $response;
+			} catch(\Exception $e) {
+				//if transaction fails rollback changes and send error
+				$transaction->rollBack();
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				return $response;
+				
+			}
+		}
+		catch(\Exception $e)  
+		{
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
 	/**
 	*Call sp to process time card data and generate account files for OASIS, QB, and ADP
 	*Looks for JSON PUT body containing date range and project IDs to process
@@ -870,7 +942,7 @@ class TimeCardController extends BaseActiveController
             //get body data
             $data = file_get_contents("php://input");
 			$submitCheckData = json_decode($data, true)['submitCheck'];
-			
+			$isAccountant = $submitCheckData['isAccountant'];
 			//if is not scct project name will always be the current client
 			if(BaseActiveController::isSCCT($client))
 			{
@@ -884,13 +956,22 @@ class TimeCardController extends BaseActiveController
 
             //build base query
 			$responseArray = new Query;
-            $responseArray->select('*')
-                ->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+			if($isAccountant) {
+	            $responseArray->select('*')
+					->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+					->addParams([
+						//':ProjectName' => json_encode($projectName), 
+						':StartDate' => $submitCheckData['StartDate'], 
+						':EndDate' => $submitCheckData['EndDate']]);
+			} else {
+				$responseArray->select('*')
+                ->from(["fnSubmit(:ProjectName, :StartDate , :EndDate)"])
                 ->addParams([
-					//':ProjectName' => json_encode($projectName), 
+					':ProjectName' => json_encode($projectName), 
 					':StartDate' => $submitCheckData['StartDate'], 
 					':EndDate' => $submitCheckData['EndDate']
 					]);
+			}
             $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
             $responseArray = $submitButtonStatus;
 
