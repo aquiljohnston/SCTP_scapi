@@ -635,8 +635,7 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $viewDispatch);
 		$auth->addChild($supervisor, $viewAssigned);
 
-
-		 // add "accountant" role and give this role CRUD permissions
+		// add "accountant" role and give this role CRUD permissions
         $accountant = $auth->createRole('Accountant');
         $auth->add($accountant);
 		//add child roles
@@ -660,9 +659,7 @@ class RbacController extends Controller
 		$auth->addChild($accountant, $timeEntryDeactivate);
 		$auth->addChild($accountant, $mileageCardGetAllCards);
 		$auth->addChild($accountant, $timeCardGetAllCards);
-		$auth->addChild($accountant, $projectView);
 		$auth->addChild($accountant, $projectGetOwnProjects);
-		$auth->addChild($accountant, $projectGetDropdown);
 		$auth->addChild($accountant, $projectGetUserRelationships);
 		// menu permissions
 		$auth->addChild($accountant, $viewAdministrationMenu);
@@ -671,7 +668,19 @@ class RbacController extends Controller
 		$auth->addChild($accountant, $viewMileageCardMgmt);
 		$auth->addChild($accountant, $viewReportsMenu);
 
-
+		// add "analyst" role and give this role CRUD permissions
+        $analyst = $auth->createRole('Analyst');
+        $auth->add($analyst);
+		//add child roles
+		$auth->addChild($analyst, $technician);
+		//add permissions
+		$auth->addChild($analyst, $notificationsGet);
+		$auth->addChild($analyst, $payCodeGetDropdown);
+		$auth->addChild($analyst, $projectGetOwnProjects);
+		$auth->addChild($analyst, $projectGetUserRelationships);
+		// menu permissions
+		$auth->addChild($analyst, $viewHomeMenu);
+		$auth->addChild($analyst, $viewReportsMenu);
 
 		
 		//assign roles to existing users////////////////////////////////////////
