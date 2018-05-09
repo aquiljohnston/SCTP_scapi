@@ -317,6 +317,11 @@ class RbacController extends Controller
         $timeCardGetEntries->description = 'Get all time entries for a time card';
         $auth->add($timeCardGetEntries);
 		
+		//add "timeCardPmSubmit" permission
+		$timeCardPmSubmit = $auth->createPermission('timeCardPmSubmit');
+        $timeCardPmSubmit->description = 'Submit time cards to accounting.';
+        $auth->add($timeCardPmSubmit);
+		
 		//Time Entry permissions/////////////////////////////////////////////////////////////////
         // add "timeEntryView" permission
         $timeEntryView = $auth->createPermission('timeEntryView');
@@ -600,6 +605,7 @@ class RbacController extends Controller
 		//add child roles
         $auth->addChild($projectManager, $supervisor);
 		$auth->addChild($projectManager, $userUpdateProjectManager);
+		$auth->addChild($projectManager, $timeCardPmSubmit);
 		
 		// add "admin" role and give this role the permissions of the "projectManager" and "engineer"
 		$admin = $auth->createRole('Admin');
