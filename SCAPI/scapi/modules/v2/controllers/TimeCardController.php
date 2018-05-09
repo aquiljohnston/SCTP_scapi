@@ -632,10 +632,10 @@ class TimeCardController extends BaseActiveController
 			try {
 				$transaction = $connection->beginTransaction();
 				foreach ($queryResults as $card) {
-					$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "', WHERE TimeCardID = " . $card['TimeCardID'];
+					$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "' WHERE TimeCardID = " . $card['TimeCardID'];
 					$connection->createCommand($statement)->execute();
 					//log approvals
-					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card->TimeCardID);
+					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card['TimeCardID']);
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
