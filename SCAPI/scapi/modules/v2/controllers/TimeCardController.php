@@ -60,6 +60,7 @@ class TimeCardController extends BaseActiveController
 					'show-entries' => ['get'],
 					'get-accountant-view' => ['get'],
 					'submit-time-cards' => ['put'],
+					'p-m-submit-time-cards' => ['put']
                 ],  
             ];
 		return $behaviors;	
@@ -606,7 +607,6 @@ class TimeCardController extends BaseActiveController
 			//capture put body
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
-			
 			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
@@ -617,49 +617,44 @@ class TimeCardController extends BaseActiveController
 			//archive json
 			BaseActiveController::archiveWebJson(json_encode($data), 'Time Card Submittal', $approvedBy, BaseActiveController::urlPrefix());
 			
-			//parse json
-			$cardIDs = $data["cardIDArray"];
-			$approvedCards = []; // Prevents empty array from causing crash
-			//get timecards
+			//parse json	
+			$cardIDs = $data["projectIDArray"];
+			$connection = BaseActiveRecord::getDb();
+			// get all timecards
 			foreach($cardIDs as $id)
 			{
-				$approvedCards[]= TimeCard::findOne($id);
+				$queryString = "Select * from [dbo].[TimeCardTb] tc
+								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = tc.TimeCardTechID
+								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $id . " and TimeCardActiveFlag = 1";
+				$queryResults = $connection->createCommand($queryString)->queryAll();
 			}
-			
 			//try to approve time cards
 			try {
-				//create transaction
-				$connection = TimeCard::getDb();
 				$transaction = $connection->beginTransaction();
-
-				foreach ($approvedCards as $card) {
-					$card->TimeCardPMApprovedFlag = 1;
-					$card->TimeCardApprovedBy = $approvedBy;
-					$card->update();
+				foreach ($queryResults as $card) {
+					$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "', WHERE TimeCardID = " . $card['TimeCardID'];
+					$connection->createCommand($statement)->execute();
 					//log approvals
 					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card->TimeCardID);
 				}
 				$transaction->commit();
-				//log approval of cards
 				$response->setStatusCode(200);
-				$response->data = $approvedCards;
+				$response->data = $queryResults;
 				return $response;
 			} catch(\Exception $e) {
-				//if transaction fails rollback changes and send error
+				// if transaction fails rollback changes, archive and send error
 				$transaction->rollBack();
-				//archive error
 				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 				return $response;
-				
 			}
 		}
 		catch(\Exception $e)  
 		{
 			//archive error
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
-			throw new \yii\web\HttpException(400);
+			throw new \yii\web\HttpException($e);
 		}
 	}
 	
