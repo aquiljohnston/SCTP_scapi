@@ -60,6 +60,7 @@ class TimeCardController extends BaseActiveController
 					'show-entries' => ['get'],
 					'get-accountant-view' => ['get'],
 					'submit-time-cards' => ['put'],
+					'p-m-submit-time-cards' => ['put']
                 ],  
             ];
 		return $behaviors;	
@@ -591,6 +592,72 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
+	public function actionPMSubmitTimeCards()
+	{
+		try
+		{
+			Yii::Trace("actionPMSubmitTimeCards started");
+			
+			//set db target
+			TimeCard::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('timeCardApproveCards');
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//get userid
+			$approvedBy = self::getUserFromToken()->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Time Card Submittal', $approvedBy, BaseActiveController::urlPrefix());
+			
+			//parse json	
+			$cardIDs = $data["projectIDArray"];
+			$connection = BaseActiveRecord::getDb();
+			// get all timecards
+			foreach($cardIDs as $id)
+			{
+				$queryString = "Select * from [dbo].[TimeCardTb] tc
+								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = tc.TimeCardTechID
+								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $id . " and TimeCardActiveFlag = 1";
+				$queryResults = $connection->createCommand($queryString)->queryAll();
+			}
+			//try to approve time cards
+			try {
+				$transaction = $connection->beginTransaction();
+				foreach ($queryResults as $card) {
+					$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "', WHERE TimeCardID = " . $card['TimeCardID'];
+					$connection->createCommand($statement)->execute();
+					//log approvals
+					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card->TimeCardID);
+				}
+				$transaction->commit();
+				$response->setStatusCode(200);
+				$response->data = $queryResults;
+				return $response;
+			} catch(\Exception $e) {
+				// if transaction fails rollback changes, archive and send error
+				$transaction->rollBack();
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				return $response;
+			}
+		}
+		catch(\Exception $e)  
+		{
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException($e);
+		}
+	}
+	
 	/**
 	*Call sp to process time card data and generate account files for OASIS, QB, and ADP
 	*Looks for JSON PUT body containing date range and project IDs to process
@@ -870,7 +937,7 @@ class TimeCardController extends BaseActiveController
             //get body data
             $data = file_get_contents("php://input");
 			$submitCheckData = json_decode($data, true)['submitCheck'];
-			
+			$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
 			//if is not scct project name will always be the current client
 			if(BaseActiveController::isSCCT($client))
 			{
@@ -884,13 +951,22 @@ class TimeCardController extends BaseActiveController
 
             //build base query
 			$responseArray = new Query;
-            $responseArray->select('*')
-                ->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+			if($isAccountant) {
+	            $responseArray->select('*')
+					->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+					->addParams([
+						//':ProjectName' => json_encode($projectName), 
+						':StartDate' => $submitCheckData['StartDate'], 
+						':EndDate' => $submitCheckData['EndDate']]);
+			} else {
+				$responseArray->select('*')
+                ->from(["fnSubmit(:ProjectName, :StartDate , :EndDate)"])
                 ->addParams([
-					//':ProjectName' => json_encode($projectName), 
+					':ProjectName' => json_encode($projectName), 
 					':StartDate' => $submitCheckData['StartDate'], 
 					':EndDate' => $submitCheckData['EndDate']
 					]);
+			}
             $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
             $responseArray = $submitButtonStatus;
 
