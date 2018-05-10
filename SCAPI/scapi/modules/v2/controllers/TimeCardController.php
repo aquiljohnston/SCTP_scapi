@@ -960,7 +960,7 @@ class TimeCardController extends BaseActiveController
 						':EndDate' => $submitCheckData['EndDate']]);
 			} else {
 				$responseArray->select('*')
-                ->from(["fnSubmit(:ProjectName, :StartDate , :EndDate)"])
+                ->from(["fnSubmitPM(:ProjectName, :StartDate , :EndDate)"])
                 ->addParams([
 					':ProjectName' => json_encode($projectName), 
 					':StartDate' => $submitCheckData['StartDate'], 
