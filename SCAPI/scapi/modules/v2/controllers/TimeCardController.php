@@ -635,7 +635,7 @@ class TimeCardController extends BaseActiveController
 					$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "' WHERE TimeCardID = " . $card['TimeCardID'];
 					$connection->createCommand($statement)->execute();
 					//log approvals
-					self::logTimeCardHistory(Constants::TIME_CARD_APPROVAL, $card['TimeCardID']);
+					self::logTimeCardHistory(Constants::TIME_CARD_PM_APPROVAL, $card['TimeCardID']);
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
