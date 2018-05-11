@@ -47,7 +47,8 @@ final class Constants
 	const ADP_FILE_NAME = 'adp_history';
 	
 	//Time Card Event History Types
-	const TIME_CARD_APPROVAL = 'Approval';
+	const TIME_CARD_APPROVAL = 'Supervisor Approval';
+	const TIME_CARD_PM_APPROVAL = 'PM Approval';
 	const TIME_CARD_SUBMISSION_OASIS = 'Oasis Submission';
 	const TIME_CARD_SUBMISSION_QB = 'QB Submission';
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
