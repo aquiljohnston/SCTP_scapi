@@ -16,6 +16,7 @@ final class Constants
 	const BASE_USER = 'app\modules\v2\models\BaseUser';
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
+	const BASE_TASKOUT = 'app\modules\v2\models\TaskOut';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
 	
 	//time card submission file locations
@@ -65,6 +66,7 @@ final class Constants
 		'AUTH' => 'app\modules\v2\rbac\ScDbManager',
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => self::BASE_EVENT,
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => 'app\modules\v2\models\SCUser'
 	];
 	
@@ -79,6 +81,7 @@ final class Constants
 		'AUTH' => 'app\modules\v2\rbac\ScDbManager',
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => self::BASE_EVENT,
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => 'app\modules\v2\models\SCUser'
 	];
 
@@ -103,6 +106,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\modules\york\models\Asset',
 		'EVENT' => self::BASE_EVENT,
+		'TASKOUT' => 'app\modules\v2\modules\york\models\TaskOut',
 		'USER' => self::BASE_USER
 	];
 	
@@ -114,6 +118,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => 'app\modules\v2\models\DominionEvent',
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => self::BASE_USER
 	];
 	
@@ -127,6 +132,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\modules\scana\models\Asset',
 		'EVENT' => 'app\modules\v2\models\ScanaEvent',
+		'TASKOUT' => 'app\modules\v2\modules\scana\models\TaskOut',
 		'USER' => self::BASE_USER
 	];
 	
@@ -136,6 +142,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\models\DemoAsset',
 		'EVENT' => 'app\modules\v2\models\DemoEvent',
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => self::BASE_USER
 	];
 	
