@@ -80,75 +80,30 @@ class TimeCardController extends BaseActiveController
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
 
-	/**
-	 * Displays a single TimeCard model.
-	 * @param integer $id
-	 * @return mixed
-	 * @throws \yii\web\HttpException
-	 */
-    public function actionView($id)
-    {
-		//may want to move this into show entries because I believe that is the only location it is called from
-		try
-		{
-			//set db target
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeCardView');
-			
-			$timeCard = TimeCard::find()
-				->select([
-					'TimeCardID',
-					'TimeCardProjectID',
-					'TimeCardApprovedBy',
-					'TimeCardApprovedFlag',
-					'TimeCardSubmittedOasis',
-					'TimeCardSubmttedQuickBooks',
-					'ProjectName',
-					'UserFirstName',
-					'UserLastName'])
-				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
-				->innerJoin('UserTb', 'UserTb.UserID = TimeCardTb.TimeCardTechID')
-				->where(['TimeCardID' => $id])
-				->asArray()
-				->one();
-			$response = Yii::$app ->response;
-			$response -> format = Response::FORMAT_JSON;
-			$response -> data = $timeCard;
-			
-			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
 	public function actionApproveCards()
 	{
 		try
 		{
 			//set db target
 			TimeCard::setClient(BaseActiveController::urlPrefix());
-			
+
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardApproveCards');
-			
+
 			//capture put body
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true);
-			
+
 			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
-			
+
 			//get userid
 			$approvedBy = self::getUserFromToken()->UserName;
-			
+
 			//archive json
 			BaseActiveController::archiveWebJson(json_encode($data), 'Time Card Approve', $approvedBy, BaseActiveController::urlPrefix());
-			
+
 			//parse json
 			$cardIDs = $data["cardIDArray"];
 			$approvedCards = []; // Prevents empty array from causing crash
@@ -157,7 +112,7 @@ class TimeCardController extends BaseActiveController
 			{
 				$approvedCards[]= TimeCard::findOne($id);
 			}
-			
+
 			//try to approve time cards
 			try {
 				//create transaction
@@ -187,31 +142,31 @@ class TimeCardController extends BaseActiveController
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 				return $response;
-				
+
 			}
 		}
-		catch(\Exception $e)  
+		catch(\Exception $e)
 		{
 			//archive error
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
+
 	public function actionGetEntries($cardID)
-	{		
+	{
 		try
 		{
 			//set db target
 			TimeCard::setClient(BaseActiveController::urlPrefix());
-			
+
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardGetEntries');
-			
+
 			$response = Yii::$app->response;
 			$dataArray = [];
 			$timeCard = TimeCard::findOne($cardID);
-			
+
 			$dayArray =
 			[
 				'Sunday' => ['Entries' => [], 'Total' => 0],
@@ -222,14 +177,14 @@ class TimeCardController extends BaseActiveController
 				'Friday' => ['Entries' => [], 'Total' => 0],
 				'Saturday' => ['Entries' => [], 'Total' => 0],
 			];
-			
+
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
 					->from("fnTimeCardEntrysByTimeCard(:cardID)")
 					->addParams([':cardID' => $cardID])
 					->orderBy('TimeEntryStartTime');
 			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
-			
+
 			foreach ($entries as $entry)
 			{
 				$dayArray[$entry['TimeEntryWeekDay']]['Entries'][] = $entry;
@@ -241,93 +196,54 @@ class TimeCardController extends BaseActiveController
 					$dayArray[$day]['Total'] = $data['Entries'][0]['DayTotalTime'];
 				}
 			}
-				
+
 			//load data into array
 			$dataArray['StartDate'] = $timeCard-> TimeCardStartDate;
 			$dataArray['EndDate'] = $timeCard-> TimeCardEndDate;
 			$dataArray['ApprovedFlag'] = $timeCard-> TimeCardApprovedFlag;
 			$dataArray['TimeEntries'] = $dayArray;
-			
+
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		}
-		catch(\Exception $e)  
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
 	}
 
 	public function actionShowEntries($cardID)
-	{		
+	{
 		try
 		{
 			//set db target
 			TimeCard::setClient(BaseActiveController::urlPrefix());
-			
+
 			// RBAC permission check
 			PermissionsController::requirePermission('timeCardGetEntries');
-			
-			$response = Yii::$app ->response;
+
 			$dataArray = [];
-			
+
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
-					->from("fnTimeEntrysByTimeCard(:cardID)")
-					->addParams([':cardID' => $cardID]);
+				->from("fnTimeEntrysByTimeCard(:cardID)")
+				->addParams([':cardID' => $cardID]);
 			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
-			
-			
-			$response -> format = Response::FORMAT_JSON;
-			$response -> data = $entries;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}	
-	
-	public function actionGetCard($userID)
-	{		
-		try
-		{
-			//get http headers
-			$headers 	= getallheaders();
-			//set db target
-			AllTimeCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeCardGetCard');
-			
-			//get project based on header
-			$project 	= Project::find()
-				->where(['ProjectUrlPrefix'=>$headers['X-Client']])
-				->one();
-			
-			//get time card
-			$timeCardQuery = AllTimeCardsCurrentWeek::find()
-				->where(['UserID'=>$userID]);
-			if($project != null)
-			{
-				$timeCardQuery->andwhere(['TimeCardProjectID'=>$project->ProjectID]);
-			}
-			$timeCard = $timeCardQuery->one();
-			
-			//handle response
+
+			$cardQuery = new Query;
+			$cardQuery->select('*')
+				->from("fnTimeCardByID(:cardID)")
+				->addParams([':cardID' => $cardID]);
+			$card = $cardQuery->one(BaseActiveRecord::getDb());
+
+			$dataArray['show-entries'] = $entries;
+			$dataArray['card'] = $card;
+
 			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			if ($timeCard != null)
-			{
-				$response->setStatusCode(200);
-				$response->data = $timeCard;
-				return $response;
-			}
-			else
-			{
-				$response->setStatusCode(404);
-				return $response;
-			}
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $dataArray;
 		}
-		catch(\Exception $e)  
+		catch(\Exception $e)
 		{
 			throw new \yii\web\HttpException(400);
 		}
@@ -367,7 +283,7 @@ class TimeCardController extends BaseActiveController
             $timeCards = new Query;
             $timeCards->select('*')
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
-                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]); 
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client))
@@ -430,7 +346,7 @@ class TimeCardController extends BaseActiveController
 
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
 			$dropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
-			
+
             if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
@@ -456,7 +372,7 @@ class TimeCardController extends BaseActiveController
 
 			//get project list for dropdown based on time cards available
 			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $projectAllOption);
-		  
+
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
             // check if approved time card exist in the data
@@ -480,7 +396,7 @@ class TimeCardController extends BaseActiveController
 		   throw new \yii\web\HttpException(400);
 		}
     }
-	
+
 	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
 	{
 		try{
@@ -489,14 +405,14 @@ class TimeCardController extends BaseActiveController
 			//explode by delimiter to allow for multi search
 			$delimiter = ',';
 			$filterArray = explode($delimiter, $filter);
-			
+
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //format response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
-			
+
 			//response array of time cards
             $timeCards = [];
             $responseArray = [];
@@ -504,27 +420,27 @@ class TimeCardController extends BaseActiveController
 			$showProjectDropDown = true;
 			//used to get current week if date range falls in the middle of the week
 			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
-			
+
 			//build base query
             $cardQuery = AccountantSubmit::find()
 				->where(['between', 'StartDate', $startDate, $endDate])
-                ->orWhere(['between', 'EndDate', $startDate, $endDate])                
-                ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);              
-			
+                ->orWhere(['between', 'EndDate', $startDate, $endDate])
+                ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
+
 			//get records for project dropdown(timing for this execution is very important)
 			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
-			
+
 			//add project filter
-			if($projectID!= null) 
+			if($projectID!= null)
 			{
                 $cardQuery->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
             }
-			
+
 			//add search filter
-			if($filter != null) 
+			if($filter != null)
 			{
                 $cardQuery->andFilterWhere([
                     'or',
@@ -533,14 +449,14 @@ class TimeCardController extends BaseActiveController
                     ['like', 'ApprovedBy', $filter],
                 ]);
             }
-			
+
 			//get project list for dropdown based on time cards available
 			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $allTheProjects);
-			
+
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
             $timeCards = $paginationResponse['Query']->orderBy('ProjectName, StartDate')->all(BaseActiveRecord::getDb());
-			
+
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
 			$projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCards);
@@ -562,21 +478,21 @@ class TimeCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
-	
+
 	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
 	{
 		try
 		{
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			
+
 			$detailsQuery = new Query;
             $timeCards = $detailsQuery->select('*')
                 ->from(["fnTimeCardByDate(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
 				->where(['TimeCardProjectID' => $projectID])
 				->all(BaseActiveRecord::getDb());
-				
+
 			//format response
 			$responseArray['details'] = $timeCards;
             $response = Yii::$app->response;
