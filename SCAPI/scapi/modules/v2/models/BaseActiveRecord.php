@@ -62,6 +62,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		return self::getClientObj($client)['ASSET'];
 	}
 	
+	//returns the file path for the taskout model associated to a project based on the client header
+	public static function getTaskOutModel($client)
+	{
+		return self::getClientObj($client)['TASKOUT'];
+	}
+	
 	private static function getClientObj($client)
 	{
 		//matches given client to associated client configuration 

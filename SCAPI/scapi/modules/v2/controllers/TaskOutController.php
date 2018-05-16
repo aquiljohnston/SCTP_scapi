@@ -9,7 +9,6 @@ use yii\filters\VerbFilter;
 use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\models\TaskOut;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -48,16 +47,17 @@ class TaskOutController extends Controller
 			{
 				//try catch to log individual errors
 				try
-				{					
+				{
 					$successFlag = 0;
 					$comment = '';
 					$taskOutID = null;
-					$newTaskOut = new TaskOut;
+					$taskoutModel = BaseActiveRecord::getTaskOutModel($client);
+					$newTaskOut = new $taskoutModel;
 					$newTaskOut->attributes = $data[$i];
 					$newTaskOut->ActivityID = $activityID;
 					
 					//check if taskout already exist.
-					$previousTaskOut = TaskOut::find()
+					$previousTaskOut = $taskoutModel::find()
 						->where(['CreatedUserID' => $newTaskOut->CreatedUserID])
 						->andWhere(['MapGrid' => $newTaskOut->MapGrid])
 						->andWhere(['SrcDTLT' => $newTaskOut->SrcDTLT])
