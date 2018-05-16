@@ -170,7 +170,11 @@ class UserController extends BaseActiveController
 				//create user record in project db if necessary and generate user project relationship
 				if(BaseActiveController::isSCCT($client))
 				{
-					ProjectController::addToProject($user);
+					$project = Project::find()
+						->where(['ProjectUrlPrefix' => $client])
+						->andWhere(['ProjectName' => Constants::SCCT_CONFIG['BASE_PROJECT']])
+						->one();
+					ProjectController::addToProject($user, $project);
 					$projectUser = 'SCCT User';
 				}
 				else{
