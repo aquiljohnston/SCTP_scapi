@@ -492,18 +492,11 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
-	public static function addToProject($user, $project = null)
+	public static function addToProject($user, $project)
 	{
 
 
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-		if($project == null)
-		{
-			$headers = getallheaders();
-			$project = Project::find()
-				->where(['ProjectUrlPrefix' => $headers['X-Client']])
-				->one();
-		}
 		$userID = $user->UserID;
 		$projectID = $project->ProjectID;
 		//link user to project
