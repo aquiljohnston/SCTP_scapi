@@ -9,15 +9,15 @@ use app\modules\v2\models\SCUser;
 use yii\db\Connection;
 use yii\web\Response;
 
-//Cmd yii user/create-admin
+//Cmd yii user/create-admin scctstage
 class UserController extends Controller
 {
 	/**
 	*Sript built to insert a new user into a database without having to use an existing user
 	*/
-    public function actionCreateAdmin()
+    public function actionCreateAdmin($client)
     {		
-		BaseActiveRecord::setClient('apistage');
+		BaseActiveRecord::setClient($client);
 	
 		//create response
 		$response = Yii::$app->response;

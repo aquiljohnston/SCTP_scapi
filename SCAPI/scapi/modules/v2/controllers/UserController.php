@@ -167,14 +167,23 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
+				
+				$projectQuery = Project::find()
+						->where(['ProjectUrlPrefix' => $client]);
+				
 				//create user record in project db if necessary and generate user project relationship
 				if(BaseActiveController::isSCCT($client))
 				{
-					ProjectController::addToProject($user);
+					$project = $projectQuery
+						->andWhere(['ProjectName' => Constants::SCCT_CONFIG['BASE_PROJECT']])
+						->one();
+					ProjectController::addToProject($user, $project);
 					$projectUser = 'SCCT User';
 				}
 				else{
-					$projectUser = self::createInProject($user, $client);
+					$project = $projectQuery
+						->one();
+					$projectUser = self::createInProject($user, $client, $project);
 				}
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
@@ -768,7 +777,7 @@ class UserController extends BaseActiveController
 		$userModel = BaseActiveRecord::getUserModel($client);
 		if($userModel == null) return 'No Client User Model Found.';
 		$userModel::setClient($client);    
-
+		
 		//check if user exist in project db
 		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
