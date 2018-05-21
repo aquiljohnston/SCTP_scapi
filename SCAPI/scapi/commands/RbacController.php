@@ -21,11 +21,13 @@ class RbacController extends Controller
 	*/
     public function actionInit($client)
     {
+		echo "Generating RBAC settings for " . $client . ".\n";
 		SCUser::setClient($client);
 		$db = SCUser::getDb();
 		$auth = new ScDbManager($db);
 		
 		try{
+			echo "Clearing Auth Tables.\n";
 			//reset all
 			//$auth->removeAll();
 			//create connection
@@ -44,11 +46,14 @@ class RbacController extends Controller
 			$deleteRuleCommand->execute();
 			//commit transaction
 			$transaction->commit();
+			echo "Auth Tables Cleared Successfully.\n";
 		} catch (Exception $e) {
 			//roll back changes on failure
 			$transaction->rollBack();
+			echo "Auth Tables Failed to Clear.\n";
 		}
 			
+		echo "Creating Permissions.\n";	
 		//Activity Code permissions/////////////////////////////////////////////////////////////////
 		//add "activityCodeGetDropdown" permission
 		$activityCodeGetDropdown = $auth->createPermission('activityCodeGetDropdown');
@@ -404,7 +409,7 @@ class RbacController extends Controller
         $userGetMe->description = 'Get equipment and project data for a user';
         $auth->add($userGetMe);
 
-		////// Module Menu Premissions //////
+		////// Module Menu Permissions //////
 		
 		$viewAdministrationMenu = $auth->createPermission('viewAdministrationMenu');
         $viewAdministrationMenu->description = 'View Administration Menu';
@@ -498,9 +503,11 @@ class RbacController extends Controller
 		$viewInspections = $auth->createPermission('viewInspections');
         $viewInspections->description = 'View Inspections';
         $auth->add($viewInspections);
+		echo "Permissions Created.\n";
 
 		
 		// add roles and children/////////////////////////////////////////////////////////////////
+		echo "Creating Role Types and Adding Permissions.\n";
 		// add "Technician" role and give this role CRUD permissions
 		$technician = $auth->createRole('Technician');
 		$auth->add($technician);
@@ -578,7 +585,6 @@ class RbacController extends Controller
 		$auth->addChild($supervisor, $userUpdate);
 		$auth->addChild($supervisor, $userUpdateTechnician);
 		$auth->addChild($supervisor, $userUpdateSupervisor);
-		$auth->addChild($supervisor, $userUpdateEngineer);
 		$auth->addChild($supervisor, $userView);
 		$auth->addChild($supervisor, $userDeactivate);
 		$auth->addChild($supervisor, $userGetDropdown);
@@ -687,6 +693,7 @@ class RbacController extends Controller
 		// menu permissions
 		$auth->addChild($analyst, $viewHomeMenu);
 		$auth->addChild($analyst, $viewReportsMenu);
+		echo "Role Types Created and Permissions Assigned.\n";
 
 		
 		//assign roles to existing users////////////////////////////////////////
@@ -695,14 +702,34 @@ class RbacController extends Controller
 				->all();
 		
 		$userSize = count($users);
+		//get vals for progress check
+		$userSize25 = intval(($userSize*.25));
+		$userSize50 = intval(($userSize*.50));
+		$userSize75 = intval(($userSize*.75));
 		
+		echo "Assigning Roles to Users.\n";
 		//assign roles to users already in the system
 		for($i = 0; $i < $userSize; $i++)
 		{
-			if($userRole = $auth->getRole($users[$i]["UserAppRoleType"]))
+			//switch to log percentage progress.
+			switch($i)
 			{
-				$auth->assign($userRole, $users[$i]["UserID"]);
+				case $userSize25:
+					echo "Assigning Roles to Users 25% complete.\n";
+					break;
+				case $userSize50:
+					echo "Assigning Roles to Users 50% complete.\n";
+					break;
+				case $userSize75:
+					echo "Assigning Roles to Users 75% complete.\n";
+					break;
+			}
+			if($userRole = $auth->getRole($users[$i]['UserAppRoleType']))
+			{
+				$auth->assign($userRole, $users[$i]['UserID']);
 			}
 		}
+		echo "Users Roles Assigned.\n";
+		echo "RBAC Geneartion Completed for " . $client . ".\n";
     }
 }
