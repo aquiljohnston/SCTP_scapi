@@ -200,12 +200,8 @@ class DropdownController extends Controller
 			
 			for($i=0; $i < $rolesSize; $i++)
 			{
-				$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
-			}
-			
-			if (!PermissionsController::can('userCreateAdmin'))
-			{
-				unset($namePairs['Admin']);
+				if(PermissionsController::can('userCreate' . $roles[$i]->AppRoleName))
+					$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
 			}
 			
 			$response = Yii::$app ->response;

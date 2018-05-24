@@ -355,16 +355,43 @@ class RbacController extends Controller
         $userView->description = 'View a user';
         $permissionsArray[] = $userView;
 		
+		//User Create Permissions
 		// add "userCreate" permission
         $userCreate = $auth->createPermission('userCreate');
         $userCreate->description = 'Create a user';
         $permissionsArray[] = $userCreate;
 		
+		// add "userCreateTechnician" permission
+        $userCreateTechnician = $auth->createPermission('userCreateTechnician');
+        $userCreateTechnician->description = 'Create user of role type technician';
+        $permissionsArray[] = $userCreateTechnician;
+		
+		// add "userCreateSupervisor" permission
+        $userCreateSupervisor = $auth->createPermission('userCreateSupervisor');
+        $userCreateSupervisor->description = 'Create user of role type supervisor';
+        $permissionsArray[] = $userCreateSupervisor;
+		
+		// add "userCreateProjectManager" permission
+        $userCreateProjectManager = $auth->createPermission('userCreateProjectManager');
+        $userCreateProjectManager->description = 'Create user of role type project manager';
+        $permissionsArray[] = $userCreateProjectManager;
+		
+		// add "userCreateAnalyst" permission
+        $userCreateAnalyst = $auth->createPermission('userCreateAnalyst');
+        $userCreateAnalyst->description = 'Create user of role type analyst';
+        $permissionsArray[] = $userCreateAnalyst;
+		
+		// add "userCreateAccountant" permission
+        $userCreateAccountant = $auth->createPermission('userCreateAccountant');
+        $userCreateAccountant->description = 'Create user of role type accountant';
+        $permissionsArray[] = $userCreateAccountant;
+		
 		// add "userCreateAdmin" permission
         $userCreateAdmin = $auth->createPermission('userCreateAdmin');
         $userCreateAdmin->description = 'Create a user of role type admin';
         $permissionsArray[] = $userCreateAdmin;
-
+		
+		//User Update Permissions
         // add "userUpdate" permission
         $userUpdate = $auth->createPermission('userUpdate');
         $userUpdate->description = 'Update user';
@@ -375,11 +402,6 @@ class RbacController extends Controller
         $userUpdateTechnician->description = 'Update user of role type technician';
         $permissionsArray[] = $userUpdateTechnician;
 		
-		// add "userUpdateEngineer" permission
-        $userUpdateEngineer = $auth->createPermission('userUpdateEngineer');
-        $userUpdateEngineer->description = 'Update user of role type engineer';
-        $permissionsArray[] = $userUpdateEngineer;
-		
 		// add "userUpdateSupervisor" permission
         $userUpdateSupervisor = $auth->createPermission('userUpdateSupervisor');
         $userUpdateSupervisor->description = 'Update user of role type supervisor';
@@ -389,6 +411,16 @@ class RbacController extends Controller
         $userUpdateProjectManager = $auth->createPermission('userUpdateProjectManager');
         $userUpdateProjectManager->description = 'Update user of role type project manager';
         $permissionsArray[] = $userUpdateProjectManager;
+		
+		// add "userUpdateAnalyst" permission
+        $userUpdateAnalyst = $auth->createPermission('userUpdateAnalyst');
+        $userUpdateAnalyst->description = 'Update user of role type analyst';
+        $permissionsArray[] = $userUpdateAnalyst;
+		
+		// add "userUpdateAccountant" permission
+        $userUpdateAccountant = $auth->createPermission('userUpdateAccountant');
+        $userUpdateAccountant->description = 'Update user of role type accountant';
+        $permissionsArray[] = $userUpdateAccountant;
 		
 		// add "userUpdateAdmin" permission
         $userUpdateAdmin = $auth->createPermission('userUpdateAdmin');
@@ -590,6 +622,8 @@ class RbacController extends Controller
 			$timeEntryCreate,
 			$timeEntryDeactivate,
 			$userCreate,
+			$userCreateTechnician,
+			$userCreateSupervisor,
 			$userUpdate,
 			$userUpdateTechnician,
 			$userUpdateSupervisor,
@@ -620,6 +654,7 @@ class RbacController extends Controller
 			//add child roles
 			$supervisor,
 			//add permissions
+			$userCreateProjectManager,
 			$userUpdateProjectManager,
 			$timeCardPmSubmit
 		]);
@@ -648,7 +683,11 @@ class RbacController extends Controller
 			$mileageCardGetAllCards,
 			$timeCardGetAllCards,
 			$userCreateAdmin,
+			$userCreateAccountant,
+			$userCreateAnalyst,
 			$userUpdateAdmin,
+			$userUpdateAccountant,
+			$userUpdateAnalyst,
 			//sub menu permissions
 			$viewClientMgmt,
 			$viewProjectMgmt,
