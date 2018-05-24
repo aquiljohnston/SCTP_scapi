@@ -109,6 +109,10 @@ class UserController extends BaseActiveController
             $post = file_get_contents("php://input");
             //decode json post input as php array:
             $data = json_decode(utf8_decode($post), true);
+			
+			$currentRole = $data['UserAppRoleType'];
+
+            PermissionsController::requirePermission('userCreate' . $currentRole);
 
             //create response
             $response = Yii::$app->response;
