@@ -537,21 +537,27 @@ class TimeCardController extends BaseActiveController
 			$cardIDs = $data["projectIDArray"];
 			$connection = BaseActiveRecord::getDb();
 			// get all timecards
-			foreach($cardIDs as $id)
-			{
-				$queryString = "Select * from [dbo].[TimeCardTb] tc
+			$max = sizeof($cardIDs);
+			$queryResults = [];
+			for ($x = 0; $x < $max; $x++) {
+				$queryString = "Select TimeCardID from [dbo].[TimeCardTb] tc
 								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = tc.TimeCardTechID
-								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $id . " and TimeCardActiveFlag = 1";
-				$queryResults = $connection->createCommand($queryString)->queryAll();
+								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and TimeCardActiveFlag = 1";
+				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();
+				Yii::trace('PM Approval - TimeCards to Approve queryString: '. $queryString);	
 			}
 			//try to approve time cards
 			try {
 				$transaction = $connection->beginTransaction();
-				foreach ($queryResults as $card) {
-					$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "' WHERE TimeCardID = " . $card['TimeCardID'];
-					$connection->createCommand($statement)->execute();
-					//log approvals
-					self::logTimeCardHistory(Constants::TIME_CARD_PM_APPROVAL, $card['TimeCardID']);
+				$max = sizeof($queryResults);
+				for ($x = 0; $x < $max; $x++) {
+					$count = sizeof($queryResults[$x]);
+					for($i=0; $i < $count; $i++) {
+						$statement = "Update TimeCardTb SET TimeCardPMApprovedFlag = 1, TimeCardApprovedBy = '" . $approvedBy . "' WHERE TimeCardID = " . $queryResults[$x][$i]['TimeCardID'];
+						$connection->createCommand($statement)->execute();
+						//log approvals
+						self::logTimeCardHistory(Constants::TIME_CARD_PM_APPROVAL, $queryResults[$x][$i]['TimeCardID']);
+					}
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
@@ -559,6 +565,7 @@ class TimeCardController extends BaseActiveController
 				return $response;
 			} catch(\Exception $e) {
 				// if transaction fails rollback changes, archive and send error
+				Yii::trace('Exception is'.$e);
 				$transaction->rollBack();
 				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$response->setStatusCode(400);
