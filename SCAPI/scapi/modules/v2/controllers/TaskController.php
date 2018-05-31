@@ -131,19 +131,16 @@ class TaskController extends Controller
         return $response;
     }
 	
-	public function actionGetHoursOverview($timeCardID, $date = null){
+	public function actionGetHoursOverview($timeCardID, $date){
 		try {
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			$hoursOverviewQuery = new Query;
-			$hoursOverviewQuery->select('*')
+			$hoursOverview = $hoursOverviewQuery->select('*')
 				->from(["fnGetTaskIntervalsByTimeCard(:TimeCardID)"])
-				->addParams([':TimeCardID' => $timeCardID]);
-			if($date !== null)
-			{
-				$hoursOverviewQuery->where(['Date' => $date]);
-			}
-			$hoursOverview = $hoursOverviewQuery->all(BaseActiveRecord::getDb());
+				->addParams([':TimeCardID' => $timeCardID])
+				->where(['Date' => $date])
+				->all(BaseActiveRecord::getDb());
 
 			//format response
 			$responseArray['hoursOverview'] = $hoursOverview;
