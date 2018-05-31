@@ -560,6 +560,13 @@ class TimeCardController extends BaseActiveController
 					}
 				}
 				$transaction->commit();
+				
+				//execute sp to inform accountants if action needs to be taken for submitted cards
+				$accountantEmailCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spSendAccountantEmail :StartDate, :EndDate");
+				$accountantEmailCommand->bindParam(':StartDate', $data["dateRangeArray"][0],  \PDO::PARAM_STR);
+				$accountantEmailCommand->bindParam(':EndDate', $data["dateRangeArray"][1],  \PDO::PARAM_STR);
+				$accountantEmailCommand->execute();
+				
 				$response->setStatusCode(200);
 				$response->data = $queryResults;
 				return $response;
