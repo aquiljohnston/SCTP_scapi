@@ -185,23 +185,26 @@ class ActivityController extends BaseActiveController
 						
 						$data['activity'][$i]['ActivityCreateDate'] = Parent::getDate();
 						
-						//create data models
+						//create base activity model and load data
 						$activity = new Activity();
-						$clientActivity = new Activity();
-
-						//load attributes to model
 						$activity->attributes = $data['activity'][$i];
-						$clientActivity->attributes = $data['activity'][$i];
+						
+						//if client is not SCCT create client activity model and load data
+						if(!BaseActiveController::isScct($headers['X-Client']))
+						{
+							$clientActivity = new Activity();
+							$clientActivity->attributes = $data['activity'][$i];
 
-						//handle createdby
-						$activity->ActivityCreatedUserUID = (string)$createdBy;
-						if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
-						{
-							$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
-						}
-						else
-						{
-							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
+							//handle createdby TODO remove this because PGE is done
+							$activity->ActivityCreatedUserUID = (string)$createdBy;
+							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
+							{
+								$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
+							}
+							else
+							{
+								$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
+							}
 						}
 
 						Activity::setClient(BaseActiveController::urlPrefix());
@@ -211,8 +214,7 @@ class ActivityController extends BaseActiveController
 							//change db path to save on client db
 							Activity::setClient($headers['X-Client']);
 							//save client activity and log error
-							//$clientActivity->save();
-							if(!$clientActivity->save())
+							if(isset($clientActivity) && !$clientActivity->save())
 							{
 								$e = BaseActiveController::modelValidationException($clientActivity);
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
@@ -221,6 +223,7 @@ class ActivityController extends BaseActiveController
 							//Sends activity to client specific parse routine to check for additional client specific activity data
 							//based on client header
 							//check for pge headers, pge is handled uniquely compared to a standard client
+							//TODO remove PGE specific logic
 							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
 							{
 								//set success flag for activity
@@ -234,7 +237,12 @@ class ActivityController extends BaseActiveController
 								//set success flag for activity
 								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
 								//client data parse
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
+								if(BaseActiveController::isScct($headers['X-Client']))
+								{
+									$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityID);
+								} else {
+									$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
+								}
 								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 							}
 							
