@@ -35,6 +35,7 @@ class TaskController extends Controller
                     'get-all-task' => ['get'],
 					'create-task-entry' => ['post'],
 					'get-charge-of-account-type' => ['get'],
+					'get-hours-overview' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -129,6 +130,30 @@ class TaskController extends Controller
 
         return $response;
     }
+	
+	public function actionGetHoursOverview($timeCardID, $date){
+		try {
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			$hoursOverviewQuery = new Query;
+			$hoursOverview = $hoursOverviewQuery->select('*')
+				->from(["fnGetTaskIntervalsByTimeCard(:TimeCardID)"])
+				->addParams([':TimeCardID' => $timeCardID])
+				->where(['Date' => $date])
+				->all(BaseActiveRecord::getDb());
+
+			//format response
+			$responseArray['hoursOverview'] = $hoursOverview;
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            BaseActiveController::archiveWebErrorJson('actionGetHoursOverview', $e, getallheaders()['X-Client'], [$timeCardID, $date]);
+            throw new \yii\web\HttpException(400);
+        }
+	}
 	
 	  /**
      * Create New Task Entry in CT DB
