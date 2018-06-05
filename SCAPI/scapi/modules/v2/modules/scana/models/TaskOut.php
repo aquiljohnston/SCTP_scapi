@@ -1,8 +1,9 @@
 <?php
 
-namespace app\modules\v2\models;
+namespace app\modules\v2\modules\scana\models;
 
 use Yii;
+use app\modules\v2\models\BaseUser;
 
 /**
  * This is the model class for table "tTaskOut".
@@ -25,8 +26,6 @@ use Yii;
  * @property double $TotalMapTime
  * @property integer $FeetOfTransmission
  * @property integer $FeetOfHighPressure
- * @property integer $CGECount
- * @property integer $AdHocCount
  *
  * @property UserTb $createdUser
  */
@@ -47,7 +46,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ActivityID', 'CreatedUserID'], 'required'],
-            [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure', 'CGECount', 'AdHocCount'], 'integer'],
+            [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
             [['MapGrid', 'Comments'], 'string'],
             [['TotalMapTime'], 'number'],
@@ -79,8 +78,6 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             'TotalMapTime' => 'Total Map Time',
             'FeetOfTransmission' => 'Feet Of Transmission',
             'FeetOfHighPressure' => 'Feet Of High Pressure',
-            'CGECount' => 'Cgecount',
-            'AdHocCount' => 'Ad Hoc Count',
         ];
     }
 

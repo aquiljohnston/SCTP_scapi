@@ -8,6 +8,7 @@ use app\modules\v2\models\Auth;
 use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\authentication\CTUser;
+use app\modules\v2\constants\Constants;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
@@ -162,10 +163,14 @@ class LoginController extends Controller
 	
 	private static function getProjectValues($client)
 	{
-		$projectValues = Project::find()
+		$projectQuery = Project::find()
 			->select('ProjectLandingPage, ProjectID')
-			->where(['ProjectUrlPrefix' => $client])
-			->one();
+			->where(['ProjectUrlPrefix' => $client]);
+		if(BaseActiveController::isSCCT($client))
+		{
+			$projectQuery->andWhere(['ProjectName' => Constants::SCCT_CONFIG['BASE_PROJECT']]);
+		}
+		$projectValues = $projectQuery->one();
 		
 		return $projectValues;
 	}

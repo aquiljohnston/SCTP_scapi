@@ -78,7 +78,8 @@ class WorkQueueController extends Controller
 				,MeterLocation
 				,PipelineFootage
 				,SpecialInstructions
-				,AssignedToID')
+				,AssignedToID
+				,AttemptCounter')
 				->where(['AssignedToID' => $userID])
 				->all();
 					

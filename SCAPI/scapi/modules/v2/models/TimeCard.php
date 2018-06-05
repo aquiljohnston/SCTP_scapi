@@ -12,7 +12,7 @@ use Yii;
  * @property string $TimeCardEndDate
  * @property integer $TimeCardProjectID
  * @property string $TimeCardProjectGroupID
- * @property string $TimeCardTechID
+ * @property integer $TimeCardTechID
  * @property integer $TimeCardActiveFlag
  * @property integer $TimeCardApprovedFlag
  * @property string $TimeCardApprovedBy
@@ -23,12 +23,14 @@ use Yii;
  * @property string $TimeCardCreatedBy
  * @property string $TimeCardModifiedDate
  * @property string $TimeCardModifiedBy
+ * @property string $TimeCardSubmittedOasis
+ * @property string $TimeCardSubmttedQuickBooks
+ * @property string $TimeCardSubmttedADP
+ * @property integer $TimeCardPMApprovedFlag
  *
- * @property EmployeeTb $timeCardTech
- * @property ProjectTb $timeCardProject
  * @property TimeEntryTb[] $timeEntryTbs
  */
-class TimeCard extends BaseActiveRecord
+class TimeCard extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -44,9 +46,10 @@ class TimeCard extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['TimeCardStartDate', 'TimeCardEndDate', 'TimeCardCreateDate', 'TimeCardModifiedDate'], 'safe'],
-            [['TimeCardProjectID', 'TimeCardTechID', 'TimeCardApprovedFlag', 'TimeCardActiveFlag', 'TimeCardArchiveFlag'], 'integer'],
-            [['TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy', 'TimeCardApprovedBy', 'TimeCardProjectGroupID'], 'string']
+            [['TimeCardStartDate', 'TimeCardEndDate', 'TimeCardCreateDate', 'TimeCardModifiedDate', 'TimeCardSubmittedOasis', 'TimeCardSubmttedQuickBooks', 'TimeCardSubmttedADP'], 'safe'],
+            [['TimeCardProjectID', 'TimeCardTechID', 'TimeCardActiveFlag', 'TimeCardApprovedFlag', 'TimeCardArchiveFlag', 'TimeCardPMApprovedFlag'], 'integer'],
+            [['TimeCardProjectGroupID', 'TimeCardApprovedBy', 'TimeCardSupervisorName', 'TimeCardComment', 'TimeCardCreatedBy', 'TimeCardModifiedBy'], 'string'],
+            [['TimeCardProjectID', 'TimeCardStartDate', 'TimeCardTechID'], 'unique', 'targetAttribute' => ['TimeCardProjectID', 'TimeCardStartDate', 'TimeCardTechID'], 'message' => 'The combination of Time Card Start Date, Time Card Project ID and Time Card Tech ID has already been taken.'],
         ];
     }
 
@@ -60,35 +63,23 @@ class TimeCard extends BaseActiveRecord
             'TimeCardStartDate' => 'Time Card Start Date',
             'TimeCardEndDate' => 'Time Card End Date',
             'TimeCardProjectID' => 'Time Card Project ID',
-			'TimeCardProjectGroupID' => 'Time Card Project Group ID',
+            'TimeCardProjectGroupID' => 'Time Card Project Group ID',
             'TimeCardTechID' => 'Time Card Tech ID',
-			'TimeCardActiveFlag' => 'TimeCardActiveFlag',
+            'TimeCardActiveFlag' => 'Time Card Active Flag',
             'TimeCardApprovedFlag' => 'Time Card Approved Flag',
-			'TimeCardApprovedBy' => 'Time Card Approved By',
+            'TimeCardApprovedBy' => 'Time Card Approved By',
             'TimeCardSupervisorName' => 'Time Card Supervisor Name',
             'TimeCardComment' => 'Time Card Comment',
-			'TimeCardArchiveFlag' => 'TimeCardArchiveFlag',
+            'TimeCardArchiveFlag' => 'Time Card Archive Flag',
             'TimeCardCreateDate' => 'Time Card Create Date',
             'TimeCardCreatedBy' => 'Time Card Created By',
             'TimeCardModifiedDate' => 'Time Card Modified Date',
             'TimeCardModifiedBy' => 'Time Card Modified By',
+            'TimeCardSubmittedOasis' => 'Time Card Submitted Oasis',
+            'TimeCardSubmttedQuickBooks' => 'Time Card Submtted Quick Books',
+            'TimeCardSubmttedADP' => 'Time Card Submtted Adp',
+            'TimeCardPMApprovedFlag' => 'Time Card Pmapproved Flag',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTimeCardTech()
-    {
-        return $this->hasOne(EmployeeTb::className(), ['EmployeeID' => 'TimeCardTechID']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTimeCardProject()
-    {
-        return $this->hasOne(ProjectTb::className(), ['ProjectID' => 'TimeCardProjectID']);
     }
 
     /**

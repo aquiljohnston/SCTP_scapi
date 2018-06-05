@@ -16,24 +16,40 @@ final class Constants
 	const BASE_USER = 'app\modules\v2\models\BaseUser';
 	const BASE_EVENT = 'app\modules\v2\models\Event';
 	const BASE_ASSET = 'app\modules\v2\models\Asset';
+	const BASE_TASKOUT = 'app\modules\v2\models\TaskOut';
 	const CLIENT_DB_MANAGER = 'app\modules\v2\rbac\ClientDbManager';
-	const DEV_DEFAULT_QB_PATH = "C:\\ClientShare\\QuickBooks\\";
-	const DEV_DEFAULT_OASIS_PATH = "C:\\ClientShare\\Oasis\\";
-	const DEV_DEFAULT_ADP_PATH = "C:\\ClientShare\\ADP\\";
-	//const DEV_DEFAULT_OASIS_PATH = "/Users/Shared/";
-	//const DEV_DEFAULT_ADP_PATH = "/Users/Shared/";
-	//const DEV_DEFAULT_QB_PATH = "/Users/Shared/";
 	
-	const PROD_DEFAULT_OASIS_PATH = "K:\\Oasis\\";
-	const PROD_DEFAULT_QB_PATH = "K:\\QuickBooks\\";
-	const PROD_DEFAULT_ADP_PATH = "K:\\ADP\\";
+	//time card submission file locations
+	const DEV_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooksDev\\';
+	const DEV_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\OasisDev\\';
+	const DEV_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADPDev\\';
+	
+	const STAGE_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooksStage\\';
+	const STAGE_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\OasisStage\\';
+	const STAGE_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADPStage\\';
+	
+	const PROD_DEFAULT_OASIS_PATH = 'K:\\Oasis\\';
+	const PROD_DEFAULT_QB_PATH = 'K:\\QuickBooks\\';
+	const PROD_DEFAULT_ADP_PATH = 'K:\\ADP\\';
 
-	const OASIS = "OASIS";
-	const QUICKBOOKS = "QB";
-	const ADP = "ADP";
+	const OASIS = 'OASIS';
+	//need to change to payroll instead of quickbooks
+	const QUICKBOOKS = 'QB';
+	const ADP = 'ADP';
+	const OT_PAYROLL_HOURS_ID = 5110;
+	
+	//Payment Method
+	const PAY_METHOD_SALARY = 'S';
+	const PAY_METHOD_HOURLY = 'H';
+	
+	//Time Card Submission file namespace
+	const OASIS_FILE_NAME = 'oasis_history_';
+	const PAYROLL_FILE_NAME = 'payroll_history_';
+	const ADP_FILE_NAME = 'adp_history';
 	
 	//Time Card Event History Types
-	const TIME_CARD_APPROVAL = 'Approval';
+	const TIME_CARD_APPROVAL = 'Supervisor Approval';
+	const TIME_CARD_PM_APPROVAL = 'PM Approval';
 	const TIME_CARD_SUBMISSION_OASIS = 'Oasis Submission';
 	const TIME_CARD_SUBMISSION_QB = 'QB Submission';
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
@@ -50,10 +66,12 @@ final class Constants
 		'AUTH' => 'app\modules\v2\rbac\ScDbManager',
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => self::BASE_EVENT,
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => 'app\modules\v2\models\SCUser'
 	];
 	
 	const SCCT_CONFIG = [
+		'BASE_PROJECT' => 'SOUTHERN CROSS:CT2',
 		'DEV_HEADER' => 'scctdev',
 		'STAGE_HEADER' => 'scctstage',
 		'PROD_HEADER' => 'scct',
@@ -63,6 +81,7 @@ final class Constants
 		'AUTH' => 'app\modules\v2\rbac\ScDbManager',
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => self::BASE_EVENT,
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => 'app\modules\v2\models\SCUser'
 	];
 
@@ -87,6 +106,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\modules\york\models\Asset',
 		'EVENT' => self::BASE_EVENT,
+		'TASKOUT' => 'app\modules\v2\modules\york\models\TaskOut',
 		'USER' => self::BASE_USER
 	];
 	
@@ -98,6 +118,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => 'app\modules\v2\models\DominionEvent',
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => self::BASE_USER
 	];
 	
@@ -111,6 +132,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\modules\scana\models\Asset',
 		'EVENT' => 'app\modules\v2\models\ScanaEvent',
+		'TASKOUT' => 'app\modules\v2\modules\scana\models\TaskOut',
 		'USER' => self::BASE_USER
 	];
 	
@@ -120,6 +142,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\models\DemoAsset',
 		'EVENT' => 'app\modules\v2\models\DemoEvent',
+		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => self::BASE_USER
 	];
 	

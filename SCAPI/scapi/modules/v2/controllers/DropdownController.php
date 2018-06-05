@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use yii\rest\Controller;
 use app\modules\v2\models\EmployeeType;
 use app\modules\v2\models\DropDown;
+use app\modules\v2\models\AppRoles;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\Response;
 use \DateTime;
@@ -37,6 +38,7 @@ class DropdownController extends Controller
                     'get-state-codes-dropdown' => ['get'],
                     'get-web-drop-downs' => ['get'],
                     'get-tracker-map-grids' => ['get'],
+					'get-roles-dropdowns'  => ['get'],
                 ],
             ];
         return $behaviors;
@@ -170,6 +172,49 @@ class DropdownController extends Controller
         $response -> format = Response::FORMAT_JSON;
         $response -> data = $processedResults;
     }
+	
+	//return
+	/**
+	 * Route to get the dropdown
+	 * 
+	 * The pairing of equal Strings for both key and value is done because the front end expects
+	 * an associative array. We use the display name as the key for convenience.
+	 *
+	 * @return Response A JSON associative array containing pairs of AppRoleNames
+	 * @throws \yii\web\HttpException
+	 */
+	public function actionGetRolesDropdowns()
+	{
+		try
+		{
+			//set db target
+			AppRoles::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('appRoleGetDropdown');
+		
+			$roles = AppRoles::find()
+				->all();
+			$namePairs = [];
+			$rolesSize = count($roles);
+			
+			for($i=0; $i < $rolesSize; $i++)
+			{
+				if(PermissionsController::can('userCreate' . $roles[$i]->AppRoleName))
+					$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
+			}
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		}
+		catch(\Exception $e) 
+		{
+			throw new \yii\web\HttpException(400);
+		}
+	}
 	
 	/////////////////////TABLET DROPDOWNS BEGIN////////////////////////
 	//route to provide data for all survey dropdowns on the tablet
