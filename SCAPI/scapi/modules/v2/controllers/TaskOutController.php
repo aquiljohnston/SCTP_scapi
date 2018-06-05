@@ -9,7 +9,6 @@ use yii\filters\VerbFilter;
 use app\modules\v2\authentication\TokenAuth;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\models\TaskOut;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -48,15 +47,17 @@ class TaskOutController extends Controller
 			{
 				//try catch to log individual errors
 				try
-				{					
+				{
 					$successFlag = 0;
+					$comment = '';
 					$taskOutID = null;
-					$newTaskOut = new TaskOut;
+					$taskoutModel = BaseActiveRecord::getTaskOutModel($client);
+					$newTaskOut = new $taskoutModel;
 					$newTaskOut->attributes = $data[$i];
 					$newTaskOut->ActivityID = $activityID;
 					
 					//check if taskout already exist.
-					$previousTaskOut = TaskOut::find()
+					$previousTaskOut = $taskoutModel::find()
 						->where(['CreatedUserID' => $newTaskOut->CreatedUserID])
 						->andWhere(['MapGrid' => $newTaskOut->MapGrid])
 						->andWhere(['SrcDTLT' => $newTaskOut->SrcDTLT])
@@ -68,16 +69,23 @@ class TaskOutController extends Controller
 							$createdUserID = $newTaskOut->CreatedUserID;
 							$mapGrid = $newTaskOut->MapGrid;
 							$taskOutDateTime = $newTaskOut->SrcDTLT;
-							//Call Task Out SP
-							$connection = BaseActiveRecord::getDb();
-							$processJSONCommand = $connection->createCommand("EXECUTE spTaskOut :UserID,:MapGrid,:TaskOutDateTime");
-							$processJSONCommand->bindParam(':UserID', $createdUserID,  \PDO::PARAM_INT);
-							$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
-							$processJSONCommand->bindParam(':TaskOutDateTime', $taskOutDateTime,  \PDO::PARAM_STR);
-							$processJSONCommand->execute();
-							$taskOutID = $newTaskOut->ID;
-							$successFlag = 1;
-							
+							if(BaseActiveController::isSCCT($client))
+							{
+								$comment = 'Task Out SP not available in base SCCT.';
+							}
+							else
+							{
+								//Call Task Out SP
+								$connection = BaseActiveRecord::getDb();
+								$processJSONCommand = $connection->createCommand("EXECUTE spTaskOut :UserID,:MapGrid,:TaskOutDateTime");
+								$processJSONCommand->bindParam(':UserID', $createdUserID,  \PDO::PARAM_INT);
+								$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
+								$processJSONCommand->bindParam(':TaskOutDateTime', $taskOutDateTime,  \PDO::PARAM_STR);
+								$processJSONCommand->execute();
+								$taskOutID = $newTaskOut->ID;
+								$successFlag = 1;
+								$comment = 'Task Out SP executed.';
+							}
 						} else {
 							throw BaseActiveController::modelValidationException($newTaskOut);
 						}
@@ -88,12 +96,12 @@ class TaskOutController extends Controller
 						$taskOutID = $previousTaskOut->ID;
 						$successFlag = 1;
 					}
-					$responseArray[] = ['ID' => $taskOutID, 'MapGrid' => $data[$i]['MapGrid'], 'SuccessFlag' => $successFlag];
+					$responseArray[] = ['ID' => $taskOutID, 'MapGrid' => $data[$i]['MapGrid'], 'SuccessFlag' => $successFlag, 'Comment' => $comment];
 				}
 				catch(\Exception $e)
 				{
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
-					$responseArray[] = ['MapGrid' => $data[$i]['MapGrid'], 'SuccessFlag' => $successFlag];
+					$responseArray[] = ['MapGrid' => $data[$i]['MapGrid'], 'SuccessFlag' => $successFlag, 'Comment' => $comment];
 				}
 			}
 			//return response data

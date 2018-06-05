@@ -417,6 +417,8 @@ class ProjectController extends BaseActiveController
 			//decode post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
+
+			
 			
 			//check if key exist
 			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
@@ -438,12 +440,10 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    if(UserController::createInProject($user, $project->ProjectUrlPrefix))
+                    if(UserController::createInProject($user, $project->ProjectUrlPrefix, $project))
 					{
 						//reset target db after external call
 						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-						//fucntion call to add to project
-						self::addToProject($user, $project);
 					}
                 }
             }
@@ -492,16 +492,11 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
-	public static function addToProject($user, $project = null)
+	public static function addToProject($user, $project)
 	{
+
+
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-		if($project == null)
-		{
-			$headers = getallheaders();
-			$project = Project::find()
-				->where(['ProjectUrlPrefix' => $headers['X-Client']])
-				->one();
-		}
 		$userID = $user->UserID;
 		$projectID = $project->ProjectID;
 		//link user to project
@@ -606,7 +601,7 @@ class ProjectController extends BaseActiveController
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
 
-			$username = self::getUserFromToken()->Username;
+			$username = self::getUserFromToken()->UserName;
 
 			//create response
 			$response = Yii::$app ->response;

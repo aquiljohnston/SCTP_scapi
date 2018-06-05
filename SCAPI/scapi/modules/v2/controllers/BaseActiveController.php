@@ -312,14 +312,16 @@ class BaseActiveController extends ActiveController
         fclose($fp);
     }
 
-     public static function processAndWriteCsv($reader,$cardName,$type=null){
-        Yii::$app->response->format = Response::FORMAT_RAW;
+    public static function processAndWriteCsv($data, $fileName, $type)
+	{
+		$environment = self::urlPrefix();
+		Yii::$app->response->format = Response::FORMAT_RAW;
 
-        $success = false;
+		$success = false;
 
-         if(YII_ENV_DEV)
+		if($environment === Constants::API_CONFIG['DEV_HEADER'])
         {
-        		switch ($type) {
+        	switch ($type) {
 			    case Constants::OASIS:
 			        $filePath = Constants::DEV_DEFAULT_OASIS_PATH;
 			        break;
@@ -327,12 +329,23 @@ class BaseActiveController extends ActiveController
 			        $filePath = Constants::DEV_DEFAULT_QB_PATH;
 			        break;
 			    case Constants::ADP:
-			       $filePath = Constants::DEV_DEFAULT_ADP_PATH;
+					$filePath = Constants::DEV_DEFAULT_ADP_PATH;
 			        break;
 			}
-           
-        } else {
-        		switch ($type) {
+        } elseif($environment === Constants::API_CONFIG['STAGE_HEADER']) {
+        	switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::STAGE_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::STAGE_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+					$filePath = Constants::STAGE_DEFAULT_ADP_PATH;
+			        break;
+			}
+        } elseif($environment === Constants::API_CONFIG['PROD_HEADER']) {
+			switch ($type) {
 			    case Constants::OASIS:
 			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
 			        break;
@@ -340,36 +353,39 @@ class BaseActiveController extends ActiveController
 			        $filePath = Constants::PROD_DEFAULT_QB_PATH;
 			        break;
 			    case Constants::ADP:
-			       $filePath = Constants::PROD_DEFAULT_ADP_PATH;
+					$filePath = Constants::PROD_DEFAULT_ADP_PATH;
 			        break;
 			}
-        }
+		}
 
-        $firstLine 	= true;
-        $fp2 		= fopen($filePath.$cardName.".csv",'w+');
+        $firstLine = true;
+        $fp2 = fopen($filePath.$fileName.".csv",'w+');
 
-        while($row2 = $reader->read()){
-
-            if($firstLine) {
-                $firstLine = false;
-                fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
-            }
-            fwrite($fp2, implode(',', $row2) . "\r\n");
-        }
+        if(is_object($data))
+		{
+			while($row2 = $data->read())
+			{
+				if($firstLine) {
+					$firstLine = false;
+					fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+				}
+				fwrite($fp2, implode(',', $row2) . "\r\n");
+			}
+        } else {
+        	foreach($data as $row2)
+			{
+				if($firstLine) {
+					$firstLine = false;
+					fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+				}
+				fwrite($fp2, implode(',', $row2) . "\r\n");
+			}
+		}
 
         fclose($fp2);
-        chmod($filePath.$cardName.".csv", 0777);
-
-        if (file_exists($filePath.$cardName.".csv")) {
-                     Yii::trace("SKITTLE ".$filePath.$cardName.".csv" ."exists");
-             } else {
-                    Yii::trace("SKITTLE".$filePath.$cardName.".csv" ."exists");
-             }
-
+        chmod($filePath.$fileName.".csv", 0777);
         $success = true;
-        Yii::trace("DOOK: ".$success);
         return $success;
-
     }
 	
 	public static function isSCCT($client)

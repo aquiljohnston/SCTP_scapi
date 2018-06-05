@@ -34,6 +34,7 @@ use yii\db\mssql\PDO;
 use yii\base\ErrorException;
 use yii\db\Exception;
 use yii\data\Pagination;
+use yii\db\Query;
 
 
 /**
@@ -108,6 +109,10 @@ class UserController extends BaseActiveController
             $post = file_get_contents("php://input");
             //decode json post input as php array:
             $data = json_decode(utf8_decode($post), true);
+			
+			$currentRole = $data['UserAppRoleType'];
+
+            PermissionsController::requirePermission('userCreate' . $currentRole);
 
             //create response
             $response = Yii::$app->response;
@@ -147,6 +152,13 @@ class UserController extends BaseActiveController
             if ($user['UserAppRoleType'] == 'Admin') {
                 PermissionsController::requirePermission('userCreateAdmin');
             }
+			
+			//set payment method
+			if($user->UserAppRoleType == 'Technician'){
+				$user->UserPayMethod = Constants::PAY_METHOD_HOURLY;
+			} else {
+				$user->UserPayMethod = Constants::PAY_METHOD_SALARY;
+			}
 
             //created date/by
             $username = self::getUserFromToken()->UserName;
@@ -159,7 +171,24 @@ class UserController extends BaseActiveController
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
-				$projectUser = self::createInProject($user, $client);
+				
+				$projectQuery = Project::find()
+						->where(['ProjectUrlPrefix' => $client]);
+				
+				//create user record in project db if necessary and generate user project relationship
+				if(BaseActiveController::isSCCT($client))
+				{
+					$project = $projectQuery
+						->andWhere(['ProjectName' => Constants::SCCT_CONFIG['BASE_PROJECT']])
+						->one();
+					ProjectController::addToProject($user, $project);
+					$projectUser = 'SCCT User';
+				}
+				else{
+					$project = $projectQuery
+						->one();
+					$projectUser = self::createInProject($user, $client, $project);
+				}
                 $response->setStatusCode(201);
                 $user->UserPassword = '';
                 $responseData = [];
@@ -574,6 +603,9 @@ class UserController extends BaseActiveController
 				$projectData['ProjectUserID'] = $projectUserID;
 				$projectData['ProjectUserName'] = $projectUserName;
 				$projectData['ProjectMinimumAppVersion'] = $projectModel->ProjectMinimumAppVersion;
+				$projectData['ProjectActivityGPSInterval'] = $projectModel->ProjectActivityGPSInterval;
+				$projectData['ProjectSurveyGPSInterval'] = $projectModel->ProjectSurveyGPSInterval;
+				$projectData['ProjectSurveyGPSMinDistance'] = $projectModel->ProjectSurveyGPSMinDistance;
 				$projectData['ProjectTask'] = $projectTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
@@ -622,11 +654,20 @@ class UserController extends BaseActiveController
 			//initialize response array
 			$responseArray['assets'] = [];
 			$responseArray['pages'] = [];
-			
+
 			if(BaseActiveController::isSCCT($client))
 			{
 				//create base of user query
-				$userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+				// $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
+				
+				//get user id from auth token
+				$userID = self::getUserFromToken()->UserID;
+				//get user
+				$user = SCUser::findOne($userID);
+				//create base of user query
+				$userQuery = SCUser::find()->select('*')
+						->where(['in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')->where(['in','ProjUserProjectID', (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')->where(['ProjUserUserID' => $user->UserID])])])
+						->andWhere(['[UserTb].UserActiveFlag' => 1]);
 			}
 			else
 			{
@@ -734,23 +775,25 @@ class UserController extends BaseActiveController
 	//$user - user being added to the project
 	//$client - project url prefix of the project being added to
 	returns ???*/
-	public static function createInProject($user, $client)
+	public static function createInProject($user, $client, $project = null)
 	{
 		//get user model based on project 
 		$userModel = BaseActiveRecord::getUserModel($client);
 		if($userModel == null) return 'No Client User Model Found.';
-        $userModel::setClient($client);
+		$userModel::setClient($client);    
 		
-		//check if user exist in project
+		//check if user exist in project db
 		$existingUser = $userModel::find()
 			->where(['UserName' => $user->UserName])
 			->one();
+		
+		//if user record already exist in the project db, return
 		if($existingUser != null) 
 		{
-			//need to confirm association to project here as well
-			ProjectController::addToProject($existingUser);
-			return 'User Already Exist in Project.';
-		}
+			//add user to project to generate time/mileage cards
+			ProjectController::addToProject($user, $project);
+            return true;
+        }
 		
 		//create a new user model based on project 
 		$projectUser = new $userModel();
@@ -778,7 +821,7 @@ class UserController extends BaseActiveController
 				$auth->assign($userRole, $projectUser['UserID']);
 			}
 			//add user to project to generate time/mileage cards
-			ProjectController::addToProject($user);
+			ProjectController::addToProject($user, $project);
 		}
 		return $projectUser;
 	}
