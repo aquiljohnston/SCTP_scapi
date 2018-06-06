@@ -983,6 +983,7 @@ class UserController extends BaseActiveController
 	}
 	
 	//public route that will allow techs to reset their passwords. In progress
+	//excluded from token check and does not have an associated permission
 	public function actionResetPassword()
 	{
 		try{

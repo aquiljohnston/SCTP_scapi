@@ -5,7 +5,7 @@ namespace app\modules\v2\rbac;
 use Yii;
 use yii\rbac\DbManager;
 
-class ClientDbManager extends DbManager
+class ClientDbManager extends ScDbManager
 {
 	public $db = '';
 	/**
