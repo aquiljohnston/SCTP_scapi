@@ -11,7 +11,7 @@ use app\modules\v2\models\BaseActiveRecord;
 * This Class establishes the rules of the RBAC system for the API
 * Permissions are created and assigned and the role hierarchy is established
 */
-class NewRbacController extends Controller
+class RbacController extends Controller
 {
 	//db connection based on active client
 	private $db;
@@ -856,6 +856,11 @@ class NewRbacController extends Controller
         $viewInspections->description = 'View Inspections';
         $this->permissionAssociationArray['Supervisor'][] = $viewInspections;
         $this->permissionArray[] = $viewInspections;
+		
+		$viewCGE = $this->auth->createPermission('viewCGE');
+        $viewCGE->description = 'View CGEs';
+        $this->permissionAssociationArray['Supervisor'][] = $viewCGE;
+        $this->permissionArray[] = $viewCGE;
 		
 		echo "Survey Permissions Array Created.\n";
 	}
