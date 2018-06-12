@@ -1,23 +1,20 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: tzhang
- * Date: 12/26/2017
- * Time: 4:07 PM
- */
 
 namespace app\modules\v2\models;
+
+use Yii;
 
 /**
  * This is the model class for table "vTaskAndProject".
  *
  * @property integer $TaskID
- * @property string $FilterName
+ * @property string $TaskName
  * @property integer $ProjectID
+ * @property integer $GPSInterval
+ * @property string $TaskQBReferenceID
  */
-class TaskAndProject extends BaseActiveRecord
+class TaskAndProject extends \app\modules\v2\models\BaseActiveRecord
 {
-
     /**
      * @inheritdoc
      */
@@ -32,8 +29,9 @@ class TaskAndProject extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['TaskID', 'ProjectID'], 'integer'],
-            [['FilterName'], 'string'],
+            [['TaskID'], 'required'],
+            [['TaskID', 'ProjectID', 'GPSInterval'], 'integer'],
+            [['TaskName', 'TaskQBReferenceID'], 'string'],
         ];
     }
 
@@ -44,8 +42,10 @@ class TaskAndProject extends BaseActiveRecord
     {
         return [
             'TaskID' => 'Task ID',
-            'FilterName' => 'Filter Name',
-            'ProjectID' => 'Project ID'
+            'TaskName' => 'Task Name',
+            'ProjectID' => 'Project ID',
+            'GPSInterval' => 'Gpsinterval',
+            'TaskQBReferenceID' => 'Task Qbreference ID',
         ];
     }
 }
