@@ -49,7 +49,9 @@ class TaskController extends Controller
 			TaskAndProject::setClient(BaseActiveController::urlPrefix());
 
 			$data = TaskAndProject::find()
+				->select(['TaskID', 'TaskName', 'TaskQBReferenceID'])
 				->where(['projectID' => $projectID])
+				->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
 				->asArray()
 				->all();
 
