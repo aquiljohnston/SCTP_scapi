@@ -522,7 +522,6 @@ class UserController extends BaseActiveController
      */
     public function actionGetMe()
     {
-
         try {
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
@@ -553,6 +552,21 @@ class UserController extends BaseActiveController
             for ($i = 0; $i < $projectUserLength; $i++) {
                 //set current projectID
                 $projectID = $projectUser[$i]->ProjUserProjectID;
+				
+				//get project
+                $projectModel = Project::findOne($projectID);
+				
+				try{
+					//get user id for project external call will set current db to $projectModel->ProjectUrlPrefix
+					$projectUserRecord = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix);
+					$projectUserID = $projectUserRecord->UserID;
+					$projectUserName = $projectUserRecord->UserName;
+				}catch(\Exception $e){
+					continue;
+				}
+				
+				//set client back to ct after external call
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
                 //get time card for the current week for this project
                 $timeCardModel = AllTimeCardsCurrentWeek::find()
@@ -583,18 +597,9 @@ class UserController extends BaseActiveController
                     $activityCodesArray[$j]['PayrollCode'] = 'TODO';
                 }
 				
-				//get project
-                $projectModel = Project::findOne($projectID);
-				
-				//get user id for project
-				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
-				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
-				
-				$projectTask = TaskController::GetProjectTask($projectID);//Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
-				
-				//set client back to ct after external call
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				$projectTask = TaskController::GetProjectTask($projectID);
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
+				
                 $projectData['ProjectID'] = $projectModel->ProjectID;
                 $projectData['ProjectName'] = $projectModel->ProjectName;
                 $projectData['ProjectUrlPrefix'] = $projectModel->ProjectUrlPrefix;
