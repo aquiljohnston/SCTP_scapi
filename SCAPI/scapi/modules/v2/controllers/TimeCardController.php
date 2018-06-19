@@ -55,7 +55,7 @@ class TimeCardController extends BaseActiveController
 					'view' => ['get'],
 					'approve-cards'  => ['put'],
 					'get-entries' => ['get'],
-					'get-card' => ['get'],
+					'get-my-card' => ['get'],
 					'get-cards' => ['get'],
 					'show-entries' => ['get'],
 					'get-accountant-view' => ['get'],
@@ -248,6 +248,63 @@ class TimeCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	public function actionGetMyCard()
+    {        
+        try
+        {
+            //get http headers
+            $headers = getallheaders();
+			$client  = $headers['X-Client'];
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+            
+            // RBAC permission check
+            PermissionsController::requirePermission('timeCardGetCard');
+			
+			//get userid for requesting user by token
+			$userID = self::getUserFromToken()->UserID;
+            
+            //get project based on header
+            $projectQuery = Project::find()
+				->where(['ProjectUrlPrefix'=> $client]);
+			if(BaseActiveController::isSCCT($client))
+			{
+				$projectQuery->andwhere(['ProjectName' => Constants::SCCT_CONFIG['BASE_PROJECT']]);
+			}
+			$project = $projectQuery->one();
+			
+            //get time card
+            $timeCardQuery = AllTimeCardsCurrentWeek::find()
+				->where(['UserID'=>$userID]);
+            if($project != null)
+            {
+                $timeCardQuery->andwhere(['TimeCardProjectID'=>$project->ProjectID]);
+            }
+            $timeCard = $timeCardQuery->one();
+            
+            //handle response
+            $response = Yii::$app->response;
+            $response ->format = Response::FORMAT_JSON;
+            if ($timeCard != null)
+            {
+                $response->setStatusCode(200);
+                $response->data = $timeCard;
+                return $response;
+            }
+            else
+            {
+                $response->setStatusCode(404);
+                return $response;
+            }
+            $response->format = Response::FORMAT_JSON;
+            $response->data = $dataArray;
+        }
+        catch(\Exception $e)
+        {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 
     public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
     {
@@ -272,7 +329,7 @@ class TimeCardController extends BaseActiveController
             $response 			= Yii::$app->response;
             $response-> format 	= Response::FORMAT_JSON;
 
-            //response array of time cards
+            //response array of time cards//
             $timeCardsArr 		= [];
             $responseArray 		= [];
 			$projectAllOption = [];
