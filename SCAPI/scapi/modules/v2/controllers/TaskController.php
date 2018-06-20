@@ -33,6 +33,7 @@ class TaskController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-all-task' => ['get'],
+                    'get-by-project' => ['get'],
 					'create-task-entry' => ['post'],
 					'get-charge-of-account-type' => ['get'],
 					'get-hours-overview' => ['get'],
@@ -41,23 +42,27 @@ class TaskController extends Controller
 		return $behaviors;	
 	}
 	
-	//want to make get lowercase..
-	public static function GetProjectTask($projectID)
+	public static function actionGetByProject($projectID)
 	{
 		try{
 			//set db target
 			TaskAndProject::setClient(BaseActiveController::urlPrefix());
 
-			$data = TaskAndProject::find()
+			$data['assets'] = TaskAndProject::find()
 				->select(['TaskID', 'TaskName', 'TaskQBReferenceID'])
 				->where(['projectID' => $projectID])
 				->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
 				->asArray()
 				->all();
 
-			return $data;
+			//build and return response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $data;
+			return $response;
 		}catch(\Exception $e){
-            return [];
+            BaseActiveController::archiveWebErrorJson('Task GetByProject', $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
 		}
 	}
 	

@@ -597,7 +597,12 @@ class UserController extends BaseActiveController
                     $activityCodesArray[$j]['PayrollCode'] = 'TODO';
                 }
 				
-				$projectTask = TaskController::GetProjectTask($projectID);
+				//error handling to avoid breaking get me if task are not avaliable.
+				try{
+					$projectTask = Yii::$app->runAction('v2/task/get-by-project', ['projectID'=>$projectID])->data['assets'];
+				}catch(\Exception $e){
+					$projectTask = [];
+				}
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
 				
                 $projectData['ProjectID'] = $projectModel->ProjectID;
