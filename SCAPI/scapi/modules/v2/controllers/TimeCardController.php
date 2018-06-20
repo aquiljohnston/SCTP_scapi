@@ -249,6 +249,7 @@ class TimeCardController extends BaseActiveController
 		}
 	}
 	
+	//Only usage on web removed. Leaving in place if needed in the future.
 	public function actionGetMyCard()
     {        
         try
