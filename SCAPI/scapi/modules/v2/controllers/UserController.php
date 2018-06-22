@@ -534,6 +534,10 @@ class UserController extends BaseActiveController
             //get user
             $user = SCUser::findOne($userID);
             $user->UserPassword = '';
+			
+			//cast user as an array to add SystemDateTime
+			$user = (array)$user->attributes;
+			$user['SystemDateTime'] = BaseActiveController::getDate();
 
             $equipment = [];
             //get equipment for user
