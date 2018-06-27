@@ -42,11 +42,11 @@ class TaskController extends Controller
 		return $behaviors;	
 	}
 	
-	public static function actionGetByProject($projectID)
+	public function actionGetByProject($projectID)
 	{
 		try{
 			//set db target
-			TaskAndProject::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
 			$data['assets'] = TaskAndProject::find()
 				->select(['TaskID', 'TaskName', 'TaskQBReferenceID'])

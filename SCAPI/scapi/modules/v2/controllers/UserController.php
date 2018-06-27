@@ -566,6 +566,8 @@ class UserController extends BaseActiveController
 					$projectUserID = $projectUserRecord->UserID;
 					$projectUserName = $projectUserRecord->UserName;
 				}catch(\Exception $e){
+					//set client back to ct after external call, may have changed target db before error
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					continue;
 				}
 				
@@ -605,6 +607,8 @@ class UserController extends BaseActiveController
 				try{
 					$projectTask = Yii::$app->runAction('v2/task/get-by-project', ['projectID'=>$projectID])->data['assets'];
 				}catch(\Exception $e){
+					//set client back to ct after external call, logging of error will retarget db
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					$projectTask = [];
 				}
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
