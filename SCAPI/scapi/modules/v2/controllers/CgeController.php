@@ -89,7 +89,7 @@ class CgeController extends Controller
         }
 	}
 	
-	public function actionGetByMap($mapGrid)
+	public function actionGetByMap($mapGrid, $inspectionType, $billingCode)
 	{
 		try
 		{
@@ -101,7 +101,10 @@ class CgeController extends Controller
 			
 			$responseArray = [];
 			$responseArray['cges'] = AvailableWorkOrderCGEByMapGridDetail::find()
-				->where(['MapGrid' => $mapGrid])
+				->where(['MapGrid' => $mapGrid,
+					'SurveyType' => $inspectionType,
+					'BillingCode' => $billingCode
+				])
 				->orderBy('Address', 'InspectionDateTime')
 				->all();
 			

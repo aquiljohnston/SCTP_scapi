@@ -8,18 +8,16 @@ use Yii;
  * This is the model class for table "AllTimeCardsCurrentWeek_vw".
  *
  * @property integer $UserID
- * @property string $UserName
- * @property string $UserFirstName
- * @property string $UserLastName
  * @property integer $TimeCardID
- * @property string $TimeCardStartDate
- * @property string $TimeCardEndDate
  * @property string $TimeCardApprovedBy
  * @property integer $TimeCardApproved
  * @property string $UserStatus
  * @property integer $TimeCardProjectID
+ * @property string $UserFullName
+ * @property string $TimeCardStartDate
+ * @property string $TimeCardEndDate
  */
-class AllTimeCardsCurrentWeek extends BaseActiveRecord
+class AllTimeCardsCurrentWeek extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -35,10 +33,9 @@ class AllTimeCardsCurrentWeek extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['UserID', 'TimeCardID', 'UserStatus'], 'required'],
-            [['UserID', 'TimeCardID', 'TimeCardProjectID', 'TimeCardApproved'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'TimeCardApprovedBy', 'UserStatus'], 'string'],
-            [['TimeCardStartDate', 'TimeCardEndDate'], 'safe'],
+            [['UserID', 'TimeCardID', 'TimeCardApproved', 'UserStatus'], 'required'],
+            [['UserID', 'TimeCardID', 'TimeCardApproved', 'TimeCardProjectID'], 'integer'],
+            [['TimeCardApprovedBy', 'UserStatus', 'UserFullName', 'TimeCardStartDate', 'TimeCardEndDate'], 'string'],
         ];
     }
 
@@ -49,16 +46,14 @@ class AllTimeCardsCurrentWeek extends BaseActiveRecord
     {
         return [
             'UserID' => 'User ID',
-            'UserName' => 'User Name',
-            'UserFirstName' => 'User First Name',
-            'UserLastName' => 'User Last Name',
             'TimeCardID' => 'Time Card ID',
-            'TimeCardStartDate' => 'Time Card Start Date',
-            'TimeCardEndDate' => 'Time Card End Date',
             'TimeCardApprovedBy' => 'Time Card Approved By',
             'TimeCardApproved' => 'Time Card Approved',
             'UserStatus' => 'User Status',
-			'TimeCardProjectID' => 'Time Card Project ID',
+            'TimeCardProjectID' => 'Time Card Project ID',
+            'UserFullName' => 'User Full Name',
+            'TimeCardStartDate' => 'Time Card Start Date',
+            'TimeCardEndDate' => 'Time Card End Date',
         ];
     }
 }

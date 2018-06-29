@@ -522,7 +522,6 @@ class UserController extends BaseActiveController
      */
     public function actionGetMe()
     {
-
         try {
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
@@ -535,6 +534,10 @@ class UserController extends BaseActiveController
             //get user
             $user = SCUser::findOne($userID);
             $user->UserPassword = '';
+			
+			//cast user as an array to add SystemDateTime
+			$user = (array)$user->attributes;
+			$user['SystemDateTime'] = BaseActiveController::getDate();
 
             $equipment = [];
             //get equipment for user
@@ -553,6 +556,23 @@ class UserController extends BaseActiveController
             for ($i = 0; $i < $projectUserLength; $i++) {
                 //set current projectID
                 $projectID = $projectUser[$i]->ProjUserProjectID;
+				
+				//get project
+                $projectModel = Project::findOne($projectID);
+				
+				try{
+					//get user id for project external call will set current db to $projectModel->ProjectUrlPrefix
+					$projectUserRecord = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix);
+					$projectUserID = $projectUserRecord->UserID;
+					$projectUserName = $projectUserRecord->UserName;
+				}catch(\Exception $e){
+					//set client back to ct after external call, may have changed target db before error
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+					continue;
+				}
+				
+				//set client back to ct after external call
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
                 //get time card for the current week for this project
                 $timeCardModel = AllTimeCardsCurrentWeek::find()
@@ -583,18 +603,17 @@ class UserController extends BaseActiveController
                     $activityCodesArray[$j]['PayrollCode'] = 'TODO';
                 }
 				
-				//get project
-                $projectModel = Project::findOne($projectID);
-				
-				//get user id for project
-				$projectUserID = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserID;
-				$projectUserName = BaseActiveController::getClientUser($projectModel->ProjectUrlPrefix)->UserName;
-				
-				$projectTask = [];//TaskController::GetProjectTask($projectID);//Yii::$app->runAction('v2/task/get-project-task', ['projectID'=>$projectID]);
-				
-				//set client back to ct after external call
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				//error handling to avoid breaking get me if task are not avaliable.
+				try{
+					$projectTask = Yii::$app->runAction('v2/task/get-by-project', ['projectID'=>$projectID])->data['assets'];
+				}catch(\Exception $e){
+					//set client back to ct after external call, logging of error will retarget db
+					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+					$projectTask = [];
+				}
+
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
+				
                 $projectData['ProjectID'] = $projectModel->ProjectID;
                 $projectData['ProjectName'] = $projectModel->ProjectName;
                 $projectData['ProjectUrlPrefix'] = $projectModel->ProjectUrlPrefix;
@@ -983,6 +1002,7 @@ class UserController extends BaseActiveController
 	}
 	
 	//public route that will allow techs to reset their passwords. In progress
+	//excluded from token check and does not have an associated permission
 	public function actionResetPassword()
 	{
 		try{
