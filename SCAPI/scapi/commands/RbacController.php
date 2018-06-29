@@ -3,8 +3,9 @@ namespace app\commands;
 
 use Yii;
 use yii\console\Controller;
-use app\modules\v2\models\SCUser;
-use app\modules\v2\rbac\ScDbManager;
+use app\modules\v2\constants\Constants;
+use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\models\BaseActiveRecord;
 
 /**
 * This Class establishes the rules of the RBAC system for the API
@@ -12,34 +13,75 @@ use app\modules\v2\rbac\ScDbManager;
 */
 class RbacController extends Controller
 {
+	//db connection based on active client
+	private $db;
+	//auth manager based on input param
+	private $auth;
+	//client based on input param
+	private $client;
+	//array of all permissions to be inserted
+	private $permissionArray = [];
+	//associative array of all permission associations to roles
+	private $permissionAssociationArray = [];
+	
 	/**
 	* Removes all RBAC settings that are currently in place and rebuilds the rule set
 	* Creates Permissions for routes
 	* Creates Roles
-	* Creates Child Heirarcy for Roles and Permissions
+	* Creates Child Hierarchy for Roles and Permissions
 	* Loops existing users to get previously assigned roles and reassign them
 	*/
-    public function actionInit($client)
+    public function actionInit($input)
     {
-		echo "Generating RBAC settings for " . $client . ".\n";
-		SCUser::setClient($client);
-		$db = SCUser::getDb();
-		$auth = new ScDbManager($db);
-		$permissionsArray = array();
+		$this->client = $input;
+		echo "Generating RBAC settings for " . $this->client . ".\n";
+		BaseActiveRecord::setClient($this->client);
+		$this->db = BaseActiveRecord::getDb();
+		$authController = BaseActiveRecord::getAuthManager($this->client);
+		$this->auth = new $authController($this->db);
 		
+		//CALL functions instantiated below
+		//clear permission tables
+		$this->clearPermissions();
+		//generate array of all permissions to add
+		$this->createBasePermissions();
+		//if client is not scct add survey permissions, may be able to alter this based on project type in the future
+		if(!BaseActiveController::isSCCT($this->client))
+		{
+			$this->createSurveyPermissions();
+		}
+		//bulk insert permissions from permissionArray
+		echo "Inserting Permissions Into DB.\n";
+		$this->auth->addItems($this->permissionArray);
+		echo "Permissions Inserted Into DB.\n";
+		//create roles, and add permissions to them based on permissionAssociationArray
+		$this->assignPermissions();
+		//reassign user roles based on user records
+		$this->reAssignUserRoles();
+		
+		echo "RBAC Geneartion Completed for " . $this->client . ".\n";
+    }
+	
+	private function clearPermissions()
+	{
+		//get shcema prefix for base comet tracker tables
+		$schemaPrefix = '';
+		if(BaseActiveController::isSCCT($this->client))
+		{
+			$schemaPrefix = 'rbac.';
+		}
 		try{
 			echo "Clearing Auth Tables.\n";
 			//reset all
-			//$auth->removeAll();
 			//create connection
-			$connection = $db;
+			$connection = $this->db;
 			//start transaction
 			$transaction = $connection-> beginTransaction();
 			//create commands
-			$deleteAssignmentCommand = $connection->createCommand("DELETE FROM rbac.auth_assignment");
-			$deleteItemChildCommand = $connection->createCommand("DELETE FROM rbac.auth_item_child");
-			$deleteItemCommand = $connection->createCommand("DELETE FROM rbac.auth_item");
-			$deleteRuleCommand = $connection->createCommand("DELETE FROM rbac.auth_rule");
+			$deleteAssignmentCommand = $connection->createCommand('DELETE FROM ' . $schemaPrefix . 'auth_assignment');
+			$deleteItemChildCommand = $connection->createCommand('DELETE FROM ' . $schemaPrefix . 'auth_item_child');
+			$deleteItemCommand = $connection->createCommand('DELETE FROM ' . $schemaPrefix . 'auth_item');
+			$deleteRuleCommand = $connection->createCommand('DELETE FROM ' . $schemaPrefix . 'auth_rule');
 			//execute commands
 			$deleteAssignmentCommand->execute();
 			$deleteItemChildCommand->execute();
@@ -53,705 +95,831 @@ class RbacController extends Controller
 			$transaction->rollBack();
 			echo "Auth Tables Failed to Clear.\n";
 		}
-			
-		echo "Creating Permissions Array.\n";	
+	}
+	
+	private function createBasePermissions()
+	{
+		echo "Creating Base Permissions Array.\n";		
 		//Activity Code permissions/////////////////////////////////////////////////////////////////
-		//add "activityCodeGetDropdown" permission
-		$activityCodeGetDropdown = $auth->createPermission('activityCodeGetDropdown');
+
+		$activityCodeGetDropdown = $this->auth->createPermission('activityCodeGetDropdown');
 		$activityCodeGetDropdown->description = 'Get an associative array of Activity Codes';
-		$permissionsArray[] = $activityCodeGetDropdown;
+		$this->permissionAssociationArray['Supervisor'][] = $activityCodeGetDropdown;
+		$this->permissionArray[] = $activityCodeGetDropdown;
 		
 		//Activity permissions/////////////////////////////////////////////////////////////////
-		//add "activityView" permission
-		$activityView = $auth->createPermission('activityView');
+
+		$activityView = $this->auth->createPermission('activityView');
 		$activityView->description = 'View an activity';
-		$permissionsArray[] = $activityView;
+		$this->permissionAssociationArray['Admin'][] = $activityView;
+		$this->permissionArray[] = $activityView;
 		
-		// "activityCreate" permission
-		$activityCreate = $auth->createPermission('activityCreate');
+		$activityCreate = $this->auth->createPermission('activityCreate');
 		$activityCreate->description = 'Create an activity';
-		$permissionsArray[] = $activityCreate;
+		$this->permissionAssociationArray['Technician'][] = $activityCreate;
+		$this->permissionArray[] = $activityCreate;
 		
 		//App Role permissions/////////////////////////////////////////////////////////////////
-		//add "appRoleGetDropdown" permission
-		$appRoleGetDropdown = $auth->createPermission('appRoleGetDropdown');
+
+		$appRoleGetDropdown = $this->auth->createPermission('appRoleGetDropdown');
 		$appRoleGetDropdown->description = 'Get an associative array of App Roles';
-		$permissionsArray[] = $appRoleGetDropdown;
+		$this->permissionAssociationArray['Supervisor'][] = $appRoleGetDropdown;
+		$this->permissionArray[] = $appRoleGetDropdown;
 		
 		//Client Accounts permissions/////////////////////////////////////////////////////////////////
-		//add "clientAccountsGetDropdown" permission
-		$clientAccountsGetDropdown = $auth->createPermission('clientAccountsGetDropdown');
+
+		$clientAccountsGetDropdown = $this->auth->createPermission('clientAccountsGetDropdown');
 		$clientAccountsGetDropdown->description = 'Get an associative array of Client Accounts';
-		$permissionsArray[] = $clientAccountsGetDropdown;
+		$this->permissionAssociationArray['Admin'][] = $clientAccountsGetDropdown;
+		$this->permissionArray[] = $clientAccountsGetDropdown;
 		
 		//Client permissions/////////////////////////////////////////////////////////////////
-        // add "clientGetAll" permission
-        $clientGetAll = $auth->createPermission('clientGetAll');
+
+        $clientGetAll = $this->auth->createPermission('clientGetAll');
         $clientGetAll->description = 'Get an array of all clients';
-        $permissionsArray[] = $clientGetAll;
+        $this->permissionAssociationArray['Admin'][] = $clientGetAll;
+        $this->permissionArray[] = $clientGetAll;
 		
-		// add "clientView" permission
-        $clientView = $auth->createPermission('clientView');
+        $clientView = $this->auth->createPermission('clientView');
         $clientView->description = 'View a client';
-        $permissionsArray[] = $clientView;
+        $this->permissionAssociationArray['Admin'][] = $clientView;
+        $this->permissionArray[] = $clientView;
 		
-		// add "clientCreate" permission
-        $clientCreate = $auth->createPermission('clientCreate');
+        $clientCreate = $this->auth->createPermission('clientCreate');
         $clientCreate->description = 'Create a client';
-        $permissionsArray[] = $clientCreate;
+        $this->permissionAssociationArray['Admin'][] = $clientCreate;
+        $this->permissionArray[] = $clientCreate;
 
-        // add "clientUpdate" permission
-        $clientUpdate = $auth->createPermission('clientUpdate');
+        $clientUpdate = $this->auth->createPermission('clientUpdate');
         $clientUpdate->description = 'Update client';
-        $permissionsArray[] = $clientUpdate;
+        $this->permissionAssociationArray['Admin'][] = $clientUpdate;
+        $this->permissionArray[] = $clientUpdate;
 
-        // add "clientDeactivate" permission
-        $clientDeactivate = $auth->createPermission('clientDeactivate');
+        $clientDeactivate = $this->auth->createPermission('clientDeactivate');
         $clientDeactivate->description = 'Deactivate client';
-        $permissionsArray[] = $clientDeactivate;
+        $this->permissionAssociationArray['Admin'][] = $clientDeactivate;
+        $this->permissionArray[] = $clientDeactivate;
 		
-		// add "clientGetDropdown" permission
-        $clientGetDropdown = $auth->createPermission('clientGetDropdown');
+        $clientGetDropdown = $this->auth->createPermission('clientGetDropdown');
         $clientGetDropdown->description = 'Get an associative array of client ID/name pairs';
-        $permissionsArray[] = $clientGetDropdown;
+        $this->permissionAssociationArray['Engineer'][] = $clientGetDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $clientGetDropdown;
+        $this->permissionArray[] = $clientGetDropdown;
 		
 		//Employee Type permissions/////////////////////////////////////////////////////////////////
-		//add "employeeTypeGetDropdown" permission
-		$employeeTypeGetDropdown = $auth->createPermission('employeeTypeGetDropdown');
+
+		$employeeTypeGetDropdown = $this->auth->createPermission('employeeTypeGetDropdown');
 		$employeeTypeGetDropdown->description = 'Get an associative array of employee types';
-		$permissionsArray[] = $employeeTypeGetDropdown;
+		$this->permissionAssociationArray['Supervisor'][] = $employeeTypeGetDropdown;
+		$this->permissionArray[] = $employeeTypeGetDropdown;
 		
 		//Equipment Calibration permissions/////////////////////////////////////////////////////////////////
-		//add "equipmentCalibrationCreate" permission
-		$equipmentCalibrationCreate = $auth->createPermission('equipmentCalibrationCreate');
+
+		$equipmentCalibrationCreate = $this->auth->createPermission('equipmentCalibrationCreate');
 		$equipmentCalibrationCreate->description = 'Creates a new equipment calibration record';
-		$permissionsArray[] = $equipmentCalibrationCreate;
+		$this->permissionAssociationArray['Technician'][] = $equipmentCalibrationCreate;
+		$this->permissionArray[] = $equipmentCalibrationCreate;
+		
+		$equipmentCalibrationDelete = $this->auth->createPermission('equipmentCalibrationDelete');
+		$equipmentCalibrationDelete->description = 'Deletes an existing equipment calibration record';
+		$this->permissionAssociationArray['Technician'][] = $equipmentCalibrationDelete;
+		$this->permissionArray[] = $equipmentCalibrationDelete;
 		
 		//Equipment Condition permissions/////////////////////////////////////////////////////////////////
-		//add "equipmentConditionGetDropdown" permission
-		$equipmentConditionGetDropdown = $auth->createPermission('equipmentConditionGetDropdown');
+
+		$equipmentConditionGetDropdown = $this->auth->createPermission('equipmentConditionGetDropdown');
 		$equipmentConditionGetDropdown->description = 'Get an associative array of equipment conditions';
-		$permissionsArray[] = $equipmentConditionGetDropdown;
+		$this->permissionAssociationArray['Engineer'][] = $equipmentConditionGetDropdown;
+		$this->permissionAssociationArray['Supervisor'][] = $equipmentConditionGetDropdown;
+		$this->permissionArray[] = $equipmentConditionGetDropdown;
 		
 		//Equipment permissions/////////////////////////////////////////////////////////////////
-        // add "getOwnEquipment" permission
-        $getOwnEquipment = $auth->createPermission('getOwnEquipment');
-        $getOwnEquipment->description = 'Get equipment for associated projects';
-        $permissionsArray[] = $getOwnEquipment;
-		
-		// add "getAllEquipment" permission
-        $getAllEquipment = $auth->createPermission('getAllEquipment');
-        $getAllEquipment->description = 'Get all equipment';
-        $permissionsArray[] = $getAllEquipment;
-		
-		// add "equipmentView" permission
-        $equipmentView = $auth->createPermission('equipmentView');
-        $equipmentView->description = 'View equipment';
-        $permissionsArray[] = $equipmentView;
-		
-		// add "equipmentCreate" permission
-        $equipmentCreate = $auth->createPermission('equipmentCreate');
-        $equipmentCreate->description = 'Create equipment';
-        $auth->add($equipmentCreate);
 
-        // add "equipmentUpdate" permission
-        $equipmentUpdate = $auth->createPermission('equipmentUpdate');
+        $getOwnEquipment = $this->auth->createPermission('getOwnEquipment');
+        $getOwnEquipment->description = 'Get equipment for associated projects';
+        $this->permissionAssociationArray['Supervisor'][] = $getOwnEquipment;
+        $this->permissionArray[] = $getOwnEquipment;
+		
+        $getAllEquipment = $this->auth->createPermission('getAllEquipment');
+        $getAllEquipment->description = 'Get all equipment';
+        $this->permissionAssociationArray['Engineer'][] = $getAllEquipment;
+        $this->permissionArray[] = $getAllEquipment;
+		
+        $equipmentView = $this->auth->createPermission('equipmentView');
+        $equipmentView->description = 'View equipment';
+        $this->permissionAssociationArray['Supervisor'][] = $equipmentView;
+        $this->permissionAssociationArray['Engineer'][] = $equipmentView;
+        $this->permissionArray[] = $equipmentView;
+		
+        $equipmentCreate = $this->auth->createPermission('equipmentCreate');
+        $equipmentCreate->description = 'Create equipment';
+        $this->permissionAssociationArray['Engineer'][] = $equipmentCreate;
+        $this->permissionArray[] = $equipmentCreate;
+
+        $equipmentUpdate = $this->auth->createPermission('equipmentUpdate');
         $equipmentUpdate->description = 'Update equipment';
-        $permissionsArray[] = $equipmentUpdate;
+        $this->permissionAssociationArray['Engineer'][] = $equipmentUpdate;
+        $this->permissionAssociationArray['Supervisor'][] = $equipmentUpdate;
+        $this->permissionArray[] = $equipmentUpdate;
 		
-		// add "equipmentDelete" permission
-        $equipmentDelete = $auth->createPermission('equipmentDelete');
+        $equipmentDelete = $this->auth->createPermission('equipmentDelete');
         $equipmentDelete->description = 'Delete equipment';
-        $permissionsArray[] = $equipmentDelete;
+        $this->permissionAssociationArray['Engineer'][] = $equipmentDelete;
+        $this->permissionAssociationArray['Supervisor'][] = $equipmentDelete;
+        $this->permissionArray[] = $equipmentDelete;
 		
-		// add "acceptEquipment" permission
-        $acceptEquipment = $auth->createPermission('acceptEquipment');
+        $acceptEquipment = $this->auth->createPermission('acceptEquipment');
         $acceptEquipment->description = 'Accept equipment';
-        $permissionsArray[] = $acceptEquipment;
+        $this->permissionAssociationArray['Engineer'][] = $acceptEquipment;
+        $this->permissionAssociationArray['Supervisor'][] = $acceptEquipment;
+        $this->permissionArray[] = $acceptEquipment;
 		
 		//Equipment Status permissions/////////////////////////////////////////////////////////////////
-		//add "equipmentStatusGetDropdown" permission
-		$equipmentStatusGetDropdown = $auth->createPermission('equipmentStatusGetDropdown');
+
+		$equipmentStatusGetDropdown = $this->auth->createPermission('equipmentStatusGetDropdown');
 		$equipmentStatusGetDropdown->description = 'Get an associative array of equipment status';
-		$permissionsArray[] = $equipmentStatusGetDropdown;
+		$this->permissionAssociationArray['Engineer'][] = $equipmentStatusGetDropdown;
+		$this->permissionAssociationArray['Supervisor'][] = $equipmentStatusGetDropdown;
+		$this->permissionArray[] = $equipmentStatusGetDropdown;
 		
 		//Equipment Type permissions/////////////////////////////////////////////////////////////////
-		//add "equipmentTypeGetDropdown" permission
-		$equipmentTypeGetDropdown = $auth->createPermission('equipmentTypeGetDropdown');
+
+		$equipmentTypeGetDropdown = $this->auth->createPermission('equipmentTypeGetDropdown');
 		$equipmentTypeGetDropdown->description = 'Get an associative array of equipment types';
-		$permissionsArray[] = $equipmentTypeGetDropdown;
+		$this->permissionAssociationArray['Engineer'][] = $equipmentTypeGetDropdown;
+		$this->permissionAssociationArray['Supervisor'][] = $equipmentTypeGetDropdown;
+		$this->permissionArray[] = $equipmentTypeGetDropdown;
 		
 		//Mileage Card permissions/////////////////////////////////////////////////////////////////
-        // add "mileageCardGetOwnCards" permission
-        $mileageCardGetOwnCards = $auth->createPermission('mileageCardGetOwnCards');
-        $mileageCardGetOwnCards->description = 'Get an array of mileage cards for associated projects';
-        $permissionsArray[] = $mileageCardGetOwnCards;
-		
-		// add "mileageCardGetAllCards" permission
-        $mileageCardGetAllCards = $auth->createPermission('mileageCardGetAllCards');
-        $mileageCardGetAllCards->description = 'Get an array of all mileage cards';
-        $permissionsArray[] = $mileageCardGetAllCards;
-		
-		// add "mileageCardView" permission
-        $mileageCardView = $auth->createPermission('mileageCardView');
-        $mileageCardView->description = 'View a mileage card';
-        $permissionsArray[] = $mileageCardView;
-		
-		// add "mileageCardGetCard" permission
-        $mileageCardGetCard = $auth->createPermission('mileageCardGetCard');
-        $mileageCardGetCard->description = 'Get a mileage card for a user';
-        $permissionsArray[] = $mileageCardGetCard;
 
-        // add "mileageCardGetEntries" permission
-        $mileageCardGetEntries = $auth->createPermission('mileageCardGetEntries');
-        $mileageCardGetEntries->description = 'Get all mileage entries for a mileage card';
-        $permissionsArray[] = $mileageCardGetEntries;
+        $mileageCardGetOwnCards = $this->auth->createPermission('mileageCardGetOwnCards');
+        $mileageCardGetOwnCards->description = 'Get an array of mileage cards for associated projects';
+        $this->permissionAssociationArray['Supervisor'][] = $mileageCardGetOwnCards;
+        $this->permissionAssociationArray['Accountant'][] = $mileageCardGetOwnCards;
+        $this->permissionArray[] = $mileageCardGetOwnCards;
 		
-		// add "mileageCardApprove" permission
-        $mileageCardApprove = $auth->createPermission('mileageCardApprove');
+        $mileageCardGetAllCards = $this->auth->createPermission('mileageCardGetAllCards');
+        $mileageCardGetAllCards->description = 'Get an array of all mileage cards';
+        $this->permissionAssociationArray['Accountant'][] = $mileageCardGetAllCards;
+        $this->permissionAssociationArray['Admin'][] = $mileageCardGetAllCards;
+        $this->permissionArray[] = $mileageCardGetAllCards;
+		
+        $mileageCardView = $this->auth->createPermission('mileageCardView');
+        $mileageCardView->description = 'View a mileage card';
+        $this->permissionAssociationArray['Supervisor'][] = $mileageCardView;
+        $this->permissionArray[] = $mileageCardView;
+		
+        $mileageCardGetCard = $this->auth->createPermission('mileageCardGetCard');
+        $mileageCardGetCard->description = 'Get a mileage card for a user';
+        $this->permissionAssociationArray['Technician'][] = $mileageCardGetCard;
+        $this->permissionArray[] = $mileageCardGetCard;
+
+        $mileageCardGetEntries = $this->auth->createPermission('mileageCardGetEntries');
+        $mileageCardGetEntries->description = 'Get all mileage entries for a mileage card';
+        $this->permissionAssociationArray['Supervisor'][] = $mileageCardGetEntries;
+        $this->permissionAssociationArray['Accountant'][] = $mileageCardGetEntries;
+        $this->permissionArray[] = $mileageCardGetEntries;
+		
+        $mileageCardApprove = $this->auth->createPermission('mileageCardApprove');
         $mileageCardApprove->description = 'Approve a mileage card';
-        $permissionsArray[] = $mileageCardApprove;
+        $this->permissionAssociationArray['Supervisor'][] = $mileageCardApprove;
+        $this->permissionArray[] = $mileageCardApprove;
 		
 		//Mileage Entry permissions/////////////////////////////////////////////////////////////////
-        // add "mileageEntryView" permission
-        $mileageEntryView = $auth->createPermission('mileageEntryView');
+		
+        $mileageEntryView = $this->auth->createPermission('mileageEntryView');
         $mileageEntryView->description = 'View a mileage entry';
-        $permissionsArray[] = $mileageEntryView;
+        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryView;
+        $this->permissionAssociationArray['Accountant'][] = $mileageEntryView;
+        $this->permissionArray[] = $mileageEntryView;
 		
-		// add "mileageEntryCreate" permission
-        $mileageEntryCreate = $auth->createPermission('mileageEntryCreate');
+        $mileageEntryCreate = $this->auth->createPermission('mileageEntryCreate');
         $mileageEntryCreate->description = 'Create a mileage entry';
-        $permissionsArray[] = $mileageEntryCreate;
+        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryCreate;
+        $this->permissionAssociationArray['Accountant'][] = $mileageEntryCreate;
+        $this->permissionArray[] = $mileageEntryCreate;
 		
-		// add "mileageEntryDeactivate" permission
-        $mileageEntryDeactivate = $auth->createPermission('mileageEntryDeactivate');
+        $mileageEntryDeactivate = $this->auth->createPermission('mileageEntryDeactivate');
         $mileageEntryDeactivate->description = 'Deactivate a mileage entry';
-        $permissionsArray[] = $mileageEntryDeactivate;
+        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryDeactivate;
+        $this->permissionAssociationArray['Accountant'][] = $mileageEntryDeactivate;
+        $this->permissionArray[] = $mileageEntryDeactivate;
 		
 		//Notifications permissions/////////////////////////////////////////////////////////////////
-        // add "notificationsGet" permission
-        $notificationsGet = $auth->createPermission('notificationsGet');
+
+        $notificationsGet = $this->auth->createPermission('notificationsGet');
         $notificationsGet->description = 'Get notifications';
-        $permissionsArray[] = $notificationsGet;
+        $this->permissionAssociationArray['Engineer'][] = $notificationsGet;
+        $this->permissionAssociationArray['Analyst'][] = $notificationsGet;
+        $this->permissionAssociationArray['Supervisor'][] = $notificationsGet;
+        $this->permissionAssociationArray['Accountant'][] = $notificationsGet;
+        $this->permissionArray[] = $notificationsGet;
 		
 		//Pay Code permissions/////////////////////////////////////////////////////////////////
-        // add "payCodeGetDropdown" permission
-        $payCodeGetDropdown = $auth->createPermission('payCodeGetDropdown');
+
+        $payCodeGetDropdown = $this->auth->createPermission('payCodeGetDropdown');
         $payCodeGetDropdown->description = 'Get an associative array of pay codes';
-        $permissionsArray[] = $payCodeGetDropdown;
+        $this->permissionAssociationArray['Analyst'][] = $payCodeGetDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $payCodeGetDropdown;
+        $this->permissionAssociationArray['Accountant'][] = $payCodeGetDropdown;
+        $this->permissionArray[] = $payCodeGetDropdown;
 		
 		//Project permissions/////////////////////////////////////////////////////////////////
-        // add "projectGetAll" permission
-        $projectGetAll = $auth->createPermission('projectGetAll');
-        $projectGetAll->description = 'Get an array of all projects';
-        $permissionsArray[] = $projectGetAll;
-		
-		// add "projectView" permission
-        $projectView = $auth->createPermission('projectView');
-        $projectView->description = 'View a project';
-        $permissionsArray[] = $projectView;
-		
-		// add "projectCreate" permission
-        $projectCreate = $auth->createPermission('projectCreate');
-        $projectCreate->description = 'Create a project';
-        $permissionsArray[] = $projectCreate;
 
-        // add "projectUpdate" permission
-        $projectUpdate = $auth->createPermission('projectUpdate');
+        $projectGetAll = $this->auth->createPermission('projectGetAll');
+        $projectGetAll->description = 'Get an array of all projects';
+        $this->permissionAssociationArray['Admin'][] = $projectGetAll;
+        $this->permissionArray[] = $projectGetAll;
+		
+        $projectView = $this->auth->createPermission('projectView');
+        $projectView->description = 'View a project';
+        $this->permissionAssociationArray['Supervisor'][] = $projectView;
+        $this->permissionArray[] = $projectView;
+		
+        $projectCreate = $this->auth->createPermission('projectCreate');
+        $projectCreate->description = 'Create a project';
+        $this->permissionAssociationArray['Admin'][] = $projectCreate;
+        $this->permissionArray[] = $projectCreate;
+
+        $projectUpdate = $this->auth->createPermission('projectUpdate');
         $projectUpdate->description = 'Update project';
-        $permissionsArray[] = $projectUpdate;
+        $this->permissionAssociationArray['Admin'][] = $projectUpdate;
+        $this->permissionArray[] = $projectUpdate;
 		
-		// add "projectGetOwnProjects" permission
-        $projectGetOwnProjects = $auth->createPermission('projectGetOwnProjects');
+        $projectGetOwnProjects = $this->auth->createPermission('projectGetOwnProjects');
         $projectGetOwnProjects->description = 'Get all projects that a user is associated with';
-        $permissionsArray[] = $projectGetOwnProjects;
+        $this->permissionAssociationArray['Analyst'][] = $projectGetOwnProjects;
+        $this->permissionAssociationArray['Supervisor'][] = $projectGetOwnProjects;
+        $this->permissionArray[] = $projectGetOwnProjects;
 		
-		// add "projectGetDropdown" permission
-        $projectGetDropdown = $auth->createPermission('projectGetDropdown');
+        $projectGetDropdown = $this->auth->createPermission('projectGetDropdown');
         $projectGetDropdown->description = 'Get an associative array of project name/id pairs';
-        $permissionsArray[] = $projectGetDropdown;
+        $this->permissionAssociationArray['Engineer'][] = $projectGetDropdown;
+        $this->permissionAssociationArray['Analyst'][] = $projectGetDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $projectGetDropdown;
+        $this->permissionArray[] = $projectGetDropdown;
 		
-		// add "projectGetUserRelationships" permission
-        $projectGetUserRelationships = $auth->createPermission('projectGetUserRelationships');
+        $projectGetUserRelationships = $this->auth->createPermission('projectGetUserRelationships');
         $projectGetUserRelationships->description = 'Get two arrays one of users associated with a project and one of all other users';
-        $permissionsArray[] = $projectGetUserRelationships;
+        $this->permissionAssociationArray['Supervisor'][] = $projectGetUserRelationships;
+        $this->permissionArray[] = $projectGetUserRelationships;
 		
-		// add "projectAddRemoveUsers" permission
-        $projectAddRemoveUsers = $auth->createPermission('projectAddRemoveUsers');
+        $projectAddRemoveUsers = $this->auth->createPermission('projectAddRemoveUsers');
         $projectAddRemoveUsers->description = 'Add or remove users from a project';
-        $permissionsArray[] = $projectAddRemoveUsers;
+        $this->permissionAssociationArray['Supervisor'][] = $projectAddRemoveUsers;
+        $this->permissionArray[] = $projectAddRemoveUsers;
 		
-		// add "projectAddRemoveModules" permission
-		$projectAddRemoveModules = $auth->createPermission('projectAddRemoveModules');
+		$projectGetProjectModules = $this->auth->createPermission('projectGetProjectModules');
+        $projectGetProjectModules->description = 'Get modules available for projects.';
+        $this->permissionAssociationArray['Admin'][] = $projectGetProjectModules;
+        $this->permissionArray[] = $projectGetProjectModules;
+		
+		$projectAddRemoveModules = $this->auth->createPermission('projectAddRemoveModules');
         $projectAddRemoveModules->description = 'Add or remove modules from a project';
-        $permissionsArray[] = $projectAddRemoveModules;
+        $this->permissionAssociationArray['Admin'][] = $projectAddRemoveModules;
+        $this->permissionArray[] = $projectAddRemoveModules;
 		
 		//State Code permissions/////////////////////////////////////////////////////////////////
-        // add "stateCodeGetDropdown" permission
-        $stateCodeGetDropdown = $auth->createPermission('stateCodeGetDropdown');
+
+        $stateCodeGetDropdown = $this->auth->createPermission('stateCodeGetDropdown');
         $stateCodeGetDropdown->description = 'Get an associative array of state codes';
-        $permissionsArray[] = $stateCodeGetDropdown;
+        $this->permissionAssociationArray['Admin'][] = $stateCodeGetDropdown;
+        $this->permissionArray[] = $stateCodeGetDropdown;
 		
 		//Time Card permissions/////////////////////////////////////////////////////////////////
-        // add "timeCardGetOwnCards" permission
-        $timeCardGetOwnCards = $auth->createPermission('timeCardGetOwnCards');
-        $timeCardGetOwnCards->description = 'Get an array of multiple time cards for associated projects';
-        $permissionsArray[] = $timeCardGetOwnCards;
-		
-		// add "timeCardGetAllCards" permission
-        $timeCardGetAllCards = $auth->createPermission('timeCardGetAllCards');
-        $timeCardGetAllCards->description = 'Get an array of all time cards';
-        $permissionsArray[] = $timeCardGetAllCards;
-		
-		// add "timeCardView" permission
-        $timeCardView = $auth->createPermission('timeCardView');
-        $timeCardView->description = 'View a time card';
-        $permissionsArray[] = $timeCardView;
-		
-		// add "timeCardApproveCards" permission
-        $timeCardApproveCards = $auth->createPermission('timeCardApproveCards');
-        $timeCardApproveCards->description = 'Approve time cards';
-        $permissionsArray[] = $timeCardApproveCards;
 
-        // add "timeCardGetCard" permission
-        $timeCardGetCard = $auth->createPermission('timeCardGetCard');
+        $timeCardGetOwnCards = $this->auth->createPermission('timeCardGetOwnCards');
+        $timeCardGetOwnCards->description = 'Get an array of multiple time cards for associated projects';
+        $this->permissionAssociationArray['Supervisor'][] = $timeCardGetOwnCards;
+        $this->permissionAssociationArray['Accountant'][] = $timeCardGetOwnCards;
+        $this->permissionArray[] = $timeCardGetOwnCards;
+		
+        $timeCardGetAllCards = $this->auth->createPermission('timeCardGetAllCards');
+        $timeCardGetAllCards->description = 'Get an array of all time cards';
+        $this->permissionAssociationArray['Accountant'][] = $timeCardGetAllCards;
+        $this->permissionAssociationArray['Admin'][] = $timeCardGetAllCards;
+        $this->permissionArray[] = $timeCardGetAllCards;
+		
+        $timeCardView = $this->auth->createPermission('timeCardView');
+        $timeCardView->description = 'View a time card';
+        $this->permissionAssociationArray['Supervisor'][] = $timeCardView;
+        $this->permissionAssociationArray['Accountant'][] = $timeCardView;
+        $this->permissionArray[] = $timeCardView;
+		
+        $timeCardApproveCards = $this->auth->createPermission('timeCardApproveCards');
+        $timeCardApproveCards->description = 'Approve time cards';
+        $this->permissionAssociationArray['Supervisor'][] = $timeCardApproveCards;
+        $this->permissionArray[] = $timeCardApproveCards;
+
+        $timeCardGetCard = $this->auth->createPermission('timeCardGetCard');
         $timeCardGetCard->description = 'Get a users time card';
-        $permissionsArray[] = $timeCardGetCard;
+        $this->permissionAssociationArray['Technician'][] = $timeCardGetCard;
+        $this->permissionArray[] = $timeCardGetCard;
 		
-		// add "timeCardGetEntries" permission
-        $timeCardGetEntries = $auth->createPermission('timeCardGetEntries');
+        $timeCardGetEntries = $this->auth->createPermission('timeCardGetEntries');
         $timeCardGetEntries->description = 'Get all time entries for a time card';
-        $permissionsArray[] = $timeCardGetEntries;
+        $this->permissionAssociationArray['Supervisor'][] = $timeCardGetEntries;
+        $this->permissionAssociationArray['Accountant'][] = $timeCardGetEntries;
+        $this->permissionArray[] = $timeCardGetEntries;
 		
-		//add "timeCardPmSubmit" permission
-		$timeCardPmSubmit = $auth->createPermission('timeCardPmSubmit');
+		$timeCardPmSubmit = $this->auth->createPermission('timeCardPmSubmit');
         $timeCardPmSubmit->description = 'Submit time cards to accounting.';
-        $permissionsArray[] = $timeCardPmSubmit;
+        $this->permissionAssociationArray['ProjectManager'][] = $timeCardPmSubmit;
+        $this->permissionArray[] = $timeCardPmSubmit;
+	
+        $timeCardSubmit = $this->auth->createPermission('timeCardSubmit');
+        $timeCardSubmit->description = 'Submit Time Cards and generate output files';
+        $this->permissionAssociationArray['Accountant'][] = $timeCardSubmit;
+        $this->permissionArray[] = $timeCardSubmit;
+		
+        $checkSubmitButtonStatus = $this->auth->createPermission('checkSubmitButtonStatus');
+        $checkSubmitButtonStatus->description = 'Check if given time cards are allowed to be submitted.';
+        $this->permissionAssociationArray['ProjectManager'][] = $checkSubmitButtonStatus;
+        $this->permissionAssociationArray['Accountant'][] = $checkSubmitButtonStatus;
+        $this->permissionArray[] = $checkSubmitButtonStatus;
+		
+		//Task Entry permissions/////////////////////////////////////////////////////////////////
+
+        $getAllTask = $this->auth->createPermission('getAllTask');
+        $getAllTask->description = 'Get all Task Types';
+        $this->permissionAssociationArray['Supervisor'][] = $getAllTask;
+        $this->permissionAssociationArray['Accountant'][] = $getAllTask;
+        $this->permissionArray[] = $getAllTask;
+		
+        $getChargeOfAccount = $this->auth->createPermission('getChargeOfAccount');
+        $getChargeOfAccount->description = 'Get charge of account types';
+        $this->permissionAssociationArray['Supervisor'][] = $getChargeOfAccount;
+        $this->permissionAssociationArray['Accountant'][] = $getChargeOfAccount;
+        $this->permissionArray[] = $getChargeOfAccount;
+		
+        $createTaskEntry = $this->auth->createPermission('createTaskEntry');
+        $createTaskEntry->description = 'Create a Task Entry';
+        $this->permissionAssociationArray['Supervisor'][] = $createTaskEntry;
+        $this->permissionAssociationArray['Accountant'][] = $createTaskEntry;
+        $this->permissionArray[] = $createTaskEntry;
 		
 		//Time Entry permissions/////////////////////////////////////////////////////////////////
-        // add "timeEntryView" permission
-        $timeEntryView = $auth->createPermission('timeEntryView');
+
+        $timeEntryView = $this->auth->createPermission('timeEntryView');
         $timeEntryView->description = 'View a time entry';
-        $permissionsArray[] = $timeEntryView;
+        $this->permissionAssociationArray['Supervisor'][] = $timeEntryView;
+        $this->permissionAssociationArray['Accountant'][] = $timeEntryView;
+        $this->permissionArray[] = $timeEntryView;
 		
-		// add "timeEntryCreate" permission
-        $timeEntryCreate = $auth->createPermission('timeEntryCreate');
+        $timeEntryCreate = $this->auth->createPermission('timeEntryCreate');
         $timeEntryCreate->description = 'Create a time entry';
-        $permissionsArray[] = $timeEntryCreate;
+        $this->permissionAssociationArray['Supervisor'][] = $timeEntryCreate;
+        $this->permissionAssociationArray['Accountant'][] = $timeEntryCreate;
+        $this->permissionArray[] = $timeEntryCreate;
 		
-		// add "timeEntryDeactivate" permission
-        $timeEntryDeactivate = $auth->createPermission('timeEntryDeactivate');
+        $timeEntryDeactivate = $this->auth->createPermission('timeEntryDeactivate');
         $timeEntryDeactivate->description = 'Deactivate a time entry';
-        $permissionsArray[] = $timeEntryDeactivate;
+        $this->permissionAssociationArray['Supervisor'][] = $timeEntryDeactivate;
+        $this->permissionAssociationArray['Accountant'][] = $timeEntryDeactivate;
+        $this->permissionArray[] = $timeEntryDeactivate;
 		
 		//User permissions/////////////////////////////////////////////////////////////////
-        // add "userGetActive" permission
-        $userGetActive = $auth->createPermission('userGetActive');
+
+        $userGetActive = $this->auth->createPermission('userGetActive');
         $userGetActive->description = 'Get all active users';
-        $permissionsArray[] = $userGetActive;
+        $this->permissionAssociationArray['Supervisor'][] = $userGetActive;
+        $this->permissionArray[] = $userGetActive;
 		
-		// add "userView" permission
-        $userView = $auth->createPermission('userView');
+        $userGetInactive = $this->auth->createPermission('userGetInactive');
+        $userGetInactive->description = 'Get all inactive users';
+        $this->permissionAssociationArray['Supervisor'][] = $userGetInactive;
+        $this->permissionArray[] = $userGetInactive;
+		
+        $userView = $this->auth->createPermission('userView');
         $userView->description = 'View a user';
-        $permissionsArray[] = $userView;
+        $this->permissionAssociationArray['Supervisor'][] = $userView;
+        $this->permissionArray[] = $userView;
 		
 		//User Create Permissions
-		// add "userCreate" permission
-        $userCreate = $auth->createPermission('userCreate');
+
+        $userCreate = $this->auth->createPermission('userCreate');
         $userCreate->description = 'Create a user';
-        $permissionsArray[] = $userCreate;
+        $this->permissionAssociationArray['Supervisor'][] = $userCreate;
+        $this->permissionArray[] = $userCreate;
 		
-		// add "userCreateTechnician" permission
-        $userCreateTechnician = $auth->createPermission('userCreateTechnician');
+        $userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
         $userCreateTechnician->description = 'Create user of role type technician';
-        $permissionsArray[] = $userCreateTechnician;
+        $this->permissionAssociationArray['Supervisor'][] = $userCreateTechnician;
+        $this->permissionArray[] = $userCreateTechnician;
 		
-		// add "userCreateSupervisor" permission
-        $userCreateSupervisor = $auth->createPermission('userCreateSupervisor');
+        $userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
         $userCreateSupervisor->description = 'Create user of role type supervisor';
-        $permissionsArray[] = $userCreateSupervisor;
+        $this->permissionAssociationArray['Supervisor'][] = $userCreateSupervisor;
+        $this->permissionArray[] = $userCreateSupervisor;
 		
-		// add "userCreateProjectManager" permission
-        $userCreateProjectManager = $auth->createPermission('userCreateProjectManager');
+        $userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
         $userCreateProjectManager->description = 'Create user of role type project manager';
-        $permissionsArray[] = $userCreateProjectManager;
+        $this->permissionAssociationArray['ProjectManager'][] = $userCreateProjectManager;
+        $this->permissionArray[] = $userCreateProjectManager;
 		
-		// add "userCreateAnalyst" permission
-        $userCreateAnalyst = $auth->createPermission('userCreateAnalyst');
+        $userCreateAnalyst = $this->auth->createPermission('userCreateAnalyst');
         $userCreateAnalyst->description = 'Create user of role type analyst';
-        $permissionsArray[] = $userCreateAnalyst;
+        $this->permissionAssociationArray['Admin'][] = $userCreateAnalyst;
+        $this->permissionArray[] = $userCreateAnalyst;
 		
-		// add "userCreateAccountant" permission
-        $userCreateAccountant = $auth->createPermission('userCreateAccountant');
+        $userCreateAccountant = $this->auth->createPermission('userCreateAccountant');
         $userCreateAccountant->description = 'Create user of role type accountant';
-        $permissionsArray[] = $userCreateAccountant;
+        $this->permissionAssociationArray['Admin'][] = $userCreateAccountant;
+        $this->permissionArray[] = $userCreateAccountant;
 		
-		// add "userCreateAdmin" permission
-        $userCreateAdmin = $auth->createPermission('userCreateAdmin');
+        $userCreateAdmin = $this->auth->createPermission('userCreateAdmin');
         $userCreateAdmin->description = 'Create a user of role type admin';
-        $permissionsArray[] = $userCreateAdmin;
+        $this->permissionAssociationArray['Admin'][] = $userCreateAdmin;
+        $this->permissionArray[] = $userCreateAdmin;
 		
 		//User Update Permissions
-        // add "userUpdate" permission
-        $userUpdate = $auth->createPermission('userUpdate');
+
+        $userUpdate = $this->auth->createPermission('userUpdate');
         $userUpdate->description = 'Update user';
-        $permissionsArray[] = $userUpdate;
+        $this->permissionAssociationArray['Supervisor'][] = $userUpdate;
+        $this->permissionArray[] = $userUpdate;
 		
-		// add "userUpdateTechnician" permission
-        $userUpdateTechnician = $auth->createPermission('userUpdateTechnician');
+        $userUpdateTechnician = $this->auth->createPermission('userUpdateTechnician');
         $userUpdateTechnician->description = 'Update user of role type technician';
-        $permissionsArray[] = $userUpdateTechnician;
+        $this->permissionAssociationArray['Supervisor'][] = $userUpdateTechnician;
+        $this->permissionArray[] = $userUpdateTechnician;
 		
-		// add "userUpdateSupervisor" permission
-        $userUpdateSupervisor = $auth->createPermission('userUpdateSupervisor');
+        $userUpdateSupervisor = $this->auth->createPermission('userUpdateSupervisor');
         $userUpdateSupervisor->description = 'Update user of role type supervisor';
-        $permissionsArray[] = $userUpdateSupervisor;
+        $this->permissionAssociationArray['Supervisor'][] = $userUpdateSupervisor;
+        $this->permissionArray[] = $userUpdateSupervisor;
 		
-		// add "userUpdateProjectManager" permission
-        $userUpdateProjectManager = $auth->createPermission('userUpdateProjectManager');
+        $userUpdateProjectManager = $this->auth->createPermission('userUpdateProjectManager');
         $userUpdateProjectManager->description = 'Update user of role type project manager';
-        $permissionsArray[] = $userUpdateProjectManager;
+        $this->permissionAssociationArray['ProjectManager'][] = $userUpdateProjectManager;
+        $this->permissionArray[] = $userUpdateProjectManager;
 		
-		// add "userUpdateAnalyst" permission
-        $userUpdateAnalyst = $auth->createPermission('userUpdateAnalyst');
+        $userUpdateAnalyst = $this->auth->createPermission('userUpdateAnalyst');
         $userUpdateAnalyst->description = 'Update user of role type analyst';
-        $permissionsArray[] = $userUpdateAnalyst;
+        $this->permissionAssociationArray['Admin'][] = $userUpdateAnalyst;
+        $this->permissionArray[] = $userUpdateAnalyst;
 		
-		// add "userUpdateAccountant" permission
-        $userUpdateAccountant = $auth->createPermission('userUpdateAccountant');
+        $userUpdateAccountant = $this->auth->createPermission('userUpdateAccountant');
         $userUpdateAccountant->description = 'Update user of role type accountant';
-        $permissionsArray[] = $userUpdateAccountant;
+        $this->permissionAssociationArray['Admin'][] = $userUpdateAccountant;
+        $this->permissionArray[] = $userUpdateAccountant;
 		
-		// add "userUpdateAdmin" permission
-        $userUpdateAdmin = $auth->createPermission('userUpdateAdmin');
+        $userUpdateAdmin = $this->auth->createPermission('userUpdateAdmin');
         $userUpdateAdmin->description = 'Update user of role type admin';
-        $permissionsArray[] = $userUpdateAdmin;
+        $this->permissionAssociationArray['Admin'][] = $userUpdateAdmin;
+        $this->permissionArray[] = $userUpdateAdmin;
 		
-		// add "userDeactivate" permission
-        $userDeactivate = $auth->createPermission('userDeactivate');
+        $userDeactivate = $this->auth->createPermission('userDeactivate');
         $userDeactivate->description = 'Deactivate user';
-        $permissionsArray[] = $userDeactivate;
+        $this->permissionAssociationArray['Supervisor'][] = $userDeactivate;
+        $this->permissionArray[] = $userDeactivate;
 		
-		// add "userGetDropdown" permission
-        $userGetDropdown = $auth->createPermission('userGetDropdown');
+        $userReactivate = $this->auth->createPermission('userReactivate');
+        $userReactivate->description = 'Reactivate user';
+		$this->permissionAssociationArray['Supervisor'][] = $userReactivate;
+		$this->permissionArray[] = $userReactivate;
+		
+        $userGetDropdown = $this->auth->createPermission('userGetDropdown');
         $userGetDropdown->description = 'Get an associative array of user id/name pairs';
-        $permissionsArray[] = $userGetDropdown;
+        $this->permissionAssociationArray['Engineer'][] = $userGetDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $userGetDropdown;
+        $this->permissionArray[] = $userGetDropdown;
 		
-		// add "userGetMe" permission
-        $userGetMe = $auth->createPermission('userGetMe');
+        $userGetMe = $this->auth->createPermission('userGetMe');
         $userGetMe->description = 'Get equipment and project data for a user';
-        $permissionsArray[] = $userGetMe;
+		$this->permissionAssociationArray['Technician'][] = $userGetMe;
+		$this->permissionAssociationArray['Engineer'][] = $userGetMe;
+		$this->permissionArray[] = $userGetMe;
+		
+		//Breadcrumb permissions/////////////////////////////////////////////////////////////////
+
+        $breadcrumbCreate = $this->auth->createPermission('breadcrumbCreate');
+        $breadcrumbCreate->description = 'Create Breadcrumbs';
+        $this->permissionAssociationArray['Technician'][] = $breadcrumbCreate;
+        $this->permissionArray[] = $breadcrumbCreate;
+		
+		////// Dropdown Controller Permissions ///////
+		
+        $getWebDropDowns = $this->auth->createPermission('getWebDropDowns');
+        $getWebDropDowns->description = 'Route to get Web Dropdowns for multiple screens.';
+        $this->permissionAssociationArray['Supervisor'][] = $getWebDropDowns;
+        $this->permissionAssociationArray['Accountant'][] = $getWebDropDowns;
+        $this->permissionArray[] = $getWebDropDowns;
+	
+        $getTrackerMapGridsDropdown = $this->auth->createPermission('getTrackerMapGridsDropdown');
+        $getTrackerMapGridsDropdown->description = 'Get Map Grid list for Tracker dropdown.';
+        $this->permissionAssociationArray['Supervisor'][] = $getTrackerMapGridsDropdown;
+        $this->permissionArray[] = $getTrackerMapGridsDropdown;
+		
+        $getTabletSurveyDropdowns = $this->auth->createPermission('getTabletSurveyDropdowns');
+        $getTabletSurveyDropdowns->description = 'Get route for all tablet dropdowns.';
+        $this->permissionAssociationArray['Technician'][] = $getTabletSurveyDropdowns;
+        $this->permissionArray[] = $getTabletSurveyDropdowns;
+		
+		////// Map Controller Permissions //////
+		
+        $mapGet = $this->auth->createPermission('mapGet');
+        $mapGet->description = 'Get map data for web maps.';
+        $this->permissionAssociationArray['Supervisor'][] = $mapGet;
+        $this->permissionArray[] = $mapGet;
+		
+		////// Reports Controller Permissions //////
+		
+		$reportGetDropdown = $this->auth->createPermission('reportGetDropdown');
+        $reportGetDropdown->description = 'Get dropdown for available reports.';
+        $this->permissionAssociationArray['Analyst'][] = $reportGetDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $reportGetDropdown;
+        $this->permissionAssociationArray['Accountant'][] = $reportGetDropdown;
+        $this->permissionArray[] = $reportGetDropdown;
+		
+		$reportGet = $this->auth->createPermission('reportGet');
+        $reportGet->description = 'Get report data.';
+        $this->permissionAssociationArray['Analyst'][] = $reportGet;
+        $this->permissionAssociationArray['Supervisor'][] = $reportGet;
+        $this->permissionAssociationArray['Accountant'][] = $reportGet;
+        $this->permissionArray[] = $reportGet;
+		
+		$reportGetParmDropdown = $this->auth->createPermission('reportGetParmDropdown');
+        $reportGetParmDropdown->description = 'Get dropdown for current report paramaters.';
+        $this->permissionAssociationArray['Analyst'][] = $reportGetParmDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $reportGetParmDropdown;
+        $this->permissionAssociationArray['Accountant'][] = $reportGetParmDropdown;
+        $this->permissionArray[] = $reportGetParmDropdown;
+		
+		$reportGetInspectorDropdown = $this->auth->createPermission('reportGetInspectorDropdown');
+        $reportGetInspectorDropdown->description = 'Get dropdown of available inspectors for a report.';
+        $this->permissionAssociationArray['Analyst'][] = $reportGetInspectorDropdown;
+        $this->permissionAssociationArray['Supervisor'][] = $reportGetInspectorDropdown;
+        $this->permissionAssociationArray['Accountant'][] = $reportGetInspectorDropdown;
+        $this->permissionArray[] = $reportGetInspectorDropdown;
+		
+		////// Route Controller Permissions //////
+		
+		$routeOptimization1 = $this->auth->createPermission('routeOptimization1');
+        $routeOptimization1->description = 'Get optimized route for data set.';
+        $this->permissionAssociationArray['Admin'][] = $routeOptimization1;
+        $this->permissionArray[] = $routeOptimization1;
+		
+		$routeOptimization2 = $this->auth->createPermission('routeOptimization2');
+        $routeOptimization2->description = 'Get optimized route for data set.';
+        $this->permissionAssociationArray['Admin'][] = $routeOptimization2;
+        $this->permissionArray[] = $routeOptimization2;
 
 		////// Module Menu Permissions //////
 		
-		$viewAdministrationMenu = $auth->createPermission('viewAdministrationMenu');
+		$viewAdministrationMenu = $this->auth->createPermission('viewAdministrationMenu');
         $viewAdministrationMenu->description = 'View Administration Menu';
-        $permissionsArray[] = $viewAdministrationMenu;
+        $this->permissionAssociationArray['Engineer'][] = $viewAdministrationMenu;
+        $this->permissionAssociationArray['Supervisor'][] = $viewAdministrationMenu;
+        $this->permissionAssociationArray['Accountant'][] = $viewAdministrationMenu;
+        $this->permissionArray[] = $viewAdministrationMenu;
 		
-		$viewDispatchMenu = $auth->createPermission('viewDispatchMenu');
-        $viewDispatchMenu->description = 'View Dispatch Menu';
-        $permissionsArray[] = $viewDispatchMenu;
-		
-		$viewReportsMenu = $auth->createPermission('viewReportsMenu');
+		$viewReportsMenu = $this->auth->createPermission('viewReportsMenu');
         $viewReportsMenu->description = 'View Reports Menu';
-        $permissionsArray[] = $viewReportsMenu;
+        $this->permissionAssociationArray['Analyst'][] = $viewReportsMenu;
+        $this->permissionAssociationArray['Supervisor'][] = $viewReportsMenu;
+        $this->permissionAssociationArray['Accountant'][] = $viewReportsMenu;
+        $this->permissionArray[] = $viewReportsMenu;
 		
-		$viewHomeMenu = $auth->createPermission('viewHomeMenu');
+		$viewHomeMenu = $this->auth->createPermission('viewHomeMenu');
         $viewHomeMenu->description = 'View Home Menu';
-        $permissionsArray[] = $viewHomeMenu;
+        $this->permissionAssociationArray['Engineer'][] = $viewHomeMenu;
+        $this->permissionAssociationArray['Analyst'][] = $viewHomeMenu;
+        $this->permissionAssociationArray['Supervisor'][] = $viewHomeMenu;
+        $this->permissionAssociationArray['Accountant'][] = $viewHomeMenu;
+        $this->permissionArray[] = $viewHomeMenu;
 		
-		$viewTrackerMenu = $auth->createPermission('viewTrackerMenu');
+		$viewTrackerMenu = $this->auth->createPermission('viewTrackerMenu');
         $viewTrackerMenu->description = 'View Tracker Menu';
-        $permissionsArray[] = $viewTrackerMenu;
+        $this->permissionAssociationArray['Supervisor'][] = $viewTrackerMenu;
+        $this->permissionArray[] = $viewTrackerMenu;
 		
-		$viewTrainingMenu = $auth->createPermission('viewTrainingMenu');
+		$viewTrainingMenu = $this->auth->createPermission('viewTrainingMenu');
         $viewTrainingMenu->description = 'View Training Menu';
-        $permissionsArray[] = $viewTrainingMenu;
+        $this->permissionAssociationArray['Supervisor'][] = $viewTrainingMenu;
+        $this->permissionArray[] = $viewTrainingMenu;
 		
         ////// Module Sub Menu Permissions //////
 
-
-        $viewClientMgmt = $auth->createPermission('viewClientMgmt');
+        $viewClientMgmt = $this->auth->createPermission('viewClientMgmt');
         $viewClientMgmt->description = 'View client management menu item';
-        $permissionsArray[] = $viewClientMgmt;
+        $this->permissionAssociationArray['Admin'][] = $viewClientMgmt;
+        $this->permissionArray[] = $viewClientMgmt;
 
-        $viewProjectMgmt = $auth->createPermission('viewProjectMgmt');
+        $viewProjectMgmt = $this->auth->createPermission('viewProjectMgmt');
         $viewProjectMgmt->description = 'View project management  menu item';
-        $permissionsArray[] = $viewProjectMgmt;
+        $this->permissionAssociationArray['Admin'][] = $viewProjectMgmt;
+        $this->permissionArray[] = $viewProjectMgmt;
 
-        $viewUserMgmt = $auth->createPermission('viewUserMgmt');
+        $viewUserMgmt = $this->auth->createPermission('viewUserMgmt');
         $viewUserMgmt->description = 'View user management menu item';
-        $permissionsArray[] = $viewUserMgmt;
+        $this->permissionAssociationArray['Supervisor'][] = $viewUserMgmt;
+        $this->permissionArray[] = $viewUserMgmt;
 
-        $viewEquipmentMgmt = $auth->createPermission('viewEquipmentMgmt');
+        $viewEquipmentMgmt = $this->auth->createPermission('viewEquipmentMgmt');
         $viewEquipmentMgmt->description = 'View equipment management menu item';
-        $permissionsArray[] = $viewEquipmentMgmt;
+        $this->permissionAssociationArray['Engineer'][] = $viewEquipmentMgmt;
+        $this->permissionAssociationArray['Supervisor'][] = $viewEquipmentMgmt;
+        $this->permissionArray[] = $viewEquipmentMgmt;
 
-        $viewTimeCardMgmt = $auth->createPermission('viewTimeCardMgmt');
+        $viewTimeCardMgmt = $this->auth->createPermission('viewTimeCardMgmt');
         $viewTimeCardMgmt->description = 'View time card management menu item';
-        $permissionsArray[] = $viewTimeCardMgmt;
+        $this->permissionAssociationArray['Supervisor'][] = $viewTimeCardMgmt;
+        $this->permissionAssociationArray['Accountant'][] = $viewTimeCardMgmt;
+        $this->permissionArray[] = $viewTimeCardMgmt;
 
-        $viewMileageCardMgmt = $auth->createPermission('viewMileageCardMgmt');
+        $viewMileageCardMgmt = $this->auth->createPermission('viewMileageCardMgmt');
         $viewMileageCardMgmt->description = 'View mileage card management menu item';
-        $permissionsArray[] = $viewMileageCardMgmt;
+        $this->permissionAssociationArray['Supervisor'][] = $viewMileageCardMgmt;
+        $this->permissionAssociationArray['Accountant'][] = $viewMileageCardMgmt;
+        $this->permissionArray[] = $viewMileageCardMgmt;
+		
+		echo "Base Permissions Array Created.\n";		
+	}
+	
+	private function createSurveyPermissions()
+	{
+		echo "Creating Survey Permissions Array.\n";	
+		//Work Queue permissions/////////////////////////////////////////////////////////////////
 
-        $viewTracker = $auth->createPermission('viewTracker');
-        $viewTracker->description = 'View tracker menu item';
-        $permissionsArray[] = $viewTracker;
-        
-        $viewLeakLogMgmt = $auth->createPermission('viewLeakLogMgmt');
-        $viewLeakLogMgmt->description = 'View leak log management menu item';
-        $permissionsArray[] = $viewLeakLogMgmt;
+        $workQueueGet = $this->auth->createPermission('workQueueGet');
+        $workQueueGet->description = 'Get User Assigned Work Queue';
+        $this->permissionAssociationArray['Technician'][] = $workQueueGet;
+        $this->permissionArray[] = $workQueueGet;
+		
+		//CGE permissions/////////////////////////////////////////////////////////////////
 
-        $viewLeakLogSearch = $auth->createPermission('viewLeakLogSearch');
-        $viewLeakLogSearch->description = 'View leak log search menu item';
-        $permissionsArray[] = $viewLeakLogSearch;
-
-        $viewMapStampMgmt = $auth->createPermission('viewMapStampMgmt');
-        $viewMapStampMgmt->description = 'View map stamp management menu item';
-        $permissionsArray[] = $viewMapStampMgmt;
-
-        $viewMapStampDetail = $auth->createPermission('viewMapStampDetail');
-        $viewMapStampDetail->description = 'View map stamp detail menu item';
-        $permissionsArray[] = $viewMapStampDetail;
-
-        $viewAOC = $auth->createPermission('viewAOC');
-        $viewAOC->description = 'View AOC menu item';
-        $permissionsArray[] = $viewAOC;
-
-        $viewDispatch = $auth->createPermission('viewDispatch');
+        $cgeGetMapGrids = $this->auth->createPermission('cgeGetMapGrids');
+        $cgeGetMapGrids->description = 'Get map grids that contain CGE records';
+        $this->permissionAssociationArray['Supervisor'][] = $cgeGetMapGrids;
+        $this->permissionArray[] = $cgeGetMapGrids;
+		
+        $cgeGetByMap = $this->auth->createPermission('cgeGetByMap');
+        $cgeGetByMap->description = 'Get cge records for given map';
+		$this->permissionAssociationArray['Supervisor'][] = $cgeGetByMap;
+        $this->permissionArray[] = $cgeGetByMap;
+		
+        $cgeGetHistory = $this->auth->createPermission('cgeGetHistory');
+        $cgeGetHistory->description = 'Get all previous records for given cge';
+        $this->permissionAssociationArray['Supervisor'][] = $cgeGetHistory;
+        $this->permissionArray[] = $cgeGetHistory;
+		
+		//Dispatch permissions/////////////////////////////////////////////////////////////////
+		
+        $dispatchGetAvailable = $this->auth->createPermission('dispatchGetAvailable');
+        $dispatchGetAvailable->description = 'Get all map grids or sections by map grid for unassigned work orders';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchGetAvailable;
+        $this->permissionArray[] = $dispatchGetAvailable;
+		
+        $dispatchGetAvailableAssets = $this->auth->createPermission('dispatchGetAvailableAssets');
+        $dispatchGetAvailableAssets->description = 'Get all unassigned work order records';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchGetAvailableAssets;
+        $this->permissionArray[] = $dispatchGetAvailableAssets;
+		
+        $dispatchGetSurveyors = $this->auth->createPermission('dispatchGetSurveyors');
+        $dispatchGetSurveyors->description = 'Get all users that can be assigned work';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchGetSurveyors;
+        $this->permissionArray[] = $dispatchGetSurveyors;
+		
+        $dispatch = $this->auth->createPermission('dispatch');
+        $dispatch->description = 'Dispatch work orders to users';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatch;
+        $this->permissionArray[] = $dispatch;
+		
+        $dispatchGetAssigned = $this->auth->createPermission('dispatchGetAssigned');
+        $dispatchGetAssigned->description = 'Get all map grids or sections by map grid for assigned work orders';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchGetAssigned;
+        $this->permissionArray[] = $dispatchGetAssigned;
+		
+        $dispatchGetAssignedAssets = $this->auth->createPermission('dispatchGetAssignedAssets');
+        $dispatchGetAssignedAssets->description = 'Get all assigned work order records';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchGetAssignedAssets;
+        $this->permissionArray[] = $dispatchGetAssignedAssets;
+		
+        $dispatchUnassign = $this->auth->createPermission('dispatchUnassign');
+        $dispatchUnassign->description = 'Unassign work orders from users';
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchUnassign;
+        $this->permissionArray[] = $dispatchUnassign;
+		
+        $dispatchGetDualDispatch = $this->auth->createPermission('dispatchGetDualDispatch');
+        $dispatchGetDualDispatch->description = 'Get records for dual dispatch regression test';
+        $this->permissionAssociationArray['Admin'][] = $dispatchGetDualDispatch;
+        $this->permissionArray[] = $dispatchGetDualDispatch;
+		
+		////// Inspection Controller Permissions //////
+		
+        $inspectionUpdate = $this->auth->createPermission('inspectionUpdate');
+        $inspectionUpdate->description = 'Update Inspection Record.';
+        $this->permissionAssociationArray['Technician'][] = $inspectionUpdate;
+        $this->permissionArray[] = $inspectionUpdate;
+		
+        $inspectionClearEvent = $this->auth->createPermission('inspectionClearEvent');
+        $inspectionClearEvent->description = 'Clear events on and inspection record.';
+        $this->permissionAssociationArray['Technician'][] = $inspectionClearEvent;
+        $this->permissionArray[] = $inspectionClearEvent;
+		
+        $inspectionGetMapGrids = $this->auth->createPermission('inspectionGetMapGrids');
+        $inspectionGetMapGrids->description = 'Get map grids for inspection web view.';
+        $this->permissionAssociationArray['Supervisor'][] = $inspectionGetMapGrids;
+        $this->permissionArray[] = $inspectionGetMapGrids;
+		
+        $inspectionsGet = $this->auth->createPermission('inspectionsGet');
+        $inspectionsGet->description = 'Get inspection records for web view.';
+        $this->permissionAssociationArray['Supervisor'][] = $inspectionsGet;
+        $this->permissionArray[] = $inspectionsGet;
+		
+        $inspectionsGetEvents = $this->auth->createPermission('inspectionsGetEvents');
+        $inspectionsGetEvents->description = 'Get events for inspection web view.';
+        $this->permissionAssociationArray['Supervisor'][] = $inspectionsGetEvents;
+        $this->permissionArray[] = $inspectionsGetEvents;
+		
+		////// Module Menu Permissions //////
+		
+		$viewDispatchMenu = $this->auth->createPermission('viewDispatchMenu');
+        $viewDispatchMenu->description = 'View Dispatch Menu';
+        $this->permissionAssociationArray['Supervisor'][] = $viewDispatchMenu;
+        $this->permissionArray[] = $viewDispatchMenu;
+		
+		////// Module Sub Menu Permissions //////
+		
+        $viewDispatch = $this->auth->createPermission('viewDispatch');
         $viewDispatch->description = 'View dispatch menu item';
-        $permissionsArray[] = $viewDispatch;
+        $this->permissionAssociationArray['Supervisor'][] = $viewDispatch;
+        $this->permissionArray[] = $viewDispatch;
 
-        $viewAssigned = $auth->createPermission('viewAssigned');
+        $viewAssigned = $this->auth->createPermission('viewAssigned');
         $viewAssigned->description = 'View assigned menu item';
-        $permissionsArray[] = $viewAssigned;
+        $this->permissionAssociationArray['Supervisor'][] = $viewAssigned;
+        $this->permissionArray[] = $viewAssigned;
         
-		$viewInspections = $auth->createPermission('viewInspections');
+		$viewInspections = $this->auth->createPermission('viewInspections');
         $viewInspections->description = 'View Inspections';
-        $permissionsArray[] = $viewInspections;
-		echo "Permissions Array Created.\n";
+        $this->permissionAssociationArray['Supervisor'][] = $viewInspections;
+        $this->permissionArray[] = $viewInspections;
 		
-		//bulk insert permissions/////////////////////////////////////////////////////////////////
-		echo "Inserting Permissions into DB.\n";
-		$auth->addItems($permissionsArray);
-		echo "Permissions inserted into DB.\n";
+		$viewCGE = $this->auth->createPermission('viewCGE');
+        $viewCGE->description = 'View CGEs';
+        $this->permissionAssociationArray['Supervisor'][] = $viewCGE;
+        $this->permissionArray[] = $viewCGE;
 		
+		echo "Survey Permissions Array Created.\n";
+	}
+	
+	private function assignPermissions()
+	{
 		// add roles and children/////////////////////////////////////////////////////////////////
 		echo "Creating Role Types and Adding Permissions.\n";
 		//add "Technician" role and give this role CRUD permissions
-		$technician = $auth->createRole('Technician');
-		$auth->add($technician);
+		$technician = $this->auth->createRole('Technician');
+		$this->auth->add($technician);
 		//add children
-		$auth->addChildren($technician, [
-			//add permissions
-			$activityCreate,
-			$equipmentCalibrationCreate,
-			$mileageCardGetCard,
-			$timeCardGetCard,
-			$userGetMe
-		]);
+		$this->auth->addChildren($technician, $this->permissionAssociationArray['Technician']);
 		
+		//TODO remove this role
 		// add "Engineer" role and give this role CRUD permissions
-		$engineer = $auth->createRole('Engineer');
-		$auth->add($engineer);
+		$engineer = $this->auth->createRole('Engineer');
+		$this->auth->add($engineer);
 		//add children
-		$auth->addChildren($engineer,
-		[
-			//add permissions
-			$clientGetDropdown,
-			$equipmentConditionGetDropdown,
-			$equipmentView,
-			$equipmentCreate,
-			$equipmentUpdate,
-			$equipmentDelete,
-			$getAllEquipment,
-			$acceptEquipment,
-			$equipmentStatusGetDropdown,
-			$equipmentTypeGetDropdown,
-			$notificationsGet,
-			$projectGetDropdown,
-			$userGetDropdown,
-			$userGetMe,
-			//menu permissions
-			$viewAdministrationMenu,
-			$viewHomeMenu,
-			//sub menu permissions
-			$viewEquipmentMgmt
-		]);
+		$this->auth->addChildren($engineer, $this->permissionAssociationArray['Engineer']);
+		
+		// add "analyst" role and give this role CRUD permissions
+        $analyst = $this->auth->createRole('Analyst');
+        $this->auth->add($analyst);
+		//add children
+		$this->auth->addChildren($analyst, array_merge([$technician], $this->permissionAssociationArray['Analyst']));
 
         // add "supervisor" role and give this role CRUD permissions
-        $supervisor = $auth->createRole('Supervisor');
-        $auth->add($supervisor);
+        $supervisor = $this->auth->createRole('Supervisor');
+        $this->auth->add($supervisor);
 		//add children
-		$auth->addChildren($supervisor, [
-			//add roles
-			$technician,
-			//add permissions
-			$activityCodeGetDropdown,
-			$appRoleGetDropdown,
-			$clientGetDropdown,
-			$employeeTypeGetDropdown,
-			$equipmentConditionGetDropdown,
-			$equipmentView,
-			$equipmentUpdate,
-			$equipmentDelete,
-			$getOwnEquipment,
-			$acceptEquipment,
-			$equipmentStatusGetDropdown,
-			$equipmentTypeGetDropdown,
-			$mileageCardView,
-			$mileageCardApprove,
-			$mileageCardGetEntries,
-			$mileageCardGetOwnCards,
-			$mileageEntryView,
-			$mileageEntryCreate,
-			$mileageEntryDeactivate,
-			$notificationsGet,
-			$payCodeGetDropdown,
-			$projectView,
-			$projectGetOwnProjects,
-			$projectGetDropdown,
-			$projectGetUserRelationships,
-			$projectAddRemoveUsers,
-			$timeCardView,
-			$timeCardApproveCards,
-			$timeCardGetEntries,
-			$timeCardGetOwnCards,
-			$timeEntryView,
-			$timeEntryCreate,
-			$timeEntryDeactivate,
-			$userCreate,
-			$userCreateTechnician,
-			$userCreateSupervisor,
-			$userUpdate,
-			$userUpdateTechnician,
-			$userUpdateSupervisor,
-			$userView,
-			$userDeactivate,
-			$userGetDropdown,
-			$userGetActive,
-			//menu permissions
-			$viewAdministrationMenu,
-			$viewHomeMenu,
-			$viewDispatchMenu,
-			$viewReportsMenu,
-			$viewTrackerMenu,
-			$viewTrainingMenu,
-			//sub menu permissions
-			$viewUserMgmt,
-			$viewEquipmentMgmt,
-			$viewTimeCardMgmt,
-			$viewMileageCardMgmt,
-			$viewInspections
-		]);
+		$this->auth->addChildren($supervisor, array_merge([$technician], $this->permissionAssociationArray['Supervisor']));
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
-        $projectManager = $auth->createRole('ProjectManager');
-        $auth->add($projectManager);
+        $projectManager = $this->auth->createRole('ProjectManager');
+        $this->auth->add($projectManager);
 		//add children
-		$auth->addChildren($projectManager, [
-			//add child roles
-			$supervisor,
-			//add permissions
-			$userCreateProjectManager,
-			$userUpdateProjectManager,
-			$timeCardPmSubmit
-		]);
-
-		// add "admin" role and give this role the permissions of the "projectManager" and "engineer"
-		$admin = $auth->createRole('Admin');
-        $auth->add($admin);
-		//add children
-		$auth->addChildren($admin, [
-			//add roles
-			$engineer,
-			$projectManager,
-			//add permissions
-			$activityView,
-			$clientAccountsGetDropdown,
-			$clientView,
-			$clientCreate,
-			$clientUpdate,
-			$clientDeactivate,
-			$clientGetAll,
-			$projectGetAll,
-			$projectCreate,
-			$projectUpdate,
-			$projectAddRemoveModules,
-			$stateCodeGetDropdown,
-			$mileageCardGetAllCards,
-			$timeCardGetAllCards,
-			$userCreateAdmin,
-			$userCreateAccountant,
-			$userCreateAnalyst,
-			$userUpdateAdmin,
-			$userUpdateAccountant,
-			$userUpdateAnalyst,
-			//sub menu permissions
-			$viewClientMgmt,
-			$viewProjectMgmt,
-			$viewDispatch,
-			$viewAssigned			
-		]);
+		$this->auth->addChildren($projectManager, array_merge([$supervisor], $this->permissionAssociationArray['ProjectManager']));
 
 		// add "accountant" role and give this role CRUD permissions
-        $accountant = $auth->createRole('Accountant');
-        $auth->add($accountant);
+        $accountant = $this->auth->createRole('Accountant');
+        $this->auth->add($accountant);
 		//add children
-		$auth->addChildren($accountant, [
-			//add roles
-			$technician,
-			//add permissions
-			$mileageCardView,
-			$mileageCardApprove,
-			$mileageCardGetEntries,
-			$mileageCardGetOwnCards,
-			$mileageEntryView,
-			$mileageEntryCreate,
-			$mileageEntryDeactivate,
-			$notificationsGet,
-			$payCodeGetDropdown,
-			$timeCardView,
-			$timeCardApproveCards,
-			$timeCardGetEntries,
-			$timeCardGetOwnCards,
-			$timeEntryView,
-			$timeEntryCreate,
-			$timeEntryDeactivate,
-			$mileageCardGetAllCards,
-			$projectGetOwnProjects,
-			$projectGetUserRelationships,
-			//menu permissions
-			$viewAdministrationMenu,
-			$viewHomeMenu,
-			$viewReportsMenu,
-			//sub menu permissions
-			$viewTimeCardMgmt,
-			$viewMileageCardMgmt
-		]);
-
-		// add "analyst" role and give this role CRUD permissions
-        $analyst = $auth->createRole('Analyst');
-        $auth->add($analyst);
-		//add children
-		$auth->addChildren($analyst, [
-			//add roles
-			$technician,
-			//add permissions
-			$notificationsGet,
-			$payCodeGetDropdown,
-			$projectGetOwnProjects,
-			$projectGetUserRelationships,
-			//menu permissions
-			$viewHomeMenu,
-			$viewReportsMenu
-		]);
-		echo "Role Types Created and Permissions Assigned.\n";
-
+		$this->auth->addChildren($accountant, array_merge([$technician], $this->permissionAssociationArray['Accountant']));
 		
+		// add "admin" role and give this role the permissions of the "projectManager" and "engineer"
+		$admin = $this->auth->createRole('Admin');
+        $this->auth->add($admin);
+		//add children
+		$this->auth->addChildren($admin, array_merge([$engineer, $projectManager], $this->permissionAssociationArray['Admin']));
+		
+		echo "Role Types Created and Permissions Assigned.\n";
+	}
+	
+	private function reAssignUserRoles()
+	{
 		//assign roles to existing users////////////////////////////////////////
-		$users = SCUser::find()
+		$userModel = BaseActiveRecord::getUserModel($this->client);
+		$users = $userModel::find()
 				->where(['UserActiveFlag' => 1])
 				->all();
 		
@@ -760,7 +928,7 @@ class RbacController extends Controller
 		$userSize25 = intval(($userSize*.25));
 		$userSize50 = intval(($userSize*.50));
 		$userSize75 = intval(($userSize*.75));
-		$userRoleTypes = $auth->getRoles();
+		$userRoleTypes = $this->auth->getRoles();
 		$bulkUserInsertArray = array();
 		
 		echo "Preparing Bulk Assignment of Roles to Users.\n";
@@ -791,8 +959,7 @@ class RbacController extends Controller
 			}
 		}
 		echo "Execute Bulk Assignment of Roles to Users.\n";
-		$auth->bulkAssign($bulkUserInsertArray);
+		$this->auth->bulkAssign($bulkUserInsertArray);
 		echo "Users Roles Assigned.\n";
-		echo "RBAC Geneartion Completed for " . $client . ".\n";
     }
 }

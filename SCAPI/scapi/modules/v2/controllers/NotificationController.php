@@ -116,24 +116,29 @@ class NotificationController extends Controller
 						$notificationCount = 0;
 					}
 				}
-
-				//pass time card data for project
-				$timeCardData['Project'] = $projectName;
-				$timeCardData['ProjectID'] = $projectID;
-				$timeCardData['Number of Items'] = $timeCardCount;
-
-				//pass notification data for project
-				$notificationData['Project'] = $projectName;
-				$notificationData['ProjectID'] = $projectID;
-				$notificationData['Number of Items'] = $notificationCount;
 				
-				//append data to response array
-				$notifications['timeCards'][] = $timeCardData;
-				$notifications['notifications'][] = $notificationData;
-
-				//increment total counts
-				$timeCardTotal += $timeCardCount;
-				$notificationTotal += $notificationCount;
+				if($timeCardCount != 0)
+				{
+					//pass time card data for project
+					$timeCardData['Project'] = $projectName;
+					$timeCardData['ProjectID'] = $projectID;
+					$timeCardData['Number of Items'] = $timeCardCount;
+					//append data to response array
+					$notifications['timeCards'][] = $timeCardData;
+					//increment total count
+					$timeCardTotal += $timeCardCount;
+				}
+				if($notificationCount != 0)
+				{
+					//pass notification data for project
+					$notificationData['Project'] = $projectName;
+					$notificationData['ProjectID'] = $projectID;
+					$notificationData['Number of Items'] = $notificationCount;
+					//append data to response array
+					$notifications['notifications'][] = $notificationData;
+					//increment total count
+					$notificationTotal += $notificationCount;
+				}
 			}
 
 			//pass time card data for total
