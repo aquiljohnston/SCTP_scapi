@@ -803,7 +803,7 @@ class RbacController extends Controller
 		
         $dispatchGetDualDispatch = $this->auth->createPermission('dispatchGetDualDispatch');
         $dispatchGetDualDispatch->description = 'Get records for dual dispatch regression test';
-        $this->permissionAssociationArray['Admin'][] = $dispatchGetDualDispatch;
+        $this->permissionAssociationArray['Supervisor'][] = $dispatchGetDualDispatch;
         $this->permissionArray[] = $dispatchGetDualDispatch;
 		
 		////// Inspection Controller Permissions //////
