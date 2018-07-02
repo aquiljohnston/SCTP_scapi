@@ -582,7 +582,7 @@ class InspectionController extends Controller
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('inspectionUpdate');
+			PermissionsController::requirePermission('inspectionUpdate', $client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -686,11 +686,10 @@ class InspectionController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			$client =  $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('inspectionClearEvent');
+			PermissionsController::requirePermission('inspectionClearEvent', $client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -763,12 +762,11 @@ class InspectionController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('inspectionGetMapGrids');
+			PermissionsController::requirePermission('inspectionGetMapGrids', $client);
 			
 			$responseArray = [];
 			
@@ -830,12 +828,11 @@ class InspectionController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('inspectionsGet');
+			PermissionsController::requirePermission('inspectionsGet', $client);
 			
 			$responseArray = [];
 			$assetQuery = '';
@@ -919,12 +916,11 @@ class InspectionController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('inspectionsGetEvents');
+			PermissionsController::requirePermission('inspectionsGetEvents', $client);
 			
 			$connection = BaseActiveRecord::getDb();
 			$getEventsCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMapViewDetails :WorkOrderID,:InspectionID");

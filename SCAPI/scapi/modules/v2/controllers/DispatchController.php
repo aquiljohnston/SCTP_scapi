@@ -60,12 +60,11 @@ class DispatchController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchGetAvailable');
+			PermissionsController::requirePermission('dispatchGetAvailable', $client);
 			
 			$responseArray = [];
 			$divisionFlag = self::getDivisionFlag();
@@ -143,10 +142,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set dbl
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchGetAvailableAssets');
+			PermissionsController::requirePermission('dispatchGetAvailableAssets', $client);
 			
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
@@ -237,10 +236,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchGetSurveyors');
+			PermissionsController::requirePermission('dispatchGetSurveyors', $client);
 				
 			$userQuery = SCUser::find()
 				->select(['UserID', "concat(UserLastName, ', ', UserFirstName) as Name", 'UserName'])
@@ -285,8 +284,7 @@ class DispatchController extends Controller
 		try
 		{
 			//get client headers
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			// get created by
 			$user = BaseActiveController::getClientUser($client);
 			$createdBy = $user->UserID;
@@ -294,7 +292,7 @@ class DispatchController extends Controller
 			//set db
 			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatch');
+			PermissionsController::requirePermission('dispatch', $client);
 			
 			//get post data
 			$post = file_get_contents("php://input");
@@ -400,10 +398,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchGetAssigned');
+			PermissionsController::requirePermission('dispatchGetAssigned', $client);
 			
 			$responseArray = [];
 			if($mapGridSelected != null)
@@ -468,10 +466,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchGetAssignedAssets');
+			PermissionsController::requirePermission('dispatchGetAssignedAssets', $client);
 			
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
@@ -562,11 +560,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchUnassign');
+			PermissionsController::requirePermission('dispatchUnassign', $client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -850,10 +847,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set dbl
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			//RBAC permissions check
-			PermissionsController::requirePermission('dispatchGetDualDispatch');
+			PermissionsController::requirePermission('dispatchGetDualDispatch', $client);
 			
 			$assetQuery = WorkOrder::find()
 				->limit(8)
