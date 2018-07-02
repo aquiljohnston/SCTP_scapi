@@ -25,6 +25,8 @@ use Yii;
  */
 class TimeEntry extends \app\modules\v2\models\BaseActiveRecord
 {
+	const SQL_CONSTRAINT_MESSAGE = 'The combination of Time Entry User ID, Time Entry Start Time and Time Entry End Time has already been taken.';
+	
     /**
      * @inheritdoc
      */
@@ -42,7 +44,7 @@ class TimeEntry extends \app\modules\v2\models\BaseActiveRecord
             [['TimeEntryUserID', 'TimeEntryTimeCardID', 'TimeEntryActivityID', 'TimeEntryActiveFlag'], 'integer'],
             [['TimeEntryStartTime', 'TimeEntryEndTime', 'TimeEntryModifiedDate', 'TimeEntrySrcDTLT', 'TimeEntrySvrDTLT'], 'safe'],
             [['TimeEntryWeekDay', 'TimeEntryComment', 'TimeEntryCreatedBy', 'TimeEntryModifiedBy', 'TimeEntryUserName'], 'string'],
-            [['TimeEntryEndTime', 'TimeEntryStartTime', 'TimeEntryUserID'], 'unique', 'targetAttribute' => ['TimeEntryEndTime', 'TimeEntryStartTime', 'TimeEntryUserID'], 'message' => 'The combination of Time Entry User ID, Time Entry Start Time and Time Entry End Time has already been taken.'],
+            [['TimeEntryEndTime', 'TimeEntryStartTime', 'TimeEntryUserID'], 'unique', 'targetAttribute' => ['TimeEntryEndTime', 'TimeEntryStartTime', 'TimeEntryUserID'], 'message' => SELF::SQL_CONSTRAINT_MESSAGE],
         ];
     }
 

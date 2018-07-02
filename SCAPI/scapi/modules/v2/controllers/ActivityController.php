@@ -276,14 +276,20 @@ class ActivityController extends BaseActiveController
 										{
 											//log validation error
 											$e = BaseActiveController::modelValidationException($timeEntry);
-											BaseActiveController::archiveErrorJson(
-												file_get_contents("php://input"),
-												$e,
-												getallheaders()['X-Client'],
-												$data['activity'][$i],
-												$data['activity'][$i]['timeEntry'][$t]);
-											//set success flag for time entry
-											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
+											//SQL Constraint
+											if(strpos($e, TimeEntry::SQL_CONSTRAINT_MESSAGE)){
+												//set success flag for time entry to success if validation was a sql constraint
+												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+											} else {
+												BaseActiveController::archiveErrorJson(
+													file_get_contents("php://input"),
+													$e,
+													getallheaders()['X-Client'],
+													$data['activity'][$i],
+													$data['activity'][$i]['timeEntry'][$t]);
+												//set success flag for time entry
+												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
+											}
 										}
 									}
 									catch(yii\db\Exception $e)
