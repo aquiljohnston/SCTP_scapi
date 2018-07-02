@@ -307,7 +307,7 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Supervisor'][] = $notificationsGet;
         $this->permissionAssociationArray['Accountant'][] = $notificationsGet;
         $this->permissionArray[] = $notificationsGet;
-		,
+		
 		//Project permissions/////////////////////////////////////////////////////////////////
 
         $projectGetAll = $this->auth->createPermission('projectGetAll');
