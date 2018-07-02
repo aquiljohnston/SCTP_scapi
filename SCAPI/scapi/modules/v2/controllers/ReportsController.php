@@ -39,6 +39,9 @@ class ReportsController extends Controller {
 
         $headers = getallheaders();
         Report::setClient($headers['X-Client']);
+		
+		//RBAC Permissions Check
+		PermissionsController::requirePermission('reportGetDropdown');
 
         $result = Report::find()
             ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, Parm, ReportType, ActiveFlag')
@@ -77,6 +80,9 @@ class ReportsController extends Controller {
 	{
 		$headers = getallheaders();
         BaseActiveRecord::setClient($headers['X-Client']);
+		
+		//RBAC Permissions Check
+		PermissionsController::requirePermission('reportGet');
 		
 		$response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
@@ -184,6 +190,10 @@ class ReportsController extends Controller {
 		{
             $headers = getallheaders();
             BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//RBAC Permissions Check
+			PermissionsController::requirePermission('reportGetParmDropdown');
+			
             $connection = BaseActiveRecord::getDb();
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -227,6 +237,10 @@ class ReportsController extends Controller {
 
             $headers = getallheaders();
             BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//RBAC Permissions Check
+			PermissionsController::requirePermission('reportGetInspectorDropdown');
+			
             $connection = BaseActiveRecord::getDb();
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;

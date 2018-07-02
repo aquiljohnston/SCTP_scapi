@@ -44,6 +44,9 @@ class WorkQueueController extends Controller
 			//set db
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
+			//RBAC permissions check
+			PermissionsController::requirePermission('workQueueGet');
+			
 			$responseArray = [];
 			$responseArray['WorkQueue'] = AssignedWorkQueue::find()
 				->select('WorkQueueID

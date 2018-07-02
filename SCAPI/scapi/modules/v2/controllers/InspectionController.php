@@ -581,6 +581,8 @@ class InspectionController extends Controller
 			//set db
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('inspectionUpdate');
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -687,6 +689,8 @@ class InspectionController extends Controller
 			$headers = getallheaders();
 			$client =  $headers['X-Client'];
 			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('inspectionClearEvent');
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -763,6 +767,8 @@ class InspectionController extends Controller
 			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
+			//RBAC permissions check
+			PermissionsController::requirePermission('inspectionGetMapGrids');
 			
 			$responseArray = [];
 			
@@ -828,6 +834,8 @@ class InspectionController extends Controller
 			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
+			//RBAC permissions check
+			PermissionsController::requirePermission('inspectionsGet');
 			
 			$responseArray = [];
 			$assetQuery = '';
@@ -915,6 +923,8 @@ class InspectionController extends Controller
 			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
+			//RBAC permissions check
+			PermissionsController::requirePermission('inspectionsGetEvents');
 			
 			$connection = BaseActiveRecord::getDb();
 			$getEventsCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMapViewDetails :WorkOrderID,:InspectionID");

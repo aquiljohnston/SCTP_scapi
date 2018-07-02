@@ -45,6 +45,8 @@ class CgeController extends Controller
 			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
+			//RBAC permissions check
+			PermissionsController::requirePermission('cgeGetMapGrids');
 			
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
@@ -98,6 +100,8 @@ class CgeController extends Controller
 			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
+			//RBAC permissions check
+			PermissionsController::requirePermission('cgeGetByMap');
 			
 			$responseArray = [];
 			$responseArray['cges'] = AvailableWorkOrderCGEByMapGridDetail::find()
@@ -133,6 +137,9 @@ class CgeController extends Controller
 			
 			//set db
 			BaseActiveRecord::setClient($headers['X-Client']);
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('cgeGetHistory');
 			
 			$responseArray = [];
 			$responseArray['cgeHistory'] = AvailableWorkOrderCGEByWODetails::find()

@@ -443,8 +443,8 @@ class UserController extends BaseActiveController
 			$client = getallheaders()['X-Client'];
             //set db target for permission check
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			//TODO update permissions
-            PermissionsController::requirePermission('userDeactivate');
+			//RBAC permissions check
+            PermissionsController::requirePermission('userReactivate');
 			
             //read the post input
             $put = file_get_contents("php://input");

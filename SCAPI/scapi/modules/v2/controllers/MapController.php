@@ -41,6 +41,9 @@ class MapController extends Controller
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
+			//RBAC permissions check
+			PermissionsController::requirePermission('mapGet');
+			
 			//create response format
 			$responseData = [];
 			
