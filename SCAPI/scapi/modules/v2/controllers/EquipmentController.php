@@ -105,11 +105,11 @@ class EquipmentController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			
 			//RBAC permissions check
-			PermissionsController::requirePermission('equipmentCalibrationDelete');
+			PermissionsController::requirePermission('equipmentCalibrationDelete', $client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -117,7 +117,7 @@ class EquipmentController extends Controller
 			//create response format
 			$responseData = [];
 			
-			BaseActiveController::archiveJson($body, 'DeletedCalibration', BaseActiveController::getClientUser($headers['X-Client'])->UserID, $headers['X-Client']);
+			BaseActiveController::archiveJson($body, 'DeletedCalibration', BaseActiveController::getClientUser($client)->UserID, $client);
 			
 			//count number of items to delete
 			$deletedRecords = $data['DeletedCalibration'];

@@ -122,10 +122,10 @@ class DropdownController extends Controller
 		try
         {
 			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			// RBAC permission check
-            PermissionsController::requirePermission('getWebDropDowns');
+            PermissionsController::requirePermission('getWebDropDowns', $client);
 			
 			$webDropDowns = DropDown::find()
 				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
@@ -158,10 +158,10 @@ class DropdownController extends Controller
 
     public function actionGetTrackerMapGrids() {
 		try{
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			// RBAC permission check
-            PermissionsController::requirePermission('getTrackerMapGridsDropdown');
+            PermissionsController::requirePermission('getTrackerMapGridsDropdown', $client);
 			
 			$sql = "SELECT DISTINCT [Mapgrid] FROM [ScctTemplate].[dbo].[vRptCompletedWorkOrders]";
 			$connection = BaseActiveRecord::getDb();
@@ -234,10 +234,10 @@ class DropdownController extends Controller
 		try
         {
 			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
 			// RBAC permission check
-            PermissionsController::requirePermission('getTabletSurveyDropdowns');
+            PermissionsController::requirePermission('getTabletSurveyDropdowns', $client);
 			
 			$tabletDropDowns = DropDown::find()
 				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
