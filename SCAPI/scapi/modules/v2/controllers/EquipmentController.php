@@ -108,6 +108,9 @@ class EquipmentController extends Controller
 			$headers = getallheaders();
 			BaseActiveRecord::setClient($headers['X-Client']);
 			
+			//RBAC permissions check
+			PermissionsController::requirePermission('equipmentCalibrationDelete');
+			
 			//get body data
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true);
