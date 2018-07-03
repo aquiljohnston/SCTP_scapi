@@ -653,6 +653,18 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $reportGetInspectorDropdown;
         $this->permissionArray[] = $reportGetInspectorDropdown;
 		
+		////// Alert Controller Permissions //////
+		
+		$alertGet = $this->auth->createPermission('alertGet');
+        $alertGet->description = 'Get all alerts for given project.';
+        $this->permissionAssociationArray['Technician'][] = $alertGet;
+        $this->permissionArray[] = $alertGet;
+		
+		$alertCreate = $this->auth->createPermission('alertCreate');
+        $alertCreate->description = 'Create an array of alerts.';
+        $this->permissionAssociationArray['Technician'][] = $alertCreate;
+        $this->permissionArray[] = $alertCreate;
+		
 		////// Route Controller Permissions //////
 		
 		$routeOptimization1 = $this->auth->createPermission('routeOptimization1');
