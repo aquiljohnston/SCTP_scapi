@@ -177,7 +177,7 @@ class ClientController extends BaseActiveController
                 . " SELECT CreatedUser.UserName as CreatedUserName, ClientTb.*,"
                 . " 'Not Modified' as ModifiedUserName"
 				. " FROM dbo.ClientTb"
-                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
+                . " LEFT JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
                 . " WHERE ClientTb.ClientId = :id3";
                 $client = Client::getDb()->createCommand($sql)->bindValue(':id1', $id)->bindValue(':id2', $id)->bindValue(':id3', $id);
                 Yii::trace("This is the client controller SQL " . $client->getSql());
