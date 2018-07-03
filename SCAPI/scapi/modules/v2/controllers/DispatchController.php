@@ -856,7 +856,7 @@ class DispatchController extends Controller
 				->limit(8)
 				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
 				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
-				->where([/*'tWorkOrder.LocationType' => 'Gas Main',*/
+				->where(['tWorkOrder.LocationType' => 'Pipeline',
 					'tWorkOrder.CompletedFlag' => 0,
 					'tWorkOrder.InspectionAttemptCounter' => 0,
 					'tWorkOrder.EventIndicator' => null])
