@@ -483,8 +483,12 @@ class InspectionController extends Controller
 							{
 								$workQueueSuccessFlag = 1;
 								$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
-								// set event indicator
-								if(self::updateWorkOrder($inspectionData, $workOrder, true)) $workOrderSuccessFlag = 1;
+								if($workOrder->LocationType != 'Pipeline'){
+									if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
+								}else{
+									// set event indicator
+									if(self::updateWorkOrder($inspectionData, $workOrder, true)) $workOrderSuccessFlag = 1;
+								}
 							}
 						} else if($inspectionData['IsCGEFlag'] == 0 && self::hasCompletedWorkQueue($workQueueArray)) {
 							// close work queue 
