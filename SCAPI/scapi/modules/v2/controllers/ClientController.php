@@ -170,14 +170,12 @@ class ClientController extends BaseActiveController
 			
             if($joinNames) {
                 $sql = "IF EXISTS (SELECT * FROM ClientTb WHERE ClientTb.ClientModifiedBy != '' AND ClientTb.ClientId = :id1 )"
-                . " BEGIN SELECT ModifiedUser.UserName as ModifiedUserName, CreatedUser.UserName as CreatedUserName, ClientTb.*"
-			    . " FROM dbo.ClientTb JOIN [UserTb] ModifiedUser ON ClientTb.ClientModifiedBy = ModifiedUser.UserName"
-                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
+                . " BEGIN SELECT ModifiedUser.UserName as ModifiedUserName, CreatedUser.UserName as CreatedUserName, ClientTb.* FROM dbo.ClientTb"
+			    . " LEFT JOIN [UserTb] ModifiedUser ON ClientTb.ClientModifiedBy = ModifiedUser.UserName"
+                . " LEFT JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
                 . " WHERE ClientTb.ClientId = :id2 END ELSE"
-                . " SELECT CreatedUser.UserName as CreatedUserName, ClientTb.*,"
-                . " 'Not Modified' as ModifiedUserName"
-				. " FROM dbo.ClientTb"
-                . " JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
+                . " SELECT CreatedUser.UserName as CreatedUserName, ClientTb.*, '' as ModifiedUserName FROM dbo.ClientTb"
+                . " LEFT JOIN [UserTb] CreatedUser ON ClientTb.ClientCreatorUserID = CreatedUser.UserName"
                 . " WHERE ClientTb.ClientId = :id3";
                 $client = Client::getDb()->createCommand($sql)->bindValue(':id1', $id)->bindValue(':id2', $id)->bindValue(':id3', $id);
                 Yii::trace("This is the client controller SQL " . $client->getSql());

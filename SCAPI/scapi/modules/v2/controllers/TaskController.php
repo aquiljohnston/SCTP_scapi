@@ -47,6 +47,9 @@ class TaskController extends Controller
 		try{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('taskGetByProject');
 
 			$data['assets'] = TaskAndProject::find()
 				->select(['TaskID', 'TaskName', 'TaskQBReferenceID'])
@@ -60,7 +63,9 @@ class TaskController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $data;
 			return $response;
-		}catch(\Exception $e){
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
             BaseActiveController::archiveWebErrorJson('Task GetByProject', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
 		}
@@ -76,6 +81,9 @@ class TaskController extends Controller
             $responseArray = [];
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('getAllTask');
 
             // check if it is CT project
             $projectUrl = Project::find()
@@ -112,35 +120,44 @@ class TaskController extends Controller
      * @return mixed
      */
     public function actionGetChargeOfAccountType($inOvertime = 'false'){
-        //set db target
-        ChartOfAccountType::setClient(BaseActiveController::urlPrefix());
-		
-		$chartOfAccountQuery = ChartOfAccountType::find();
-		
-		if($inOvertime == 'true') $chartOfAccountQuery->where(['ChartOfAccountID' => Constants::OT_PAYROLL_HOURS_ID]);
-        
-		$chartOfAccountType = $chartOfAccountQuery
-            ->all();
+		try{
+			//set db target
+			ChartOfAccountType::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('getChargeOfAccount');
+			
+			$chartOfAccountQuery = ChartOfAccountType::find();
+			
+			if($inOvertime == 'true') $chartOfAccountQuery->where(['ChartOfAccountID' => Constants::OT_PAYROLL_HOURS_ID]);
+			
+			$chartOfAccountType = $chartOfAccountQuery->all();
 
-        $namePairs = [];
-        $codesSize = count($chartOfAccountType);
+			$namePairs = [];
+			$codesSize = count($chartOfAccountType);
 
-        for($i=0; $i < $codesSize; $i++)
-        {
-            $namePairs[$chartOfAccountType[$i]->ChartOfAccountID]= $chartOfAccountType[$i]->ChartOfAccountDescription;
+			for($i=0; $i < $codesSize; $i++)
+			{
+				$namePairs[$chartOfAccountType[$i]->ChartOfAccountID] = $chartOfAccountType[$i]->ChartOfAccountDescription;
+			}
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
         }
-
-
-        $response = Yii::$app ->response;
-        $response -> format = Response::FORMAT_JSON;
-        $response -> data = $namePairs;
-
-        return $response;
     }
 	
 	public function actionGetHoursOverview($timeCardID, $date){
 		try {
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('taskGetHoursOverview');
 			
 			$hoursOverviewQuery = new Query;
 			$hoursOverview = $hoursOverviewQuery->select('*')
@@ -172,6 +189,9 @@ class TaskController extends Controller
         try {
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('createTaskEntry');
 
 			$successFlag = 0;
 			$warningMessage = '';
@@ -207,6 +227,8 @@ class TaskController extends Controller
 				$warningMessage = 'Failed to save, new entry overlaps with existing time.';
 			}
 
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
                 'TimeCardID' => $data['TimeCardID'],

@@ -52,7 +52,6 @@ class TimeCardController extends BaseActiveController
 					'create' => ['create'],
                     'delete' => ['delete'],
 					'update' => ['put'],
-					'view' => ['get'],
 					'approve-cards'  => ['put'],
 					'get-entries' => ['get'],
 					'get-my-card' => ['get'],
@@ -131,8 +130,6 @@ class TimeCardController extends BaseActiveController
 				$response->setStatusCode(200);
 				$response->data = $approvedCards;
 				return $response;
-			} catch (ForbiddenHttpException $e) {
-				throw new ForbiddenHttpException;
 			}
 			catch(\Exception $e) //if transaction fails rollback changes and send error
 			{
@@ -144,9 +141,9 @@ class TimeCardController extends BaseActiveController
 				return $response;
 
 			}
-		}
-		catch(\Exception $e)
-		{
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
 			//archive error
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
@@ -205,9 +202,9 @@ class TimeCardController extends BaseActiveController
 
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
-		}
-		catch(\Exception $e)
-		{
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -242,9 +239,9 @@ class TimeCardController extends BaseActiveController
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $dataArray;
-		}
-		catch(\Exception $e)
-		{
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -300,9 +297,9 @@ class TimeCardController extends BaseActiveController
             }
             $response->format = Response::FORMAT_JSON;
             $response->data = $dataArray;
-        }
-        catch(\Exception $e)
-        {
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -466,6 +463,8 @@ class TimeCardController extends BaseActiveController
 
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('timeCardGetAccountantView');
 
             //format response
             $response = Yii::$app->response;
@@ -543,6 +542,8 @@ class TimeCardController extends BaseActiveController
 		{
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('timeCardGetAccountantDetails');
 
 			$detailsQuery = new Query;
             $timeCards = $detailsQuery->select('*')
@@ -576,7 +577,7 @@ class TimeCardController extends BaseActiveController
 			TimeCard::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
-			PermissionsController::requirePermission('timeCardApproveCards');
+			PermissionsController::requirePermission('timeCardPmSubmit');
 			
 			//capture put body
 			$put = file_get_contents("php://input");
@@ -637,9 +638,9 @@ class TimeCardController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
-		}
-		catch(\Exception $e)  
-		{
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			//archive error
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException($e);
@@ -656,6 +657,8 @@ class TimeCardController extends BaseActiveController
 		try
 		{
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('timeCardSubmit');
 			
 			//get put data
 			$put = file_get_contents("php://input");
@@ -921,6 +924,8 @@ class TimeCardController extends BaseActiveController
 			
             //set db target
             TimeCard::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('checkSubmitButtonStatus');
 
             //get body data
             $data = file_get_contents("php://input");

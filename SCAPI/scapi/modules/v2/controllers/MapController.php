@@ -38,8 +38,11 @@ class MapController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('mapGet', $client);
 			
 			//create response format
 			$responseData = [];
