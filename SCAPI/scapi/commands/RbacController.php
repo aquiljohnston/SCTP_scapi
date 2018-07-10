@@ -428,7 +428,7 @@ class RbacController extends Controller
 		
         $checkSubmitButtonStatus = $this->auth->createPermission('checkSubmitButtonStatus');
         $checkSubmitButtonStatus->description = 'Check if given time cards are allowed to be submitted.';
-        $this->permissionAssociationArray['ProjectManager'][] = $checkSubmitButtonStatus;
+        $this->permissionAssociationArray['Supervisor'][] = $checkSubmitButtonStatus;
         $this->permissionAssociationArray['Accountant'][] = $checkSubmitButtonStatus;
         $this->permissionArray[] = $checkSubmitButtonStatus;
 		
