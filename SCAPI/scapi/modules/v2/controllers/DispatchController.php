@@ -673,7 +673,7 @@ class DispatchController extends Controller
         if ($scheduledDate == null) {
             //build query to get work orders based on map grid and section(optional)
             if ($workOrder == null ) {
-                $workOrdersQuery = AvailableWorkOrder::find()
+                $workOrdersQuery = WorkOrder::find()
                     ->where(['MapGrid' => $mapGrid]);
                 if ($section != null) {
                     $workOrdersQuery->andWhere(['SectionNumber' => $section]);
@@ -714,7 +714,7 @@ class DispatchController extends Controller
 					$dataArray['WorkOrderID'] = $workOrder;
 				}else{
 					$dataArray['SectionNumber'] = $workOrders[$i]->SectionNumber;
-					$dataArray['WorkOrderID'] = $workOrders[$i]->WorkOrderID;
+					$dataArray['WorkOrderID'] = $workOrders[$i]->ID;
 				}
 				
 				if ($scheduledDate != null)
