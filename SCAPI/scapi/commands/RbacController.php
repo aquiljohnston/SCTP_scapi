@@ -454,8 +454,7 @@ class RbacController extends Controller
 		
 		$taskGetByProject = $this->auth->createPermission('taskGetByProject');
         $taskGetByProject->description = 'Get task types for given project';
-        $this->permissionAssociationArray['Supervisor'][] = $taskGetByProject;
-        $this->permissionAssociationArray['Accountant'][] = $taskGetByProject;
+        $this->permissionAssociationArray['Technician'][] = $taskGetByProject;
         $this->permissionArray[] = $taskGetByProject;
 		
 		$taskGetHoursOverview = $this->auth->createPermission('taskGetHoursOverview');
