@@ -859,7 +859,7 @@ class DispatchController extends Controller
 				->where(['tWorkOrder.LocationType' => 'Pipeline',
 					'tWorkOrder.CompletedFlag' => 0,
 					'tWorkOrder.InspectionAttemptCounter' => 0,
-					'tWorkOrder.EventIndicator' => null])
+					'tWorkOrder.EventIndicator' => 0])
 				->asArray()
 				->all();
 
