@@ -670,30 +670,25 @@ class DispatchController extends Controller
 		$isAsset = 0;
 
 		//pull work orders to update
-        if ($scheduledDate == null) {
-            //build query to get work orders based on map grid and section(optional)
-            if ($workOrder == null ) {
-                $workOrdersQuery = WorkOrder::find()
-                    ->where(['MapGrid' => $mapGrid]);
-                if ($section != null) {
-                    $workOrdersQuery->andWhere(['SectionNumber' => $section]);
-                }
-				if ($inspectionType != null) {
-                    $workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
-                }
-				if ($billingCode != null) {
-                    $workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
-                }
-				 $workOrders = $workOrdersQuery->all();
-				 $workOrdersCount = count($workOrders);
-            } else {
-                $isAsset = true;
-				$workOrdersCount = 1;
-            }
-        } else {
-            $workOrders = self::getCgeWorkOrders($mapGrid, $workOrder);
-			$workOrdersCount = count($workOrders);
-        }
+		//build query to get work orders based on map grid and section(optional)
+		if ($workOrder == null ) {
+			$workOrdersQuery = WorkOrder::find()
+				->where(['MapGrid' => $mapGrid]);
+			if ($section != null) {
+				$workOrdersQuery->andWhere(['SectionNumber' => $section]);
+			}
+			if ($inspectionType != null) {
+				$workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
+			}
+			if ($billingCode != null) {
+				$workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
+			}
+			 $workOrders = $workOrdersQuery->all();
+			 $workOrdersCount = count($workOrders);
+		} else {
+			$isAsset = true;
+			$workOrdersCount = 1;
+		}
 		
 		$db = BaseActiveRecord::getDb();
 		$transaction = $db->beginTransaction();
@@ -812,22 +807,6 @@ class DispatchController extends Controller
 		$statusCode = $statusLookup['StatusCode'];
 		return $statusCode;
 	}
-
-	//helper method gets cge work orders from vWebManagementCGIByMapGridDetail
-	private static function getCgeWorkOrders($mapGrid = null, $workOrder = null){
-        //build query to get work orders based on map grid
-        if ($workOrder == null) {
-            $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['MapGrid' => $mapGrid]);
-
-        } else {
-            $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['WorkOrderID' => $workOrder]);
-        }
-        $workOrders = $workOrdersQuery->all();
-
-        return $workOrders;
-    }
 	
 	//helper method returns flag to determine if division column needs to be displayed on the web
 	//will return a flag 1/0 based on if any division values for getAvaliableByMapGrid do not equal null
