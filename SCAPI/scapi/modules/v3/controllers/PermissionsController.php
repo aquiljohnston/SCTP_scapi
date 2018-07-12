@@ -39,7 +39,7 @@ class PermissionsController extends Controller {
 		//handle if user could not be found
 		if ($user == null)
 		{
-			throw new \yii\web\HttpException(401);
+			throw new ForbiddenHttpException;
 		}
 		
         $userID = $user->UserID;
