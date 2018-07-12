@@ -9,9 +9,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 {
 	private static $CLIENT_ID = '';
 	
-	//TODO: create object/array for all clients and refactor get methods(exclude getDb) into single function
-	//that takes in client and model to retrieve that will be based on client object keys
-	
 	public static function getClient()
 	{
 		return self::$CLIENT_ID;

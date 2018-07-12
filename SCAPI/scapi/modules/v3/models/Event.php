@@ -26,10 +26,33 @@ use Yii;
  * @property string $AOCReason
  * @property string $CGEReason
  * @property string $LeakNumber
+ * @property string $LeakReportedTo
+ * @property string $LeakPipelineSystemInvestigated
+ * @property string $LeakDetectType
  * @property string $LeakGrade
  * @property string $LeakAboveOrBelow
+ * @property integer $LeakMeterInspected
+ * @property string $LeakMeterNumber
+ * @property string $LeakMeterLeakLocation
+ * @property integer $RiserOnly
+ * @property integer $MultiMeter
+ * @property string $PartOfSystem
+ * @property string $CustomerType
+ * @property string $SurfaceCondition
  * @property string $DetectedByEquipment
  * @property string $EquipmentSerialNumber
+ * @property string $Collecting
+ * @property string $ProbableCause
+ * @property string $Soil
+ * @property string $LELPercent
+ * @property string $GASPercent
+ * @property string $PPM
+ * @property string $Negative
+ * @property string $Pressure
+ * @property string $Surface
+ * @property string $PipeSize
+ * @property string $PipeType
+ * @property string $PipeCondition
  * @property string $Comments
  * @property double $Latitude
  * @property double $Longitude
@@ -48,31 +71,13 @@ use Yii;
  * @property integer $NumberOfGPSAttempts
  * @property integer $InspectionID
  * @property integer $DeletedFlag
- * @property integer $SplashGuardNeeded
- * @property integer $SplashGuardInstalled
- * @property integer $TracerWireMissing
- * @property integer $TamperSealNotPresent
- * @property integer $EnergyDiversionPresent
- * @property string $ACGrade
- * @property integer $RiserPostBad
- * @property integer $RecommendToRetireInActiveService
- * @property integer $FacilitiesNeedToBeProtected
- * @property integer $Other
- * @property integer $AOCFlag
- * @property string $AccessIssues
- * @property string $CGE
- * @property integer $LeakRepaired
- * @property string $LeakFoundMainOrService
- * @property integer $BadDogPresent
- * @property string $NIFReason
- * @property string $PipelineAOCIssues
  * @property string $EnergyDiversionPhoto1Path
  * @property string $EnergyDiversionPhoto2Path
  * @property string $EnergyDiversionPhoto3Path
  *
  * @property UserTb $createdByUser
  */
-class DemoEvent extends \app\modules\v3\models\BaseActiveRecord
+class Event extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
      * @inheritdoc
@@ -88,8 +93,8 @@ class DemoEvent extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakGrade', 'LeakAboveOrBelow', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'ACGrade', 'AccessIssues', 'CGE', 'LeakFoundMainOrService', 'NIFReason', 'PipelineAOCIssues', 'EnergyDiversionPhoto1Path', 'EnergyDiversionPhoto2Path', 'EnergyDiversionPhoto3Path'], 'string'],
-            [['EventType', 'CreatedByUserID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag', 'SplashGuardNeeded', 'SplashGuardInstalled', 'TracerWireMissing', 'TamperSealNotPresent', 'EnergyDiversionPresent', 'RiserPostBad', 'RecommendToRetireInActiveService', 'FacilitiesNeedToBeProtected', 'Other', 'AOCFlag', 'LeakRepaired', 'BadDogPresent'], 'integer'],
+            [['EventTabletID', 'InspectionTabletID', 'LocationID', 'LocationAddress', 'City', 'State', 'MapGrid', 'Photo1Path', 'Photo2Path', 'Photo3Path', 'AOCReason', 'CGEReason', 'LeakNumber', 'LeakReportedTo', 'LeakPipelineSystemInvestigated', 'LeakDetectType', 'LeakGrade', 'LeakAboveOrBelow', 'LeakMeterNumber', 'LeakMeterLeakLocation', 'PartOfSystem', 'CustomerType', 'SurfaceCondition', 'DetectedByEquipment', 'EquipmentSerialNumber', 'Collecting', 'ProbableCause', 'Soil', 'LELPercent', 'GASPercent', 'PPM', 'Negative', 'Pressure', 'Surface', 'PipeSize', 'PipeType', 'PipeCondition', 'Comments', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'EnergyDiversionPhoto1Path', 'EnergyDiversionPhoto2Path', 'EnergyDiversionPhoto3Path'], 'string'],
+            [['EventType', 'CreatedByUserID', 'LeakMeterInspected', 'RiserOnly', 'MultiMeter', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'InspectionID', 'DeletedFlag'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'FixQuality', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
             [['InspectionID'], 'required'],
@@ -122,10 +127,33 @@ class DemoEvent extends \app\modules\v3\models\BaseActiveRecord
             'AOCReason' => 'Aocreason',
             'CGEReason' => 'Cgereason',
             'LeakNumber' => 'Leak Number',
+            'LeakReportedTo' => 'Leak Reported To',
+            'LeakPipelineSystemInvestigated' => 'Leak Pipeline System Investigated',
+            'LeakDetectType' => 'Leak Detect Type',
             'LeakGrade' => 'Leak Grade',
             'LeakAboveOrBelow' => 'Leak Above Or Below',
+            'LeakMeterInspected' => 'Leak Meter Inspected',
+            'LeakMeterNumber' => 'Leak Meter Number',
+            'LeakMeterLeakLocation' => 'Leak Meter Leak Location',
+            'RiserOnly' => 'Riser Only',
+            'MultiMeter' => 'Multi Meter',
+            'PartOfSystem' => 'Part Of System',
+            'CustomerType' => 'Customer Type',
+            'SurfaceCondition' => 'Surface Condition',
             'DetectedByEquipment' => 'Detected By Equipment',
             'EquipmentSerialNumber' => 'Equipment Serial Number',
+            'Collecting' => 'Collecting',
+            'ProbableCause' => 'Probable Cause',
+            'Soil' => 'Soil',
+            'LELPercent' => 'Lelpercent',
+            'GASPercent' => 'Gaspercent',
+            'PPM' => 'Ppm',
+            'Negative' => 'Negative',
+            'Pressure' => 'Pressure',
+            'Surface' => 'Surface',
+            'PipeSize' => 'Pipe Size',
+            'PipeType' => 'Pipe Type',
+            'PipeCondition' => 'Pipe Condition',
             'Comments' => 'Comments',
             'Latitude' => 'Latitude',
             'Longitude' => 'Longitude',
@@ -144,24 +172,6 @@ class DemoEvent extends \app\modules\v3\models\BaseActiveRecord
             'NumberOfGPSAttempts' => 'Number Of Gpsattempts',
             'InspectionID' => 'Inspection ID',
             'DeletedFlag' => 'Deleted Flag',
-            'SplashGuardNeeded' => 'Splash Guard Needed',
-            'SplashGuardInstalled' => 'Splash Guard Installed',
-            'TracerWireMissing' => 'Tracer Wire Missing',
-            'TamperSealNotPresent' => 'Tamper Seal Not Present',
-            'EnergyDiversionPresent' => 'Energy Diversion Present',
-            'ACGrade' => 'Acgrade',
-            'RiserPostBad' => 'Riser Post Bad',
-            'RecommendToRetireInActiveService' => 'Recommend To Retire In Active Service',
-            'FacilitiesNeedToBeProtected' => 'Facilities Need To Be Protected',
-            'Other' => 'Other',
-            'AOCFlag' => 'Aocflag',
-            'AccessIssues' => 'Access Issues',
-            'CGE' => 'Cge',
-            'LeakRepaired' => 'Leak Repaired',
-            'LeakFoundMainOrService' => 'Leak Found Main Or Service',
-            'BadDogPresent' => 'Bad Dog Present',
-            'NIFReason' => 'Nifreason',
-            'PipelineAOCIssues' => 'Pipeline Aocissues',
             'EnergyDiversionPhoto1Path' => 'Energy Diversion Photo1 Path',
             'EnergyDiversionPhoto2Path' => 'Energy Diversion Photo2 Path',
             'EnergyDiversionPhoto3Path' => 'Energy Diversion Photo3 Path',
