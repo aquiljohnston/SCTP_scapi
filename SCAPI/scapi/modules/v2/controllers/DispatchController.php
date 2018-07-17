@@ -318,7 +318,8 @@ class DispatchController extends Controller
 						$data['dispatchMap'][$i]['MapGrid'],
 						null,
 						null,
-						null,
+						//hack override for cge dispatch
+						array_key_exists('ScheduledDate', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['ScheduledDate'] : null,
 						//pass inspection type and billing code if available
 						array_key_exists('InspectionType', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['InspectionType'] : null,
 						array_key_exists('BillingCode', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['BillingCode'] : null
@@ -354,8 +355,6 @@ class DispatchController extends Controller
 				//process asset dispatch
 				for($i = 0; $i < $assetCount; $i++)
 				{
-					$scheduledDate = (array_key_exists("ScheduledDate",$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null);
-
 					//calls helper method to process assingments
 					$results = self::processDispatch(
 						$data['dispatchAsset'][$i]['AssignedUserID'],
@@ -364,7 +363,7 @@ class DispatchController extends Controller
 						//dont think we need section number to be passed here
 						$data['dispatchAsset'][$i]['SectionNumber'],
 						$data['dispatchAsset'][$i]['WorkOrderID'],
-						$scheduledDate
+						array_key_exists('ScheduledDate',$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null
 					);
 					$responseData['dispatchAsset'][] = $results;
 				}
@@ -673,14 +672,14 @@ class DispatchController extends Controller
 				if ($billingCode != null) {
                     $workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
                 }
-				 $workOrders = $workOrdersQuery->all();
-				 $workOrdersCount = count($workOrders);
+				$workOrders = $workOrdersQuery->all();
+				$workOrdersCount = count($workOrders);
             } else {
                 $isAsset = true;
 				$workOrdersCount = 1;
             }
         } else {
-            $workOrders = self::getCgeWorkOrders($mapGrid, $workOrder);
+            $workOrders = self::getCgeWorkOrders($mapGrid, $inspectionType, $billingCode, $workOrder);
 			$workOrdersCount = count($workOrders);
         }
 		
@@ -803,16 +802,21 @@ class DispatchController extends Controller
 	}
 
 	//helper method gets cge work orders from vWebManagementCGIByMapGridDetail
-	private static function getCgeWorkOrders($mapGrid = null, $workOrder = null){
+	private static function getCgeWorkOrders($mapGrid = null, $inspectionType = null, $billingCode = null, $workOrder = null){
         //build query to get work orders based on map grid
-        if ($workOrder == null) {
-            $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['MapGrid' => $mapGrid]);
-
-        } else {
-            $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['WorkOrderID' => $workOrder]);
-        }
+		$workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find();
+		if ($workOrder != null) {
+            $workOrdersQuery->where(['WorkOrderID' => $workOrder]);
+        } else {        
+			$workOrdersQuery->where(['MapGrid' => $mapGrid]);
+			if ($inspectionType != null) {
+				$workOrdersQuery->andWhere(['SurveyType' => $inspectionType]);
+			}
+			if ($billingCode != null) {
+				$workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
+			}
+		}
+				
         $workOrders = $workOrdersQuery->all();
 
         return $workOrders;
