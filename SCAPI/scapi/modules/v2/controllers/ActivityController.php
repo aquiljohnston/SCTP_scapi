@@ -189,22 +189,15 @@ class ActivityController extends BaseActiveController
 						$activity = new Activity();
 						$activity->attributes = $data['activity'][$i];
 						
+						//set created by
+						$activity->ActivityCreatedUserUID = (string)$createdBy;
+						
 						//if client is not SCCT create client activity model and load data
 						if(!BaseActiveController::isScct($headers['X-Client']))
 						{
 							$clientActivity = new Activity();
 							$clientActivity->attributes = $data['activity'][$i];
-
-							//handle createdby TODO remove this because PGE is done
-							$activity->ActivityCreatedUserUID = (string)$createdBy;
-							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
-							{
-								$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
-							}
-							else
-							{
-								$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
-							}
+							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
 						}
 
 						Activity::setClient(BaseActiveController::urlPrefix());
