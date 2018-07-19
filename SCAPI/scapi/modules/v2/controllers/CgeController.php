@@ -104,7 +104,7 @@ class CgeController extends Controller
 			$responseArray = [];
 			$responseArray['cges'] = AvailableWorkOrderCGEByMapGridDetail::find()
 				->where(['MapGrid' => $mapGrid,
-					'SurveyType' => $inspectionType,
+					'InspectionType' => $inspectionType,
 					'BillingCode' => $billingCode
 				])
 				->orderBy('Address', 'InspectionDateTime')
