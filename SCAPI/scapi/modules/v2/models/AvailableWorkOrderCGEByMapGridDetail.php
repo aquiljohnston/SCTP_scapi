@@ -8,7 +8,7 @@ use Yii;
  * This is the model class for table "vAvailableWorkOrderCGEByMapGridDetail".
  *
  * @property string $CustomerInfo
- * @property string $SurveyType
+ * @property string $InspectionType
  * @property string $Inspector
  * @property string $Address
  * @property string $InspectionDateTime
@@ -17,6 +17,8 @@ use Yii;
  * @property integer $WorkOrderID
  * @property string $SectionNumber
  * @property integer $ScheduleRequired
+ * @property string $BillingCode
+ * @property string $OfficeName
  */
 class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -34,7 +36,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     public function rules()
     {
         return [
-            [['CustomerInfo', 'SurveyType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid', 'SectionNumber'], 'string'],
+            [['CustomerInfo', 'InspectionType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid', 'SectionNumber', 'BillingCode', 'OfficeName'], 'string'],
             [['WorkOrderID'], 'required'],
             [['WorkOrderID', 'ScheduleRequired'], 'integer'],
         ];
@@ -47,7 +49,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     {
         return [
             'CustomerInfo' => 'Customer Info',
-            'SurveyType' => 'Survey Type',
+            'InspectionType' => 'Inspection Type',
             'Inspector' => 'Inspector',
             'Address' => 'Address',
             'InspectionDateTime' => 'Inspection Date Time',
