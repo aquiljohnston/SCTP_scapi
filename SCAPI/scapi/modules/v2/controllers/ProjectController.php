@@ -92,9 +92,9 @@ class ProjectController extends BaseActiveController
 			$response->data = $project;
 			
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	} 
@@ -200,9 +200,9 @@ class ProjectController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 			}
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -247,9 +247,9 @@ class ProjectController extends BaseActiveController
 				$response->data = "Http:400 Bad Request";
 			}
 			return $response;
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -286,9 +286,9 @@ class ProjectController extends BaseActiveController
 			$response -> data = $namePairs;
 			
 			return $response;
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -381,9 +381,9 @@ class ProjectController extends BaseActiveController
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $data;
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -549,6 +549,9 @@ class ProjectController extends BaseActiveController
 		try {
 			//set db target
 			MenusProjectModule::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('projectGetProjectModules');
 
 			//TODO: Sanitize $projectID
 
@@ -591,7 +594,9 @@ class ProjectController extends BaseActiveController
 			$response->data = $data;
 
 			return $response;
-		} catch (Exception $e) {
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (Exception $e) {
 			throw new BadRequestHttpException;
 		}
 	}
@@ -600,6 +605,9 @@ class ProjectController extends BaseActiveController
 		try{
 			//set db target
 			Project::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('projectAddRemoveModules');
 
 			$username = self::getUserFromToken()->UserName;
 
@@ -659,9 +667,9 @@ class ProjectController extends BaseActiveController
 			$response -> data = $data;
 
 			return $response;
-		}
-		catch(\Exception $e)  
-		{
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}

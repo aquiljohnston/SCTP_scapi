@@ -53,6 +53,9 @@ class BreadcrumbController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('breadcrumbCreate');
+			
 			$userName = BaseActiveController::getUserFromToken()->UserName;
 			
 			//save json to archive

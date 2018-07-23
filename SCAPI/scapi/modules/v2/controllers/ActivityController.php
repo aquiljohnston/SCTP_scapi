@@ -189,22 +189,15 @@ class ActivityController extends BaseActiveController
 						$activity = new Activity();
 						$activity->attributes = $data['activity'][$i];
 						
+						//set created by
+						$activity->ActivityCreatedUserUID = (string)$createdBy;
+						
 						//if client is not SCCT create client activity model and load data
 						if(!BaseActiveController::isScct($headers['X-Client']))
 						{
 							$clientActivity = new Activity();
 							$clientActivity->attributes = $data['activity'][$i];
-
-							//handle createdby TODO remove this because PGE is done
-							$activity->ActivityCreatedUserUID = (string)$createdBy;
-							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
-							{
-								$clientActivity->ActivityCreatedUserUID = $pgeCreatedBy;
-							}
-							else
-							{
-								$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
-							}
+							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
 						}
 
 						Activity::setClient(BaseActiveController::urlPrefix());
@@ -276,14 +269,20 @@ class ActivityController extends BaseActiveController
 										{
 											//log validation error
 											$e = BaseActiveController::modelValidationException($timeEntry);
-											BaseActiveController::archiveErrorJson(
-												file_get_contents("php://input"),
-												$e,
-												getallheaders()['X-Client'],
-												$data['activity'][$i],
-												$data['activity'][$i]['timeEntry'][$t]);
-											//set success flag for time entry
-											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
+											//SQL Constraint
+											if(strpos($e, TimeEntry::SQL_CONSTRAINT_MESSAGE)){
+												//set success flag for time entry to success if validation was a sql constraint
+												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
+											} else {
+												BaseActiveController::archiveErrorJson(
+													file_get_contents("php://input"),
+													$e,
+													getallheaders()['X-Client'],
+													$data['activity'][$i],
+													$data['activity'][$i]['timeEntry'][$t]);
+												//set success flag for time entry
+												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
+											}
 										}
 									}
 									catch(yii\db\Exception $e)

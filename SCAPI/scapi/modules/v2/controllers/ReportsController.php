@@ -37,8 +37,11 @@ class ReportsController extends Controller {
     public function actionGetReportDropDown() 
 	{
 
-        $headers = getallheaders();
-        Report::setClient($headers['X-Client']);
+        $client = getallheaders()['X-Client'];
+        Report::setClient($client);
+		
+		//RBAC Permissions Check
+		PermissionsController::requirePermission('reportGetDropdown', $client);
 
         $result = Report::find()
             ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, Parm, ReportType, ActiveFlag')
@@ -75,8 +78,11 @@ class ReportsController extends Controller {
 	 //TODO inspector filter for views
     public function actionGetReport($reportType, $reportName, $reportID = null, $parm = null, $startDate = null, $endDate = null, $ParmInspector = null)
 	{
-		$headers = getallheaders();
-        BaseActiveRecord::setClient($headers['X-Client']);
+		$client = getallheaders()['X-Client'];
+        BaseActiveRecord::setClient($client);
+		
+		//RBAC Permissions Check
+		PermissionsController::requirePermission('reportGet', $client);
 		
 		$response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
@@ -182,8 +188,12 @@ class ReportsController extends Controller {
 	{
 		try
 		{
-            $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
+            $client = getallheaders()['X-Client'];
+            BaseActiveRecord::setClient($client);
+			
+			//RBAC Permissions Check
+			PermissionsController::requirePermission('reportGetParmDropdown', $client);
+			
             $connection = BaseActiveRecord::getDb();
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -225,8 +235,12 @@ class ReportsController extends Controller {
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-            $headers = getallheaders();
-            BaseActiveRecord::setClient($headers['X-Client']);
+            $client = getallheaders()['X-Client'];
+            BaseActiveRecord::setClient($client);
+			
+			//RBAC Permissions Check
+			PermissionsController::requirePermission('reportGetInspectorDropdown', $client);
+			
             $connection = BaseActiveRecord::getDb();
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;

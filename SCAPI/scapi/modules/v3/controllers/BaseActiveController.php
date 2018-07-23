@@ -284,6 +284,109 @@ class BaseActiveController extends ActiveController
         return $asset;
     }
 	
+	 // helper method for setting the csv header for tracker maps csv output
+    public static function setCsvHeaders(){
+        header('Content-Type: text/csv;charset=UTF-8');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    // helper method for outputting csv data without storing the whole result
+    public static function processAndOutputCsvResponse($reader){
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        self::setCsvHeaders();
+        // TODO find a way to use Yii response but without storing the whole response content in a variable
+        $firstLine = true;
+        $fp = fopen('php://output','w');
+
+        while($row = $reader->read()){
+
+            if($firstLine) {
+                $firstLine = false;
+                fwrite($fp, implode(',', array_keys($row)) . "\r\n");
+            }
+            fwrite($fp, implode(',', $row) . "\r\n");
+        }
+        fclose($fp);
+    }
+
+    public static function processAndWriteCsv($data, $fileName, $type)
+	{
+		$environment = self::urlPrefix();
+		Yii::$app->response->format = Response::FORMAT_RAW;
+
+		$success = false;
+
+		if($environment === Constants::API_CONFIG['DEV_HEADER'])
+        {
+        	switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::DEV_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::DEV_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+					$filePath = Constants::DEV_DEFAULT_ADP_PATH;
+			        break;
+			}
+        } elseif($environment === Constants::API_CONFIG['STAGE_HEADER']) {
+        	switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::STAGE_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::STAGE_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+					$filePath = Constants::STAGE_DEFAULT_ADP_PATH;
+			        break;
+			}
+        } elseif($environment === Constants::API_CONFIG['PROD_HEADER']) {
+			switch ($type) {
+			    case Constants::OASIS:
+			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
+			        break;
+			    case Constants::QUICKBOOKS:
+			        $filePath = Constants::PROD_DEFAULT_QB_PATH;
+			        break;
+			    case Constants::ADP:
+					$filePath = Constants::PROD_DEFAULT_ADP_PATH;
+			        break;
+			}
+		}
+
+        $firstLine = true;
+        $fp2 = fopen($filePath.$fileName.".csv",'w+');
+
+        if(is_object($data))
+		{
+			while($row2 = $data->read())
+			{
+				if($firstLine) {
+					$firstLine = false;
+					fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+				}
+				fwrite($fp2, implode(',', $row2) . "\r\n");
+			}
+        } else {
+        	foreach($data as $row2)
+			{
+				if($firstLine) {
+					$firstLine = false;
+					fwrite($fp2, implode(',', array_keys($row2)) . "\r\n");
+				}
+				fwrite($fp2, implode(',', $row2) . "\r\n");
+			}
+		}
+
+        fclose($fp2);
+        chmod($filePath.$fileName.".csv", 0777);
+        $success = true;
+        return $success;
+    }
+	
 	public static function isSCCT($client)
 	{
 		return ($client == Constants::SCCT_DEV ||

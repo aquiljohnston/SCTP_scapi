@@ -60,10 +60,11 @@ class DispatchController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchGetAvailable', $client);
 			
 			$responseArray = [];
 			$divisionFlag = self::getDivisionFlag();
@@ -141,8 +142,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set dbl
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchGetAvailableAssets', $client);
 			
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
@@ -233,8 +236,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchGetSurveyors', $client);
 				
 			$userQuery = SCUser::find()
 				->select(['UserID', "concat(UserLastName, ', ', UserFirstName) as Name", 'UserName'])
@@ -279,14 +284,15 @@ class DispatchController extends Controller
 		try
 		{
 			//get client headers
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			// get created by
 			$user = BaseActiveController::getClientUser($client);
 			$createdBy = $user->UserID;
 			$username = $user->UserName;
 			//set db
 			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatch', $client);
 			
 			//get post data
 			$post = file_get_contents("php://input");
@@ -315,10 +321,12 @@ class DispatchController extends Controller
 					$results = self::processDispatch(
 						$data['dispatchMap'][$i]['AssignedUserID'],
 						$createdBy,
+						array_key_exists('IsCge', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['IsCge'] : false,
 						$data['dispatchMap'][$i]['MapGrid'],
 						null,
 						null,
-						null,
+						//hack override for cge dispatch
+						array_key_exists('ScheduledDate', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['ScheduledDate'] : null,
 						//pass inspection type and billing code if available
 						array_key_exists('InspectionType', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['InspectionType'] : null,
 						array_key_exists('BillingCode', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['BillingCode'] : null
@@ -336,6 +344,7 @@ class DispatchController extends Controller
                     $results = self::processDispatch(
                         $data['dispatchSection'][$i]['AssignedUserID'],
                         $createdBy,
+						array_key_exists('IsCge', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['IsCge'] : false,
                         $data['dispatchSection'][$i]['MapGrid'],
                         $data['dispatchSection'][$i]['SectionNumber'],
 						null,
@@ -354,17 +363,15 @@ class DispatchController extends Controller
 				//process asset dispatch
 				for($i = 0; $i < $assetCount; $i++)
 				{
-					$scheduledDate = (array_key_exists("ScheduledDate",$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null);
-
 					//calls helper method to process assingments
 					$results = self::processDispatch(
 						$data['dispatchAsset'][$i]['AssignedUserID'],
 						$createdBy,
+						array_key_exists('IsCge', $data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['IsCge'] : false,
 						null,
-						//dont think we need section number to be passed here
 						$data['dispatchAsset'][$i]['SectionNumber'],
 						$data['dispatchAsset'][$i]['WorkOrderID'],
-						$scheduledDate
+						array_key_exists('ScheduledDate',$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null
 					);
 					$responseData['dispatchAsset'][] = $results;
 				}
@@ -392,8 +399,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchGetAssigned', $client);
 			
 			$responseArray = [];
 			if($mapGridSelected != null)
@@ -458,8 +467,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchGetAssignedAssets', $client);
 			
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
@@ -550,9 +561,10 @@ class DispatchController extends Controller
 		try
 		{
 			//set db
-			$headers = getallheaders();
-			$client = $headers['X-Client'];
+			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchUnassign', $client);
 			
 			//get body data
 			$body = file_get_contents("php://input");
@@ -647,7 +659,7 @@ class DispatchController extends Controller
 	**Then checks for existing assigned work queue records and removes any from 
 	**results that already exist. Finally creates new records and returns results.
 	*/
-	private static function processDispatch($userID, $createdBy, $mapGrid = null, $section = null, $workOrder = null,
+	private static function processDispatch($userIDs, $createdBy, $isCge, $mapGrid = null, $section = null, $workOrder = null,
 		$scheduledDate = null, $inspectionType = null, $billingCode = null)
 	{
 		$results = [];
@@ -658,31 +670,14 @@ class DispatchController extends Controller
 		$successFlag = 1;
 		$isAsset = 0;
 
-		//pull work orders to update
-        if ($scheduledDate == null) {
-            //build query to get work orders based on map grid and section(optional)
-            if ($workOrder == null ) {
-                $workOrdersQuery = AvailableWorkOrder::find()
-                    ->where(['MapGrid' => $mapGrid]);
-                if ($section != null) {
-                    $workOrdersQuery->andWhere(['SectionNumber' => $section]);
-                }
-				if ($inspectionType != null) {
-                    $workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
-                }
-				if ($billingCode != null) {
-                    $workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
-                }
-				 $workOrders = $workOrdersQuery->all();
-				 $workOrdersCount = count($workOrders);
-            } else {
-                $isAsset = true;
-				$workOrdersCount = 1;
-            }
-        } else {
-            $workOrders = self::getCgeWorkOrders($mapGrid, $workOrder);
+		//scheduledDate works as an indicator if the the record is cge
+		if($workOrder == null) {
+			$workOrders = self::getDispatchWorkOrders($mapGrid, $section, $inspectionType, $billingCode, $workOrder, $isCge);
 			$workOrdersCount = count($workOrders);
-        }
+		} else {
+			$isAsset = true;
+			$workOrdersCount = 1;
+		}
 		
 		$db = BaseActiveRecord::getDb();
 		$transaction = $db->beginTransaction();
@@ -690,26 +685,29 @@ class DispatchController extends Controller
 			//loop work orders to assign
 			for($i = 0; $i < $workOrdersCount; $i++)
 			{
-				$dataArray = [
-				'CreatedBy' => $createdBy,
-				'CreatedDate' => date(Constants::DATE_FORMAT),
-				'AssignedUserID' => $userID,
-				'WorkQueueStatus' => $assignedCode,
-				];
-				
-				//assign workorder/section based on data available
-				if($isAsset){
-					$dataArray['SectionNumber'] = $section;
-					$dataArray['WorkOrderID'] = $workOrder;
-				}else{
-					$dataArray['SectionNumber'] = $workOrders[$i]->SectionNumber;
-					$dataArray['WorkOrderID'] = $workOrders[$i]->WorkOrderID;
+				$userCount = count($userIDs);
+				for($j = 0; $j < $userCount; $j++){
+					$dataArray = [
+						'CreatedBy' => $createdBy,
+						'CreatedDate' => date(Constants::DATE_FORMAT),
+						'AssignedUserID' => $userIDs[$j],
+						'WorkQueueStatus' => $assignedCode,
+					];
+					
+					//assign workorder/section based on data available
+					if($isAsset){
+						$dataArray['SectionNumber'] = $section;
+						$dataArray['WorkOrderID'] = $workOrder;
+					}else{
+						$dataArray['SectionNumber'] = $workOrders[$i]->SectionNumber;
+						$dataArray['WorkOrderID'] = $workOrders[$i]->WorkOrderID;
+					}
+					
+					if ($scheduledDate != null)
+						$dataArray['ScheduledDispatchDate'] = date(Constants::DATE_FORMAT,strtotime($scheduledDate));
+					
+					$db->createCommand()->insert('tWorkQueue', $dataArray)->execute();
 				}
-				
-				if ($scheduledDate != null)
-					$dataArray['ScheduledDispatchDate'] = date(Constants::DATE_FORMAT,strtotime($scheduledDate));
-				
-				$db->createCommand()->insert('tWorkQueue', $dataArray)->execute();
 			} 
 			$transaction->commit();
 		} catch(\Exception $e)
@@ -720,7 +718,7 @@ class DispatchController extends Controller
 		}
 		return $results = [
 			'MapGrid' => $mapGrid,
-			'AssignedUserID' => $userID,
+			'AssignedUserID' => $userIDs,
 			'SectionNumber' => $section,
 			'WorkOrderID' => $workOrder,
 			'InspectionType' => $inspectionType,
@@ -803,18 +801,25 @@ class DispatchController extends Controller
 	}
 
 	//helper method gets cge work orders from vWebManagementCGIByMapGridDetail
-	private static function getCgeWorkOrders($mapGrid = null, $workOrder = null){
+	private static function getDispatchWorkOrders($mapGrid = null, $section = null, $inspectionType = null, $billingCode = null, $workOrder = null, $isCge){
         //build query to get work orders based on map grid
-        if ($workOrder == null) {
-            $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['MapGrid' => $mapGrid]);
-
-        } else {
-            $workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find()
-                ->where(['WorkOrderID' => $workOrder]);
-        }
+		if($isCge){
+			$workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find();
+		} else {
+			$workOrdersQuery = AvailableWorkOrder::find();
+		}
+		if ($mapGrid != null) {
+			$workOrdersQuery->where(['MapGrid' => $mapGrid]);
+		}
+		if ($inspectionType != null) {
+			$workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
+		}
+		if ($billingCode != null) {
+			$workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
+		}
+				
         $workOrders = $workOrdersQuery->all();
-
+		
         return $workOrders;
     }
 	
@@ -836,17 +841,19 @@ class DispatchController extends Controller
 		try
 		{
 			//set dbl
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchGetDualDispatch', $client);
 			
 			$assetQuery = WorkOrder::find()
 				->limit(8)
 				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
 				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
-				->where([/*'tWorkOrder.LocationType' => 'Gas Main',*/
+				->where(['tWorkOrder.LocationType' => 'Pipeline',
 					'tWorkOrder.CompletedFlag' => 0,
 					'tWorkOrder.InspectionAttemptCounter' => 0,
-					'tWorkOrder.EventIndicator' => null])
+					'tWorkOrder.EventIndicator' => 0])
 				->asArray()
 				->all();
 

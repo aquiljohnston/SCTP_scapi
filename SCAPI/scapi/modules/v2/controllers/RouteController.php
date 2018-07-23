@@ -45,8 +45,13 @@ class RouteController extends Controller
 			if(array_key_exists('X-Client', $headers))
 			{
 				BaseActiveRecord::setClient($headers['X-Client']);
+				//RBAC permissions check
+				PermissionsController::requirePermission('routeOptimization1', $headers['X-Client']);
+			} else {
+				//RBAC permissions check
+				PermissionsController::requirePermission('routeOptimization1');
 			}
-			
+
 			//get post data
 			$post = file_get_contents("php://input");			
 			$data = json_decode($post, true);
@@ -54,13 +59,9 @@ class RouteController extends Controller
 			$response = self::routeOptimization($data, "TwoOpt");
 			
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		} catch(ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -74,8 +75,13 @@ class RouteController extends Controller
 			if(array_key_exists('X-Client', $headers))
 			{
 				BaseActiveRecord::setClient($headers['X-Client']);
+				//RBAC permissions check
+				PermissionsController::requirePermission('routeOptimization2', $headers['X-Client']);
+			} else {
+				//RBAC permissions check
+				PermissionsController::requirePermission('routeOptimization2');
 			}
-			
+
 			//get post data
 			$post = file_get_contents("php://input");			
 			$data = json_decode($post, true);
@@ -83,13 +89,9 @@ class RouteController extends Controller
 			$response = self::routeOptimization($data, "SimulatedAnnealing");
 			
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		} catch(ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
 	}
