@@ -41,10 +41,11 @@ class CgeController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('cgeGetMapGrids', $client);
 			
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
@@ -94,15 +95,16 @@ class CgeController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('cgeGetByMap', $client);
 			
 			$responseArray = [];
 			$responseArray['cges'] = AvailableWorkOrderCGEByMapGridDetail::find()
 				->where(['MapGrid' => $mapGrid,
-					'SurveyType' => $inspectionType,
+					'InspectionType' => $inspectionType,
 					'BillingCode' => $billingCode
 				])
 				->orderBy('Address', 'InspectionDateTime')
@@ -129,10 +131,12 @@ class CgeController extends Controller
 		try
 		{
 			//get headers
-			$headers = getallheaders();
-			
+			$client = getallheaders()['X-Client'];
 			//set db
-			BaseActiveRecord::setClient($headers['X-Client']);
+			BaseActiveRecord::setClient($client);
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('cgeGetHistory', $client);
 			
 			$responseArray = [];
 			$responseArray['cgeHistory'] = AvailableWorkOrderCGEByWODetails::find()

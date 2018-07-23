@@ -72,9 +72,9 @@ class DropdownController extends Controller
             $response -> data = $namePairs;
 
             return $response;
-        }
-        catch(\Exception $e)
-        {
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
     }
@@ -107,9 +107,9 @@ class DropdownController extends Controller
             $response -> data = $namePairs;
 
             return $response;
-        }
-        catch(\Exception $e)
-        {
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
     }
@@ -122,8 +122,10 @@ class DropdownController extends Controller
 		try
         {
 			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			// RBAC permission check
+            PermissionsController::requirePermission('getWebDropDowns', $client);
 			
 			$webDropDowns = DropDown::find()
 				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
@@ -147,30 +149,39 @@ class DropdownController extends Controller
             $response -> data = $responseArray;
 
             return $response;
-		}
-        catch(\Exception $e)
-        {
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
 	}
 
     public function actionGetTrackerMapGrids() {
-        $headers = getallheaders();
-        BaseActiveRecord::setClient($headers['X-Client']);
-        $sql = "SELECT DISTINCT [Mapgrid] FROM [ScctTemplate].[dbo].[vRptCompletedWorkOrders]";
-        $connection = BaseActiveRecord::getDb();
-        $results = $connection->createCommand($sql)->queryAll();
+		try{
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			// RBAC permission check
+            PermissionsController::requirePermission('getTrackerMapGridsDropdown', $client);
+			
+			$sql = "SELECT DISTINCT [Mapgrid] FROM [ScctTemplate].[dbo].[vRptCompletedWorkOrders]";
+			$connection = BaseActiveRecord::getDb();
+			$results = $connection->createCommand($sql)->queryAll();
 
-        //These next four lines convert the data from
-        //[{"MapGrid": "XX-YYY"},...] to {"XX-YYY": "XX-YYY",...}
-        $processedResults = [];
-        foreach($results as $result) {
-            $processedResults[$result['Mapgrid']] = $result['Mapgrid'];
+			//These next four lines convert the data from
+			//[{"MapGrid": "XX-YYY"},...] to {"XX-YYY": "XX-YYY",...}
+			$processedResults = [];
+			foreach($results as $result) {
+				$processedResults[$result['Mapgrid']] = $result['Mapgrid'];
+			}
+
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $processedResults;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
         }
-
-        $response = Yii::$app ->response;
-        $response -> format = Response::FORMAT_JSON;
-        $response -> data = $processedResults;
     }
 	
 	//return
@@ -209,11 +220,11 @@ class DropdownController extends Controller
 			$response -> data = $namePairs;
 			
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	/////////////////////TABLET DROPDOWNS BEGIN////////////////////////
@@ -223,8 +234,10 @@ class DropdownController extends Controller
 		try
         {
 			//set db target
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			// RBAC permission check
+            PermissionsController::requirePermission('getTabletSurveyDropdowns', $client);
 			
 			$tabletDropDowns = DropDown::find()
 				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
@@ -247,9 +260,9 @@ class DropdownController extends Controller
             $response -> data = $responseArray;
 
             return $response;
-		}
-        catch(\Exception $e)
-        {
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
         }
 	}

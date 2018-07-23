@@ -443,8 +443,8 @@ class UserController extends BaseActiveController
 			$client = getallheaders()['X-Client'];
             //set db target for permission check
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			//TODO update permissions
-            PermissionsController::requirePermission('userDeactivate');
+			//RBAC permissions check
+            PermissionsController::requirePermission('userReactivate');
 			
             //read the post input
             $put = file_get_contents("php://input");
@@ -919,7 +919,7 @@ class UserController extends BaseActiveController
 			$userDeactivateCommand->execute();
 			
 			//Log out user so that they don't receive 403s if logged in or deactivating self
-			$auth = Auth::findOne(["AuthUserID" => $username]);
+			$auth = Auth::findOne(["AuthUserID" => $userID]);
 			if($auth != null) $auth->delete();
 			
 			//build response data
@@ -939,8 +939,7 @@ class UserController extends BaseActiveController
 	//deactivate user in all accociated non PG&E clients or given non pge client based on optional param
 	private static function deactivateInProjects($user, $client = null)
 	{
-		try
-		{
+		try {
 			$response = [];
 			if($client == null)
 			{
@@ -957,11 +956,12 @@ class UserController extends BaseActiveController
 			}
 			$projectCount = count($userProjects);
 			
-			 //loop projects
+			//loop projects
 			for ($i = 0; $i < $projectCount; $i++) {
 				//try catch for individual projects
-				try
-				{
+				try {
+					//if has an scct prefix skip
+					if (BaseActiveController::isSCCT($userProjects[$i]['ProjectUrlPrefix'])) continue;
 					//get model from base active record based on urlPrefix in project
 					$userModel = BaseActiveRecord::getUserModel($userProjects[$i]['ProjectUrlPrefix']);
 					if($userModel == null) continue;
@@ -971,23 +971,27 @@ class UserController extends BaseActiveController
 						->andWhere(['UserActiveFlag' => 1])
 						->one();
 
-					$projectUser->UserActiveFlag = 0;
+					//check if active user was found
+					if ($projectUser != null)
+					{
+						$projectUser->UserActiveFlag = 0;
 
-					//unassign all associate work queues for the current project prior to deactivating the user
-					$unassignedFlag = DispatchController::unassignUser($projectUser->UserID, $userProjects[$i]['ProjectUrlPrefix']);
-					
-					if ($projectUser->update()) {
-						/*remove rbac role
-						I dont belive this is reset on reactivation and 
-						I feel is unnecessary on deactivation because being inactive would prevent system access entirely*/
-						/*$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
-						if($projectAuthClass != null){
-							$projectAuth = new $projectAuthClass($userModel::getDb());
-							if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
-								$projectAuth->revokeAll($projectUser['UserID']);
-							}
-						}	*/
-						$response[] = ['Client' => $userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag' => $unassignedFlag];
+						//unassign all associate work queues for the current project prior to deactivating the user
+						$unassignedFlag = DispatchController::unassignUser($projectUser->UserID, $userProjects[$i]['ProjectUrlPrefix']);
+						
+						if ($projectUser->update()) {
+							/*remove rbac role
+							I dont belive this is reset on reactivation and 
+							I feel is unnecessary on deactivation because being inactive would prevent system access entirely*/
+							/*$projectAuthClass = BaseActiveRecord::getAuthManager($project->ProjectUrlPrefix);
+							if($projectAuthClass != null){
+								$projectAuth = new $projectAuthClass($userModel::getDb());
+								if ($userRole = $projectAuth->getRole($projectUser['UserAppRoleType'])) {
+									$projectAuth->revokeAll($projectUser['UserID']);
+								}
+							}	*/
+							$response[] = ['Client' => $userProjects[$i]['ProjectUrlPrefix'], 'UnassignedFlag' => $unassignedFlag];
+						}
 					}
 					//reset db to Comet Tracker
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());

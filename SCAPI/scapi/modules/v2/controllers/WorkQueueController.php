@@ -42,8 +42,11 @@ class WorkQueueController extends Controller
 		{
 			ini_set('memory_limit', '-1');
 			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('workQueueGet', $client);
+			
 			$responseArray = [];
 			$responseArray['WorkQueue'] = AssignedWorkQueue::find()
 				->select('WorkQueueID
@@ -113,12 +116,15 @@ class WorkQueueController extends Controller
 			//count number of items to accept
 			$acceptedCount = count($data);
 			
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 			//process accepted
 			for($i = 0; $i < $acceptedCount; $i++)
 			{
 				//try catch to log individual errors
 				try
 				{
+					$workQueue = (object)[];
 					$successFlag = 0;
 					$workQueue = WorkQueue::find()
 						->where(['ID' => $data[$i]['WorkQueueID']])
@@ -141,16 +147,15 @@ class WorkQueueController extends Controller
 					else{
 						$successFlag = 1;
 					}
-				}
-				catch(\Exception $e)
-				{
-					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i]);
+				} catch(\Exception $e) {
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i], json_encode($workQueue));
 				}
 				$responseData[] = [
 					'WorkQueueID' => $data[$i]['WorkQueueID'],
 					'SuccessFlag' => $successFlag
 				];
 			}
+			$transaction->commit();
 			return $responseData;
 		}
         catch(ForbiddenHttpException $e)
