@@ -10,12 +10,14 @@ use yii\rest\Controller;
 use app\modules\v2\models\EmployeeType;
 use app\modules\v2\models\DropDown;
 use app\modules\v2\models\AppRoles;
+use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\Response;
 use \DateTime;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use app\modules\v2\models\StateCode;
+use yii\db\Query;
 
 
 class DropdownController extends Controller
@@ -33,12 +35,13 @@ class DropdownController extends Controller
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'get-state-codes-dropdown' => ['get'],
                     'get-employee-type-dropdown' => ['get'],
-                    'get-tablet-survey-dropdowns' => ['get'],
-                    'get-state-codes-dropdown' => ['get'],
-                    'get-web-drop-downs' => ['get'],
-                    'get-tracker-map-grids' => ['get'],
+					'get-web-drop-downs' => ['get'],
+					'get-tracker-map-grids' => ['get'],
 					'get-roles-dropdowns'  => ['get'],
+					'get-user-projects' => ['get'],
+                    'get-tablet-survey-dropdowns' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -218,6 +221,63 @@ class DropdownController extends Controller
 			$response = Yii::$app ->response;
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $namePairs;
+			
+			return $response;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	public function actionGetUserProjects()
+	{
+		try{
+			//get http headers
+            $headers = getallheaders();
+			$client  = $headers['X-Client'];
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permission check and base query
+			if(PermissionsController::can("projectGetAll")){
+				$relationQuery = (new Query())->select('ProjUserProjectID')->distinct()->from('Project_User_Tb');
+			} else if (PermissionsController::can("projectGetOwnProjects")){
+				//get user id from auth token
+				$user = BaseActiveController::getUserFromToken();
+				$relationQuery = (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')
+					->where(['ProjUserUserID' => $user->UserID]);
+			} else {
+				throw new ForbiddenHttpException;
+			}
+			//get projects
+			$projects = Project::find()->select('*')->where(['in', 'ProjectID', $relationQuery])->orderBy('ProjectName')->all();
+			
+			//create dropdown pair array
+			if(count($projects) > 1)
+			{
+				$dropdownPairs = [null => 'All'];
+			} else {
+				$dropdownPairs = [];
+			}
+
+			//populate response array
+			foreach($projects as $project)
+			{
+				$dropdownPairs[$project->ProjectID]= $project->ProjectName;
+			}
+			
+			if(BaseActiveController::isSCCT($client)){
+				$showProjectDropdown = true;
+			} else {
+				$showProjectDropdown = false;
+			}
+			
+			//format response data
+			$responseArray['showProjectDropdown'] = $showProjectDropdown;
+			$responseArray['projects'] = $dropdownPairs;
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $responseArray;
 			
 			return $response;
 		} catch(ForbiddenHttpException $e) {
