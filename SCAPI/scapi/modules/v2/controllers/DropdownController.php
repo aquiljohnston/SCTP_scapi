@@ -238,19 +238,27 @@ class DropdownController extends Controller
 			$client  = $headers['X-Client'];
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			//RBAC permission check and base query
-			if(PermissionsController::can("projectGetAll")){
-				$relationQuery = (new Query())->select('ProjUserProjectID')->distinct()->from('Project_User_Tb');
-			} else if (PermissionsController::can("projectGetOwnProjects")){
-				//get user id from auth token
-				$user = BaseActiveController::getUserFromToken();
-				$relationQuery = (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')
-					->where(['ProjUserUserID' => $user->UserID]);
+			
+			if(BaseActiveController::isSCCT($client)){
+				$showProjectDropdown = true;
+				//RBAC permission check and base query
+				if(PermissionsController::can('projectGetAll')){
+					$relationQuery = (new Query())->select('ProjUserProjectID')->distinct()->from('Project_User_Tb');
+				} else if (PermissionsController::can('projectGetOwnProjects')){
+					//get user id from auth token
+					$user = BaseActiveController::getUserFromToken();
+					$relationQuery = (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')
+						->where(['ProjUserUserID' => $user->UserID]);
+				} else {
+					throw new ForbiddenHttpException;
+				}
+				//get projects
+				$projects = Project::find()->select('*')->where(['in', 'ProjectID', $relationQuery])->orderBy('ProjectName')->all();
 			} else {
-				throw new ForbiddenHttpException;
+				PermissionsController::requirePermission('projectGetOwnProjects');
+				$showProjectDropdown = false;
+				$projects = Project::find()->where(['ProjectUrlPrefix' => $client])->all();
 			}
-			//get projects
-			$projects = Project::find()->select('*')->where(['in', 'ProjectID', $relationQuery])->orderBy('ProjectName')->all();
 			
 			//create dropdown pair array
 			if(count($projects) > 1)
@@ -264,12 +272,6 @@ class DropdownController extends Controller
 			foreach($projects as $project)
 			{
 				$dropdownPairs[$project->ProjectID]= $project->ProjectName;
-			}
-			
-			if(BaseActiveController::isSCCT($client)){
-				$showProjectDropdown = true;
-			} else {
-				$showProjectDropdown = false;
 			}
 			
 			//format response data
