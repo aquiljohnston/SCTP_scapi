@@ -12,6 +12,7 @@ use app\modules\v2\constants\Constants;
 use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\UnauthorizedHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
@@ -154,9 +155,9 @@ class LoginController extends Controller
 			Yii::$app->user->logout($destroySession = true, $token);
 			$response->data = 'Logout Successful!';
 			return $response;
-		}
-		catch(\Exception $e)  
-		{
+		} catch(UnauthorizedHttpException $e) {
+            throw new UnauthorizedHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
