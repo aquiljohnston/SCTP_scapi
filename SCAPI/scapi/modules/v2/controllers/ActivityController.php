@@ -16,6 +16,7 @@ use app\modules\v2\controllers\InspectionController;
 use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\web\UnauthorizedHttpException;
 use yii\base\ErrorException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -380,9 +381,9 @@ class ActivityController extends BaseActiveController
 			//build and return the response json
 			$response->data = $responseData; 
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
+		} catch(UnauthorizedHttpException $e) {
+            throw new UnauthorizedHttpException;
+        } catch(\Exception $e) {
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 			throw new \yii\web\HttpException(400);
 		}
