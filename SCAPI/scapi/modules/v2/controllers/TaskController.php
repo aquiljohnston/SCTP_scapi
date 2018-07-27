@@ -63,6 +63,8 @@ class TaskController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $data;
 			return $response;
+		} catch (yii\db\Exception $e) {
+			throw new yii\db\Exception;
 		} catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
