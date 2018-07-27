@@ -5,6 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 use yii\web\IdentityInterface;
 use app\modules\v2\models\Auth;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * This is the model class for table "UserTb".
@@ -166,7 +167,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
 		//handle if auth record does not exist
 		if ($auth == null)
 		{
-			return null;
+			throw new UnauthorizedHttpException;
 		}
 		
         return static::findOne(['UserID' => $auth->AuthUserID]);
