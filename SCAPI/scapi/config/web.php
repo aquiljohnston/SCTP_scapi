@@ -16,28 +16,9 @@ $config = [
 		],
         'v2' => [
             'class' => 'app\modules\v2\Module',
-			'components' => [
-				'user' => [
-					'class' => 'app\modules\v2\authentication\CTUser',
-					'identityClass' => 'app\modules\v2\models\SCUser',
-					'enableAutoLogin' => false,
-					'authTimeout' => 28800,
-					'loginUrl' => null
-				]
-			],
         ],
 		'v3' => [
             'class' => 'app\modules\v3\Module',
-			//not sure this component piece works I think you need the component overwrite in the module class.
-			'components' => [
-				'user' => [
-					'class' => 'app\modules\v3\authentication\CTUser',
-					'identityClass' => 'app\modules\v3\models\SCUser',
-					'enableAutoLogin' => false,
-					'authTimeout' => 28800,
-					'loginUrl' => null
-				]
-			],
         ]
     ],
     'components' => [

@@ -52,15 +52,19 @@ class CTUser extends User
 			$currentTime = time();//get time
 			$timeout = $auth->AuthTimeout;
 			//check timeout vs current time
-			if($currentTime < $timeout)
-			{
-				//update timeout to current time + time limit
-				$newTimeout = $currentTime + $this->authTimeout;
-				$auth->AuthTimeout = $newTimeout;
-				// set modified by
-				$auth->AuthModifiedBy = $username;
-				$auth->update();
-			} else {
+			//commented out rewnewal of auth token
+			// if($currentTime < $timeout)
+			// {
+				// //update timeout to current time + time limit
+				// $newTimeout = $currentTime + $this->authTimeout;
+				// $auth->AuthTimeout = $newTimeout;
+				// // set modified by
+				// $auth->AuthModifiedBy = $username;
+				// $auth->update();
+			// } else {
+				// $this->logout(true, $token);
+			// }
+			if($currentTime > $timeout) {
 				$this->logout(true, $token);
 			}
 		} else {
