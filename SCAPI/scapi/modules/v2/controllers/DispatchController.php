@@ -55,7 +55,8 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null,
+		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
 		try
 		{
@@ -87,7 +88,7 @@ class DispatchController extends Controller
 			}
 			else
 			{
-				$orderBy = ['MapGrid' => SORT_ASC, 'ComplianceEnd' => SORT_ASC];
+				$orderBy = "$sortField $sortOrder";
 				$envelope = 'mapGrids';
 				$assetQuery = AvailableWorkOrderByMapGrid::find();
 				
