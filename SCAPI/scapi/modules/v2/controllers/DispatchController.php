@@ -802,15 +802,17 @@ class DispatchController extends Controller
 	}
 
 	//helper method gets cge work orders from vWebManagementCGIByMapGridDetail
-	private static function getDispatchWorkOrders($mapGrid = null, $section = null, $inspectionType = null, $billingCode = null, $workOrder = null, $isCge){
+	private static function getDispatchWorkOrders($mapGrid, $section = null, $inspectionType = null, $billingCode = null, $workOrder = null, $isCge){
         //build query to get work orders based on map grid
 		if($isCge){
 			$workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find();
 		} else {
 			$workOrdersQuery = AvailableWorkOrder::find();
 		}
-		if ($mapGrid != null) {
-			$workOrdersQuery->where(['MapGrid' => $mapGrid]);
+		//always filter on map grid
+		$workOrdersQuery->where(['MapGrid' => $mapGrid]);
+		if ($section != null) {
+			$workOrdersQuery->andWhere(['SectionNumber' => $section]);
 		}
 		if ($inspectionType != null) {
 			$workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);
