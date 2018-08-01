@@ -110,6 +110,9 @@ class WorkQueueController extends Controller
 			//set db
 			BaseActiveRecord::setClient($client);
 			
+			//get requesting userID
+			$modifiedBy = BaseActiveController::getClientUser($client)->UserID;
+			
 			//create response format
 			$responseData = [];
 			
@@ -133,7 +136,7 @@ class WorkQueueController extends Controller
 					if($workQueue != null)
 					{
 						$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
-						$workQueue->ModifiedBy = BaseActiveController::getClientUser($client)->UserID;
+						$workQueue->ModifiedBy = $modifiedBy;
 						$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
 						if($workQueue->update())
 						{
