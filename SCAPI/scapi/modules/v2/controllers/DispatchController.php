@@ -55,7 +55,8 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 	
-	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1)
+	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null,
+		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
 		try
 		{
@@ -87,7 +88,7 @@ class DispatchController extends Controller
 			}
 			else
 			{
-				$orderBy = ['MapGrid' => SORT_ASC, 'ComplianceEnd' => SORT_ASC];
+				$orderBy = "$sortField $sortOrder";
 				$envelope = 'mapGrids';
 				$assetQuery = AvailableWorkOrderByMapGrid::find();
 				
@@ -801,15 +802,17 @@ class DispatchController extends Controller
 	}
 
 	//helper method gets cge work orders from vWebManagementCGIByMapGridDetail
-	private static function getDispatchWorkOrders($mapGrid = null, $section = null, $inspectionType = null, $billingCode = null, $workOrder = null, $isCge){
+	private static function getDispatchWorkOrders($mapGrid, $section = null, $inspectionType = null, $billingCode = null, $workOrder = null, $isCge){
         //build query to get work orders based on map grid
 		if($isCge){
 			$workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find();
 		} else {
 			$workOrdersQuery = AvailableWorkOrder::find();
 		}
-		if ($mapGrid != null) {
-			$workOrdersQuery->where(['MapGrid' => $mapGrid]);
+		//always filter on map grid
+		$workOrdersQuery->where(['MapGrid' => $mapGrid]);
+		if ($section != null) {
+			$workOrdersQuery->andWhere(['SectionNumber' => $section]);
 		}
 		if ($inspectionType != null) {
 			$workOrdersQuery->andWhere(['InspectionType' => $inspectionType]);

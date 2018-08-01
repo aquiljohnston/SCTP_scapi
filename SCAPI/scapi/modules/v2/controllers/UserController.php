@@ -657,7 +657,7 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($listPerPage = null, $page = null, $filter = null)
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = null)
     {
         try {
 			//get headers
@@ -676,17 +676,26 @@ class UserController extends BaseActiveController
 
 			if(BaseActiveController::isSCCT($client))
 			{
-				//create base of user query
-				// $userQuery = SCUser::find()->where(['UserActiveFlag' => 1]);
-				
 				//get user id from auth token
-				$userID = self::getUserFromToken()->UserID;
-				//get user
-				$user = SCUser::findOne($userID);
+				$user = self::getUserFromToken();
+				
+				//create base query for projects
+				if($user->UserAppRoleType == 'Admin'){
+					$projectQuery = (new Query())->select('ProjUserProjectID')->distinct()->from('Project_User_Tb');
+				} else {
+					$projectQuery = (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')
+						->where(['ProjUserUserID' => $user->UserID]);
+				}
+				
+				//filter by selected project
+				if($projectID != null)
+					$projectQuery->andWhere(['ProjUserProjectID' => $projectID]);
+				
 				//create base of user query
 				$userQuery = SCUser::find()->select('*')
-						->where(['in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')->where(['in','ProjUserProjectID', (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')->where(['ProjUserUserID' => $user->UserID])])])
-						->andWhere(['[UserTb].UserActiveFlag' => 1]);
+					->where(['in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')
+						->where(['in','ProjUserProjectID', $projectQuery])])
+					->andWhere(['[UserTb].UserActiveFlag' => 1]);
 			}
 			else
 			{
