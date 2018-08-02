@@ -15,23 +15,17 @@ class CTUser extends User
 	
 	public function clearTokenByToken($token)
 	{
-		Auth::setClient(BaseActiveController::urlPrefix());
-		$session = Yii::$app->getSession();
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		//$session = Yii::$app->getSession();
 		$auth = Auth::find()
 			->where(['AuthToken' => $token])
 			->one();
-		if ($auth !== null)
-		{
-			$auth->delete();
-		}
+		$auth->delete();
 	}
 	 
 	public function logout($destroySession = true, $token = null)
 	{
-		if($token != null)
-		{
-			$this->clearTokenByToken($token);
-		}
+		$this->clearTokenByToken($token);
 		parent::logout();
 	}
 	
