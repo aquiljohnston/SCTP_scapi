@@ -15,23 +15,14 @@ class CTUser extends User
 	
 	public function clearTokenByToken($token)
 	{
-		Auth::setClient(BaseActiveController::urlPrefix());
-		$session = Yii::$app->getSession();
-		$auth = Auth::find()
-			->where(['AuthToken' => $token])
-			->one();
-		if ($auth !== null)
-		{
-			$auth->delete();
-		}
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+		//set token value to empty string
+		Auth::updateAll(['AuthToken' => ''], ['AuthToken' => $token]);
 	}
 	 
 	public function logout($destroySession = true, $token = null)
 	{
-		if($token != null)
-		{
-			$this->clearTokenByToken($token);
-		}
+		$this->clearTokenByToken($token);
 		parent::logout();
 	}
 	
@@ -69,7 +60,7 @@ class CTUser extends User
 			}
 		} else {
 			//TODO move string to constants when version is created
-			throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
+			throw new \yii\web\UnauthorizedHttpException('You are requesting with invalid credentials.');
 		}
 	}
 }
