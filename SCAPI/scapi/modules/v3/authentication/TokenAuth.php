@@ -21,17 +21,13 @@ class TokenAuth extends AuthMethod
         $token = $request->getAuthUser();
 		
 		//check for client header
-		$headers = getAllHeaders();
-		try
-		{
-			$headers['X-Client'];
-		}
-		catch(ErrorException $e)
-		{	
+		try{
+			getAllHeaders()['X-Client'];
+		} catch(ErrorException $e) {	
 			throw new \yii\web\HttpException(400, 'Client Header Not Found.');
 		}
 		
-		if ($token !== null) {
+		if ($token !== null && $token !== '') {
 			Yii::$app->user->checkTimeout($token);
 			try 
 			{
@@ -39,7 +35,7 @@ class TokenAuth extends AuthMethod
 				if ($identity === null) 
 				{
 					//TODO move string to constants when version is created
-					throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
+					throw new \yii\web\UnauthorizedHttpException('You are requesting with invalid credentials.');
 				}
 				return $identity;
 			}
