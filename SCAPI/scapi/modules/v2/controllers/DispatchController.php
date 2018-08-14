@@ -54,7 +54,7 @@ class DispatchController extends Controller
             ];
 		return $behaviors;	
 	}
-	
+
 	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null,
 		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
@@ -598,7 +598,7 @@ class DispatchController extends Controller
 			{
 				$assetCount = count($data['unassignAsset']);
 			}
-			
+			//may want to try and wrap this in a transaction
 			//process unassignMap
 			for($i = 0; $i < $mapCount; $i++)
 			{
@@ -606,7 +606,7 @@ class DispatchController extends Controller
 					$data['unassignMap'][$i]['MapGrid'],
 					null, //section
 					null, //wo id
-					null, //user id
+					(array_key_exists('AssignedUserID', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['AssignedUserID'] : null),
 					(array_key_exists('InspectionType', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['InspectionType'] : null),
 					(array_key_exists('BillingCode', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['BillingCode'] : null)
 				);
@@ -620,7 +620,7 @@ class DispatchController extends Controller
 					$data['unassignSection'][$i]['MapGrid'],
 					$data['unassignSection'][$i]['SectionNumber'],
 					null, //wo id
-					null, //user id
+					(array_key_exists('AssignedUserID', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['AssignedUserID'] : null),
 					(array_key_exists('InspectionType', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['InspectionType'] : null),
 					(array_key_exists('BillingCode', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['BillingCode'] : null)
 				);
@@ -656,6 +656,69 @@ class DispatchController extends Controller
         }
 	}
 	
+	// Select Distinct
+	// UserTb.UserID,
+	// UserTb.UserFirstName + ' ' + UserTb.UserLastName + ' (' + UserTb.UserName + ')' AS UserFullName 
+	// FROM tWorkOrder
+	// RIGHT JOIN tWorkQueue ON tWorkOrder.ID = tWorkQueue.WorkOrderID
+	// RIGHT JOIN UserTb ON tWorkQueue.AssignedUserID = UserTb.UserID
+	// where tWorkOrder.MapGrid = '110-09-5' 
+	// and tWorkOrder.InspectionType = 'LS'
+	// and tWorkOrder.BillingCode = 'LM'
+	// and tWorkQueue.WorkQueueStatus = 100
+	//post route, that accepts a json body of objects containing mapgrid, section, inspection type and billing code and returns the associated users for unassigning
+	public function actionGetAssignedUser()
+	{
+		try{
+			//set db
+			$client = getallheaders()['X-Client'];
+			BaseActiveRecord::setClient($client);
+			//RBAC permissions check
+			PermissionsController::requirePermission('dispatchUnassign', $client);
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'GetAssignedUser', BaseActiveController::getClientUser($client)->UserName, $client);
+			
+			//create response array
+			$responseData['assignedUserMaps'] = [];
+			
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			foreach($data['assignedUserMaps'] as $map){
+				$whereClause = ['tWorkOrder.MapGrid' => $map['MapGrid']];
+				if(array_key_exists('SectionNumber', $map) && $map['SectionNumber'] != null) $whereClause['tWorkOrder.SectionNumber'] = $map['SectionNumber'];
+				if(array_key_exists('InspectionType', $map) && $map['InspectionType'] != null) $whereClause['tWorkOrder.InspectionType'] = $map['InspectionType'];
+				if(array_key_exists('BillingCode', $map) && $map['BillingCode'] != null) $whereClause['tWorkOrder.BillingCode'] = $map['BillingCode'];
+				$whereClause['tWorkQueue.WorkQueueStatus'] = Constants::WORK_QUEUE_ASSIGNED;
+				$user = (new Query())
+					->select(['UserTb.UserID', "UserTb.UserFirstName + ' ' + UserTb.UserLastName + ' (' + UserTb.UserName + ')' AS UserFullName"])
+					->distinct()
+					->from('tWorkOrder')
+					->rightJoin('tWorkQueue', 'tWorkOrder.ID = tWorkQueue.WorkOrderID')
+					->rightJoin('UserTb', 'tWorkQueue.AssignedUserID = UserTb.UserID')
+					->where(['and', $whereClause])
+					->all(BaseActiveRecord::getDb());
+				$map['Users'] = $user;
+				$responseData['assignedUserMaps'][] = $map;
+			}
+			$transaction->commit();
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
+	}
+
 	/*Helper method that gets all work orders associated with given mapGrid/section.
 	**Then checks for existing assigned work queue records and removes any from 
 	**results that already exist. Finally creates new records and returns results.
