@@ -396,7 +396,7 @@ class DispatchController extends Controller
 	}
 	
 	public function actionGetAssigned($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1,
-		$sortField = 'ComplianceEnd', $sortOrder = 'ASC'))
+		$sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
 		try
 		{
