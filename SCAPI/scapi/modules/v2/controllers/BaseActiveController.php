@@ -223,9 +223,37 @@ class BaseActiveController extends ActiveController
 	}
 	
 	//inserts a new error record into tTabletJSONDataInsertError table for given $client
-	public static function archiveErrorJson($data, $error, $client, $data2 = null, $data3 = null, $data4 = null, $data5 = null)
+	public static function archiveErrorJson($data, $error, $client, $data2 = null, $data3 = null, $data4 = null)
 	{
 		TabletJSONDataInsertError::setClient($client);
+		//fifth data slot reserved to guarantee space for backtrace string.
+		$data5 = null;
+		
+		//get back trace data
+		$backtrace = debug_backtrace();
+		$backtraceString = '';
+		if(count($backtrace) > 0){
+			$backtraceFirstIndex = $backtrace[0];
+			$backtraceFile = array_key_exists('file', $backtraceFirstIndex) ? $backtraceFirstIndex['file'] . ' ' : '';
+			$backtraceFileArray = explode('\\', $backtraceFile);
+			$backtraceString .= end($backtraceFileArray);
+			$backtraceString .= array_key_exists('line', $backtraceFirstIndex) ? $backtraceFirstIndex['line'] . ' ' : '';
+			
+			//put string in first empty data field, default to 5 it no others are avalaible
+			switch(null){
+				case $data2:
+					$data2 = $backtraceString;
+					break;
+				case $data3:
+					$data3 = $backtraceString;
+					break;
+				case $data4:
+					$data4 = $backtraceString;
+					break;
+				default:
+					$data5 = $backtraceString;
+			}
+		}
 		
 		$archiveError = new TabletJSONDataInsertError;
 		$archiveError->InsertedData = $data;

@@ -14,6 +14,7 @@ use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Breadcrumb;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
+use yii\web\UnauthorizedHttpException;
 
 class BreadcrumbController extends Controller 
 {
@@ -122,13 +123,11 @@ class BreadcrumbController extends Controller
 			//return data in response
 			$response->data = $responseArray;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		} catch(ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+		} catch(UnauthorizedHttpException $e){
+			throw new UnauthorizedHttpException();
+        } catch(\Exception $e) {
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }

@@ -35,7 +35,7 @@ class TokenAuth extends AuthMethod
 					return $identity;
 				} else { 
 					//TODO move string to constants when version is created
-					throw new \yii\web\HttpException(401, 'You are requesting with invalid credentials.');
+					throw new \yii\web\UnauthorizedHttpException('You are requesting with invalid credentials.');
 				}
 				
 			} catch (\Exception $e) {
