@@ -7,7 +7,7 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
-		 $this->registerComponents();
+		$this->registerComponents();
 		$this->modules = [
 			'scana' => [
 				'class' => 'app\modules\v3\modules\scana\Module',
@@ -24,7 +24,7 @@ class Module extends \yii\base\Module
 				'class' => 'app\modules\v3\authentication\CTUser',
 				'identityClass' => 'app\modules\v3\models\SCUser',
 				'enableAutoLogin' => false,
-				'authTimeout' => 28800,
+				'authTimeout' => 36000,
 				'loginUrl' => null
 			]
         ]);

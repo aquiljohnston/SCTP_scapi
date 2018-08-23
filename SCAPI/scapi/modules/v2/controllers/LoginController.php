@@ -7,6 +7,7 @@ use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
 use app\modules\v2\models\Project;
 use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\authentication\CTUser;
 use app\modules\v2\constants\Constants;
 use yii\data\ActiveDataProvider;
@@ -120,39 +121,23 @@ class LoginController extends Controller
 	// User logout
 	public function actionUserLogout()
 	{
-		try
-		{
+		try{
 			//get request headers
 			$headers = getallheaders();
-			//set db target
-			SCUser::setClient(BaseActiveController::urlPrefix());
-			//create response object
-			$response = Yii::$app->response;
+			$client = $headers['X-Client'];
+			$token = substr(base64_decode(explode(" ", $headers['Authorization'])[1]), 0, -1);
+			
+			//set target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			//archive request
-			//check if header contains xclient
-			$client = (array_key_exists('X-Client', $headers) ? $headers['X-Client'] : null);
-			BaseActiveController::archiveWebJson(
-				null,
-				'Logout',
-				($client !== null ? BaseActiveController::getClientUser($client)->UserName : null),
-				$client);
+			BaseActiveController::archiveWebJson(null, 'Logout', BaseActiveController::getUserFromToken($token)->UserName, $client);
 			
-			if(array_key_exists('Authorization', $headers))
-			{
-				//pull token from Authorization header, base 64 decode, and parse.
-				$token = substr(base64_decode(explode(" ", $headers['Authorization'])[1]), 0, -1);
-			}
-			else
-			{
-				//return unauthorized if token is not available 
-				$response->statusCode = 401;
-				$response->data = 'You are requesting with invalid credentials.';
-				return $response;
-			}
-
 			//call CTUser\logout()
 			Yii::$app->user->logout($destroySession = true, $token);
+			
+			//create response object
+			$response = Yii::$app->response;
 			$response->data = 'Logout Successful!';
 			return $response;
 		} catch(UnauthorizedHttpException $e) {

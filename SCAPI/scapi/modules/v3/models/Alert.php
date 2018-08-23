@@ -15,6 +15,7 @@ use Yii;
  * @property string $Severity
  * @property string $SvrDTLT
  * @property string $svrDTLTOffset
+ * @property string $Message
  */
 class Alert extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -32,8 +33,7 @@ class Alert extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['ID'], 'integer'],
-            [['Title', 'Username', 'ProjectID', 'Severity'], 'string'],
+            [['Title', 'Username', 'ProjectID', 'Severity', 'Message'], 'string'],
             [['CreatedDate', 'SvrDTLT', 'svrDTLTOffset'], 'safe'],
         ];
     }
@@ -52,6 +52,7 @@ class Alert extends \app\modules\v3\models\BaseActiveRecord
             'Severity' => 'Severity',
             'SvrDTLT' => 'Svr Dtlt',
             'svrDTLTOffset' => 'Svr Dtltoffset',
+            'Message' => 'Message',
         ];
     }
 }
