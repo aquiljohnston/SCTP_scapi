@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "BreadcrumbTb".
  *
- * @property integer $BreadcrumbID
+ * @property int $BreadcrumbID
  * @property string $BreadcrumbUID
  * @property string $BreadcrumbActivityUID
  * @property string $BreadcrumbSourceID
@@ -19,15 +19,14 @@ use Yii;
  * @property string $BreadcrumbGPSAccuracy
  * @property string $BreadcrumbGPSType
  * @property string $BreadcrumbGPSSentence
- * @property string $BreadcrumbGPSTime
  * @property string $BreadcrumbShape
  * @property string $BreadcrumbWorkQueueFilter
  * @property string $BreadcrumbActivityType
- * @property integer $BreadcrumbTrackingGroupID
- * @property integer $BreadcrumbSatellites
+ * @property int $BreadcrumbTrackingGroupID
+ * @property int $BreadcrumbSatellites
  * @property double $BreadcrumbAltitude
- * @property integer $BreadcrumbMapPlat
- * @property integer $BreadcrumbArchiveFlag
+ * @property string $BreadcrumbMapPlat
+ * @property int $BreadcrumbArchiveFlag
  * @property string $BreadcrumbComments
  * @property string $BreadcrumbCreatedUserUID
  * @property string $BreadcrumbSrcDTLT
@@ -35,11 +34,16 @@ use Yii;
  * @property string $BreadcrumbSrvDTLTOffset
  * @property string $BreadcrumbCreatedDate
  * @property double $BreadcrumbBatteryLevel
+ * @property string $BreadcrumbGPSTime
+ * @property int $IsStationary
+ * @property int $IsImmobile
+ * @property string $PaceOfTravel
+ * @property int $IsDistanceBased
  */
-class Breadcrumb extends BaseActiveRecord
+class Breadcrumb extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -47,21 +51,20 @@ class Breadcrumb extends BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType',
-			'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID', 'BreadcrumbMapPlat'], 'string'],
-            [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel'], 'number'],
-            [['BreadcrumbGPSTime', 'BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate'], 'safe'],
-            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag'], 'integer']
+            [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType', 'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbMapPlat', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID'], 'string'],
+            [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel', 'PaceOfTravel'], 'number'],
+            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsImmobile', 'IsDistanceBased'], 'integer'],
+            [['BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate', 'BreadcrumbGPSTime'], 'safe'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -78,7 +81,6 @@ class Breadcrumb extends BaseActiveRecord
             'BreadcrumbGPSAccuracy' => 'Breadcrumb Gpsaccuracy',
             'BreadcrumbGPSType' => 'Breadcrumb Gpstype',
             'BreadcrumbGPSSentence' => 'Breadcrumb Gpssentence',
-            'BreadcrumbGPSTime' => 'Breadcrumb Gpstime',
             'BreadcrumbShape' => 'Breadcrumb Shape',
             'BreadcrumbWorkQueueFilter' => 'Breadcrumb Work Queue Filter',
             'BreadcrumbActivityType' => 'Breadcrumb Activity Type',
@@ -94,6 +96,11 @@ class Breadcrumb extends BaseActiveRecord
             'BreadcrumbSrvDTLTOffset' => 'Breadcrumb Srv Dtltoffset',
             'BreadcrumbCreatedDate' => 'Breadcrumb Created Date',
             'BreadcrumbBatteryLevel' => 'Breadcrumb Battery Level',
+            'BreadcrumbGPSTime' => 'Breadcrumb Gpstime',
+            'IsStationary' => 'Is Stationary',
+            'IsImmobile' => 'Is Immobile',
+            'PaceOfTravel' => 'Pace Of Travel',
+            'IsDistanceBased' => 'Is Distance Based',
         ];
     }
 }
