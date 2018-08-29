@@ -5,7 +5,7 @@ namespace app\modules\v2\models;
 use Yii;
 
 /**
- * This is the model class for table "tTaskOut2".
+ * This is the model class for table "tTaskOut".
  *
  * @property int $ID
  * @property int $ActivityID
@@ -68,7 +68,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'tTaskOut2';
+        return 'tTaskOut';
     }
 
     /**
