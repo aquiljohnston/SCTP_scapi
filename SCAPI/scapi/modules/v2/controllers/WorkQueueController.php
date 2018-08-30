@@ -148,7 +148,7 @@ class WorkQueueController extends Controller
 						}
 					}
 					else{
-						$successFlag = 1;
+						$successFlag = 0;
 					}
 				} catch(\Exception $e) {
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i], json_encode($workQueue));
