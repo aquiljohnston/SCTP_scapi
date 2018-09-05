@@ -396,7 +396,6 @@ class TimeCardController extends BaseActiveController
                     ->one();
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
-                $projectsSize = count($project);
             }
 
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
