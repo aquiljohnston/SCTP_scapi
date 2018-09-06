@@ -36,7 +36,6 @@ use Yii;
  * @property double $BreadcrumbBatteryLevel
  * @property string $BreadcrumbGPSTime
  * @property int $IsStationary
- * @property int $IsImmobile
  * @property string $PaceOfTravel
  * @property int $IsDistanceBased
  */
@@ -58,7 +57,7 @@ class Breadcrumb extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType', 'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbMapPlat', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID'], 'string'],
             [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel', 'PaceOfTravel'], 'number'],
-            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsImmobile', 'IsDistanceBased'], 'integer'],
+            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsDistanceBased'], 'integer'],
             [['BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate', 'BreadcrumbGPSTime'], 'safe'],
         ];
     }
@@ -98,7 +97,6 @@ class Breadcrumb extends \app\modules\v2\models\BaseActiveRecord
             'BreadcrumbBatteryLevel' => 'Breadcrumb Battery Level',
             'BreadcrumbGPSTime' => 'Breadcrumb Gpstime',
             'IsStationary' => 'Is Stationary',
-            'IsImmobile' => 'Is Immobile',
             'PaceOfTravel' => 'Pace Of Travel',
             'IsDistanceBased' => 'Is Distance Based',
         ];
