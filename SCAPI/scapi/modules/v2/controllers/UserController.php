@@ -736,12 +736,10 @@ class UserController extends BaseActiveController
 			//populate response array
             $responseArray['assets'] = $usersArr;
             
-            if (!empty($responseArray['assets'])) {
-                $response = Yii::$app->response;
-                $response->format = Response::FORMAT_JSON;
-                $response->setStatusCode(200);
-                $response->data = $responseArray;
-            }
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $responseArray;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
