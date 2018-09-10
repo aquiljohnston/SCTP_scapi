@@ -60,7 +60,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
             [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
             [['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval', 'DistanceThresholdInMeters', 'TimeThreshold', 'StationaryThresholdInMeters'], 'number'],
-            [['ProjectClientID'], 'exist', 'skipOnError' => true, 'targetClass' => ClientTb::className(), 'targetAttribute' => ['ProjectClientID' => 'ClientID']],
+            [['ProjectClientID'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['ProjectClientID' => 'ClientID']],
         ];
     }
 
@@ -131,7 +131,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
      */
     public function getProjectClient()
     {
-        return $this->hasOne(ClientTb::className(), ['ClientID' => 'ProjectClientID']);
+        return $this->hasOne(Client::className(), ['ClientID' => 'ProjectClientID']);
     }
 	
 	/**
