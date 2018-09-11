@@ -7,13 +7,13 @@ use Yii;
 /**
  * This is the model class for table "ProjectTb".
  *
- * @property integer $ProjectID
+ * @property int $ProjectID
  * @property string $ProjectName
  * @property string $ProjectDescription
  * @property string $ProjectNotes
  * @property string $ProjectType
- * @property integer $ProjectStatus
- * @property integer $ProjectClientID
+ * @property int $ProjectStatus
+ * @property int $ProjectClientID
  * @property string $ProjectState
  * @property string $ProjectUrlPrefix
  * @property string $ProjectStartDate
@@ -24,13 +24,17 @@ use Yii;
  * @property string $ProjectModifiedBy
  * @property double $ProjectActivityGPSInterval
  * @property double $ProjectSurveyGPSInterval
- * @property integer $ProjectSurveyGPSMinDistance
+ * @property int $ProjectSurveyGPSMinDistance
  * @property string $ProjectMinimumAppVersion
+ * @property string $ProjectLandingPage
+ * @property string $ProjectQBProjectID
+ * @property string $ProjectReferenceID
  * @property string $ProjectRefreshDateTime
- * @property string $ProjectLandingPage 
- * @property integer $ProjectQBProjectID 
- * @property integer $ProjectReferenceID
  * @property string $ProjectProjectTypeReferenceID
+ * @property string $ProjectClass
+ * @property double $DistanceThresholdInMeters
+ * @property double $TimeThreshold
+ * @property double $StationaryThresholdInMeters
  *
  * @property ProjectUserTb[] $projectUserTbs
  * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
@@ -39,7 +43,7 @@ use Yii;
 class Project extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -47,22 +51,21 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectMinimumAppVersion',
-			'ProjectLandingPage', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectProjectTypeReferenceID'], 'string'],
-            [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance', 'ProjectQBProjectID', 'ProjectReferenceID'], 'integer'],
+            [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectMinimumAppVersion', 'ProjectLandingPage', 'ProjectQBProjectID', 'ProjectReferenceID', 'ProjectProjectTypeReferenceID', 'ProjectClass'], 'string'],
+            [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
-			[['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval'], 'number'],
-			[['ProjectUrlPrefix'], 'unique']
+            [['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval', 'DistanceThresholdInMeters', 'TimeThreshold', 'StationaryThresholdInMeters'], 'number'],
+            [['ProjectClientID'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['ProjectClientID' => 'ClientID']],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -73,24 +76,28 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
             'ProjectNotes' => 'Project Notes',
             'ProjectType' => 'Project Type',
             'ProjectStatus' => 'Project Status',
-			'ProjectUrlPrefix' => 'Project Url Prefix',
             'ProjectClientID' => 'Project Client ID',
-			'ProjectState' => 'Project State',
+            'ProjectState' => 'Project State',
+            'ProjectUrlPrefix' => 'Project Url Prefix',
             'ProjectStartDate' => 'Project Start Date',
             'ProjectEndDate' => 'Project End Date',
             'ProjectCreateDate' => 'Project Create Date',
             'ProjectCreatedBy' => 'Project Created By',
             'ProjectModifiedDate' => 'Project Modified Date',
             'ProjectModifiedBy' => 'Project Modified By',
-			'ProjectActivityGPSInterval' => 'Project Activity GPS Interval',
-			'ProjectSurveyGPSInterval' => 'Project Survey GPS Interval',
-			'ProjectSurveyGPSMinDistance' => 'Project Survey GPS Min Distance',
-			'ProjectMinimumAppVersion' => 'Project Minimum App Version',
-			'ProjectLandingPage' => 'Project Landing Page',
-			'ProjectQBProjectID' => 'Project QB Project ID',
-			'ProjectReferenceID' => 'Project Reference ID',
-			'ProjectRefreshDateTime' => 'Project Refresh Date Time',
-            'ProjectProjectTypeReferenceID' => 'Project Project Type Reference ID'
+            'ProjectActivityGPSInterval' => 'Project Activity Gpsinterval',
+            'ProjectSurveyGPSInterval' => 'Project Survey Gpsinterval',
+            'ProjectSurveyGPSMinDistance' => 'Project Survey Gpsmin Distance',
+            'ProjectMinimumAppVersion' => 'Project Minimum App Version',
+            'ProjectLandingPage' => 'Project Landing Page',
+            'ProjectQBProjectID' => 'Project Qbproject ID',
+            'ProjectReferenceID' => 'Project Reference ID',
+            'ProjectRefreshDateTime' => 'Project Refresh Date Time',
+            'ProjectProjectTypeReferenceID' => 'Project Project Type Reference ID',
+            'ProjectClass' => 'Project Class',
+            'DistanceThresholdInMeters' => 'Distance Threshold In Meters',
+            'TimeThreshold' => 'Time Threshold',
+            'StationaryThresholdInMeters' => 'Stationary Threshold In Meters',
         ];
     }
 
@@ -124,7 +131,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
      */
     public function getProjectClient()
     {
-        return $this->hasOne(ClientTb::className(), ['ClientID' => 'ProjectClientID']);
+        return $this->hasOne(Client::className(), ['ClientID' => 'ProjectClientID']);
     }
 	
 	/**
