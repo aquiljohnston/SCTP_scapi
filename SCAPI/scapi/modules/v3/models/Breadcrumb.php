@@ -41,6 +41,7 @@ use Yii;
  * @property string $DistanceTraveled
  * @property double $OriginBreadcrumbLatitude
  * @property double $OriginBreadcrumbLongitude
+ * @property string $SpeedAttribute
  */
 class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -58,7 +59,7 @@ class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType', 'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbMapPlat', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID'], 'string'],
+            [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType', 'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbMapPlat', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID', 'SpeedAttribute'], 'string'],
             [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel', 'PaceOfTravel', 'DistanceTraveled', 'OriginBreadcrumbLatitude', 'OriginBreadcrumbLongitude'], 'number'],
             [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsDistanceBased'], 'integer'],
             [['BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate', 'BreadcrumbGPSTime'], 'safe'],
@@ -105,6 +106,7 @@ class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
             'DistanceTraveled' => 'Distance Traveled',
             'OriginBreadcrumbLatitude' => 'Origin Breadcrumb Latitude',
             'OriginBreadcrumbLongitude' => 'Origin Breadcrumb Longitude',
+            'SpeedAttribute' => 'Speed Attribute',
         ];
     }
 }
