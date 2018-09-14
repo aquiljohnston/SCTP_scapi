@@ -35,6 +35,8 @@ use Yii;
  * @property double $DistanceThresholdInMeters
  * @property double $TimeThreshold
  * @property double $StationaryThresholdInMeters
+ * @property int $BreakTimeValue
+ * @property int $LunchTimeValue
  *
  * @property ProjectUserTb[] $projectUserTbs
  * @property ProjectOQRequirementsTb[] $projectOQRequirementsTbs
@@ -57,7 +59,7 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ProjectName', 'ProjectDescription', 'ProjectNotes', 'ProjectType', 'ProjectState', 'ProjectUrlPrefix', 'ProjectCreatedBy', 'ProjectModifiedBy', 'ProjectMinimumAppVersion', 'ProjectLandingPage', 'ProjectQBProjectID', 'ProjectReferenceID', 'ProjectProjectTypeReferenceID', 'ProjectClass'], 'string'],
-            [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance'], 'integer'],
+            [['ProjectStatus', 'ProjectClientID', 'ProjectSurveyGPSMinDistance', 'BreakTimeValue', 'LunchTimeValue'], 'integer'],
             [['ProjectStartDate', 'ProjectEndDate', 'ProjectCreateDate', 'ProjectModifiedDate', 'ProjectRefreshDateTime'], 'safe'],
             [['ProjectActivityGPSInterval', 'ProjectSurveyGPSInterval', 'DistanceThresholdInMeters', 'TimeThreshold', 'StationaryThresholdInMeters'], 'number'],
             [['ProjectClientID'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['ProjectClientID' => 'ClientID']],
@@ -98,6 +100,8 @@ class Project extends \app\modules\v2\models\BaseActiveRecord
             'DistanceThresholdInMeters' => 'Distance Threshold In Meters',
             'TimeThreshold' => 'Time Threshold',
             'StationaryThresholdInMeters' => 'Stationary Threshold In Meters',
+            'BreakTimeValue' => 'Break Time Value',
+            'LunchTimeValue' => 'Lunch Time Value',
         ];
     }
 
