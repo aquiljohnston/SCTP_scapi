@@ -625,6 +625,7 @@ class UserController extends BaseActiveController
 				$projectData['ProjectActivityGPSInterval'] = $projectModel->ProjectActivityGPSInterval;
 				$projectData['ProjectSurveyGPSInterval'] = $projectModel->ProjectSurveyGPSInterval;
 				$projectData['ProjectSurveyGPSMinDistance'] = $projectModel->ProjectSurveyGPSMinDistance;
+				$projectData['ProjectType'] = $projectModel->ProjectType;
 				$projectData['ProjectTask'] = $projectTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
@@ -721,23 +722,25 @@ class UserController extends BaseActiveController
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
-				$usersArr = $paginationResponse['Query']->all();
+				$usersArr = $paginationResponse['Query']
+					->orderBy('UserLastName, UserFirstName')
+					->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
 			}
 			else
 			{
 				//if no pagination params were sent use base query
-				$usersArr = $userQuery->all();
+				$usersArr = $userQuery
+					->orderBy('UserLastName, UserFirstName')
+					->all();
 			}
 			//populate response array
             $responseArray['assets'] = $usersArr;
             
-            if (!empty($responseArray['assets'])) {
-                $response = Yii::$app->response;
-                $response->format = Response::FORMAT_JSON;
-                $response->setStatusCode(200);
-                $response->data = $responseArray;
-            }
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $responseArray;
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
