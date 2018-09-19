@@ -71,6 +71,8 @@ class TaskOutController extends Controller
 							$taskOutDateTime = $newTaskOut->SrcDTLT;
 							if(BaseActiveController::isSCCT($client))
 							{
+								$taskOutID = $newTaskOut->ID;
+								$successFlag = 1;
 								$comment = 'Task Out SP not available in base SCCT.';
 							}
 							else
