@@ -88,10 +88,11 @@ class BreadcrumbController extends Controller
 					
 					//point at ct db
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-					if ($clientBreadcrumb->save()) {
+					if ($breadcrumb->save()) {
 						//point at client db
 						BaseActiveRecord::setClient($headers['X-Client']);
-						if ($breadcrumb->save()) {
+						//or should be true after isSCCT check if client is SCCT and ignore the second half and avoid duplicate saves
+						if (BaseActiveController::isSCCT($headers['X-Client']) || $clientBreadcrumb->save()) {
 							$response->setStatusCode(201);
 							$successFlag = 1;
 						} else {

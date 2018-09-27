@@ -125,6 +125,9 @@ class ActivityController extends BaseActiveController
 				$data = json_decode(utf8_decode($post), true);
 			}
 			
+			//Archive complete json array
+			BaseActiveController::archiveJson(json_encode($data), 'ActivityJSON', $createdBy, $headers['X-Client']);
+			
 			//create and format response json
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
