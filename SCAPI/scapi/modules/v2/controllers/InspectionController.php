@@ -512,6 +512,8 @@ class InspectionController extends Controller
 							}
 						//else if is not a CGE, will attempt to complete work queue, if that returns success handle work order
 						} elseif(self::updateWorkQueue($inspectionData)) {
+							$workQueueSuccessFlag = 1;
+							$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
 							if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
 						}
 					//if is CGE, doing nothing regardless of completed state of other work queues will be handled by task out SP
