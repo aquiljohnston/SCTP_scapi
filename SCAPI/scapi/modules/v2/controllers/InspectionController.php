@@ -336,19 +336,22 @@ class InspectionController extends Controller
 			$workQueue = WorkQueue::find()
 				->where(['ID' => $inspectionData['WorkQueueID']])
 				->one();
-			if($workQueue != null && $workQueue->WorkQueueStatus != Constants::WORK_QUEUE_COMPLETED)
+			if($workQueue != null)
 			{
-				$workQueue->WorkQueueStatus = Constants::WORK_QUEUE_COMPLETED;
-				$workQueue->ModifiedBy = $inspectionData['CreatedBy'];
-				$workQueue->ModifiedDate =  $inspectionData['CreatedDate'];
-				if($workQueue->update())
-				{
-					return true;
+				if($workQueue->WorkQueueStatus != Constants::WORK_QUEUE_COMPLETED){
+					$workQueue->WorkQueueStatus = Constants::WORK_QUEUE_COMPLETED;
+					$workQueue->ModifiedBy = $inspectionData['CreatedBy'];
+					$workQueue->ModifiedDate =  $inspectionData['CreatedDate'];
+					if($workQueue->update())
+					{
+						return true;
+					}
+					else
+					{
+						throw BaseActiveController::modelValidationException($workQueue);
+					}
 				}
-				else
-				{
-					throw BaseActiveController::modelValidationException($workQueue);
-				}
+				return true;
 			}	
 		}
 		catch(\Exception $e)
@@ -408,44 +411,40 @@ class InspectionController extends Controller
 	private static function updateWorkOrder($inspectionData, $workOrder, $updateEventIndicator = false, $updateInspectionAttemptCounter = false, $setComplete = false)
 	{
 		try{
-			$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
-			$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
-			if($updateEventIndicator)
-			{
-				//have to check if it is set to 1 previously because value default on db is NULL
-				if($workOrder->EventIndicator !== Constants::WORK_ORDER_COMPLETED_WITH_EVENT)
-				{
-					if(array_key_exists('Event', $inspectionData) && count($inspectionData['Event']) > 0)
-					{
-						$workOrder->EventIndicator = Constants::WORK_ORDER_COMPLETED_WITH_EVENT;
-					}
-					else
-					{
-						$workOrder->EventIndicator = Constants::WORK_ORDER_COMPLETED_NO_EVENT;
+			//will not update it work order is already complete
+			if($workOrder->CompletedFlag !== 1){
+				$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
+				$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
+				if($updateEventIndicator){
+					//have to check if it is set to 1 previously because value default on db is NULL
+					if($workOrder->EventIndicator !== Constants::WORK_ORDER_COMPLETED_WITH_EVENT && 
+						$workOrder->EventIndicator !== Constants::WORK_ORDER_ADHOC){
+						if(array_key_exists('IsAdHocFlag', $inspectionData) && $inspectionData['IsAdHocFlag'] == 1){
+							$workOrder->EventIndicator = Constants::WORK_ORDER_ADHOC;
+						}elseif(array_key_exists('Event', $inspectionData) && count($inspectionData['Event']) > 0){
+							$workOrder->EventIndicator = Constants::WORK_ORDER_COMPLETED_WITH_EVENT;
+						}else {
+							$workOrder->EventIndicator = Constants::WORK_ORDER_COMPLETED_NO_EVENT;
+						}
 					}
 				}
-			}
-			if($updateInspectionAttemptCounter)
-			{
-				$workOrder->InspectionAttemptCounter =  $workOrder->InspectionAttemptCounter + 1;
-			}
-			if($setComplete)
-			{
-				$workOrder->CompletedDate = $inspectionData['CreatedDate'];
-				$workOrder->CompletedFlag = 1;
-			}
-			//update
-			if($workOrder->update())
-			{
+				if($updateInspectionAttemptCounter){
+					$workOrder->InspectionAttemptCounter =  $workOrder->InspectionAttemptCounter + 1;
+				}
+				if($setComplete){
+					$workOrder->CompletedDate = $inspectionData['CreatedDate'];
+					$workOrder->CompletedFlag = 1;
+				}
+				//update, will not update if work order has already been completed.
+				if($workOrder->update()){
+					return true;
+				}else{
+					throw BaseActiveController::modelValidationException($workOrder);
+				}
+			}else{ 
 				return true;
 			}
-			else
-			{
-				throw BaseActiveController::modelValidationException($workOrder);
-			}
-		}
-		catch(\Exception $e)
-		{
+		} catch(\Exception $e) {
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 		}
 		return false;
@@ -453,8 +452,7 @@ class InspectionController extends Controller
 	
 	private static function completeWork($inspectionData)
 	{
-		try
-		{
+		try{
 			//create response format
 			$responseData = [];
 			$workQueueStatus = Constants::WORK_QUEUE_IN_PROGRESS;
@@ -462,101 +460,69 @@ class InspectionController extends Controller
 			$workOrderID = null;
 			$workOrderSuccessFlag = 0;
 			//try catch to log individual errors
-			try
-			{
+			try{
 				//get workOrder by work queue id
 				$workOrder = self::getWorkOrderByWorkQueue($inspectionData['WorkQueueID']);
-				// check if work order was found and not completed yet
-				if($workOrder !== null && $workOrder->CompletedFlag != 1)
-				{
-					//get all work queues for work order
-					$workQueueArray = WorkQueue::find()
-						->where(['WorkOrderID' => $workOrder->ID])
-						->all();
+				// check if work order was found
+				if($workOrder !== null){
 					//set work order id for response
 					$workOrderID = $workOrder->ID;
-					if(count($workQueueArray) > 1) {
-						// check workqueue statuses
-						if($inspectionData['IsCGEFlag'] == 0 && !self::hasCompletedWorkQueue($workQueueArray)) {
-							// close work queue
-							if(self::updateWorkQueue($inspectionData))
-							{
-								$workQueueSuccessFlag = 1;
-								$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
-								if($workOrder->LocationType != 'Pipeline'){
-									if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
-								}else{
-									// set event indicator
-									if(self::updateWorkOrder($inspectionData, $workOrder, true)) $workOrderSuccessFlag = 1;
-								}
-							}
-						} else if($inspectionData['IsCGEFlag'] == 0 && self::hasCompletedWorkQueue($workQueueArray)) {
-							// close work queue 
-							if(self::updateWorkQueue($inspectionData))
-							{
-								$workQueueSuccessFlag = 1;
-								$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
-								//if attempt counter is 1 can override previous CGE
-								if($workOrder->InspectionAttemptCounter === 1)
-								{
-									// set event indicator, increment work order attempt counter ,close work order
-									if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
-								}
-								//if attempt counter is 0 cannot override previous CGE
-								elseif($workOrder->InspectionAttemptCounter === 0)
-								{
-									if($workOrder->EventIndicator === 2)
-									{
-										// increment work order attempt counter
-										//if(self::updateWorkOrder($inspectionData, $workOrder, false, true)) $workOrderSuccessFlag = 1;
-										$workOrderSuccessFlag = 1;
-									} else {
-										// set event indicator, increment work order attempt counter, close work order
+					//if is not a CGE, will attempt to complete work queue if that returns success handle work order
+					if($inspectionData['IsCGEFlag'] !== 1){
+						//get all work queues for work order
+						$workQueueArray = WorkQueue::find()
+							->where(['WorkOrderID' => $workOrder->ID])
+							->all();
+						if(count($workQueueArray) > 1) {
+							// check workqueue statuses
+							if(!self::hasCompletedWorkQueue($workQueueArray)){
+								// close work queue
+								if(self::updateWorkQueue($inspectionData)){
+									$workQueueSuccessFlag = 1;
+									$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
+									if($workOrder->LocationType != 'Pipeline'){
 										if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
+									}else{
+										// set event indicator
+										if(self::updateWorkOrder($inspectionData, $workOrder, true)) $workOrderSuccessFlag = 1;
+									}
+								}
+							}elseif(self::hasCompletedWorkQueue($workQueueArray)){
+								// close work queue 
+								if(self::updateWorkQueue($inspectionData)){
+									$workQueueSuccessFlag = 1;
+									$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
+									//if attempt counter is 1 can override previous CGE
+									if($workOrder->InspectionAttemptCounter === 1){
+										// set event indicator, increment work order attempt counter ,close work order
+										if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
+									}
+									//if attempt counter is 0 cannot override previous CGE
+									elseif($workOrder->InspectionAttemptCounter === 0){
+										if($workOrder->EventIndicator === 2){
+											// increment work order attempt counter
+											//if(self::updateWorkOrder($inspectionData, $workOrder, false, true)) $workOrderSuccessFlag = 1;
+											$workOrderSuccessFlag = 1;
+										}else{
+											// set event indicator, increment work order attempt counter, close work order
+											if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
+										}
 									}
 								}
 							}
-						} else if($inspectionData['IsCGEFlag'] == 1) {
-							//if is CGE doing nothing regardless of completed state of other work queues will be handled by task out SP
-							Yii::trace("I'm doing nothing because the inspection is a CGE!!!");
+						//else if is not a CGE, will attempt to complete work queue, if that returns success handle work order
+						} elseif(self::updateWorkQueue($inspectionData)) {
+							$workQueueSuccessFlag = 1;
+							$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
+							if(self::updateWorkOrder($inspectionData, $workOrder, true, true, true)) $workOrderSuccessFlag = 1;
 						}
-					//else if if is not a CGE, will attempt to complete work queue if that returns success handle work order
-					} elseif($inspectionData['IsCGEFlag'] !== 1 && self::updateWorkQueue($inspectionData)) {
-						$workQueueSuccessFlag = 1;
-						$workQueueStatus = Constants::WORK_QUEUE_COMPLETED;
-						$eventIndicator = 0;
-						if(array_key_exists('IsAdHocFlag', $inspectionData) && $inspectionData['IsAdHocFlag'] == 1)
-						{
-							$eventIndicator = 3;
-						}
-						elseif(array_key_exists('Event', $inspectionData) && count($inspectionData['Event']) > 0)
-						{
-							$eventIndicator = 1;
-						}
-						//assign new data
-						$workOrder->EventIndicator = $eventIndicator;
-						$workOrder->CompletedFlag = 1;
-						$workOrder->CompletedDate = $inspectionData['CreatedDate'];
-						$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
-						$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
-						$workOrder->InspectionAttemptCounter =  $workOrder->InspectionAttemptCounter + 1;
-						//update
-						if($workOrder->update())
-						{
-							$workOrderSuccessFlag = 1;
-						}
-						else
-						{
-							throw BaseActiveController::modelValidationException($workOrder);
-						}
-					}elseif($inspectionData['IsCGEFlag'] == 1){
+					//if is CGE, doing nothing regardless of completed state of other work queues will be handled by task out SP
+					}else{
 						$workQueueSuccessFlag = 1;
 						$workOrderSuccessFlag = 1;
 					}
 				}
-			}
-			catch(\Exception $e)
-			{
+			}catch(\Exception $e){
 				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $inspectionData);//update this inserted data value
 			}
 			$responseData = [
@@ -567,13 +533,9 @@ class InspectionController extends Controller
 										'SuccessFlag' => $workOrderSuccessFlag]
 			];
 			return $responseData;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
         }
 	}
