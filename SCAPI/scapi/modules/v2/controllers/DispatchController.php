@@ -903,7 +903,7 @@ class DispatchController extends Controller
 	
 	
 	//route to get records for the purpose of Andre's dual dispatch test.
-	public function actionGetDualDispatch()
+	public function actionGetDualDispatch($locType)
 	{
 		try
 		{
@@ -917,10 +917,10 @@ class DispatchController extends Controller
 				->limit(8)
 				->select(['ID as WorkOrderID', 'tWorkOrder.MapGrid', 'tWorkOrder.SectionNumber'])
 				->innerJoin('vAvailableWorkOrder', 'tWorkOrder.ID = vAvailableWorkOrder.WorkOrderID')
-				->where(['tWorkOrder.LocationType' => 'Pipeline',
+				->where(['tWorkOrder.LocationType' => $locType,
 					'tWorkOrder.CompletedFlag' => 0,
 					'tWorkOrder.InspectionAttemptCounter' => 0,
-					'tWorkOrder.EventIndicator' => 0])
+					'tWorkOrder.EventIndicator' => null])
 				->asArray()
 				->all();
 
