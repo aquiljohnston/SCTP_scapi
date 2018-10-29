@@ -7,31 +7,31 @@ use Yii;
 /**
  * This is the model class for table "tInspection".
  *
- * @property integer $ID
+ * @property int $ID
  * @property string $InspectionTabletID
- * @property integer $ActivityID
- * @property integer $WorkQueueID
- * @property integer $WorkQueueStatus
+ * @property int $ActivityID
+ * @property int $WorkQueueID
+ * @property int $WorkQueueStatus
  * @property string $MapGrid
- * @property integer $IsAdHocFlag
- * @property integer $IsInGridFlag
- * @property integer $IsCGEFlag
- * @property integer $IsAOCFlag
- * @property integer $IsIndicationFlag
- * @property integer $IsPipelineFlag
- * @property integer $AGLeakCounter
- * @property integer $BGLeakCounter
- * @property integer $Grade1Counter
- * @property integer $CreatedBy
+ * @property int $IsAdHocFlag
+ * @property int $IsInGridFlag
+ * @property int $IsCGEFlag
+ * @property int $IsAOCFlag
+ * @property int $IsIndicationFlag
+ * @property int $IsPipelineFlag
+ * @property int $AGLeakCounter
+ * @property int $BGLeakCounter
+ * @property int $Grade1Counter
+ * @property int $CreatedBy
  * @property string $CreatedDate
- * @property integer $AssetID
+ * @property int $AssetID
  * @property double $Latitude
  * @property double $Longitude
  * @property string $GPSType
  * @property string $GPSSentence
  * @property string $GPSTime
  * @property double $FixQuality
- * @property integer $NumberOfSatellites
+ * @property int $NumberOfSatellites
  * @property double $HDOP
  * @property double $AltitudeMetersAboveMeanSeaLevel
  * @property double $HeightOfGeoid
@@ -39,24 +39,25 @@ use Yii;
  * @property string $ChecksumData
  * @property double $Bearing
  * @property double $Speed
- * @property integer $NumberOfGPSAttempts
+ * @property int $NumberOfGPSAttempts
  * @property string $SrvDTLT
  * @property string $SrvDTLTOffset
- * @property integer $IsWorkOrderUpdated
+ * @property int $IsWorkOrderUpdated
  * @property string $Photo1Path
  * @property string $PipelineType
  * @property string $Comments
- * @property integer $HardToLocateFlag
+ * @property int $HardToLocateFlag
  * @property string $MeterNumberPhoto1Path
  * @property string $MeterNumberPhoto2Path
  * @property string $MeterNumberPhoto3Path
+ * @property string $TaskOutActivityUID
  *
  * @property UserTb $createdBy
  */
 class Inspection extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -64,12 +65,12 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType', 'Comments', 'MeterNumberPhoto1Path', 'MeterNumberPhoto2Path', 'MeterNumberPhoto3Path'], 'string'],
+            [['InspectionTabletID', 'MapGrid', 'GPSType', 'GPSSentence', 'GPSTime', 'ChecksumData', 'Photo1Path', 'PipelineType', 'Comments', 'MeterNumberPhoto1Path', 'MeterNumberPhoto2Path', 'MeterNumberPhoto3Path', 'TaskOutActivityUID'], 'string'],
             [['ActivityID', 'WorkQueueID', 'WorkQueueStatus', 'IsAdHocFlag', 'IsInGridFlag', 'IsCGEFlag', 'IsAOCFlag', 'IsIndicationFlag', 'IsPipelineFlag', 'AGLeakCounter', 'BGLeakCounter', 'Grade1Counter', 'CreatedBy', 'AssetID', 'NumberOfSatellites', 'NumberOfGPSAttempts', 'IsWorkOrderUpdated', 'HardToLocateFlag'], 'integer'],
             [['CreatedDate', 'SrvDTLT', 'SrvDTLTOffset'], 'safe'],
             [['Latitude', 'Longitude', 'FixQuality', 'HDOP', 'AltitudeMetersAboveMeanSeaLevel', 'HeightOfGeoid', 'TimeSecondsSinceLastDGPS', 'Bearing', 'Speed'], 'number'],
@@ -78,7 +79,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -126,6 +127,7 @@ class Inspection extends \app\modules\v2\models\BaseActiveRecord
             'MeterNumberPhoto1Path' => 'Meter Number Photo1 Path',
             'MeterNumberPhoto2Path' => 'Meter Number Photo2 Path',
             'MeterNumberPhoto3Path' => 'Meter Number Photo3 Path',
+            'TaskOutActivityUID' => 'Task Out Activity Uid',
         ];
     }
 
