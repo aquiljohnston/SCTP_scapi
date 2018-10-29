@@ -52,7 +52,7 @@ class TaskController extends Controller
 			PermissionsController::requirePermission('taskGetByProject');
 
 			$data['assets'] = TaskAndProject::find()
-				->select(['TaskID', 'TaskName', 'TaskQBReferenceID'])
+				->select(['TaskID', 'TaskName', 'TaskQBReferenceID', 'Category'])
 				->where(['projectID' => $projectID])
 				->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
 				->asArray()

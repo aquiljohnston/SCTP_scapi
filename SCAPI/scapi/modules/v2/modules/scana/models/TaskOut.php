@@ -8,31 +8,32 @@ use app\modules\v2\models\BaseUser;
 /**
  * This is the model class for table "tTaskOut".
  *
- * @property integer $ID
- * @property integer $ActivityID
- * @property integer $AboveGroundLeakCount
- * @property integer $BelowGroundLeakCount
- * @property integer $ServicesCount
- * @property integer $FeetOfMain
- * @property integer $CreatedUserID
+ * @property int $ID
+ * @property int $ActivityID
+ * @property int $AboveGroundLeakCount
+ * @property int $BelowGroundLeakCount
+ * @property int $ServicesCount
+ * @property int $FeetOfMain
+ * @property int $CreatedUserID
  * @property string $SrcDTLT
  * @property string $SrvDTLT
  * @property string $SrvDTLTOffSet
  * @property string $MapGrid
  * @property string $StartDTLT
  * @property string $EndDTLT
- * @property integer $DeletedFlag
+ * @property int $DeletedFlag
  * @property string $Comments
  * @property double $TotalMapTime
- * @property integer $FeetOfTransmission
- * @property integer $FeetOfHighPressure
+ * @property int $FeetOfTransmission
+ * @property int $FeetOfHighPressure
+ * @property string $TaskOutUID
  *
  * @property UserTb $createdUser
  */
 class TaskOut extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -40,7 +41,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
@@ -48,14 +49,14 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             [['ActivityID', 'CreatedUserID'], 'required'],
             [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
-            [['MapGrid', 'Comments'], 'string'],
+            [['MapGrid', 'Comments', 'TaskOutUID'], 'string'],
             [['TotalMapTime'], 'number'],
             [['CreatedUserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedUserID' => 'UserID']],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -78,6 +79,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             'TotalMapTime' => 'Total Map Time',
             'FeetOfTransmission' => 'Feet Of Transmission',
             'FeetOfHighPressure' => 'Feet Of High Pressure',
+            'TaskOutUID' => 'Task Out Uid',
         ];
     }
 
