@@ -444,16 +444,24 @@ class ActivityController extends BaseActiveController
 			$put = file_get_contents("php://input");
 			$data = json_decode($put, true)['activity'];
 			
+			//Archive complete json array
+			BaseActiveController::archiveJson(json_encode($data), 'ActivityAddTime', $user->UserName, $headers['X-Client']);
+			
+			//get count of activities to add time to
 			$activityCount = count($data);
+
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 			
 			for($i = 0; $i<$activityCount; $i++)
 			{
-				//Archive complete json array
-				BaseActiveController::archiveJson(json_encode($data[$i]), 'ActivityAddTime', $user->UserName, $headers['X-Client']);
-				
 				$responseData['activity'][$i]['ActivityUID'] = $data[$i]['ActivityUID'];
 				$responseData['activity'][$i]['timeEntry'] = self::saveTimeEntry($data[$i]['timeEntry'], $data[$i]['ActivityUID'], $user);
 			}
+			
+			//commit transaction
+			$transaction->commit();
 			
 			//create and format response json
 			$response = Yii::$app->response;
