@@ -525,6 +525,10 @@ class UserController extends BaseActiveController
         try {
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 
             PermissionsController::requirePermission('userGetMe');
 
@@ -635,6 +639,8 @@ class UserController extends BaseActiveController
 
                 $projects[] = $projectData;
             }
+			
+			$transaction->commit();
 
             //load data into array
             $dataArray = [];
