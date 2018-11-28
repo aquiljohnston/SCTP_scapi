@@ -304,7 +304,8 @@ class TimeCardController extends BaseActiveController
         }
 	}
 
-    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
+    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+		$sortField = 'UserFullName', $sortOrder = 'ASC')
     {
         // RBAC permission check is embedded in this action
         try
@@ -428,7 +429,7 @@ class TimeCardController extends BaseActiveController
 			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $projectAllOption);
 
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
-            $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
+            $timeCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
             // check if approved time card exist in the data
             $unapprovedTimeCardExist = $this->CheckUnapprovedTimeCardExist($timeCardsArr);
             $projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCardsArr);
@@ -452,7 +453,8 @@ class TimeCardController extends BaseActiveController
 		}
     }
 
-	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null)
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+		$sortField = 'ProjectName', $sortOrder = 'ASC')
 	{
 		try{
 			//url decode filter value
@@ -512,7 +514,7 @@ class TimeCardController extends BaseActiveController
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
-            $timeCards = $paginationResponse['Query']->orderBy('ProjectName, StartDate')->all(BaseActiveRecord::getDb());
+            $timeCards = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
 
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
