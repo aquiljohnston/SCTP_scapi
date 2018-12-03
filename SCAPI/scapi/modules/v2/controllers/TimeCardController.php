@@ -305,18 +305,17 @@ class TimeCardController extends BaseActiveController
 	}
 
     public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
-		$sortField = 'UserFullName', $sortOrder = 'ASC')
+		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
     {
         // RBAC permission check is embedded in this action
-        try
-        {
+        try{
             //get headers
-            $headers 			= getallheaders();
+            $headers = getallheaders();
             //get client header
-            $client 			= $headers['X-Client'];
+            $client = $headers['X-Client'];
 
             //url decode filter value
-            $filter 			= urldecode($filter);
+            $filter = urldecode($filter);
 			//explode by delimiter to allow for multi search
 			$delimiter = ',';
 			$filterArray = explode($delimiter, $filter);
@@ -325,12 +324,12 @@ class TimeCardController extends BaseActiveController
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
             //format response
-            $response 			= Yii::$app->response;
-            $response-> format 	= Response::FORMAT_JSON;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
 
             //response array of time cards//
-            $timeCardsArr 		= [];
-            $responseArray 		= [];
+            $timeCardsArr = [];
+            $responseArray = [];
 			$projectAllOption = [];
 			$allTheProjects = [];
 			$showProjectDropDown = false;
@@ -400,7 +399,7 @@ class TimeCardController extends BaseActiveController
             }
 
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$dropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			$projectDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
 
             if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
 				//initialize array for filter query values
@@ -418,6 +417,7 @@ class TimeCardController extends BaseActiveController
 				$timeCards->andFilterWhere($filterQueryArray);
             }
 
+			//apply project filter
             if($projectID!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
                     'and',
@@ -425,30 +425,42 @@ class TimeCardController extends BaseActiveController
                 ]);
             }
 
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			
+			//apply employee filter
+			if($employeeID!= null && isset($timeCards)) {
+                $timeCards->andFilterWhere([
+                    'and',
+                    ['UserID' => $employeeID],
+                ]);
+            }
+			
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $projectAllOption);
+			$projectDropDown = self::extractProjectsFromTimeCards($projectDropdownRecords, $projectAllOption);
+			
+			//get employee list for dropdown based on time cards available
+			$employeeDropDown = self::extractEmployeesFromTimeCards($employeeDropdownRecords);
 
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
-            // check if approved time card exist in the data
+            //check if approved time card exist in the data
             $unapprovedTimeCardExist = $this->CheckUnapprovedTimeCardExist($timeCardsArr);
             $projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCardsArr);
             
             $responseArray['assets'] 				= $timeCardsArr;
             $responseArray['pages'] 				= $paginationResponse['pages'];
-            $responseArray['projectDropDown'] 		= $allTheProjects;
+            $responseArray['projectDropDown'] 		= $projectDropDown;
+            $responseArray['employeeDropDown'] 		= $employeeDropDown;
             $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
 			$responseArray['unapprovedTimeCardExist'] = $unapprovedTimeCardExist;
             $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
 			return $response;
-        }
-		catch(ForbiddenHttpException $e) {
+        }catch(ForbiddenHttpException $e) {
 			throw $e;
-		}
-		catch(\Exception $e)
-		{
+		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
 		}
     }
@@ -997,6 +1009,26 @@ class TimeCardController extends BaseActiveController
 		$allTheProjects = $projectAllOption + $allTheProjects;
 		
 		return $allTheProjects;
+	}
+	
+	private function extractEmployeesFromTimeCards($dropdownRecords)
+	{
+		$employeeValues = [];
+		//iterate and stash user values
+		foreach ($dropdownRecords as $e) {
+			//build key value pair
+			$key = $e['UserID'];
+			$value = $e['UserFullName'];
+			$employeeValues[$key] = $value;
+		}
+		//remove dupes
+		$employeeValues = array_unique($employeeValues);
+		//abc order for all
+		asort($employeeValues);
+		//append all option to the front
+		$employeeValues = [""=>"All"] + $employeeValues;
+		
+		return $employeeValues;
 	}
 	
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
