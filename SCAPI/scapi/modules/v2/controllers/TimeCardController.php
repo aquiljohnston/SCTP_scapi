@@ -430,13 +430,14 @@ class TimeCardController extends BaseActiveController
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy('UserID,TimeCardStartDate,TimeCardProjectID')->all(BaseActiveRecord::getDb());
             // check if approved time card exist in the data
-            $approvedTimeCardExist = $this->CheckApprovedTimeCardExist($timeCardsArr);
+            $unapprovedTimeCardExist = $this->CheckUnapprovedTimeCardExist($timeCardsArr);
             $projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCardsArr);
-            $responseArray['approvedTimeCardExist'] = $approvedTimeCardExist;
+            
             $responseArray['assets'] 				= $timeCardsArr;
             $responseArray['pages'] 				= $paginationResponse['pages'];
             $responseArray['projectDropDown'] 		= $allTheProjects;
             $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
+			$responseArray['unapprovedTimeCardExist'] = $unapprovedTimeCardExist;
             $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
@@ -600,7 +601,7 @@ class TimeCardController extends BaseActiveController
 			for ($x = 0; $x < $max; $x++) {
 				$queryString = "Select TimeCardID from [dbo].[TimeCardTb] tc
 								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = tc.TimeCardTechID
-								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and TimeCardActiveFlag = 1";
+								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and tc.TimeCardActiveFlag = 1 and TimeCardPMApprovedFlag != 1";
 				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();
 				Yii::trace('PM Approval - TimeCards to Approve queryString: '. $queryString);	
 			}
@@ -867,15 +868,15 @@ class TimeCardController extends BaseActiveController
      * @param $timeCardsArr
      * @return boolean
      */
-    private function CheckApprovedTimeCardExist($timeCardsArr){
-        $approvedTimeCardExist = false;
+    private function CheckUnapprovedTimeCardExist($timeCardsArr){
+        $unapprovedTimeCardExist = false;
         foreach ($timeCardsArr as $item){
-            if ($item['TimeCardApprovedFlag'] == 1){
-                $approvedTimeCardExist = true;
+            if ($item['TimeCardApprovedFlag'] == 0){
+                $unapprovedTimeCardExist = true;
                 break;
             }
         }
-        return $approvedTimeCardExist;
+        return $unapprovedTimeCardExist;
     }
 
 
