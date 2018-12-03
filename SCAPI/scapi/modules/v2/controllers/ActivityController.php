@@ -42,6 +42,7 @@ class ActivityController extends BaseActiveController
                 'actions' => [
 					'create' => ['post'],
 					'view' => ['get'],
+					'add-time' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -423,5 +424,123 @@ class ActivityController extends BaseActiveController
 		}
 		
 		return $responseData;
+	}
+	
+	public function actionAddTime()
+	{
+		try
+		{
+			//set db target
+			$headers = getallheaders();
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get user making the request
+			$user = Parent::getUserFromToken();
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('activityCreate');
+			
+			//capture and decode the input json
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true)['activity'];
+			
+			//Archive complete json array
+			BaseActiveController::archiveJson(json_encode($data), 'ActivityAddTime', $user->UserName, $headers['X-Client']);
+			
+			//get count of activities to add time to
+			$activityCount = count($data);
+
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
+			for($i = 0; $i<$activityCount; $i++)
+			{
+				$responseData['activity'][$i]['ActivityUID'] = $data[$i]['ActivityUID'];
+				$responseData['activity'][$i]['timeEntry'] = self::saveTimeEntry($data[$i]['timeEntry'], $data[$i]['ActivityUID'], $user);
+			}
+			
+			//commit transaction
+			$transaction->commit();
+			
+			//create and format response json
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseData;
+			return $response;
+			
+		}catch(ForbiddenHttpException $e){
+            throw new ForbiddenHttpException;
+        }catch(\Exception $e) {
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	//TODO try and make use of this within the base activity save
+	private function saveTimeEntry($timeArray, $activityUID, $user)
+	{
+		$resultArray = [];
+		$timeLength = count($timeArray);
+		
+		//get activity id based on uid
+		$activity = Activity::find()
+			->select('ActivityID')
+			->where(['ActivityUID' => $activityUID])
+			->orderBy(['ActivityID' => SORT_DESC])
+			->one();
+		$activityID = $activity->ActivityID;
+		
+		for($t = 0; $t < $timeLength; $t++){
+			Activity::setClient(BaseActiveController::urlPrefix());
+			$timeArray[$t]['TimeEntryActivityID'] = $activityID;
+			$timeEntry = new TimeEntry();
+			$timeEntry->attributes = $timeArray[$t];
+			$timeEntry->TimeEntryUserID = $user->ID;
+			$timeEntry->TimeEntryCreatedBy = $user->UserName;
+			try{
+				if($timeEntry->save())
+				{
+					//set success flag for time entry
+					$resultArray[$t] = $timeEntry;
+				}
+				else
+				{
+					//log validation error
+					$e = BaseActiveController::modelValidationException($timeEntry);
+					//SQL Constraint
+					if(strpos($e, TimeEntry::SQL_CONSTRAINT_MESSAGE)){
+						//set success flag for time entry to success if validation was a sql constraint
+						$resultArray[$t] = ['SuccessFlag'=>1];
+					} else {
+						BaseActiveController::archiveErrorJson(
+							file_get_contents("php://input"),
+							$e,
+							getallheaders()['X-Client'],
+							$activityID,
+							$timeArray[$t]);
+						//set success flag for time entry
+						$resultArray[$t] = ['SuccessFlag'=>0];
+					}
+				}
+			}catch(yii\db\Exception $e){
+				//if db exception is 2601, duplicate contraint then success
+				if(in_array($e->errorInfo[1], array(2601, 2627)))
+				{
+					$resultArray[$t] = $timeEntry;
+				}
+				else //log other errors and return failure
+				{
+					BaseActiveController::archiveErrorJson(
+						file_get_contents("php://input"),
+						$e,
+						getallheaders()['X-Client'],
+						$activityID,
+						$timeArray[$t]);
+					$resultArray[$t] = ['SuccessFlag'=>0];
+				}
+			}
+		}
+		return $resultArray;
 	}
 }
