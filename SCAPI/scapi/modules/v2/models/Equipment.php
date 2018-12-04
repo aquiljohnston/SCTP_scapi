@@ -7,7 +7,7 @@ use Yii;
 /**
  * This is the model class for table "EquipmentTb".
  *
- * @property string $EquipmentID
+ * @property int $EquipmentID
  * @property string $EquipmentName
  * @property string $EquipmentSerialNumber
  * @property string $EquipmentSCNumber
@@ -22,27 +22,28 @@ use Yii;
  * @property string $EquipmentColor
  * @property string $EquipmentWarrantyDetail
  * @property string $EquipmentComment
- * @property integer $EquipmentClientID
- * @property integer $EquipmentProjectID
+ * @property int $EquipmentClientID
+ * @property int $EquipmentProjectID
  * @property string $EquipmentAnnualCalibrationDate
  * @property string $EquipmentAnnualCalibrationStatus
- * @property string $EquipmentAssignedUserID
+ * @property int $EquipmentCalibrationID
+ * @property string $EquipmentAssignedUserName
  * @property string $EquipmentAcceptedFlag
  * @property string $EquipmentAcceptedBy
  * @property string $EquipmentModificationReason
  * @property string $EquipmentArchiveFlag
- * @property integer $EquipmentCreatedBy
  * @property string $EquipmentCreateDate
- * @property integer $EquipmentModifiedBy
+ * @property string $EquipmentCreatedBy
  * @property string $EquipmentModifiedDate
+ * @property string $EquipmentModifiedBy
  *
+ * @property UserTb $equipmentAssignedUserName
  * @property ClientTb $equipmentClient
- * @property UserTb $equipmentAssignedUser
  */
-class Equipment extends BaseActiveRecord
+class Equipment extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -50,21 +51,21 @@ class Equipment extends BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear',
-			'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment',
-			'EquipmentAnnualCalibrationStatus', 'EquipmentAcceptedFlag',  'EquipmentModificationReason', 'EquipmentModificationReason', 'EquipmentArchiveFlag'], 'string'],
-            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentAssignedUserID', 'EquipmentCreatedBy', 'EquipmentModifiedBy', 'EquipmentAcceptedBy'], 'integer'],
-            [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe']
+            [['EquipmentName', 'EquipmentSerialNumber', 'EquipmentSCNumber', 'EquipmentDetails', 'EquipmentType', 'EquipmentManufacturer', 'EquipmentManufactureYear', 'EquipmentCondition', 'EquipmentStatus', 'EquipmentMACID', 'EquipmentModel', 'EquipmentColor', 'EquipmentWarrantyDetail', 'EquipmentComment', 'EquipmentAnnualCalibrationStatus', 'EquipmentAssignedUserName', 'EquipmentAcceptedFlag', 'EquipmentAcceptedBy', 'EquipmentModificationReason', 'EquipmentArchiveFlag', 'EquipmentCreatedBy', 'EquipmentModifiedBy'], 'string'],
+            [['EquipmentClientID', 'EquipmentProjectID', 'EquipmentCalibrationID'], 'integer'],
+            [['EquipmentAnnualCalibrationDate', 'EquipmentCreateDate', 'EquipmentModifiedDate'], 'safe'],
+            [['EquipmentAssignedUserName'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['EquipmentAssignedUserName' => 'UserName']],
+            [['EquipmentClientID'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['EquipmentClientID' => 'ClientID']],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -72,13 +73,13 @@ class Equipment extends BaseActiveRecord
             'EquipmentID' => 'Equipment ID',
             'EquipmentName' => 'Equipment Name',
             'EquipmentSerialNumber' => 'Equipment Serial Number',
-			'EquipmentSCNumber' => 'Equipment SC Number',
+            'EquipmentSCNumber' => 'Equipment Scnumber',
             'EquipmentDetails' => 'Equipment Details',
             'EquipmentType' => 'Equipment Type',
             'EquipmentManufacturer' => 'Equipment Manufacturer',
             'EquipmentManufactureYear' => 'Equipment Manufacture Year',
             'EquipmentCondition' => 'Equipment Condition',
-			'EquipmentStatus' => 'Equipment Status',
+            'EquipmentStatus' => 'Equipment Status',
             'EquipmentMACID' => 'Equipment Macid',
             'EquipmentModel' => 'Equipment Model',
             'EquipmentColor' => 'Equipment Color',
@@ -88,16 +89,25 @@ class Equipment extends BaseActiveRecord
             'EquipmentProjectID' => 'Equipment Project ID',
             'EquipmentAnnualCalibrationDate' => 'Equipment Annual Calibration Date',
             'EquipmentAnnualCalibrationStatus' => 'Equipment Annual Calibration Status',
-            'EquipmentAssignedUserID' => 'Equipment Assigned User ID',
-			'EquipmentAcceptedFlag' => 'Equipment Accepted Flag',
-			'EquipmentAcceptedBy' => 'Equipment Accepted By',
-			'EquipmentModificationReason' => 'Equipment Modification Reason',
-			'EquipmentArchiveFlag' => 'Equipment Archive Flag',
-            'EquipmentCreatedBy' => 'Equipment Created By',
+            'EquipmentCalibrationID' => 'Equipment Calibration ID',
+            'EquipmentAssignedUserName' => 'Equipment Assigned User Name',
+            'EquipmentAcceptedFlag' => 'Equipment Accepted Flag',
+            'EquipmentAcceptedBy' => 'Equipment Accepted By',
+            'EquipmentModificationReason' => 'Equipment Modification Reason',
+            'EquipmentArchiveFlag' => 'Equipment Archive Flag',
             'EquipmentCreateDate' => 'Equipment Create Date',
-            'EquipmentModifiedBy' => 'Equipment Modified By',
+            'EquipmentCreatedBy' => 'Equipment Created By',
             'EquipmentModifiedDate' => 'Equipment Modified Date',
+            'EquipmentModifiedBy' => 'Equipment Modified By',
         ];
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getEquipmentAssignedUserName()
+    {
+        return $this->hasOne(BaseUser::className(), ['UserName' => 'EquipmentAssignedUserName']);
     }
 
     /**
@@ -105,14 +115,6 @@ class Equipment extends BaseActiveRecord
      */
     public function getEquipmentClient()
     {
-        return $this->hasOne(ClientTb::className(), ['ClientID' => 'EquipmentClientID']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getEquipmentAssignedUser()
-    {
-        return $this->hasOne(SCUser::className(), ['UserID' => 'EquipmentAssignedUserID']);
+        return $this->hasOne(Client::className(), ['ClientID' => 'EquipmentClientID']);
     }
 }
