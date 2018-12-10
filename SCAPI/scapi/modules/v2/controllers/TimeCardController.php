@@ -401,22 +401,6 @@ class TimeCardController extends BaseActiveController
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
 			$projectDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
 
-            if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
-				//initialize array for filter query values
-				$filterQueryArray = array('or');
-				//loop for multi search
-				for($i = 0; $i < count($filterArray); $i++)
-				{
-					//remove leading space from filter string
-					$trimmedFilter = trim($filterArray[$i]);
-					array_push($filterQueryArray,
-						['like', 'UserFullName', $trimmedFilter],
-						['like', 'ProjectName', $trimmedFilter]
-					);
-				}
-				$timeCards->andFilterWhere($filterQueryArray);
-            }
-
 			//apply project filter
             if($projectID!= null && isset($timeCards)) {
                 $timeCards->andFilterWhere([
@@ -434,6 +418,22 @@ class TimeCardController extends BaseActiveController
                     'and',
                     ['UserID' => $employeeID],
                 ]);
+            }
+			
+			if($filterArray!= null && isset($timeCards)) { //Empty strings or nulls will result in false
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++)
+				{
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'UserFullName', $trimmedFilter],
+						['like', 'ProjectName', $trimmedFilter]
+					);
+				}
+				$timeCards->andFilterWhere($filterQueryArray);
             }
 			
 			//get project list for dropdown based on time cards available
