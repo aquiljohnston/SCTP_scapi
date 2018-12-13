@@ -87,6 +87,7 @@ $config = [
 		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
+        'ctDemoDb' => $db['ctDemoDb'],
 		// // clean up the Url
 		// 'urlManager' => [
 			// 'enablePrettyUrl' => true,

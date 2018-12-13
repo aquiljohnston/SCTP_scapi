@@ -25,6 +25,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		
 		//try and do this in a better way to avoid a second switch if possible
 		switch(self::$CLIENT_ID){
+			case array_key_exists('DEMO_HEADER', $clientConfigObj) ? $clientConfigObj['DEMO_HEADER']: null:
+				return Yii::$app->{$clientConfigObj['DEMO_DB']};
 			case array_key_exists('DEV_HEADER', $clientConfigObj) ? $clientConfigObj['DEV_HEADER']: null:
 				return Yii::$app->{$clientConfigObj['DEV_DB']};
 			case array_key_exists('STAGE_HEADER', $clientConfigObj) ? $clientConfigObj['STAGE_HEADER']: null:
@@ -74,6 +76,7 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			case Constants::API_CONFIG['STAGE_HEADER']:
 			case Constants::API_CONFIG['PROD_HEADER']:
 			case Constants::API_CONFIG['AZURE_PROD_HEADER']:
+			case Constants::API_CONFIG['DEMO_HEADER']:
 				return Constants::API_CONFIG;
 			//SCCT
 			case Constants::SCCT_CONFIG['DEV_HEADER']:
