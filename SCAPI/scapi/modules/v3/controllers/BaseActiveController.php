@@ -177,10 +177,7 @@ class BaseActiveController extends ActiveController
                 || strpos($_SERVER['SERVER_NAME'],'192.168.')===0)
         )
         {
-            if($_SERVER['SERVER_PORT'] == '8000')
             $prefix = 'apidev';
-			else
-			$prefix = 'apidemo';
         }
 		return $prefix;
 	}
@@ -394,8 +391,6 @@ class BaseActiveController extends ActiveController
 	{
 		return ($client == Constants::SCCT_CONFIG['DEV_HEADER'] ||
 		$client == Constants::SCCT_CONFIG['STAGE_HEADER'] ||
-		$client == Constants::SCCT_CONFIG['PROD_HEADER'] ||
-        //added for rbac purposes, currently does not seem to create any issues.
-        $client == Constants::API_CONFIG['DEMO_HEADER']);
+		$client == Constants::SCCT_CONFIG['PROD_HEADER']);
 	}
 }

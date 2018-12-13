@@ -105,13 +105,6 @@ return [
 		'charset' => 'utf8',
 	],
 //Demo
-	'ctDemoDb' => [
-		'class' => 'yii\db\Connection',
-		'dsn' => 'sqlsrv:Server=10.0.0.50;Database=CometTracker_Demo',
-		'username' => 'ApplicationCometTracker',
-		'password' => '321cba',
-		'charset' => 'utf8',
-	],
 	'demoDb' => [
 		'class' => 'yii\db\Connection',
 		'dsn' => 'sqlsrv:Server=10.0.0.50;Database=vCAT_DEMO_GIS_DEV',
