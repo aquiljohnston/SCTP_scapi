@@ -50,7 +50,6 @@ return [
 		'scanaProdDb' => $db['scanaProdDb'],
 		//Demo
         'demoDb' => $db['demoDb'],
-		'ctDemoDb' => $db['ctDemoDb'],
     ],
     'params' => $params,
 ];
