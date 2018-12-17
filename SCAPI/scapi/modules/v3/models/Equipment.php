@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v2\models;
+namespace app\modules\v3\models;
 
 use Yii;
 
@@ -40,7 +40,7 @@ use Yii;
  * @property UserTb $equipmentAssignedUserName
  * @property ClientTb $equipmentClient
  */
-class Equipment extends \app\modules\v2\models\BaseActiveRecord
+class Equipment extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
      * {@inheritdoc}
