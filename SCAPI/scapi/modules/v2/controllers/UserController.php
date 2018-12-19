@@ -828,6 +828,11 @@ class UserController extends BaseActiveController
 		//if user record already exist in the project db, return
 		if($existingUser != null) 
 		{
+			//reactivate user if they are currently inactive
+			if($existingUser->UserActiveFlag == 0){
+				$existingUser->UserActiveFlag = 1;
+				$existingUser->update();
+			}
 			//add user to project to generate time/mileage cards
 			ProjectController::addToProject($user, $project);
             return true;
