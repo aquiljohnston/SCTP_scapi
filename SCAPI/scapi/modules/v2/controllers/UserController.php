@@ -167,7 +167,8 @@ class UserController extends BaseActiveController
 
             if ($user->save()) {
                 //assign rbac role
-                $auth = Yii::$app->authManager;
+                $authClass = BaseActiveRecord::getAuthManager(BaseActiveController::urlPrefix());
+                $auth = new $authClass(BaseActiveRecord::getDb());
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
