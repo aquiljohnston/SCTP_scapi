@@ -107,19 +107,21 @@ class DispatchController extends Controller
 					['like', 'OfficeName', $filter],
 					]);
 				}
-			}
-			
-			if($page != null)
-			{
+				
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
-				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray['divisionFlag'] = $divisionFlag;
-				$responseArray[$envelope] = $data;
+				//add pagination data to response data
+				$responseArray['pages'] = $paginationResponse['pages'];	
+				//set asset query to returned value with added pagination clause
+				$assetQuery = $paginationResponse['Query'];
 			}
+			
+			
+			//add order by to query and get data
+			$data = $assetQuery->orderBy($orderBy)
+				->all();
+			$responseArray['divisionFlag'] = $divisionFlag;
+			$responseArray[$envelope] = $data;
 			
 			//create response object
 			$response = Yii::$app->response;
@@ -398,8 +400,7 @@ class DispatchController extends Controller
 	public function actionGetAssigned($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1,
 		$sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
-		try
-		{
+		try{
 			//set db
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
@@ -428,29 +429,75 @@ class DispatchController extends Controller
 				$orderBy = "$sortField $sortOrder";
 				$envelope = 'mapGrids';
 				
-				$assetQuery = new Query;
-				$assetQuery->select('*')
-					->from("fnAssignedWorkQueueByMapGrid(:Filter)")
-					->addParams([':Filter' => $filter]);
+				$assetQuery = AssignedWorkQueueByMapGrid::find()
+					->select([
+						'MapGrid',
+						'AssignedUser',
+						'ComplianceStart',
+						'ComplianceEnd',
+						'Sum(InspectionAttemptcounter) [InspectionAttemptcounter]',
+						'SectionFlag',
+						'Sum(AssignedWorkOrderCount) [AssignedWorkOrderCount]',
+						'AssignedCount',
+						'[Percent Completed]',
+						'Total',
+						'Remaining',
+						'InspectionType',
+						'BillingCode',
+						'InProgressFlag',
+						'OfficeName',
+					]);
+					
+				if($filter != null)
+				{
+					$assetQuery->andFilterWhere([
+						'or',
+						['like', 'UserFirstName ', $filter],
+						['like', 'UserLastName  ', $filter],
+						['like', 'UserName', $filter],
+						['like', 'MapGrid', $filter],
+						['like', 'OfficeName', $filter],
+						['like', 'BillingCode', $filter],
+						['like', 'InspectionType', $filter],
+						['like', 'Cast(ComplianceStartDate as varchar(10))', $filter],
+						['like', 'Cast(CompliancenEndDate as varchar(10))', $filter],
+					]);
+				}
+				
+				$assetQuery->groupBy([
+					'MapGrid',
+					'AssignedUser',
+					'ComplianceStart',
+					'ComplianceEnd',
+					'SectionFlag',
+					'AssignedCount',
+					'[Percent Completed]',
+					'Total',
+					'Remaining',
+					'InspectionType',
+					'BillingCode',
+					'InProgressFlag',
+					'OfficeName',
+				]);
+
+				//pass query with pagination data to helper method
+				$paginationResponse = self::countFunctionPaginationProcessor($assetQuery, $page, $listPerPage, $filter);
+				//add pagination data to response data
+				$responseArray['pages'] = $paginationResponse['pages'];	
+				//set asset query to returned value with added pagination clause
+				$assetQuery = $paginationResponse['Query'];
 			}
 			
-			if($page != null)
-			{
-				//pass query with pagination data to helper method
-				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//return $paginationResponse;
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
+			//add order by to query and get data
+			$data = $assetQuery->orderBy($orderBy)
 				->all(BaseActiveRecord::getDb());
-				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray[$envelope] = $data;
-			}
+			//add query data to response data
+            $responseArray[$envelope] = $data;
 			
 			//create response object
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
-			//$response->data = $results;
 			return $response;
 		}
         catch(ForbiddenHttpException $e)
@@ -463,6 +510,30 @@ class DispatchController extends Controller
             throw new \yii\web\HttpException(400);
         }
 	}
+	
+	public function countFunctionPaginationProcessor($assetQuery, $page, $listPerPage, $filter)
+    {
+        // set pagination
+        $countQuery = new Query;
+		$countQuery->select('*')
+			->from("fnAssignedWorkQueueByMapGridCount(:Filter)")
+			->addParams([':Filter' => $filter]);
+        $pages = new Pagination(['totalCount' => $countQuery->One(BaseActiveRecord::getDb())['WorkQueueCount']]);
+        $pages->pageSizeLimit = [1, 750];
+        $offset = $listPerPage * ($page - 1);
+        $pages->setPageSize($listPerPage);
+        $pages->pageParam = 'userPage';
+        $pages->params = ['per-page' => $listPerPage, 'userPage' => $page];
+
+        //append pagination clause to query
+        $assetQuery->offset($offset)
+            ->limit($listPerPage);
+
+        $asset['pages'] = $pages;
+        $asset['Query'] = $assetQuery;
+
+        return $asset;
+    }
 	
 	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType = null, $billingCode = null)
 	{

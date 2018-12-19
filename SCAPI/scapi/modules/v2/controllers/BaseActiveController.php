@@ -316,7 +316,7 @@ class BaseActiveController extends ActiveController
         return $asset;
     }
 	
-	 // helper method for setting the csv header for tracker maps csv output
+	// helper method for setting the csv header for tracker maps csv output
     public static function setCsvHeaders(){
         header('Content-Type: text/csv;charset=UTF-8');
         header('Pragma: no-cache');
