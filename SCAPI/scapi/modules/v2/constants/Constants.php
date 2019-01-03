@@ -144,7 +144,7 @@ final class Constants
 		'AUTH' => self::CLIENT_DB_MANAGER,
 		'ASSET' => 'app\modules\v2\models\DemoAsset',
 		'EVENT' => 'app\modules\v2\models\DemoEvent',
-		'TASKOUT' => self::BASE_TASKOUT,
+		'TASKOUT' => 'app\modules\v2\models\DemoTaskOut',
 		'USER' => self::BASE_USER
 	];
 	
