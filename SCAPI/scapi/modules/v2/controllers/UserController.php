@@ -167,7 +167,8 @@ class UserController extends BaseActiveController
 
             if ($user->save()) {
                 //assign rbac role
-                $auth = Yii::$app->authManager;
+                $authClass = BaseActiveRecord::getAuthManager(BaseActiveController::urlPrefix());
+                $auth = new $authClass(BaseActiveRecord::getDb());
                 if ($userRole = $auth->getRole($user['UserAppRoleType'])) {
                     $auth->assign($userRole, $user['UserID']);
                 }
@@ -533,11 +534,11 @@ class UserController extends BaseActiveController
             PermissionsController::requirePermission('userGetMe');
 
             //get user id from auth token
-            $userID = self::getUserFromToken()->UserID;
-
-            //get user
-            $user = SCUser::findOne($userID);
+            $user = self::getUserFromToken();
             $user->UserPassword = '';
+			
+			$userID = $user->UserID;
+            $userName = $user->UserName;
 			
 			//cast user as an array to add SystemDateTime
 			$user = (array)$user->attributes;
@@ -546,7 +547,7 @@ class UserController extends BaseActiveController
             $equipment = [];
             //get equipment for user
             $equipment = Equipment::find()
-                ->where("EquipmentAssignedUserID = $userID")
+                ->where(['EquipmentAssignedUserName' => $userName])
                 ->all();
 
             //get users realtionship to projects

@@ -206,6 +206,7 @@ class RbacController extends Controller
 		
         $equipmentCreate = $this->auth->createPermission('equipmentCreate');
         $equipmentCreate->description = 'Create equipment';
+        $this->permissionAssociationArray['Technician'][] = $equipmentCreate;
         $this->permissionAssociationArray['Engineer'][] = $equipmentCreate;
         $this->permissionArray[] = $equipmentCreate;
 
