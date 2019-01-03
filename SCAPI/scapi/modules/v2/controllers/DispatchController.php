@@ -107,19 +107,21 @@ class DispatchController extends Controller
 					['like', 'OfficeName', $filter],
 					]);
 				}
-			}
-			
-			if($page != null)
-			{
+				
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
-				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray['divisionFlag'] = $divisionFlag;
-				$responseArray[$envelope] = $data;
+				//add pagination data to response data
+				$responseArray['pages'] = $paginationResponse['pages'];	
+				//set asset query to returned value with added pagination clause
+				$assetQuery = $paginationResponse['Query'];
 			}
+			
+			
+			//add order by to query and get data
+			$data = $assetQuery->orderBy($orderBy)
+				->all();
+			$responseArray['divisionFlag'] = $divisionFlag;
+			$responseArray[$envelope] = $data;
 			
 			//create response object
 			$response = Yii::$app->response;
@@ -483,13 +485,12 @@ class DispatchController extends Controller
 				//add pagination data to response data
 				$responseArray['pages'] = $paginationResponse['pages'];	
 				//set asset query to returned value with added pagination clause
-				$assetQuery = $paginationResponse['Query']->orderBy($orderBy);
+				$assetQuery = $paginationResponse['Query'];
 			}
 			
 			//add order by to query and get data
 			$data = $assetQuery->orderBy($orderBy)
 				->all(BaseActiveRecord::getDb());
-			
 			//add query data to response data
             $responseArray[$envelope] = $data;
 			

@@ -1,15 +1,16 @@
 <?php
 
-namespace app\modules\v2\controllers;
+namespace app\modules\v3\controllers;
 
 use Yii;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
-use app\modules\v2\authentication\TokenAuth;
-use app\modules\v2\controllers\BaseActiveController;
-use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\models\Calibration;
+use app\modules\v3\authentication\TokenAuth;
+use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\Calibration;
+use app\modules\v3\models\Equipment;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 
@@ -27,10 +28,60 @@ class EquipmentController extends Controller
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'create' => ['post'],
 					'delete-calibration' => ['put'],
                 ],  
             ];
 		return $behaviors;	
+	}
+	
+	public function actionCreate()
+	{
+		try{
+			//set db
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('equipmentCreate');
+			
+			//get body data
+			$body = file_get_contents("php://input");
+			$data = json_decode($body, true)['equipment'];
+			//create response format
+			$responseArray = [];
+			
+			BaseActiveController::archiveJson($body, 'EquipmentCreate', BaseActiveController::getClientUser(BaseActiveController::urlPrefix())->UserName, BaseActiveController::urlPrefix());
+			
+			//count number of items to delete
+			$equipment = new Equipment();
+			$equipment->attributes = $data;
+				
+			$equipmentID = null;
+			$equipmentSerialNumber = $equipment->EquipmentSerialNumber;
+			$successFlag = 0;
+			if($equipment->save())
+			{
+				$equipmentID =  $equipment->EquipmentID;
+				$successFlag = 1;
+			}
+			else
+			{
+				throw BaseActiveController::modelValidationException($equipment);
+			}
+			$responseData = ['EquipmentID' => $equipmentID, 'EquipmentSerialNumber' => $equipmentSerialNumber, 'SuccessFlag' => $successFlag];
+				
+			//send response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(201);
+			$response->data = (object)$responseData;
+			return $response;
+		} catch(ForbiddenHttpException $e){
+            throw new ForbiddenHttpException;
+        }catch(\Exception $e){
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	public static function processCalibration($data, $client, $activityID)
