@@ -5,7 +5,6 @@ namespace app\modules\v2\controllers;
 use Yii;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\MileageEntry;
-use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
