@@ -872,7 +872,7 @@ class TimeCardController extends BaseActiveController
     }
 
     /**
-     * Check if there is at least one time card has been approved
+     * Check if there is at least one time card to be been approved
      * @param $timeCardsArr
      * @return boolean
      */

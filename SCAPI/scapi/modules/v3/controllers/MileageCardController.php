@@ -190,11 +190,11 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null)
+	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		// RBAC permission check is embedded in this action	
-		try
-		{
+		try{
 			//get headers
 			$headers = getallheaders();
 			//get client header
@@ -202,6 +202,10 @@ class MileageCardController extends BaseActiveController
 			
 			//url decode filter value
 			$filter = urldecode($filter);
+			//explode by delimiter to allow for multi search
+			//TODO consider adding global delimiter constant
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
 			
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -213,16 +217,21 @@ class MileageCardController extends BaseActiveController
 			//response array of mileage cards
             $mileageCardsArr = [];
             $responseArray = [];
+			$projectAllOption = [];
+			$allProjects = [];
+			$showProjectDropdown = false;
 			
 			//build base query
 			$mileageCards = new Query;
 			$mileageCards->select('*')
-				->from(["fnAllMileageCards(:startDate, :endDate)"])
+				->from(["fnMileageCardByDate(:startDate, :endDate)"])
 				->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 			
 			//if is scct website get all or own
 			if(BaseActiveController::isSCCT($client))
 			{
+				//set project dropdown to true for scct
+				$showProjectDropDown = true;
 				//rbac permission check
 				if(!PermissionsController::can('mileageCardGetAllCards') &&PermissionsController::can('mileageCardGetOwnCards'))		
 				{
@@ -232,23 +241,23 @@ class MileageCardController extends BaseActiveController
 						->where("ProjUserUserID = $userID")
 						->all();
 					$projectsSize = count($projects);
-					
-					//check if week is prior or current to determine appropriate view
 					if($projectsSize > 0)
 					{
 						$mileageCards->where(['MileageCardProjectID' => $projects[0]->ProjUserProjectID]);
+					} else {
+						//can only get own but has no project relations
+						throw new ForbiddenHttpException;
 					}
                     if($projectsSize > 1)
                     {
+						//add all option to project dropdown if there will be more than one option
+						$projectAllOption = [""=>"All"];
                         for($i=1; $i < $projectsSize; $i++)
                         {
                             $projectID = $projects[$i]->ProjUserProjectID;
                             $mileageCards->orWhere(['MileageCardProjectID'=>$projectID]);
                         }
                     }
-				}
-				elseif(!PermissionsController::can('mileageCardGetAllCards')){
-					throw new ForbiddenHttpException;
 				}
 			}
 			else // get only cards for the current project.
@@ -260,35 +269,72 @@ class MileageCardController extends BaseActiveController
 				//add project where to query
 				$mileageCards->where(['MileageCardProjectID' => $project->ProjectID]);
 			}
-            if($filter != null && isset($mileageCards))
-            {
+			
+			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
+			$projectDropdownRecords = $mileageCards->all(BaseActiveRecord::getDb());
+
+			//apply project filter
+            if($projectID!= null && isset($mileageCards)) {
                 $mileageCards->andFilterWhere([
-                    'or',
-                    //['like', 'UserName', $filter],
-                    ['like', 'UserFirstName', $filter],
-                    ['like', 'UserLastName', $filter],
-                    ['like', 'ProjectName', $filter],
-                    ['like', 'MileageCardApproved', $filter]
+                    'and',
+                    ['MileageCardProjectID' => $projectID],
                 ]);
             }
+
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeDropdownRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			
+			//apply employee filter
+			if($employeeID!= null && isset($mileageCards)) {
+                $mileageCards->andFilterWhere([
+                    'and',
+                    ['UserID' => $employeeID],
+                ]);
+            }
+
+            if($filterArray != null && isset($mileageCards)){ //Empty strings or nulls will result in false
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++)
+				{
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'UserFullName', $trimmedFilter],
+						['like', 'ProjectName', $trimmedFilter]
+					);
+				}
+				$mileageCards->andFilterWhere($filterQueryArray);
+            }
+			
+			//get project list for dropdown based on time cards available
+			$projectDropDown = self::extractProjectsFromMileageCards($projectDropdownRecords, $projectAllOption);
+			
+			//get employee list for dropdown based on time cards available
+			$employeeDropDown = self::extractEmployeesFromMileageCards($employeeDropdownRecords);
+			
+			//add pagination and fetch mileage card data
             $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
-            $mileageCardsArr = $paginationResponse['Query']->orderBy('UserID,MileageCardProjectID')->all(BaseActiveRecord::getDb());
+            $mileageCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
+			
+			//check mileage card submission statuses
+            $unapprovedMileageCardExist = $this->CheckUnapprovedMileageCardExist($mileageCardsArr);
+			//unsure of business rules for mileage submission
+            $projectWasSubmitted = $this->CheckAllAssetsSubmitted($mileageCardsArr);
+			
             $responseArray['assets'] = $mileageCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
-
-            if (!empty($responseArray['assets']))
-			{
-				$response->data = $responseArray;
-				$response->setStatusCode(200);
-				return $response;
-			}
-			else
-			{
-				$response->setStatusCode(404);
-				return $response;
-			}
+			$responseArray['projectDropDown'] = $projectDropDown;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+			$responseArray['unapprovedMileageCardExist'] = $unapprovedMileageCardExist;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
+			$response->data = $responseArray;
+			$response->setStatusCode(200);
+			return $response;
 		} catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
+            throw $e;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
@@ -381,6 +427,85 @@ class MileageCardController extends BaseActiveController
         }
     }
 
+	//TODO consider creating cards parent controller and extracting out these 4 helper methods to combine with time cards
+	//extractProjectsFromMileageCards, extractEmployeesFromMileageCards, CheckUnapprovedMileageCardExist, CheckAllAssetsSubmitted
+	private function extractProjectsFromMileageCards($dropdownRecords, $projectAllOption)
+	{
+		$allTheProjects = [];
+		//iterate and stash project name
+		foreach ($dropdownRecords as $p) {
+			//second option is only needed for the accountant view in timecard because the tables dont match
+			//currently only two option exist for key would have to update this if more views/tables/functions use this function
+			//$key = array_key_exists('MileageCardProjectID', $p) ? $p['MileageCardProjectID'] : $p['ProjectID'];
+			$key = $p['MileageCardProjectID'];
+			$value = $p['ProjectName'];
+			$allTheProjects[$key] = $value;
+		}
+		//remove dupes
+		$allTheProjects = array_unique($allTheProjects);
+		//abc order for all
+		asort($allTheProjects);
+		//appened all option to the front
+		$allTheProjects = $projectAllOption + $allTheProjects;
+		
+		return $allTheProjects;
+	}
+	
+	private function extractEmployeesFromMileageCards($dropdownRecords)
+	{
+		$employeeValues = [];
+		//iterate and stash user values
+		foreach ($dropdownRecords as $e) {
+			//build key value pair
+			$key = $e['UserID'];
+			$value = $e['UserFullName'];
+			$employeeValues[$key] = $value;
+		}
+		//remove dupes
+		$employeeValues = array_unique($employeeValues);
+		//abc order for all
+		asort($employeeValues);
+		//append all option to the front
+		$employeeValues = [""=>"All"] + $employeeValues;
+		
+		return $employeeValues;
+	}
+	
+	/**
+     * Check if there is at least one time card to be been approved
+     * @param $mileageCardsArr
+     * @return boolean
+     */
+    private function CheckUnapprovedMileageCardExist($mileageCardsArr){
+        foreach ($mileageCardsArr as $item){
+            if ($item['MileageCardApprovedFlag'] == 0){
+                return true;
+            }
+        }
+        return false;
+    }
+	
+	/**
+     * Check if project was submitted to Oasis and QB
+     * @param $mileageCardsArr
+     * @return boolean
+     */
+    private function CheckAllAssetsSubmitted($mileageCardsArr){
+        foreach ($mileageCardsArr as $item)
+		{
+			//second option is only needed for the accountant view in timecard because the tables dont match
+			// $oasisKey = array_key_exists('MileageCardOasisSubmitted', $item) ? 'MileageCardOasisSubmitted' : 'OasisSubmitted';
+			// $qbKey = array_key_exists('MileageCardQBSubmitted', $item) ? 'MileageCardQBSubmitted' : 'QBSubmitted';
+			$oasisKey = 'MileageCardOasisSubmitted';
+			$qbKey = 'MileageCardQBSubmitted';
+			
+            if ($item[$oasisKey] == "No" || $item[$qbKey] == "No" ){
+                return false;
+            }
+        }
+        return true;        
+    }
+	
 	//TODO change to use base active controller version when updates are completed to match time cards
     // helper method for setting the csv header for tracker maps csv output
     public static function setCsvHeaders(){
