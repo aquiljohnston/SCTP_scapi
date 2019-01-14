@@ -46,6 +46,7 @@ class MileageCardController extends BaseActiveController
 					'approve-cards'  => ['put'],
 					'get-card' => ['get'],
 					'get-cards' => ['get'],
+					'show-entries' => ['get'],
 					'get-cards-export' => ['get'],
                 ],  
             ];
@@ -131,61 +132,44 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionGetEntries($cardID)
+	public function actionShowEntries($cardID)
 	{		
-		try
-		{
+		try{
 			//set db target
-			MileageCard::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+
 			// RBAC permission check
 			PermissionsController::requirePermission('mileageCardGetEntries');
-			
-			$response = Yii::$app ->response;
+
 			$dataArray = [];
-			$mileageCard = MileageCard::findOne($cardID);
-			
-			$dayArray =
-			[
-				'Sunday' => ['Entries' => [], 'Total' => 0],
-				'Monday' => ['Entries' => [], 'Total' => 0],
-				'Tuesday' => ['Entries' => [], 'Total' => 0],
-				'Wednesday' => ['Entries' => [], 'Total' => 0],
-				'Thursday' => ['Entries' => [], 'Total' => 0],
-				'Friday' => ['Entries' => [], 'Total' => 0],
-				'Saturday' => ['Entries' => [], 'Total' => 0],
-			];
-			
+
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
-					->from("fnMileageCardEntrysByMileageCard(:cardID)")
-					->addParams([':cardID' => $cardID])
-					->orderBy('MileageEntryStartTime');
+				->from("fnMileageCardEntrysByMileageCard(:cardID)")
+				->addParams([':cardID' => $cardID]);
 			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+
+			$cardQuery = new Query;
+			$cardQuery->select('*')
+				->from("fnMileageCardByID(:cardID)")
+				->addParams([':cardID' => $cardID]);
+			$card = $cardQuery->one(BaseActiveRecord::getDb());
 			
-			foreach ($entries as $entry)
-			{
-				$dayArray[$entry['MileageEntryWeekDay']]['Entries'][] = $entry;
-			}
-			foreach ($dayArray as $day => $data)
-			{
-				if(count($dayArray[$day]['Entries']) > 0)
-				{
-					$dayArray[$day]['Total'] = $data['Entries'][0]['DayTotalMiles'];
-				}
-			}
-			
-			//load data into array
-			$dataArray['StartDate'] = $mileageCard-> MileageStartDate;
-			$dataArray['EndDate'] = $mileageCard-> MileageEndDate;
-			$dataArray['ApprovedFlag'] = $mileageCard-> MileageCardApprovedFlag;
-			$dataArray['MileageEntries'] = $dayArray;
-			
-			$response -> format = Response::FORMAT_JSON;
-			$response -> data = $dataArray;
-		}
-		catch(\Exception $e)  
-		{
+			$transaction->commit();
+
+			$dataArray['show-entries'] = $entries;
+			$dataArray['card'] = $card;
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $dataArray;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -209,6 +193,10 @@ class MileageCardController extends BaseActiveController
 			
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 			
 			//format response
 			$response = Yii::$app->response;
@@ -322,6 +310,8 @@ class MileageCardController extends BaseActiveController
             $unapprovedMileageCardExist = $this->CheckUnapprovedMileageCardExist($mileageCardsArr);
 			//unsure of business rules for mileage submission
             $projectWasSubmitted = $this->CheckAllAssetsSubmitted($mileageCardsArr);
+			
+			$transaction->commit();
 			
             $responseArray['assets'] = $mileageCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
