@@ -69,8 +69,7 @@ class MileageCardController extends BaseActiveController
 	
 	public function actionApproveCards()
 	{		
-		try
-		{
+		try{
 			//set db target
 			MileageCard::setClient(BaseActiveController::urlPrefix());
 			
@@ -88,11 +87,13 @@ class MileageCardController extends BaseActiveController
 			//get user id
 			$approvedBy = self::getUserFromToken()->UserName;
 
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Mileage Card Approve', $approvedBy, BaseActiveController::urlPrefix());
+			
 			//parse json
 			$cardIDs = $data["cardIDArray"];
-			
-			//get timecards
 			$approvedCards = []; //Prevent uninitialized error
+			//get mielagecards
 			foreach($cardIDs as $id)
 			{
 				$approvedCards[]= MileageCard::findOne($id);
@@ -107,10 +108,13 @@ class MileageCardController extends BaseActiveController
 			
 				foreach($approvedCards as $card)
 				{
-					$card-> MileageCardApprovedFlag = "Yes";
+					$card-> MileageCardApprovedFlag = 1;
 					$card-> MileageCardApprovedBy = $approvedBy;
 					$card-> MileageCardModifiedDate = Parent::getDate();
-					$card-> update();
+					if(!$card-> update()){
+						throw BaseActiveController::modelValidationException($card);
+					}
+					//TODO log mileage card approval history
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
@@ -121,13 +125,17 @@ class MileageCardController extends BaseActiveController
 			catch(Exception $e)
 			{
 				$transaction->rollBack();
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 				return $response;
 			}
-		}
-		catch(\Exception $e) 
-		{
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
