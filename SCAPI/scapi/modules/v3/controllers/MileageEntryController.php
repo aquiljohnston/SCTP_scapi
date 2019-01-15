@@ -45,8 +45,7 @@ class MileageEntryController extends BaseActiveController
 	
 	public function actionDeactivate()
 	{
-		try
-		{
+		try{
 			//set db target
 			MileageEntry::setClient(BaseActiveController::urlPrefix());
 			
@@ -55,50 +54,41 @@ class MileageEntryController extends BaseActiveController
 			
 			//capture put body
 			$put = file_get_contents("php://input");
-			$data = json_decode($put, true);
+			$entries = json_decode($put, true)['entries'];
 			
 			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			//get current user by auth token
-			$deactivatedBy =  self::getUserFromToken()->UserName;
-			//parse json
-			$entryIDs = $data["entryArray"];
+			//get current user to set deactivated by
+			$username = BaseActiveController::getUserFromToken()->UserName;
 			
-			//get mileage entries
-			foreach($entryIDs as $id)
-			{
-				$approvedEntries[]= MileageEntry::findOne($id);
-			}
-			
-			//try to approve time cards
-			try
-			{
-				//create transaction
-				$connection = BaseActiveRecord::getDb();
-				$transaction = $connection->beginTransaction(); 
-			
-				foreach($approvedEntries as $entry)
-				{
-					$entry-> MileageEntryActiveFlag = 0;
-					$entry-> MileageEntryModifiedDate = Parent::getDate();
-					$entry-> MileageEntryModifiedBy = $deactivatedBy;
-					$entry-> update();
+			foreach ($entries as $entry) {
+				//SPROC has no return so just in case we need a flag.
+				$success = 0;
+				//add variables to avoid pass by reference error
+				$taskString = json_encode($entry['taskName']);
+				$day = array_key_exists('day', $entry) ? $entry['day'] : null;
+				//call SPROC to deactivateTimeEntry
+				try {
+					$connection = BaseActiveRecord::getDb();
+					//TODO may want to move the transaction outside of the loop to allow full rollback of the request
+					$transaction = $connection->beginTransaction(); 
+					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateMileageEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
+					$timeCardCommand->bindParam(':PARAMETER1', $entry['mileageCardID'], \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':PARAMETER2', $taskString, \PDO::PARAM_STR);
+					$timeCardCommand->bindParam(':PARAMETER3', $day, \PDO::PARAM_STR);
+					$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
+					$timeCardCommand->execute();
+					$transaction->commit();
+					$success = 1;
+				} catch (Exception $e) {
+					$transaction->rollBack();
 				}
-				$transaction->commit();
-				$response->setStatusCode(200);
-				$response->data = $approvedEntries; 
-				return $response;
 			}
-			//if transaction fails rollback changes and send error
-			catch(Exception $e)
-			{
-				$transaction->rollBack();
-				$response->setStatusCode(400);
-				$response->data = "Http:400 Bad Request";
-				return $response;
-			}
+			//TODO could update response to be formated with success flag per entry if we keep individual transactions
+			$response->data = $success; 
+			return $response;
 		}
 		catch(\Exception $e) 
 		{
