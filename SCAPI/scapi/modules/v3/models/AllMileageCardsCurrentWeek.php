@@ -7,25 +7,22 @@ use Yii;
 /**
  * This is the model class for table "AllMileageCardsCurrentWeek_vw".
  *
- * @property integer $UserID
- * @property string $UserName
- * @property string $UserFirstName
- * @property string $UserLastName
- * @property integer $MileageCardID
- * @property string $MileageStartDate
- * @property string $MileageEndtDate
- * @property integer $MileageCardBusinessMiles
- * @property integer $MileageCardPersonalMiles
- * @property integer $MileageCardAllMileage_calc
+ * @property int $UserID
+ * @property int $MileageCardID
+ * @property int $MileageCardBusinessMiles
+ * @property int $MileageCardPersonalMiles
+ * @property int $MileageCardAllMileage_calc
  * @property string $MileageCardApprovedBy
- * @property string $MileageCardApproved
+ * @property int $MileageCardApproved
  * @property string $UserStatus
- * @property interer $MileageCardProjectID
+ * @property int $MileageCardProjectID
+ * @property string $MileageCardStartDate
+ * @property string $MileageCardEndDate
  */
-class AllMileageCardsCurrentWeek extends BaseActiveRecord
+class AllMileageCardsCurrentWeek extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -33,38 +30,34 @@ class AllMileageCardsCurrentWeek extends BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
             [['UserID', 'MileageCardID', 'UserStatus'], 'required'],
-            [['UserID', 'MileageCardID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles', 'MileageCardAllMileage_calc', 'MileageCardProjectID'], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'MileageCardApprovedBy', 'MileageCardApproved', 'UserStatus'], 'string'],
-            [['MileageStartDate', 'MileageEndtDate'], 'safe']
+            [['UserID', 'MileageCardID', 'MileageCardBusinessMiles', 'MileageCardPersonalMiles', 'MileageCardAllMileage_calc', 'MileageCardApproved', 'MileageCardProjectID'], 'integer'],
+            [['MileageCardApprovedBy', 'UserStatus', 'MileageCardStartDate', 'MileageCardEndDate'], 'string'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
         return [
             'UserID' => 'User ID',
-            'UserName' => 'User Name',
-            'UserFirstName' => 'User First Name',
-            'UserLastName' => 'User Last Name',
             'MileageCardID' => 'Mileage Card ID',
-            'MileageStartDate' => 'Mileage Start Date',
-            'MileageEndtDate' => 'Mileage Endt Date',
             'MileageCardBusinessMiles' => 'Mileage Card Business Miles',
             'MileageCardPersonalMiles' => 'Mileage Card Personal Miles',
             'MileageCardAllMileage_calc' => 'Mileage Card All Mileage Calc',
             'MileageCardApprovedBy' => 'Mileage Card Approved By',
-            'MileageCardApproved' => 'Mileage Card Approve',
+            'MileageCardApproved' => 'Mileage Card Approved',
             'UserStatus' => 'User Status',
-			'MileageCardProjectID' => 'Mileage Card Project ID',
+            'MileageCardProjectID' => 'Mileage Card Project ID',
+            'MileageCardStartDate' => 'Mileage Card Start Date',
+            'MileageCardEndDate' => 'Mileage Card End Date',
         ];
     }
 }
