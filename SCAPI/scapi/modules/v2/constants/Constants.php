@@ -28,9 +28,9 @@ final class Constants
 	const STAGE_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\OasisStage\\';
 	const STAGE_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADPStage\\';
 	
-	const PROD_DEFAULT_OASIS_PATH = 'K:\\Oasis\\';
-	const PROD_DEFAULT_QB_PATH = 'K:\\QuickBooks\\';
-	const PROD_DEFAULT_ADP_PATH = 'K:\\ADP\\';
+	const PROD_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\Oasis';
+	const PROD_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooks';
+	const PROD_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADP';
 
 	const OASIS = 'OASIS';
 	//need to change to payroll instead of quickbooks
