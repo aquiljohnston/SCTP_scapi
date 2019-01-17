@@ -343,7 +343,7 @@ class BaseActiveController extends ActiveController
 					$filePath = Constants::STAGE_DEFAULT_ADP_PATH;
 			        break;
 			}
-        } elseif($environment === Constants::API_CONFIG['PROD_HEADER']) {
+        } elseif($environment === Constants::API_CONFIG['AZURE_PROD_HEADER']) {
 			switch ($type) {
 			    case Constants::OASIS:
 			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
