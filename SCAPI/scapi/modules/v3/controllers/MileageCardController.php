@@ -229,7 +229,11 @@ class MileageCardController extends BaseActiveController
 				//set project dropdown to true for scct
 				$showProjectDropDown = true;
 				//rbac permission check
-				if(!PermissionsController::can('mileageCardGetAllCards') &&PermissionsController::can('mileageCardGetOwnCards'))		
+				if (PermissionsController::can('mileageCardGetAllCards'))
+                {
+					$projectAllOption = [""=>"All"];
+                }
+				elseif(PermissionsController::can('mileageCardGetOwnCards'))		
 				{
 					$userID = self::getUserFromToken()->UserID;
 					//get user project relations array
@@ -254,6 +258,9 @@ class MileageCardController extends BaseActiveController
                             $mileageCards->orWhere(['MileageCardProjectID'=>$projectID]);
                         }
                     }
+				} else{
+					//no permissions for any cards
+					throw new ForbiddenHttpException;
 				}
 			}
 			else // get only cards for the current project.
