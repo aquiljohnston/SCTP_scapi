@@ -7,15 +7,15 @@ use Yii;
 /**
  * This is the model class for table "MileageEntryTb".
  *
- * @property integer $MileageEntryID
+ * @property int $MileageEntryID
  * @property string $MileageEntryStartingMileage
  * @property string $MileageEntryEndingMileage
  * @property string $MileageEntryStartDate
  * @property string $MileageEntryEndDate
  * @property string $MileageEntryWeekDay
- * @property string $MileageEntryType
- * @property integer $MileageEntryMileageCardID
- * @property integer $MileageEntryActivityID
+ * @property string $MileageEntryType 0 = business 1 = personal;  al
+ * @property int $MileageEntryMileageCardID
+ * @property int $MileageEntryActivityID
  * @property string $MileageEntryApprovedBy
  * @property string $MileageEntryComment
  * @property string $MileageEntryCreatedBy
@@ -24,14 +24,19 @@ use Yii;
  * @property string $MileageEntryUserName
  * @property string $MileageEntrySrcDTLT
  * @property string $MileageEntrySrvDTLT
- * @property integer $MileageEntryActiveFlag
+ * @property int $MileageEntryActiveFlag
+ * @property string $MileageEntryChartOfAccount
+ * @property string $MileageEntryMileageType
+ * @property string $MileageEntryTotalMiles
+ * @property string $MileageEntryPhoto1Path
+ * @property string $MileageEntryPhoto2Path
  *
  * @property MileageCardTb $mileageEntryMileageCard
  */
 class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -39,21 +44,21 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
+            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryTotalMiles'], 'number'],
             [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT'], 'safe'],
-            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName'], 'string'],
+            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'MileageEntryChartOfAccount', 'MileageEntryMileageType', 'MileageEntryPhoto1Path', 'MileageEntryPhoto2Path'], 'string'],
             [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
             [['MileageEntryMileageCardID'], 'exist', 'skipOnError' => true, 'targetClass' => MileageCard::className(), 'targetAttribute' => ['MileageEntryMileageCardID' => 'MileageCardID']],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -76,6 +81,11 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
             'MileageEntrySrcDTLT' => 'Mileage Entry Src Dtlt',
             'MileageEntrySrvDTLT' => 'Mileage Entry Srv Dtlt',
             'MileageEntryActiveFlag' => 'Mileage Entry Active Flag',
+            'MileageEntryChartOfAccount' => 'Mileage Entry Chart Of Account',
+            'MileageEntryMileageType' => 'Mileage Entry Mileage Type',
+            'MileageEntryTotalMiles' => 'Mileage Entry Total Miles',
+            'MileageEntryPhoto1Path' => 'Mileage Entry Photo1 Path',
+            'MileageEntryPhoto2Path' => 'Mileage Entry Photo2 Path',
         ];
     }
 
