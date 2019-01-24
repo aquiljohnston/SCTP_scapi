@@ -43,6 +43,62 @@ class MileageEntryController extends BaseActiveController
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
 	
+	/**
+     * Create New Mileage Entry and Activity in CT DB
+     * @return mixed
+     * @throws \yii\web\HttpException
+     */
+    public function actionCreateTask()
+    {
+        try {
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('createTaskEntry');
+
+			$successFlag = 0;
+			$warningMessage = '';
+			
+            //get body data
+            $body = file_get_contents("php://input");
+            $data = json_decode($body, true);
+			
+			// set up db connection
+			$connection = BaseActiveRecord::getDb();
+			$processJSONCommand = $connection->createCommand("EXECUTE spAddMileage :MileageCardID , :Date, :TotalMiles, :MileageType, :CreatedByUserName");
+			$processJSONCommand->bindParam(':MileageCardID', $data['MileageCardID'], \PDO::PARAM_INT);
+			$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':TotalMiles', $data['TotalMiles']);
+			$processJSONCommand->bindParam(':MileageType', $data['MileageType'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
+			$processJSONCommand->execute();
+			$successFlag = 1;			
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
+                'MileageCardID' => $data['MileageCardID'],
+                'Date' => $data['Date'],
+                'CreatedByUserName' => $data['CreatedByUserName'],
+                'SuccessFlag' => $successFlag
+            ]);
+			$warningMessage = 'An error occurred.';
+        }
+		
+		//build response format
+		$dataArray =  [
+			'MileageCardID' => $data['MileageCardID'],
+			'SuccessFlag' => $successFlag,
+			'WarningMessage' => $warningMessage,
+		];
+		$response = Yii::$app->response;
+		$response->format = Response::FORMAT_JSON;
+		$response->data = $dataArray;
+		
+		return $response;
+    }
+	
 	public function actionDeactivate()
 	{
 		try{
