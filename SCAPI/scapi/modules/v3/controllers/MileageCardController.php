@@ -12,6 +12,7 @@ use app\modules\v3\models\MileageEntry;
 use app\modules\v3\models\Project;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\AllMileageCardsCurrentWeek;
+use app\modules\v3\models\MileageCardAccountantSubmit;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\authentication\TokenAuth;
@@ -42,11 +43,11 @@ class MileageCardController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'view' => ['get'],
 					'approve-cards'  => ['put'],
-					'get-card' => ['get'],
-					'get-cards' => ['get'],
 					'show-entries' => ['get'],
+					'get-cards' => ['get'],
+					'get-accountant-view' => ['get'],
+					'get-accountant-details' => ['get'],
 					'get-cards-export' => ['get'],
                 ],  
             ];
@@ -344,7 +345,116 @@ class MileageCardController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+		$sortField = 'ProjectName', $sortOrder = 'ASC')
+	{
+		try{
+			//url decode filter value
+            $filter = urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
 
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('mileageCardGetAccountantView');
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+			//response array of time cards
+            $mileageCards = [];
+            $responseArray = [];
+			$allTheProjects = [""=>"All"];
+			$showProjectDropDown = true;
+			//used to get current week if date range falls in the middle of the week
+			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
+
+			//build base query
+            $cardQuery = MileageCardAccountantSubmit::find()
+				->where(['between', 'StartDate', $startDate, $endDate])
+                ->orWhere(['between', 'EndDate', $startDate, $endDate])
+                ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
+
+			//get records for project dropdown(timing for this execution is very important)
+			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+
+			//add project filter
+			if($projectID!= null)
+			{
+                $cardQuery->andFilterWhere([
+                    'and',
+                    ['ProjectID' => $projectID],
+                ]);
+            }
+
+			//add search filter
+			if($filter != null)
+			{
+                $cardQuery->andFilterWhere([
+                    'or',
+                    ['like', 'ProjectName', $filter],
+                    ['like', 'ProjectManager', $filter],
+                    ['like', 'ApprovedBy', $filter],
+                ]);
+            }
+
+			//get project list for dropdown based on time cards available
+			$allTheProjects = self::extractProjectsFromMileageCards($dropdownRecords, $allTheProjects);
+
+			//paginate
+			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
+            $mileageCards = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
+
+			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
+			//this check seems to have some issue and is only currently being applied to the post filter data set.
+			$projectWasSubmitted   = $this->CheckAllAssetsSubmitted($mileageCards);
+
+            $responseArray['assets'] = $mileageCards;
+            $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
+
+			$response->data = $responseArray;
+			return $response;
+		} catch(ForbiddenHttpException $e) {
+			throw $e;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	{
+		try{
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('mileageCardGetAccountantDetails');
+
+			$detailsQuery = new Query;
+            $mileageCards = $detailsQuery->select('*')
+                ->from(["fnMileageCardByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+				->where(['MileageCardProjectID' => $projectID])
+				->all(BaseActiveRecord::getDb());
+
+			//format response
+			$responseArray['details'] = $mileageCards;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+		} catch(ForbiddenHttpException $e) {
+			throw $e;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
     public function actionGetCardsExport($startDate, $endDate)
     {
         // RBAC permission check is embedded in this action
@@ -441,8 +551,7 @@ class MileageCardController extends BaseActiveController
 		foreach ($dropdownRecords as $p) {
 			//second option is only needed for the accountant view in timecard because the tables dont match
 			//currently only two option exist for key would have to update this if more views/tables/functions use this function
-			//$key = array_key_exists('MileageCardProjectID', $p) ? $p['MileageCardProjectID'] : $p['ProjectID'];
-			$key = $p['MileageCardProjectID'];
+			$key = array_key_exists('MileageCardProjectID', $p) ? $p['MileageCardProjectID'] : $p['ProjectID'];
 			$value = $p['ProjectName'];
 			$allTheProjects[$key] = $value;
 		}
@@ -499,12 +608,9 @@ class MileageCardController extends BaseActiveController
         foreach ($mileageCardsArr as $item)
 		{
 			//second option is only needed for the accountant view in timecard because the tables dont match
-			// $oasisKey = array_key_exists('MileageCardOasisSubmitted', $item) ? 'MileageCardOasisSubmitted' : 'OasisSubmitted';
-			// $qbKey = array_key_exists('MileageCardQBSubmitted', $item) ? 'MileageCardQBSubmitted' : 'QBSubmitted';
-			$oasisKey = 'MileageCardOasisSubmitted';
-			$qbKey = 'MileageCardQBSubmitted';
+			$oasisKey = array_key_exists('MileageCardOasisSubmitted', $item) ? 'MileageCardOasisSubmitted' : 'OasisSubmitted';
 			
-            if ($item[$oasisKey] == "No" || $item[$qbKey] == "No" ){
+            if ($item[$oasisKey] == "No"){
                 return false;
             }
         }
