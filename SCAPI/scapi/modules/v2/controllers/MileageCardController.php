@@ -9,24 +9,17 @@ use app\modules\v2\controllers\UpdateMethodNotAllowed;
 use Yii;
 use app\modules\v2\models\MileageCard;
 use app\modules\v2\models\MileageEntry;
-use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\AllMileageCardsCurrentWeek;
-use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
-use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\authentication\TokenAuth;
-use yii\db\Connection;
-use yii\data\ActiveDataProvider;
-use yii\debug\components\search\matchers\Base;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
-use \DateTime;
 use yii\data\Pagination;
 use yii\db\query;
 
@@ -72,36 +65,6 @@ class MileageCardController extends BaseActiveController
 	use CreateMethodNotAllowed;
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
-	
-	 /**
-     * Displays a single MileageCard model.
-     * @param integer $id
-     * @return mixed
-     */
-    public function actionView($id)
-    {
-		try
-		{			
-			//set db target
-			$headers = getallheaders();
-			MileageCard::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardView');
-			
-			$mileageCard = MileageCard::findOne($id);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileageCard;
-			
-			return $response;
-		}
-		catch(\Exception $e) 
-		{
-			throw new \yii\web\HttpException(400);
-		}
-    }
-	
 	
 	public function actionApproveCards()
 	{		
@@ -222,39 +185,6 @@ class MileageCardController extends BaseActiveController
 			$response -> data = $dataArray;
 		}
 		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
-	
-	//is this route even used? seems like it would not work with multiple project structure.
-	//appears time card version of this is still in use, this will probably need to be altered that new structure
-	public function actionGetCard($userID)
-	{		
-		try
-		{
-			//set db target
-			AllMileageCardsCurrentWeek::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageCardGetCard');
-			
-			$mileageCard = AllMileageCardsCurrentWeek::findOne(['UserID'=>$userID]);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			if ($mileageCard != null)
-			{
-				$response->setStatusCode(200);
-				$response->data = $mileageCard;
-				return $response;
-			}
-			else
-			{
-				$response->setStatusCode(404);
-				return $response;
-			}
-		}
-		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);
 		}

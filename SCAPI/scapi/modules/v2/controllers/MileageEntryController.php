@@ -5,7 +5,6 @@ namespace app\modules\v2\controllers;
 use Yii;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\MileageEntry;
-use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
@@ -43,31 +42,6 @@ class MileageEntryController extends BaseActiveController
 	
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
-	
-	//is this still in use?
-	public function actionView($id)
-	{
-		try
-		{
-			//set db target
-			MileageEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageEntryView');
-			
-			//$userData = array_map(function ($model) {return $model->attributes;},$arrayUser);
-			$mileageEntry = MileageEntry::findOne($id);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $mileageEntry;
-			
-			return $response;
-		}
-		catch(\Exception $e)
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
 	
 	public function actionDeactivate()
 	{

@@ -448,33 +448,8 @@ class ProjectController extends BaseActiveController
                 }
             }
 			
-			//loop usersRemoved and delete relationships and deactivate cards
-            if (count($usersRemoved) > 0 && $usersRemoved[0] != null) {
-                foreach ($usersRemoved as $i) {
-					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-                    $projUser = ProjectUser::find()
-                        ->where(['and', "ProjUserUserID = $i", "ProjUserProjectID = $projectID"])
-                        ->one();
-                    $projUser->delete();
-                    //call sps to deactivate time cards and mileage cards
-                    try {
-                        $userID = $i;
-                        $connection = SCUser::getDb();
-                        $transaction = $connection->beginTransaction();
-                        $timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
-                        $timeCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
-                        $timeCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
-                        $timeCardCommand->execute();
-                        $mileageCardCommand = $connection->createCommand("EXECUTE DeactivateMileageCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
-                        $mileageCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
-                        $mileageCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
-                        $mileageCardCommand->execute();
-                        $transaction->commit();
-                    } catch (Exception $e) {
-                        $transaction->rollBack();
-                    }
-                }
-            }
+			//deactivate user records, cards and remove project relationships
+			self::removeFromProject($usersRemoved, $project);
 			
 			//set success response 
 			$response->setStatusCode(200);
@@ -492,15 +467,14 @@ class ProjectController extends BaseActiveController
 		}
 	}
 	
+	//used in user/create-in-project
 	public static function addToProject($user, $project)
 	{
-
-
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		$userID = $user->UserID;
 		$projectID = $project->ProjectID;
 		//link user to project
-		//TODO add created by via third param extraColumns array if possible http://www.yiiframework.com/doc-2.0/yii-db-baseactiverecord.html#link()-detail
+		//add created by via third param extraColumns array http://www.yiiframework.com/doc-2.0/yii-db-baseactiverecord.html#link()-detail
 		$user->link('projects',$project, ['ProjUserCreatedBy' => self::getUserFromToken()->UserName]);
 		//call sps to create new time cards and mileage cards
 		try
@@ -544,6 +518,58 @@ class ProjectController extends BaseActiveController
 		}
 	}
 
+	//function used by addRemoveUser to remove a user from a project, deactivate related time/mileage cards and 
+	//if project has its own users deactivate that record
+	private static function removeFromProject($usersRemoved, $project){
+		$projectID = $project->ProjectID;
+		if (count($usersRemoved) > 0 && $usersRemoved[0] != null) {
+			foreach ($usersRemoved as $i) {
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+				//call sps to deactivate time cards and mileage cards
+				try {
+					$userID = $i;
+					$connection = SCUser::getDb();
+					$transaction = $connection->beginTransaction();
+					$projUser = ProjectUser::find()
+						->where(['and', "ProjUserUserID = $i", "ProjUserProjectID = $projectID"])
+						->one();
+					$projUser->delete();
+					$timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
+					$timeCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
+					$timeCardCommand->execute();
+					$mileageCardCommand = $connection->createCommand("EXECUTE DeactivateMileageCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
+					$mileageCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
+					$mileageCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
+					$mileageCardCommand->execute();
+					$transaction->commit();
+				} catch (Exception $e) {
+					$transaction->rollBack();
+					//continue to break loop and avoid deactivating user in the event of a failure
+					continue;
+				}
+				//deactivate user if the project is not SCCT
+				if(!BaseActiveController::isSCCT($project->ProjectUrlPrefix)){
+					//find user
+					$user = SCUser::findOne($i);
+					//get user model based on project 
+					$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
+					if($userModel != null){
+						BaseActiveRecord::setClient($project->ProjectUrlPrefix);
+						$existingUser = $userModel::find()
+							->where(['UserName' => $user->UserName])
+							->one();
+						//deactivate user if they are currently active
+						if($existingUser != null && $existingUser->UserActiveFlag == 1) {
+							$existingUser->UserActiveFlag = 0;
+							$existingUser->update();
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	public function actionGetProjectModules($projectID) {
 		//PermissionsController::requirePermission('projectGetProjectModules');
 		try {
