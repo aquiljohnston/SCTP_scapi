@@ -2,6 +2,7 @@
 
 namespace app\modules\v3\controllers;
 
+use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\CreateMethodNotAllowed;
 use app\modules\v3\controllers\DeleteMethodNotAllowed;
 use app\modules\v3\controllers\PermissionsController;
@@ -13,6 +14,7 @@ use app\modules\v3\models\Project;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\AllMileageCardsCurrentWeek;
 use app\modules\v3\models\MileageCardAccountantSubmit;
+use app\modules\v3\models\MileageCardEventHistory;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\authentication\TokenAuth;
@@ -115,7 +117,8 @@ class MileageCardController extends BaseActiveController
 					if(!$card-> update()){
 						throw BaseActiveController::modelValidationException($card);
 					}
-					//TODO log mileage card approval history
+					//log approvals
+					self::logMileageCardHistory(Constants::MILEAGE_CARD_APPROVAL, $card->MileageCardID);
 				}
 				$transaction->commit();
 				$response->setStatusCode(200);
@@ -455,89 +458,150 @@ class MileageCardController extends BaseActiveController
 		}
 	}
 	
-    public function actionGetCardsExport($startDate, $endDate)
-    {
-        // RBAC permission check is embedded in this action
-        try
-        {
+    public function actionPMSubmit()
+	{
+		try
+		{		
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('mileageCardPmSubmit');
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//get userid
+			$approvedBy = self::getUserFromToken()->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Mileage Card Submittal', $approvedBy, BaseActiveController::urlPrefix());
+			
+			//parse json	
+			$cardIDs = $data["projectIDArray"];
+			$connection = BaseActiveRecord::getDb();
+			// get all mileagecards
+			$max = sizeof($cardIDs);
+			$queryResults = [];
+			for ($x = 0; $x < $max; $x++) {
+				$queryString = "Select MileageCardID from [dbo].[MileageCardTb] mc
+								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = mc.MileageCardTechID
+								Where mc.MileageStartDate = '" . $data["dateRangeArray"][0] . "' and mc.MileageCardProjectID = " . $cardIDs[$x] . " and mc.MileageCardActiveFlag = 1 and MileageCardPMApprovedFlag != 1";
+				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();
+				Yii::trace('PM Approval - Mileage Cards to Approve queryString: '. $queryString);	
+			}
+			//try to approve mileage cards
+			try {
+				$transaction = $connection->beginTransaction();
+				$max = sizeof($queryResults);
+				for ($x = 0; $x < $max; $x++) {
+					$count = sizeof($queryResults[$x]);
+					for($i=0; $i < $count; $i++) {
+						$statement = "Update MileageCardTb SET MileageCardPMApprovedFlag = 1, MileageCardApprovedBy = '" . $approvedBy . "' WHERE MileageCardID = " . $queryResults[$x][$i]['MileageCardID'];
+						$connection->createCommand($statement)->execute();
+						//log approvals
+						self::logMileageCardHistory(Constants::MILEAGE_CARD_PM_APPROVAL, $queryResults[$x][$i]['MileageCardID']);
+					}
+				}
+				$transaction->commit();
+				
+				//execute sp to inform accountants if action needs to be taken for submitted cards
+				$accountantEmailCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spSendMileageCardAccountantEmail :StartDate, :EndDate");
+				$accountantEmailCommand->bindParam(':StartDate', $data["dateRangeArray"][0],  \PDO::PARAM_STR);
+				$accountantEmailCommand->bindParam(':EndDate', $data["dateRangeArray"][1],  \PDO::PARAM_STR);
+				$accountantEmailCommand->execute();
+				
+				$response->setStatusCode(200);
+				$response->data = $queryResults;
+				return $response;
+			} catch(\Exception $e) {
+				// if transaction fails rollback changes, archive and send error
+				$transaction->rollBack();
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				return $response;
+			}
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException($e);
+		}
+	}
+	
+	/**
+     * Check if submit button should be enabled/disabled by calling DB fnSubmit function
+     * @return mixed
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionCheckSubmitButtonStatus(){
+        try{
 			//get headers
-			$headers = getallheaders();
-			//get client header
-			$client = $headers['X-Client'];
+            $headers = getallheaders();
+            //get client header
+            $client = $headers['X-Client'];
 			
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('checkSubmitButtonStatus');
 
-            //format response
-            $response = Yii::$app->response;
-            $response-> format = Response::FORMAT_JSON;
-
-            //response array of mileage cards
-            $mileageCardArray = [];
-            $mileageCardsArr = [];
-			
-			$mileageCards = new Query;
-			$mileageCards->select('*')
-				->from(["fnAllMileageCards(:startDate, :endDate)"])
-				->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
-
+            //get body data
+            $data = file_get_contents("php://input");
+			$submitCheckData = json_decode($data, true)['submitCheck'];
+			$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
+			//if is not scct project name will always be the current client
 			if(BaseActiveController::isSCCT($client))
 			{
-				//rbac permission check
-				if(!PermissionsController::can('mileageCardGetAllCards') && PermissionsController::can('mileageCardGetOwnCards'))
-				{
-					$userID = self::getUserFromToken()->UserID;
-					//get user project relations array
-					$projects = ProjectUser::find()
-						->where("ProjUserUserID = $userID")
-						->all();
-					$projectsSize = count($projects);
-
-					//check if week is prior or current to determine appropriate view
-					if($projectsSize > 0)
-					{
-						$mileageCards->where(['MileageCardProjectID' => $projects[0]->ProjUserProjectID]);
-					}
-					if($projectsSize > 1)
-					{
-						for($i=1; $i < $projectsSize; $i++)
-						{
-							$projectID = $projects[$i]->ProjUserProjectID;
-							$mileageCards->orWhere(['MileageCardProjectID'=>$projectID]);
-						}
-					}
-				}
-				elseif(!PermissionsController::can('mileageCardGetAllCards')){
-					throw new ForbiddenHttpException;
-				}
-			} else
-			{
-				//get project based on client header
+				$projectName  = $submitCheckData['ProjectName'];
+			}else{
 				$project = Project::find()
 					->where(['ProjectUrlPrefix' => $client])
 					->one();
-				//add project where to query
-				$mileageCards->where(['MileageCardProjectID' => $project->ProjectID]);
+				$projectName = array($project->ProjectID);
 			}
 
-			// creates a reader so that information can be processed one row at a time
-			$responseArray = $mileageCards->orderBy('UserID,MileageCardProjectID')
-				->createCommand(BaseActiveRecord::getDb())
-				->query();
+            //build base query
+			$responseArray = new Query;
+			if($isAccountant) {
+	            $responseArray->select('*')
+					->from(["fnMileageCardSubmitAccountant(:StartDate , :EndDate)"])
+					->addParams([
+						//':ProjectName' => json_encode($projectName), 
+						':StartDate' => $submitCheckData['StartDate'], 
+						':EndDate' => $submitCheckData['EndDate']]);
+			} else {
+				$responseArray->select('*')
+                ->from(["fnMileageCardSubmitPM(:ProjectName, :StartDate , :EndDate)"])
+                ->addParams([
+					':ProjectName' => json_encode($projectName), 
+					':StartDate' => $submitCheckData['StartDate'], 
+					':EndDate' => $submitCheckData['EndDate']
+					]);
+			}
+            $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
+            $responseArray = $submitButtonStatus;
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $responseArray;
+
 			
-            if (!empty($responseArray))
-            {
-                self::processAndOutputCsvResponse($responseArray);
-                return '';
-            }
-            self::setCsvHeaders();
-            //send response
-            return '';
+			yii::trace(json_encode($responseArray));
+			
+            return $response;
         } catch(ForbiddenHttpException $e) {
-            //Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
-            //Yii::trace('Exception '.$e->getMessage());
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
             throw new \yii\web\HttpException(400);
         }
     }
@@ -617,31 +681,33 @@ class MileageCardController extends BaseActiveController
         return true;        
     }
 	
-	//TODO change to use base active controller version when updates are completed to match time cards
-    // helper method for setting the csv header for tracker maps csv output
-    public static function setCsvHeaders(){
-        header('Content-Type: text/csv;charset=UTF-8');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-    }
-
-	//TODO change to use base active controller version when updates are completed to match time cards
-    // helper method for outputting csv data without storing the whole result
-    public static function processAndOutputCsvResponse($reader){
-        Yii::$app->response->format = Response::FORMAT_RAW;
-
-        self::setCsvHeaders();
-        // TODO find a way to use Yii response but without storing the whole response content in a variable
-        $firstLine = true;
-        $fp = fopen('php://output','w');
-
-        while($row = $reader->read()){
-            if($firstLine) {
-                $firstLine = false;
-                fputcsv($fp, array_keys($row));
-            }
-            fputcsv($fp, $row);
-        }
-        fclose($fp);
-    }
+	//inserts records into historical tables
+	private function logMileageCardHistory($type, $mileageCardID = null, $startDate = null, $endDate = null, $comments = null)
+	{
+		try
+		{
+			//create and populate model
+			//TODO need table
+			$historyRecord = new MileageCardEventHistory;
+			$historyRecord->Date = BaseActiveController::getDate();
+			$historyRecord->Name = self::getUserFromToken()->UserName;
+			$historyRecord->Type = $type;
+			$historyRecord->MileageCardID = $mileageCardID;
+			$historyRecord->StartDate = $startDate;
+			$historyRecord->EndDate = $endDate;
+			$historyRecord->Comments = $comments;
+			
+			//save
+			if(!$historyRecord->save())
+			{
+				//throw error on failure
+				throw BaseActiveController::modelValidationException($newInspection);
+			}
+		}
+		catch(\Exception $e)
+		{
+			//catch and log errors
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+		}
+	}
 }

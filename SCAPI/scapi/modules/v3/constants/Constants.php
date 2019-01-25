@@ -55,6 +55,13 @@ final class Constants
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
 	const TIME_CARD_SUBMISSION_RESET = 'Reset Submission';
 	
+	//Mileage Card Event History Types
+	const MILEAGE_CARD_APPROVAL = 'Supervisor Approval';
+	const MILEAGE_CARD_PM_APPROVAL = 'PM Approval';
+	const MILEAGE_CARD_SUBMISSION_OASIS = 'Oasis Submission';
+	const MILEAGE_CARD_SUBMISSION_ADP = 'ADP Submission';
+	const MILEAGE_CARD_SUBMISSION_RESET = 'Reset Submission';
+	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',
 		'STAGE_HEADER' => 'apistage',
