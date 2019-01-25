@@ -258,6 +258,16 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Admin'][] = $mileageCardGetAllCards;
         $this->permissionArray[] = $mileageCardGetAllCards;
 		
+		$mileageCardGetAccountantView = $this->auth->createPermission('mileageCardGetAccountantView');
+        $mileageCardGetAccountantView->description = 'View the Accountant flavor of the mileage card screen';
+        $this->permissionAssociationArray['Accountant'][] = $mileageCardGetAccountantView;
+        $this->permissionArray[] = $mileageCardGetAccountantView;
+		
+		$mileageCardGetAccountantDetails = $this->auth->createPermission('mileageCardGetAccountantDetails');
+        $mileageCardGetAccountantDetails->description = 'View expanded section details on the Accountant flavor of the mileage card screen';
+        $this->permissionAssociationArray['Accountant'][] = $mileageCardGetAccountantDetails;
+        $this->permissionArray[] = $mileageCardGetAccountantDetails;
+		
         $mileageCardView = $this->auth->createPermission('mileageCardView');
         $mileageCardView->description = 'View a mileage card';
         $this->permissionAssociationArray['Supervisor'][] = $mileageCardView;
@@ -278,6 +288,16 @@ class RbacController extends Controller
         $mileageCardApprove->description = 'Approve a mileage card';
         $this->permissionAssociationArray['Supervisor'][] = $mileageCardApprove;
         $this->permissionArray[] = $mileageCardApprove;
+		
+		$mileageCardPmSubmit = $this->auth->createPermission('mileageCardPmSubmit');
+        $mileageCardPmSubmit->description = 'Submit mileage cards to accounting.';
+        $this->permissionAssociationArray['ProjectManager'][] = $mileageCardPmSubmit;
+        $this->permissionArray[] = $mileageCardPmSubmit;
+	
+        $mileageCardSubmit = $this->auth->createPermission('mileageCardSubmit');
+        $mileageCardSubmit->description = 'Submit Mileage Cards and generate output files';
+        $this->permissionAssociationArray['Accountant'][] = $mileageCardSubmit;
+        $this->permissionArray[] = $mileageCardSubmit;
 		
 		//Mileage Entry permissions/////////////////////////////////////////////////////////////////
 		
