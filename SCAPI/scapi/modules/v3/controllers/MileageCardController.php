@@ -50,6 +50,8 @@ class MileageCardController extends BaseActiveController
 					'get-cards' => ['get'],
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
+					'p-m-submit' => ['put'],
+					'accountant-submit' => ['put'],
 					'get-cards-export' => ['get'],
                 ],  
             ];
@@ -536,6 +538,201 @@ class MileageCardController extends BaseActiveController
 	}
 	
 	/**
+	*Call sp to process mileage card data and generate account files for OASIS and ADP
+	*Looks for JSON PUT body containing date range and project IDs to process
+	*@RETURNS JSON w/success flag and comment
+	*TODO consider extracting some submit functions out when time card v3 is created.
+	*/
+	public function actionAccountantSubmit()
+	{
+		try{
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('mileageCardSubmit');
+			
+			//get put data
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			
+			//format response
+			$response = Yii::$app->response;
+			$responseData = [];
+			$responseData['success'] = 0;
+			$responseData['comments'] = '';
+			
+			//call function to get file data, check after each file for failure
+			$oasisData = self::getSubmissionFileData($params, Constants::MILEAGE_CARD_OASIS);
+			if($oasisData === false)
+			{
+				$comments = 'Failed to get Oasis Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				$response->format = Response::FORMAT_JSON;
+				return $response;
+			}
+			$adpData = self::getSubmissionFileData($params, Constants::MILEAGE_CARD_ADP);
+			if($adpData === false)
+			{
+				$comments = 'Failed to get ADP Data.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				$response->format = Response::FORMAT_JSON;
+				return $response;
+			}
+			
+			//call function to write files, check after each file for failure
+			$oasisWriteStatus = count($oasisData) != 0 ? self::writeFileData($oasisData, Constants::MILEAGE_CARD_OASIS) : true;
+			if(!$oasisWriteStatus)
+			{
+				$comments = 'Failed to write Oasis file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				$response->format = Response::FORMAT_JSON;
+				return $response;
+			}
+			$adpWriteStatus = count($adpData) != 0 ? self::writeFileData($adpData, Constants::MILEAGE_CARD_ADP) : true;
+			if(!$adpWriteStatus)
+			{
+				$comments = 'Failed to write ADP file.';
+				self::resetSubmission($params, 'ALL', $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				$response->format = Response::FORMAT_JSON;
+				return $response;
+			}
+			
+			//if all process run successfully return success
+			$responseData['success'] = 1;
+			$responseData['comments'] = 'Mileage Card submission processed successfully.';
+			$response->data = $responseData;
+			$response->format = Response::FORMAT_JSON;
+			return $response;
+			
+		} catch(ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+        }	
+	}
+	
+	private static function getSubmissionFileData($params, $type)
+	{
+		try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			switch ($type) {
+				case Constants::MILEAGE_CARD_OASIS:
+					$spName = 'spGenerateOasisMileageCardByProject';
+					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_OASIS;
+					break;
+				case Constants::MILEAGE_CARD_ADP:
+					$spName = 'spGenerateADPMileageCardByProject';
+					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_ADP;
+					break;
+			}
+			
+			//if sp call fails concat sp name instead
+			$db = BaseActiveRecord::getDb();
+			$getFileDataCommand = $db->createCommand("SET NOCOUNT ON EXECUTE $spName :projectIDs, :startDate, :endDate");
+			$getFileDataCommand->bindParam(':projectIDs', $projectIDs, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':startDate', $startDate, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':endDate', $endDate, \PDO::PARAM_STR);
+			$fileData = $getFileDataCommand->query();
+
+			//log submission
+			self::logMileageCardHistory($mcEventHistoryType, null, $startDate, $endDate);
+			
+			return $fileData;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'getMileageSubmissionFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Type: ' . $type
+			);
+			return false;
+		}
+	}
+	
+	private static function writeFileData($data, $type)
+	{
+		try {
+			switch ($type) {
+				case Constants::MILEAGE_CARD_OASIS:
+					$fileNamePrefix = Constants::OASIS_FILE_NAME;
+					break;
+				case Constants::MILEAGE_CARD_ADP:
+					$fileNamePrefix = Constants::ADP_FILE_NAME;
+					break;
+			}
+			//get date and format for file name
+			$date = BaseActiveController::getDate();
+			$formatedDate = str_replace([' ', ':'], '_', $date);
+			$fileName = $fileNamePrefix . $formatedDate;
+			
+			//data is the sp response for the given file, file name oasis_history_2018-03-27_9_36_36.csv, type is type of file being written
+			BaseActiveController::processAndWriteCsv($data,$fileName,$type);
+			return true;
+		}catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'writeMileageFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Data: ' . json_encode($data),
+				'Type: ' . $type
+			);
+			return false;
+		}
+	}
+	
+	private static function resetSubmission($params, $process = 'ALL', $comments = null)
+    {
+        try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+            $responseArray = [];
+
+			$responseArray = BaseActiveRecord::getDb();
+			$getEventsCommand = $responseArray->createCommand("SET NOCOUNT ON EXECUTE spResetMileageCardSubmitFlag :projectIDs, :startDate, :endDate, :process");
+			$getEventsCommand->bindParam(':projectIDs', $projectIDs,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$getEventsCommand->bindParam(':process', $process,  \PDO::PARAM_STR);
+			$responseArray = $getEventsCommand->query();  
+
+			$status['success'] = true;	
+			$response->data = $status;	
+			
+			//log submission
+			self::logMileageCardHistory(Constants::MILEAGE_CARD_SUBMISSION_RESET, null, $startDate, $endDate, $comments);
+			
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'resetMileageSubmission',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Comments: ' . $comments
+			);
+			throw new \yii\web\HttpException(400);
+		}
+    }
+	
+	/**
      * Check if submit button should be enabled/disabled by calling DB fnSubmit function
      * @return mixed
      * @throws ForbiddenHttpException
@@ -592,9 +789,6 @@ class MileageCardController extends BaseActiveController
             $response = Yii::$app ->response;
             $response -> format = Response::FORMAT_JSON;
             $response -> data = $responseArray;
-
-			
-			yii::trace(json_encode($responseArray));
 			
             return $response;
         } catch(ForbiddenHttpException $e) {

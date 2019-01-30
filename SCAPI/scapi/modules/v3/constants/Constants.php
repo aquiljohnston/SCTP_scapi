@@ -19,7 +19,7 @@ final class Constants
 	const BASE_TASKOUT = 'app\modules\v3\models\TaskOut';
 	const CLIENT_DB_MANAGER = 'app\modules\v3\rbac\ClientDbManager';
 	
-	//time card submission file locations
+	//Time Card Submission File Locations
 	const DEV_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooksDev\\';
 	const DEV_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\OasisDev\\';
 	const DEV_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADPDev\\';
@@ -32,6 +32,7 @@ final class Constants
 	const PROD_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooks\\';
 	const PROD_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADP\\';
 
+	//Time Card File Types
 	const OASIS = 'OASIS';
 	//need to change to payroll instead of quickbooks
 	const QUICKBOOKS = 'QB';
@@ -61,6 +62,20 @@ final class Constants
 	const MILEAGE_CARD_SUBMISSION_OASIS = 'Oasis Submission';
 	const MILEAGE_CARD_SUBMISSION_ADP = 'ADP Submission';
 	const MILEAGE_CARD_SUBMISSION_RESET = 'Reset Submission';
+	
+	//Mileage Card File Types
+	const MILEAGE_CARD_OASIS = 'mcOASIS';
+	const MILEAGE_CARD_ADP = 'mcADP';
+	
+	//Mileage Card Submission File Locations
+	const DEV_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasisDev\\';
+	const DEV_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADPDev\\';
+	
+	const STAGE_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasisStage\\';
+	const STAGE_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADPStage\\';
+	
+	const PROD_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasis\\';
+	const PROD_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADP\\';
 	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',
