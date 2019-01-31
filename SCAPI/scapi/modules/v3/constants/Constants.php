@@ -56,6 +56,10 @@ final class Constants
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
 	const TIME_CARD_SUBMISSION_RESET = 'Reset Submission';
 	
+	//Mileage Card Submission File Name
+	const OASIS_MILEAGE_FILE_NAME = 'oasis_mileage_history_';
+	const ADP_MILEAGE_FILE_NAME = 'adp_mileage_history';
+	
 	//Mileage Card Event History Types
 	const MILEAGE_CARD_APPROVAL = 'Supervisor Approval';
 	const MILEAGE_CARD_PM_APPROVAL = 'PM Approval';

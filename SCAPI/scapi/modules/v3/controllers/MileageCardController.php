@@ -664,10 +664,10 @@ class MileageCardController extends BaseActiveController
 		try {
 			switch ($type) {
 				case Constants::MILEAGE_CARD_OASIS:
-					$fileNamePrefix = Constants::OASIS_FILE_NAME;
+					$fileNamePrefix = Constants::OASIS_MILEAGE_FILE_NAME;
 					break;
 				case Constants::MILEAGE_CARD_ADP:
-					$fileNamePrefix = Constants::ADP_FILE_NAME;
+					$fileNamePrefix = Constants::ADP_MILEAGE_FILE_NAME;
 					break;
 			}
 			//get date and format for file name
