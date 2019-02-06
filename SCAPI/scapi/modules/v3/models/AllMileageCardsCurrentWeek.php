@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\v2\models;
+namespace app\modules\v3\models;
 
 use Yii;
 
@@ -19,7 +19,7 @@ use Yii;
  * @property string $MileageCardStartDate
  * @property string $MileageCardEndDate
  */
-class AllMileageCardsCurrentWeek extends \app\modules\v2\models\BaseActiveRecord
+class AllMileageCardsCurrentWeek extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
      * {@inheritdoc}

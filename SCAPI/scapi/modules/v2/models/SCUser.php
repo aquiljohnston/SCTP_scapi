@@ -10,7 +10,7 @@ use yii\web\UnauthorizedHttpException;
 /**
  * This is the model class for table "UserTb".
  *
- * @property integer $UserID
+ * @property int $UserID
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
@@ -20,35 +20,40 @@ use yii\web\UnauthorizedHttpException;
  * @property string $UserCompanyPhone
  * @property string $UserAppRoleType
  * @property string $UserComments
- * @property integer $UserActiveFlag
- * @property string $UserCreatedDate
- * @property string $UserModifiedDate
- * @property string $UserCreatedUID
- * @property string $UserModifiedUID
+ * @property int $UserActiveFlag 0 = inactive 1 = active and 9 
  * @property string $UserCreatedDTLTOffset
  * @property string $UserModifiedDTLTOffset
+ * @property string $UserCreatedDate
+ * @property string $UserCreatedUID
+ * @property string $UserModifiedDate
+ * @property string $UserModifiedUID
  * @property string $UserUID
  * @property string $UserPassword
- * @property integer $UserPaySourceID
+ * @property int $UserPaySourceID
  * @property string $UserOasisID
- * @property integer $SCCEmployeeID
- * @property string $UserAddress 
- * @property string $UserCity 
- * @property string $UserState 
- * @property string $UserZip 
- * @property string $UserLocation 
- * @property string $UserPayMethod 
- * @property string $UserPreferredEmail 
- * @property string $UserRefreshDateTime 
+ * @property int $SCCEmployeeID
+ * @property string $UserAddress
+ * @property string $UserCity
+ * @property string $UserState
+ * @property string $UserZip
+ * @property string $UserLocation
+ * @property string $UserPayMethod
+ * @property string $UserPreferredEmail
+ * @property string $UserRefreshDateTime
+ * @property string $UserInactiveDTLTOffset
+ * @property string $UserQuickBooksID
+ * @property string $UserADPID
+ * @property int $hasPersonalVehicle
  *
  * @property EquipmentTb[] $equipmentTbs
  * @property ProjectUserTb[] $projectUserTbs
+ * @property ProjectTb[] $projUserProjects
  * @property TTaskOut[] $tTaskOuts
  */
 class SCUser extends BaseActiveRecord  implements IdentityInterface
 {	
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -56,20 +61,20 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments',
-			'UserPassword', 'UserUID', 'UserOasisID', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserRefreshDateTime'], 'string'],
-            [['UserActiveFlag', 'UserPaySourceID', 'SCCEmployeeID'], 'integer'],
-            [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserCreatedUID', 'UserModifiedUID'], 'safe']
+            [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedUID', 'UserModifiedUID', 'UserUID', 'UserPassword', 'UserOasisID', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserQuickBooksID', 'UserADPID'], 'string'],
+            [['UserActiveFlag', 'UserPaySourceID', 'SCCEmployeeID', 'hasPersonalVehicle'], 'integer'],
+            [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserRefreshDateTime', 'UserInactiveDTLTOffset'], 'safe'],
+            [['UserName'], 'unique'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -85,25 +90,29 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserAppRoleType' => 'User App Role Type',
             'UserComments' => 'User Comments',
             'UserActiveFlag' => 'User Active Flag',
-            'UserCreatedDate' => 'User Created Date',
-            'UserModifiedDate' => 'User Modified Date',
-            'UserCreatedUID' => 'User Created UID',
-            'UserModifiedUID' => 'User Modified UID',
             'UserCreatedDTLTOffset' => 'User Created Dtltoffset',
             'UserModifiedDTLTOffset' => 'User Modified Dtltoffset',
-			'UserUID' => 'User UID',
-			'UserPassword' => 'User Password',
-			'UserPaySourceID' => 'User Pay Source ID',
-			'UserOasisID' => 'User Oasis ID',
-			'SCCEmployeeID' => 'SCC Employee ID',
-			'UserAddress' => 'User Address',
-			'UserCity' => 'User City',
-			'UserState' => 'User State',
-			'UserZip' => 'User Zip',
-			'UserLocation' => 'User Location',
-			'UserPayMethod' => 'User Pay Method',
-			'UserPreferredEmail' => 'User Preferred Email',
-			'UserRefreshDateTime' => 'User Refresh Date Time',
+            'UserCreatedDate' => 'User Created Date',
+            'UserCreatedUID' => 'User Created Uid',
+            'UserModifiedDate' => 'User Modified Date',
+            'UserModifiedUID' => 'User Modified Uid',
+            'UserUID' => 'User Uid',
+            'UserPassword' => 'User Password',
+            'UserPaySourceID' => 'User Pay Source ID',
+            'UserOasisID' => 'User Oasis ID',
+            'SCCEmployeeID' => 'Sccemployee ID',
+            'UserAddress' => 'User Address',
+            'UserCity' => 'User City',
+            'UserState' => 'User State',
+            'UserZip' => 'User Zip',
+            'UserLocation' => 'User Location',
+            'UserPayMethod' => 'User Pay Method',
+            'UserPreferredEmail' => 'User Preferred Email',
+            'UserRefreshDateTime' => 'User Refresh Date Time',
+            'UserInactiveDTLTOffset' => 'User Inactive Dtltoffset',
+            'UserQuickBooksID' => 'User Quick Books ID',
+            'UserADPID' => 'User Adpid',
+            'hasPersonalVehicle' => 'Has Personal Vehicle',
         ];
     }
 
@@ -112,7 +121,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
      */
     public function getEquipmentTbs()
     {
-        return $this->hasMany(EquipmentTb::className(), ['EquipmentAssignedUserID' => 'UserID']);
+        return $this->hasMany(EquipmentTb::className(), ['EquipmentAssignedUserName' => 'UserName']);
     }
 
     /**

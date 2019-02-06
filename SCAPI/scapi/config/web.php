@@ -32,11 +32,12 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
+		//these setting can be overwritten within the module config
         'user' => [
 			'class' => 'app\authentication\CTUser',
             'identityClass' => 'app\modules\v1\models\SCUser',
             'enableAutoLogin' => false,
-			'authTimeout' => 28800,
+			'authTimeout' => 36000,
 			'loginUrl' => null
         ],
 		'authManager' => [
