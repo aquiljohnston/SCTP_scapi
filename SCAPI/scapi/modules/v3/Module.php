@@ -20,6 +20,7 @@ class Module extends \yii\base\Module
 	
 	public function registerComponents(){
         \Yii::$app->setComponents([
+		//these settings take precedent over the base config
                'user' => [
 				'class' => 'app\modules\v3\authentication\CTUser',
 				'identityClass' => 'app\modules\v3\models\SCUser',

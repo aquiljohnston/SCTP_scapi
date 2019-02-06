@@ -44,7 +44,7 @@ class ReportsController extends Controller {
 		PermissionsController::requirePermission('reportGetDropdown', $client);
 
         $result = Report::find()
-            ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, Parm, ReportType, ActiveFlag')
+            ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, ParmProjectFlag, Parm, ReportType, ActiveFlag')
             ->where(['ActiveFlag' => 1])
             ->asArray()
             ->all();
