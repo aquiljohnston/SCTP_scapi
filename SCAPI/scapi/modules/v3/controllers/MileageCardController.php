@@ -221,7 +221,7 @@ class MileageCardController extends BaseActiveController
             $responseArray = [];
 			$projectAllOption = [];
 			$allProjects = [];
-			$showProjectDropdown = false;
+			$showProjectDropDown = false;
 			
 			//build base query
 			$mileageCards = new Query;
