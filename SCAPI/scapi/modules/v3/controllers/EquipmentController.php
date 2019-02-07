@@ -50,6 +50,7 @@ class EquipmentController extends Controller
 			//create response format
 			$responseData = [];
 			
+			$createdBy = BaseActiveController::getUserFromToken()->UserName;
 			$equipmentID = null;
 			$equipmentSerialNumber = $data['EquipmentSerialNumber'];
 			$successFlag = 0;
@@ -64,6 +65,7 @@ class EquipmentController extends Controller
 				//create new equipment if none exist
 				$equipment = new Equipment();
 				$equipment->attributes = $data;
+				$equipment->EquipmentCreatedBy = $createdBy;
 
 				if($equipment->save())
 				{
@@ -78,7 +80,7 @@ class EquipmentController extends Controller
 				//update existing equipment
 				$existingEquipment->EquipmentAssignedUserName = $data['EquipmentAssignedUserName'];
 				$existingEquipment->EquipmentModifiedDate = $data['EquipmentCreateDate'];
-				$existingEquipment->EquipmentModifiedBy = $data['EquipmentCreatedBy'];
+				$existingEquipment->EquipmentModifiedBy = $createdBy;
 				
 				if($existingEquipment->update())
 				{
