@@ -709,7 +709,7 @@ class DispatchController extends Controller
 					null, //wo id
 					(array_key_exists('AssignedUserID', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['AssignedUserID'] : null),
 					(array_key_exists('InspectionType', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['InspectionType'] : null),
-					(array_key_exists('BillingCode', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['BillingCode'] : null)
+					(array_key_exists('BillingCode', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['BillingCode'] : null),
 					(array_key_exists('OfficeName', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['OfficeName'] : null)
 				);
 				$responseData['unassignSection'][] = $results;
