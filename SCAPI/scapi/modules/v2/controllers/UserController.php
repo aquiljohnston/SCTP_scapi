@@ -583,7 +583,35 @@ class UserController extends BaseActiveController
                 $timeCardModel = AllTimeCardsCurrentWeek::find()
                     ->where("UserID = $userID")
                     ->andWhere("TimeCardProjectID = $projectID")
+					->asArray()
                     ->One();
+				
+				if($timeCardModel != null){
+					//format time summary data
+					$totalHoursArray = [
+						$timeCardModel['Sun'],
+						$timeCardModel['Mon'],
+						$timeCardModel['Tue'],
+						$timeCardModel['Wed'],
+						$timeCardModel['Thu'],
+						$timeCardModel['Fri'],
+						$timeCardModel['Sat']
+					];
+					
+					//add total hours to response data
+					$timeCardModel['hoursWorked'] = $totalHoursArray;
+					
+					//remove day keys
+					unset(
+						$timeCardModel['Sun'],
+						$timeCardModel['Mon'],
+						$timeCardModel['Tue'],
+						$timeCardModel['Wed'],
+						$timeCardModel['Thu'],
+						$timeCardModel['Fri'],
+						$timeCardModel['Sat']
+					);
+				}
 
                 //get time card for the current week for this project
                 $mileageCardModel = AllMileageCardsCurrentWeek::find()
