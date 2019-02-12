@@ -111,20 +111,6 @@ final class Constants
 		'USER' => 'app\modules\v3\models\SCUser'
 	];
 	
-	const YORK_CONFIG = [
-		'DEV_HEADER' => 'yorkdev',
-		'STAGE_HEADER' => 'yorkstage',
-		'PROD_HEADER' => 'york',
-		'DEV_DB' => 'yorkDevDb',
-		'STAGE_DB' => 'yorkStageDb',
-		'PROD_DB' => 'yorkProdDb',
-		'AUTH' => self::CLIENT_DB_MANAGER,
-		'ASSET' => 'app\modules\v3\modules\york\models\Asset',
-		'EVENT' => self::BASE_EVENT,
-		'TASKOUT' => 'app\modules\v3\modules\york\models\TaskOut',
-		'USER' => self::BASE_USER
-	];
-	
 	const SCANA_CONFIG = [
 		'DEV_HEADER' => 'scanadev',
 		'STAGE_HEADER' => 'scanastage',
