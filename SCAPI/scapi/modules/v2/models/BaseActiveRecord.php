@@ -80,20 +80,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 			case Constants::SCCT_CONFIG['STAGE_HEADER']:
 			case Constants::SCCT_CONFIG['PROD_HEADER']:
 				return Constants::SCCT_CONFIG;
-			//PGE
-			case Constants::PGE_CONFIG['DEV_HEADER']:
-			case Constants::PGE_CONFIG['STAGE_HEADER']:
-			case Constants::PGE_CONFIG['PROD_HEADER']:
-				return Constants::PGE_CONFIG;
-			//YORK
-			case Constants::YORK_CONFIG['DEV_HEADER']:
-			case Constants::YORK_CONFIG['STAGE_HEADER']:
-			case Constants::YORK_CONFIG['PROD_HEADER']:
-				return Constants::YORK_CONFIG;
-			//DEO
-			case Constants::DOMINION_CONFIG['STAGE_HEADER']:
-			case Constants::DOMINION_CONFIG['PROD_HEADER']:
-				return Constants::DOMINION_CONFIG;
 			//SCANA
 			case Constants::SCANA_CONFIG['DEV_HEADER']:
 			case Constants::SCANA_CONFIG['STAGE_HEADER']:

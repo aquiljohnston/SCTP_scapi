@@ -84,43 +84,6 @@ final class Constants
 		'TASKOUT' => self::BASE_TASKOUT,
 		'USER' => 'app\modules\v2\models\SCUser'
 	];
-
-	const PGE_CONFIG = [
-		'DEV_HEADER' => 'pgedev',
-		'STAGE_HEADER' => 'pgestage',
-		'PROD_HEADER' => 'pge',
-		'DEV_DB' => 'pgeDevDb',
-		'STAGE_DB' => 'pgeStageDb',
-		'PROD_DB' => 'pgeProdDb',
-		'AUTH' => 'app\modules\v2\rbac\PgeDbManager',
-		'USER' => 'app\modules\v2\modules\pge\models\PGEUser'
-	];
-	
-	const YORK_CONFIG = [
-		'DEV_HEADER' => 'yorkdev',
-		'STAGE_HEADER' => 'yorkstage',
-		'PROD_HEADER' => 'york',
-		'DEV_DB' => 'yorkDevDb',
-		'STAGE_DB' => 'yorkStageDb',
-		'PROD_DB' => 'yorkProdDb',
-		'AUTH' => self::CLIENT_DB_MANAGER,
-		'ASSET' => 'app\modules\v2\modules\york\models\Asset',
-		'EVENT' => self::BASE_EVENT,
-		'TASKOUT' => 'app\modules\v2\modules\york\models\TaskOut',
-		'USER' => self::BASE_USER
-	];
-	
-	const DOMINION_CONFIG = [
-		'STAGE_HEADER' => 'deostage',
-		'PROD_HEADER' => 'deo',
-		'STAGE_DB' => 'dominionStageDb',
-		'PROD_DB' => 'dominionProdDb',
-		'AUTH' => self::CLIENT_DB_MANAGER,
-		'ASSET' => self::BASE_ASSET,
-		'EVENT' => 'app\modules\v2\models\DominionEvent',
-		'TASKOUT' => self::BASE_TASKOUT,
-		'USER' => self::BASE_USER
-	];
 	
 	const SCANA_CONFIG = [
 		'DEV_HEADER' => 'scanadev',
