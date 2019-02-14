@@ -40,6 +40,7 @@ class MileageEntryController extends BaseActiveController
 		return $actions;
 	}
 	
+	use ViewMethodNotAllowed;
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
 	
@@ -145,9 +146,9 @@ class MileageEntryController extends BaseActiveController
 			//TODO could update response to be formated with success flag per entry if we keep individual transactions
 			$response->data = $success; 
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
