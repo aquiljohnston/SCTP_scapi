@@ -589,17 +589,19 @@ class UserController extends BaseActiveController
 				if($timeCardModel != null){
 					//format time summary data
 					$totalHoursArray = [
-						$timeCardModel['Sun'],
-						$timeCardModel['Mon'],
-						$timeCardModel['Tue'],
-						$timeCardModel['Wed'],
-						$timeCardModel['Thu'],
-						$timeCardModel['Fri'],
-						$timeCardModel['Sat']
+						(float)$timeCardModel['Sun'],
+						(float)$timeCardModel['Mon'],
+						(float)$timeCardModel['Tue'],
+						(float)$timeCardModel['Wed'],
+						(float)$timeCardModel['Thu'],
+						(float)$timeCardModel['Fri'],
+						(float)$timeCardModel['Sat']
 					];
 					
 					//add total hours to response data
-					$timeCardModel['hoursWorked'] = $totalHoursArray;
+					$timeCardModel['HoursWorked'] = $totalHoursArray;
+					//cast total hours to float
+					$timeCardModel['WeeklyTotal'] = (float)$timeCardModel['WeeklyTotal'];
 					
 					//remove day keys
 					unset(
