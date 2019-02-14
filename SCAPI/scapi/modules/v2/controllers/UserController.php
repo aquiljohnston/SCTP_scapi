@@ -595,8 +595,7 @@ class UserController extends BaseActiveController
 						$timeCardModel['Wed'],
 						$timeCardModel['Thu'],
 						$timeCardModel['Fri'],
-						$timeCardModel['Sat'],
-						$timeCardModel['WeeklyTotal']
+						$timeCardModel['Sat']
 					];
 					
 					//add total hours to response data
@@ -610,8 +609,7 @@ class UserController extends BaseActiveController
 						$timeCardModel['Wed'],
 						$timeCardModel['Thu'],
 						$timeCardModel['Fri'],
-						$timeCardModel['Sat'],
-						$timeCardModel['WeeklyTotal']
+						$timeCardModel['Sat']
 					);
 				}
 
