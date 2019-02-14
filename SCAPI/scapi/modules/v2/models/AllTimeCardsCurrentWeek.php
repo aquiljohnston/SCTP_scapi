@@ -23,6 +23,7 @@ use Yii;
  * @property string $Thu
  * @property string $Fri
  * @property string $Sat
+ * @property string $WeeklyTotal
  */
 class AllTimeCardsCurrentWeek extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -42,7 +43,7 @@ class AllTimeCardsCurrentWeek extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['UserID', 'TimeCardID', 'TimeCardApproved', 'UserStatus'], 'required'],
             [['UserID', 'TimeCardID', 'TimeCardApproved', 'TimeCardProjectID'], 'integer'],
-            [['TimeCardApprovedBy', 'UserStatus', 'UserFullName', 'TimeCardStartDate', 'TimeCardEndDate', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], 'string'],
+            [['TimeCardApprovedBy', 'UserStatus', 'UserFullName', 'TimeCardStartDate', 'TimeCardEndDate', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'WeeklyTotal'], 'string'],
         ];
     }
 
@@ -68,6 +69,7 @@ class AllTimeCardsCurrentWeek extends \app\modules\v2\models\BaseActiveRecord
             'Thu' => 'Thu',
             'Fri' => 'Fri',
             'Sat' => 'Sat',
+            'WeeklyTotal' => 'Weekly Total',
         ];
     }
 }
