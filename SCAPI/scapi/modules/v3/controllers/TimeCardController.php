@@ -47,7 +47,7 @@ class TimeCardController extends BaseActiveController
 					'get-cards' => ['get'],
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
-					'p-m-submit' => ['put']
+					'p-m-submit' => ['put'],
 					'accountant-submit' => ['put'],
                 ],  
             ];
