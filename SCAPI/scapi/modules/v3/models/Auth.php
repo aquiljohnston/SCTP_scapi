@@ -58,7 +58,7 @@ class Auth extends BaseActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if ($this->isNewRecord) {
-				//review the algorithm for generateRandomString
+				//DELETE any existing records
 				$authArray = Auth::find()
 					->where(['AuthUserID' => $this->AuthUserID])
 					->all();
@@ -66,8 +66,6 @@ class Auth extends BaseActiveRecord
 				{
 					$a -> delete();
 				}
-                $this->AuthToken = \Yii::$app->security->generateRandomString();
-				$this->AuthTimeout = time() + Yii::$app->user->authTimeout;
             }
             return true;
         }
