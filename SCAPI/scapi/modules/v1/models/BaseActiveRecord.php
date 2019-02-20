@@ -27,22 +27,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 	//comet tracker auth manager
 	const CT_AUTH = 'app\rbac\ScDbManager';
 	
-	//pg&e databases
-	const PGE_DEV = 'pgedev';
-	const PGE_STAGE = 'pgestage';
-	const PGE_PROD = 'pge';
-	//pg&e user model
-	const PGE_USER = 'app\modules\v1\modules\pge\models\PGEUser';
-	//pg&e auth manager
-	const PGE_AUTH = 'app\rbac\PgeDbManager';
-	
-	//york databases
-	const YORK_DEV = 'yorkdev';
-	//york user model
-	const YORK_USER = self::BASE_USER;
-	//york auth manager
-	const YORK_AUTH = 'app\rbac\YorkDbManager';
-	
 	public static function getClient()
 	{
 		return self::$CLIENT_ID;
@@ -68,24 +52,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return Yii::$app->ctProdDb;
 		}
-		//pge
-		if (self::$CLIENT_ID == self::PGE_DEV)
-		{
-			return Yii::$app->pgeDevDb;
-		}
-		if (self::$CLIENT_ID == self::PGE_STAGE)
-		{
-			return Yii::$app->pgeStageDb;
-		}
-		if (self::$CLIENT_ID == self::PGE_PROD)
-		{
-			return Yii::$app->pgeProdDb;
-		}
-		//york
-		if (self::$CLIENT_ID == self::YORK_DEV)
-		{
-			return Yii::$app->yorkDevDb;
-		}
 	}
 	
 	//reutrns the file path for the user model associated to a project based on the client header
@@ -102,18 +68,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::CT_USER;
 		}
-		//York
-		if($client == self::YORK_DEV)
-		{
-			return self::YORK_USER;
-		}
-		//PGE - Deos not use standard user propagation
-		// if($client == self::PGE_DEV 
-		// || $client == self::PGE_STAGE
-		// || $client == self::PGE_PROD)
-		// {
-			// return self::PGE_USER;
-		// }
 		return null;
 	}
 	
@@ -131,18 +85,6 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		{
 			return self::CT_AUTH;
 		}
-		//York
-		if($client == self::YORK_DEV)
-		{
-			return self::YORK_AUTH;
-		}
-		//PGE - Deos not use standard user propagation
-		// if($client == self::PGE_DEV 
-		// || $client == self::PGE_STAGE
-		// || $client == self::PGE_PROD)
-		// {
-			// return self::PGE_USER;
-		// }
 		return null;
 	}
 }

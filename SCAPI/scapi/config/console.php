@@ -33,17 +33,6 @@ return [
         'ctDevDb' => $db['ctDevDb'],
 		'ctStageDb' => $db['ctStageDb'],
 		'ctProdDb' => $db['ctProdDb'],
-		//PGE
-        'pgeDevDb' => $db['pgeDevDb'],
-		'pgeStageDb' => $db['pgeStageDb'],
-		'pgeProdDb' => $db['pgeProdDb'],
-		//York
-        'yorkDevDb' => $db['yorkDevDb'],
-		'yorkStageDb' => $db['yorkStageDb'],
-		'yorkProdDb' => $db['yorkProdDb'],
-		//Dominion
-		'dominionStageDb' => $db['dominionStageDb'],
-		'dominionProdDb' => $db['dominionProdDb'],
 		//Scana
 		'scanaDevDb' => $db['scanaDevDb'],
 		'scanaStageDb' => $db['scanaStageDb'],
