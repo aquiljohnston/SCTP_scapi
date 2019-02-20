@@ -13,7 +13,6 @@ use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
 use app\modules\v2\controllers\EquipmentController;
 use app\modules\v2\controllers\InspectionController;
-use app\modules\v2\modules\pge\controllers\PgeActivityController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
@@ -112,7 +111,6 @@ class ActivityController extends BaseActiveController
 			Activity::setClient(BaseActiveController::urlPrefix());
 			//get user making the request
 			$user = Parent::getUserFromToken();
-			$pgeCreatedBy = $user->UserUID;
 			$createdBy = $user->UserName;
 			$userID = $user->ID;
 			
@@ -146,15 +144,7 @@ class ActivityController extends BaseActiveController
 					try
 					{
 						//save json to archive
-						//Can remove this pge check when project is finished
-						if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
-						{
-							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $pgeCreatedBy, $headers['X-Client']);
-						}
-						else
-						{
-							BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
-						}
+						BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
 
 						//handle app version from tablet TODO fix this later so it is consistent between web and tablet
 						if(array_key_exists('AppVersion', $data['activity'][$i]))
@@ -218,32 +208,17 @@ class ActivityController extends BaseActiveController
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 							}
 
-							//Sends activity to client specific parse routine to check for additional client specific activity data
-							//based on client header
-							//check for pge headers, pge is handled uniquely compared to a standard client
-							//TODO remove PGE specific logic
-							if($headers['X-Client'] == Constants::PGE_CONFIG['DEV_HEADER'] || $headers['X-Client'] == Constants::PGE_CONFIG['STAGE_HEADER'] ||$headers['X-Client'] == Constants::PGE_CONFIG['PROD_HEADER'])
+							//set success flag for activity
+							$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
+							//client data parse
+							if(BaseActiveController::isScct($headers['X-Client']))
 							{
-								//set success flag for activity
-								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
-								//pge data parse
-								$clientData = PgeActivityController::parseActivityData($data['activity'][$i], $headers['X-Client'],$pgeCreatedBy, $activity->ActivityUID);
-								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityID);
+							} else {
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
 							}
-							else
-							{
-								//set success flag for activity
-								$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>1];
-								//client data parse
-								if(BaseActiveController::isScct($headers['X-Client']))
-								{
-									$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityID);
-								} else {
-									$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
-								}
-								$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
-							}
-							
+							$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
+						
 							//change path back to ct db
 							Activity::setClient(BaseActiveController::urlPrefix());
 							$response->setStatusCode(201);
