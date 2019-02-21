@@ -1,22 +1,22 @@
 <?php
 
-namespace app\modules\v2\controllers;
+namespace app\modules\v3\controllers;
 
 use Yii;
-use app\modules\v2\models\TimeEntry;
-use app\modules\v2\controllers\BaseActiveController;
+use app\modules\v3\models\TimeEntry;
+use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
-use app\modules\v2\models\BaseActiveRecord;
 
 /**
  * TimeEntryController implements the CRUD actions for TimeEntry model.
  */
 class TimeEntryController extends BaseActiveController
 {
-    public $modelClass = 'app\modules\v2\models\TimeEntry'; 
+    public $modelClass = 'app\modules\v3\models\TimeEntry'; 
 
 	public function behaviors()
 	{
@@ -25,7 +25,6 @@ class TimeEntryController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
-					'view' => ['get'],
 					'deactivate' => ['put'],
                 ],  
             ];
@@ -41,32 +40,9 @@ class TimeEntryController extends BaseActiveController
 		return $actions;
 	}
 	
+	use ViewMethodNotAllowed;
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
-	
-	public function actionView($id)
-	{		
-		try
-		{
-			//set db target
-			$headers = getallheaders();
-			TimeEntry::setClient(BaseActiveController::urlPrefix());
-			
-			// RBAC permission check
-			PermissionsController::requirePermission('timeEntryView');
-			
-			$timeEntry = TimeEntry::findOne($id);
-			$response = Yii::$app->response;
-			$response ->format = Response::FORMAT_JSON;
-			$response->data = $timeEntry;
-			
-			return $response;
-		}
-		catch(\Exception $e)  
-		{
-			throw new \yii\web\HttpException(400);
-		}
-	}
 	
 	public function actionDeactivate()
 	{		
