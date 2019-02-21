@@ -25,8 +25,7 @@ class LoginController extends Controller
 		
 	public function actionUserLogin()
 	{
-		try
-		{
+		try{
 			//get client header to find project landing page
 			$headers = getallheaders();
 			$client = '';
@@ -81,7 +80,17 @@ class LoginController extends Controller
 					$auth = new Auth();
 					$auth->AuthUserID = $user->UserID;
 					$auth->AuthCreatedBy = $user->UserName;
-					$auth-> beforeSave(true);
+					if($client == null){
+						$timeout = Yii::$app->user->authTimeout;
+					} else {
+						$project = Project::find()
+							->where(['ProjectUrlPrefix' => $client])
+							->one();
+						$timeout = $project->AuthTimeOut;
+					}
+					//review the algorithm for generateRandomString
+					$auth->AuthToken = \Yii::$app->security->generateRandomString();
+					$auth->AuthTimeout = time() + $timeout;
 					//Store Auth Token
 					$auth-> save();
 				}
@@ -111,9 +120,7 @@ class LoginController extends Controller
 			//add auth token to response
 			$response->data = $authArray;
 			return $response;
-		}
-		catch(\Exception $e) 
-		{
+		}catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
