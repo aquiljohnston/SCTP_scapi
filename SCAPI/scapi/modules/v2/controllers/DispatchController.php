@@ -55,7 +55,7 @@ class DispatchController extends Controller
 		return $behaviors;	
 	}
 
-	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null,
+	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null, $officeName = null,
 		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
 		try
@@ -84,6 +84,10 @@ class DispatchController extends Controller
 				if($billingCode != null)
 				{
 					$assetQuery->andWhere(['BillingCode' => $billingCode]);
+				}
+				if($officeName != null)
+				{
+					$assetQuery->andWhere(['OfficeName' => $officeName]);
 				}
 			}
 			else
@@ -140,7 +144,8 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType=null, $billingCode=null)
+	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1,
+		$inspectionType = null, $billingCode = null, $officeName = null)
 	{
 		try
 		{
@@ -178,7 +183,8 @@ class DispatchController extends Controller
 			$assetQuery = AvailableWorkOrder::find()
 				->where(['MapGrid' => $mapGridSelected])
 				->andwhere($inspectionTypeFilter)
-				->andwhere(['BillingCode' => $billingCode]);
+				->andwhere(['BillingCode' => $billingCode])
+				->andwhere(['OfficeName' => $officeName]);
 
 			if($sectionNumberSelected !=null)
 			{
@@ -332,7 +338,8 @@ class DispatchController extends Controller
 						array_key_exists('ScheduledDate', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['ScheduledDate'] : null,
 						//pass inspection type and billing code if available
 						array_key_exists('InspectionType', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['InspectionType'] : null,
-						array_key_exists('BillingCode', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['BillingCode'] : null
+						array_key_exists('BillingCode', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['BillingCode'] : null,
+						array_key_exists('OfficeName', $data['dispatchMap'][$i]) ? $data['dispatchMap'][$i]['OfficeName'] : null
 					);
 					$responseData['dispatchMap'][] = $results;
 				}
@@ -354,7 +361,8 @@ class DispatchController extends Controller
 						null,
 						//pass inspection type and billing code if available
 						array_key_exists('InspectionType', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['InspectionType'] : null,
-						array_key_exists('BillingCode', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['BillingCode'] : null
+						array_key_exists('BillingCode', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['BillingCode'] : null,
+						array_key_exists('OfficeName', $data['dispatchSection'][$i]) ? $data['dispatchSection'][$i]['OfficeName'] : null
                     );
                     $responseData['dispatchSection'][] = $results;
                 }
@@ -397,8 +405,8 @@ class DispatchController extends Controller
         }
 	}
 	
-	public function actionGetAssigned($mapGridSelected = null, $inspectionType = null, $billingCode = null, $filter = null, $listPerPage = 10, $page = 1,
-		$sortField = 'ComplianceEnd', $sortOrder = 'ASC')
+	public function actionGetAssigned($mapGridSelected = null, $inspectionType = null, $billingCode = null, $officeName = null,
+		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
 	{
 		try{
 			//set db
@@ -422,6 +430,10 @@ class DispatchController extends Controller
 				if($billingCode != null)
 				{
 					$assetQuery->andWhere(['BillingCode' => $billingCode]);
+				}
+				if($officeName != null)
+				{
+					$assetQuery->andWhere(['OfficeName' => $officeName]);
 				}
 			}
 			else
@@ -535,7 +547,8 @@ class DispatchController extends Controller
         return $asset;
     }
 	
-	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1, $inspectionType = null, $billingCode = null)
+	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1,
+		$inspectionType = null, $billingCode = null, $officeName = null)
 	{
 		try
 		{
@@ -572,7 +585,8 @@ class DispatchController extends Controller
 			$assetQuery = AssignedWorkQueue::find()
 				->where(['MapGrid' => $mapGridSelected])
 				->andwhere($inspectionTypeFilter)
-				->andwhere(['BillingCode' => $billingCode]);
+				->andwhere(['BillingCode' => $billingCode])
+				->andwhere(['OfficeName' => $officeName]);
 			if($sectionNumberSelected !=null)
 			{
 				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
@@ -680,7 +694,8 @@ class DispatchController extends Controller
 					null, //wo id
 					(array_key_exists('AssignedUserID', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['AssignedUserID'] : null),
 					(array_key_exists('InspectionType', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['InspectionType'] : null),
-					(array_key_exists('BillingCode', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['BillingCode'] : null)
+					(array_key_exists('BillingCode', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['BillingCode'] : null),
+					(array_key_exists('OfficeName', $data['unassignMap'][$i]) ? $data['unassignMap'][$i]['OfficeName'] : null)
 				);
 				$responseData['unassignMap'][] = $results;
 			}
@@ -694,7 +709,8 @@ class DispatchController extends Controller
 					null, //wo id
 					(array_key_exists('AssignedUserID', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['AssignedUserID'] : null),
 					(array_key_exists('InspectionType', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['InspectionType'] : null),
-					(array_key_exists('BillingCode', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['BillingCode'] : null)
+					(array_key_exists('BillingCode', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['BillingCode'] : null),
+					(array_key_exists('OfficeName', $data['unassignSection'][$i]) ? $data['unassignSection'][$i]['OfficeName'] : null)
 				);
 				$responseData['unassignSection'][] = $results;
 			}
@@ -765,6 +781,7 @@ class DispatchController extends Controller
 				if(array_key_exists('SectionNumber', $map) && $map['SectionNumber'] != null) $whereClause['tWorkOrder.SectionNumber'] = $map['SectionNumber'];
 				if(array_key_exists('InspectionType', $map) && $map['InspectionType'] != null) $whereClause['tWorkOrder.InspectionType'] = $map['InspectionType'];
 				if(array_key_exists('BillingCode', $map) && $map['BillingCode'] != null) $whereClause['tWorkOrder.BillingCode'] = $map['BillingCode'];
+				if(array_key_exists('OfficeName', $map) && $map['OfficeName'] != null) $whereClause['tWorkOrder.OfficeName'] = $map['OfficeName'];
 				$whereClause['tWorkQueue.WorkQueueStatus'] = Constants::WORK_QUEUE_ASSIGNED;
 				$user = (new Query())
 					->select(['UserTb.UserID', "UserTb.UserFirstName + ' ' + UserTb.UserLastName + ' (' + UserTb.UserName + ')' AS UserFullName"])
@@ -796,7 +813,7 @@ class DispatchController extends Controller
 	**results that already exist. Finally creates new records and returns results.
 	*/
 	private static function processDispatch($userIDs, $createdBy, $isCge, $mapGrid = null, $section = null, $workOrder = null,
-		$scheduledDate = null, $inspectionType = null, $billingCode = null)
+		$scheduledDate = null, $inspectionType = null, $billingCode = null, $officeName = null)
 	{
 		$results = [];
 		$workOrders = [];
@@ -808,7 +825,7 @@ class DispatchController extends Controller
 
 		//scheduledDate works as an indicator if the the record is cge
 		if($workOrder == null) {
-			$workOrders = self::getDispatchWorkOrders($mapGrid, $section, $inspectionType, $billingCode, $workOrder, $isCge);
+			$workOrders = self::getDispatchWorkOrders($mapGrid, $section, $inspectionType, $billingCode, $officeName, $workOrder, $isCge);
 			$workOrdersCount = count($workOrders);
 		} else {
 			$isAsset = true;
@@ -859,22 +876,26 @@ class DispatchController extends Controller
 			'WorkOrderID' => $workOrder,
 			'InspectionType' => $inspectionType,
 			'BillingCode' => $billingCode,
+			'OfficeName' => $officeName,
 			'SuccessFlag' => $successFlag,
 		];
 	}
 	
-	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null, $assignedUserID = null, $inspectionType = null, $billingCode = null)
+	private static function processUnassigned($mapGrid = null, $section = null, $workOrder = null, $assignedUserID = null,
+		$inspectionType = null, $billingCode = null, $officeName = null)
 	{
 		$successFlag = 0;
 		try{
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID, :AssignedUserID, :InspectionType, :BillingCode");
+			$processJSONCommand = $connection->createCommand("EXECUTE spUnassignWO :MapGrid, :SectionNum , :WorkOrderID, :AssignedUserID,
+				:InspectionType, :BillingCode, :OfficeName");
 			$processJSONCommand->bindParam(':MapGrid', $mapGrid,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':SectionNum', $section,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':WorkOrderID', $workOrder,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':AssignedUserID', $assignedUserID,  \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':InspectionType', $inspectionType,  \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':BillingCode', $billingCode,  \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':OfficeName', $officeName,  \PDO::PARAM_STR);
 			$processJSONCommand->execute();
 			$successFlag = 1;
 		}
@@ -887,6 +908,7 @@ class DispatchController extends Controller
 			'UserID' => $assignedUserID,
 			'InspectionType' => $inspectionType,
 			'BillingCode' => $billingCode,
+			'OfficeName' => $officeName,
 			'SuccessFlag' => $successFlag
 			]);
 		}
@@ -899,6 +921,7 @@ class DispatchController extends Controller
 			'UserID' => $assignedUserID,
 			'InspectionType' => $inspectionType,
 			'BillingCode' => $billingCode,
+			'OfficeName' => $officeName,
 			'SuccessFlag' => $successFlag
 		];
 	}
@@ -937,8 +960,8 @@ class DispatchController extends Controller
 	}
 
 	//helper method gets cge work orders from vWebManagementCGIByMapGridDetail
-	private static function getDispatchWorkOrders($mapGrid, $section = null, $inspectionType = null, $billingCode = null, $workOrder = null, $isCge){
-        //build query to get work orders based on map grid
+	private static function getDispatchWorkOrders($mapGrid, $section = null, $inspectionType = null, $billingCode = null, $officeName = null, $workOrder = null, $isCge){
+		//build query to get work orders based on map grid
 		if($isCge){
 			$workOrdersQuery = AvailableWorkOrderCGEByMapGridDetail::find();
 		} else {
@@ -954,6 +977,9 @@ class DispatchController extends Controller
 		}
 		if ($billingCode != null) {
 			$workOrdersQuery->andWhere(['BillingCode' => $billingCode]);
+		}
+		if ($officeName != null) {
+			$workOrdersQuery->andWhere(['OfficeName' => $officeName]);
 		}
 				
         $workOrders = $workOrdersQuery->all();

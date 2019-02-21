@@ -48,28 +48,51 @@ class EquipmentController extends Controller
 			$body = file_get_contents("php://input");
 			$data = json_decode($body, true)['equipment'];
 			//create response format
-			$responseArray = [];
+			$responseData = [];
+			
+			$createdBy = BaseActiveController::getUserFromToken()->UserName;
+			$equipmentID = null;
+			$equipmentSerialNumber = $data['EquipmentSerialNumber'];
+			$successFlag = 0;
 			
 			BaseActiveController::archiveJson($body, 'EquipmentCreate', BaseActiveController::getClientUser(BaseActiveController::urlPrefix())->UserName, BaseActiveController::urlPrefix());
 			
-			//count number of items to delete
-			$equipment = new Equipment();
-			$equipment->attributes = $data;
+			$existingEquipment = Equipment::find()
+				->where(['EquipmentSerialNumber' => $data['EquipmentSerialNumber']])
+				->one();
 				
-			$equipmentID = null;
-			$equipmentSerialNumber = $equipment->EquipmentSerialNumber;
-			$successFlag = 0;
-			if($equipment->save())
-			{
-				$equipmentID =  $equipment->EquipmentID;
-				$successFlag = 1;
+			if($existingEquipment == null){
+				//create new equipment if none exist
+				$equipment = new Equipment();
+				$equipment->attributes = $data;
+				$equipment->EquipmentCreatedBy = $createdBy;
+
+				if($equipment->save())
+				{
+					$equipmentID =  $equipment->EquipmentID;
+					$successFlag = 1;
+				}
+				else
+				{
+					throw BaseActiveController::modelValidationException($equipment);
+				}
+			}else{
+				//update existing equipment
+				$existingEquipment->EquipmentAssignedUserName = $data['EquipmentAssignedUserName'];
+				$existingEquipment->EquipmentModifiedDate = $data['EquipmentCreateDate'];
+				$existingEquipment->EquipmentModifiedBy = $createdBy;
+				
+				if($existingEquipment->update())
+				{
+					$equipmentID = $existingEquipment->EquipmentID;
+					$successFlag = 1;
+				} else {
+					throw BaseActiveController::modelValidationException($existingEquipment);
+				}
 			}
-			else
-			{
-				throw BaseActiveController::modelValidationException($equipment);
-			}
+			//set response values
 			$responseData = ['EquipmentID' => $equipmentID, 'EquipmentSerialNumber' => $equipmentSerialNumber, 'SuccessFlag' => $successFlag];
-				
+	
 			//send response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
