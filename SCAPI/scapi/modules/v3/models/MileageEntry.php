@@ -30,6 +30,7 @@ use Yii;
  * @property string $MileageEntryTotalMiles
  * @property string $MileageEntryPhoto1Path
  * @property string $MileageEntryPhoto2Path
+ * @property string $MileageEntryPersonalMiles
  *
  * @property MileageCardTb $mileageEntryMileageCard
  */
@@ -49,7 +50,7 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryTotalMiles'], 'number'],
+            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryTotalMiles', 'MileageEntryPersonalMiles'], 'number'],
             [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT'], 'safe'],
             [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'MileageEntryChartOfAccount', 'MileageEntryMileageType', 'MileageEntryPhoto1Path', 'MileageEntryPhoto2Path'], 'string'],
             [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
@@ -86,6 +87,7 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
             'MileageEntryTotalMiles' => 'Mileage Entry Total Miles',
             'MileageEntryPhoto1Path' => 'Mileage Entry Photo1 Path',
             'MileageEntryPhoto2Path' => 'Mileage Entry Photo2 Path',
+            'MileageEntryPersonalMiles' => 'Mileage Entry Personal Miles',
         ];
     }
 
