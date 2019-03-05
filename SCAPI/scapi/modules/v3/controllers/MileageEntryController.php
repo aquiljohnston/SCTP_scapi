@@ -10,6 +10,7 @@ use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use yii\db\query;
 
 /**
  * MileageEntryController implements the CRUD actions for MileageEntry model.
@@ -25,7 +26,9 @@ class MileageEntryController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'create-task' => ['post'],
 					'deactivate' => ['put'],
+					'view-entries' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -152,4 +155,41 @@ class MileageEntryController extends BaseActiveController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	public function actionViewEntries($cardID, $date)
+	{
+		try{
+			//set db target
+			MileageEntry::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+				
+			//RBAC permission check
+			PermissionsController::requirePermission('mileageEntryView');
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			$entriesQuery = new Query;
+			$entriesQuery->select('*')
+				->from(["fnMileageCardEntryDetailsByMileageCardAndDate(:cardID, :date)"])
+				->addParams([':cardID' => $cardID, ':date' => $date]);
+			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+			
+			$transaction->commit();
+
+			$dataArray['entries'] = $entries;
+				
+			$response->data = $dataArray; 
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
 }
