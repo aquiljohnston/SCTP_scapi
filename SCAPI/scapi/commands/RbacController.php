@@ -313,6 +313,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $mileageEntryCreate;
         $this->permissionArray[] = $mileageEntryCreate;
 		
+		$mileageEntryUpdate = $this->auth->createPermission('mileageEntryUpdate');
+        $mileageEntryUpdate->description = 'Update a mileage entry';
+        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryUpdate;
+        $this->permissionAssociationArray['Accountant'][] = $mileageEntryUpdate;
+        $this->permissionArray[] = $mileageEntryUpdate;
+		
         $mileageEntryDeactivate = $this->auth->createPermission('mileageEntryDeactivate');
         $mileageEntryDeactivate->description = 'Deactivate a mileage entry';
         $this->permissionAssociationArray['Supervisor'][] = $mileageEntryDeactivate;
