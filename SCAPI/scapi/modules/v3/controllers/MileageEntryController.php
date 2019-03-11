@@ -5,11 +5,13 @@ namespace app\modules\v3\controllers;
 use Yii;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\MileageEntry;
+use app\modules\v3\models\MileageEntryEventHistory;
 use app\modules\v3\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use yii\db\query;
 
 /**
  * MileageEntryController implements the CRUD actions for MileageEntry model.
@@ -25,7 +27,9 @@ class MileageEntryController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'create-task' => ['post'],
 					'deactivate' => ['put'],
+					'view-entries' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -149,6 +153,106 @@ class MileageEntryController extends BaseActiveController
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionViewEntries($cardID, $date)
+	{
+		try{
+			//set db target
+			MileageEntry::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+				
+			//RBAC permission check
+			PermissionsController::requirePermission('mileageEntryView');
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			$entriesQuery = new Query;
+			$entriesQuery->select('*')
+				->from(["fnMileageCardEntryDetailsByMileageCardAndDate(:cardID, :date)"])
+				->addParams([':cardID' => $cardID, ':date' => $date]);
+			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+			
+			$transaction->commit();
+
+			$dataArray['entries'] = $entries;
+				
+			$response->data = $dataArray; 
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionUpdate(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			//get body object
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//create response object
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('mileageEntryUpdate');
+
+			//get date and current user
+			$modifiedBy = self::getUserFromToken()->UserName;
+			$modifiedDate = Parent::getDate();
+			
+			//get current record
+			$entryModel = MileageEntry::findOne($data['MileageEntryID']);
+			//pass current data to new history record
+			$historyModel = new MileageEntryEventHistory;
+			$historyModel->Attributes = $entryModel->attributes;
+			$historyModel->ChangeMadeBy = $modifiedBy;
+			$historyModel->ChangeDateTime = $modifiedDate;
+			$historyModel->Change = 'Updated';
+			//updated record with new data
+			$entryModel->attributes = $data;  
+			$entryModel->MileageEntryModifiedBy = $modifiedBy;
+			$entryModel->MileageEntryModifiedDate = $modifiedDate;
+			$successFlag = 0;
+			try{
+				if($entryModel-> update()){
+					//insert history record
+					if($historyModel->save()){
+						$successFlag = 1;
+					}
+				}
+			}catch(Exception $e){
+				$transaction->rollBack();
+			}
+			
+			$transaction->commit();
+			
+			$responseData = [
+				'EntryID' => $entryModel->MileageEntryID,
+				'SuccessFlag' => $successFlag
+			];
+			$response->data = $responseData;
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 			throw new \yii\web\HttpException(400);
 		}
 	}
