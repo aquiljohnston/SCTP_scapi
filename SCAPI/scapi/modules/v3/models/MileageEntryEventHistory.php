@@ -5,7 +5,7 @@ namespace app\modules\v3\models;
 use Yii;
 
 /**
- * This is the model class for table "MileageEntryTb".
+ * This is the model class for table "tMileageEntryEventHistory".
  *
  * @property int $MileageEntryID
  * @property string $MileageEntryStartingMileage
@@ -13,7 +13,7 @@ use Yii;
  * @property string $MileageEntryStartDate
  * @property string $MileageEntryEndDate
  * @property string $MileageEntryWeekDay
- * @property string $MileageEntryType 0 = business 1 = personal;  al
+ * @property string $MileageEntryType
  * @property int $MileageEntryMileageCardID
  * @property int $MileageEntryActivityID
  * @property string $MileageEntryApprovedBy
@@ -25,23 +25,19 @@ use Yii;
  * @property string $MileageEntrySrcDTLT
  * @property string $MileageEntrySrvDTLT
  * @property int $MileageEntryActiveFlag
- * @property string $MileageEntryChartOfAccount
- * @property string $MileageEntryMileageType
- * @property string $MileageEntryTotalMiles
- * @property string $MileageEntryPhoto1Path
- * @property string $MileageEntryPhoto2Path
- * @property string $MileageEntryPersonalMiles
- *
- * @property MileageCardTb $mileageEntryMileageCard
+ * @property string $ChangeMadeBy
+ * @property string $ChangeDateTime
+ * @property string $Change
+ * @property string $Comments
  */
-class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
+class MileageEntryEventHistory extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'MileageEntryTb';
+        return 'tMileageEntryEventHistory';
     }
 
     /**
@@ -50,11 +46,10 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryTotalMiles', 'MileageEntryPersonalMiles'], 'number'],
-            [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT'], 'safe'],
-            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'MileageEntryChartOfAccount', 'MileageEntryMileageType', 'MileageEntryPhoto1Path', 'MileageEntryPhoto2Path'], 'string'],
-            [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
-            [['MileageEntryMileageCardID'], 'exist', 'skipOnError' => true, 'targetClass' => MileageCard::className(), 'targetAttribute' => ['MileageEntryMileageCardID' => 'MileageCardID']],
+            [['MileageEntryID', 'MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
+            [['MileageEntryStartingMileage', 'MileageEntryEndingMileage'], 'number'],
+            [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT', 'ChangeDateTime'], 'safe'],
+            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'ChangeMadeBy', 'Change', 'Comments'], 'string'],
         ];
     }
 
@@ -82,20 +77,10 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
             'MileageEntrySrcDTLT' => 'Mileage Entry Src Dtlt',
             'MileageEntrySrvDTLT' => 'Mileage Entry Srv Dtlt',
             'MileageEntryActiveFlag' => 'Mileage Entry Active Flag',
-            'MileageEntryChartOfAccount' => 'Mileage Entry Chart Of Account',
-            'MileageEntryMileageType' => 'Mileage Entry Mileage Type',
-            'MileageEntryTotalMiles' => 'Mileage Entry Total Miles',
-            'MileageEntryPhoto1Path' => 'Mileage Entry Photo1 Path',
-            'MileageEntryPhoto2Path' => 'Mileage Entry Photo2 Path',
-            'MileageEntryPersonalMiles' => 'Mileage Entry Personal Miles',
+            'ChangeMadeBy' => 'Change Made By',
+            'ChangeDateTime' => 'Change Date Time',
+            'Change' => 'Change',
+            'Comments' => 'Comments',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getMileageEntryMileageCard()
-    {
-        return $this->hasOne(MileageCard::className(), ['MileageCardID' => 'MileageEntryMileageCardID']);
     }
 }
