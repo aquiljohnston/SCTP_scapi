@@ -260,8 +260,8 @@ class MileageCardController extends BaseActiveController
 						$projectAllOption = [""=>"All"];
                         for($i=1; $i < $projectsSize; $i++)
                         {
-                            $projectID = $projects[$i]->ProjUserProjectID;
-                            $mileageCards->orWhere(['MileageCardProjectID'=>$projectID]);
+                            $relatedProjectID = $projects[$i]->ProjUserProjectID;
+                            $mileageCards->orWhere(['MileageCardProjectID'=>$relatedProjectID]);
                         }
                     }
 				} else{
