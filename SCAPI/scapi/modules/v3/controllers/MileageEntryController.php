@@ -131,11 +131,8 @@ class MileageEntryController extends BaseActiveController
 			try{
 				//pass current data to new history record
 				if(self::createHistoryRecord($mileageEntry, $modifiedBy, $modifiedDate, 'Deactivated')){
-					//updated record with new data
-					$mileageEntry->MileageEntryActiveFlag = 0;  
-					$mileageEntry->MileageEntryModifiedBy = $modifiedBy;
-					$mileageEntry->MileageEntryModifiedDate = $modifiedDate;
-					if($mileageEntry-> update()){
+					//delete the record, to avoid constraint issues
+					if($mileageEntry->delete()){
 						$successFlag = 1;
 					}
 				}
