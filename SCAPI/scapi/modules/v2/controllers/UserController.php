@@ -524,6 +524,11 @@ class UserController extends BaseActiveController
     public function actionGetMe()
     {
         try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 			
@@ -550,10 +555,20 @@ class UserController extends BaseActiveController
                 ->where(['EquipmentAssignedUserName' => $userName])
                 ->all();
 
-            //get users realtionship to projects
-            $projectUser = ProjectUser::find()
-                ->where("ProjUserUserID = $userID")
-                ->all();
+            //get users relationship to projects
+            $projectQuery = ProjectUser::find()
+                ->where("ProjUserUserID = $userID");
+				
+			//if current header is not scct only get projects for current header
+			if(!BaseActiveController::isSCCT($client)){
+				$urlPrefixProjects = Project::find()
+					->select('ProjectID')
+					->where (['ProjectUrlPrefix' => $client]);
+				yii::trace('matching projects' . json_encode($urlPrefixProjects));
+				$projectQuery->andWhere(['in', 'ProjUserProjectID', $urlPrefixProjects]);
+			}
+			
+			$projectUser = $projectQuery->all();
 
             //get projects based on relationship
             $projectUserLength = count($projectUser);
