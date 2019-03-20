@@ -56,6 +56,8 @@ class CTUser extends User
 				// $this->logout(true, $token);
 			// }
 			if($currentTime > $timeout) {
+				//log alert for timeout
+				TokenAuth::timeoutAlert($auth);
 				$this->logout(true, $token);
 			}
 		} else {
