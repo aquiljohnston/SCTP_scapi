@@ -630,7 +630,7 @@ class TimeCardController extends BaseActiveController
 					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_OASIS;
 					break;
 				case Constants::QUICKBOOKS:
-					$spName = 'spGenerateQBDummyPayrollByProject';
+					$spName = 'spGenerateMSDynamicsTimeCardByProject';
 					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_QB;
 					break;
 				case Constants::ADP:
