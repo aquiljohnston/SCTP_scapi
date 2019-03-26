@@ -629,7 +629,7 @@ class MileageCardController extends BaseActiveController
 					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_OASIS;
 					break;
 				case Constants::MILEAGE_CARD_ADP:
-					$spName = 'spGenerateADPMileageCardByProject';
+					$spName = 'spGenerateMSDynamicsMileageCardByProject';
 					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_ADP;
 					break;
 			}
