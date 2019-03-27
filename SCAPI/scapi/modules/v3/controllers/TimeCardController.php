@@ -524,7 +524,7 @@ class TimeCardController extends BaseActiveController
 	}
 	
 	/**
-	*Call sp to process time card data and generate account files for OASIS, QB, and ADP
+	*Call sp to process time card data and generate account files for OASIS, MSDYNAMICS, and ADP
 	*Looks for JSON PUT body containing date range and project IDs to process
 	*@RETURNS JSON w/success flag and comment
 	*/
@@ -555,7 +555,7 @@ class TimeCardController extends BaseActiveController
 				$response->data = $responseData;
 				return $response;
 			}
-			$payrollData = self::getSubmissionFileData($params, Constants::QUICKBOOKS);
+			$payrollData = self::getSubmissionFileData($params, Constants::MSDYNAMICS_TIMECARD);
 			if($payrollData === false)
 			{
 				$comments = 'Failed to get Payroll Data.';
@@ -584,7 +584,7 @@ class TimeCardController extends BaseActiveController
 				$response->data = $responseData;
 				return $response;
 			}
-			$payrollWriteStatus = count($payrollData) != 0 ? self::writeFileData($payrollData, Constants::QUICKBOOKS) : true;
+			$payrollWriteStatus = count($payrollData) != 0 ? self::writeFileData($payrollData, Constants::MSDYNAMICS_TIMECARD) : true;
 			if(!$payrollWriteStatus)
 			{
 				$comments = 'Failed to write Payroll file.';
@@ -629,9 +629,9 @@ class TimeCardController extends BaseActiveController
 					$spName = 'spGenerateOasisTimeCardByProject';
 					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_OASIS;
 					break;
-				case Constants::QUICKBOOKS:
+				case Constants::MSDYNAMICS_TIMECARD:
 					$spName = 'spGenerateMSDynamicsTimeCardByProject';
-					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_QB;
+					$tcEventHistoryType = Constants::TIME_CARD_SUBMISSION_MSDYNAMICS;
 					break;
 				case Constants::ADP:
 					$spName = 'spGenerateADPTimeCardByProject';
@@ -670,7 +670,7 @@ class TimeCardController extends BaseActiveController
 				case Constants::OASIS:
 					$fileNamePrefix = Constants::OASIS_FILE_NAME;
 					break;
-				case Constants::QUICKBOOKS:
+				case Constants::MSDYNAMICS_TIMECARD:
 					$fileNamePrefix = Constants::PAYROLL_FILE_NAME;
 					break;
 				case Constants::ADP:
@@ -758,7 +758,7 @@ class TimeCardController extends BaseActiveController
 
 
      /**
-     * Check if project was submitted to Oasis and QB
+     * Check if project was submitted to Oasis and MSDYNAMICS
      * @param $timeCardsArr
      * @return boolean
      */
@@ -770,9 +770,9 @@ class TimeCardController extends BaseActiveController
         foreach ($timeCardsArr as $item)
 		{
 			$oasisKey = array_key_exists('TimeCardOasisSubmitted', $item) ? 'TimeCardOasisSubmitted' : 'OasisSubmitted';
-			$qbKey = array_key_exists('TimeCardQBSubmitted', $item) ? 'TimeCardQBSubmitted' : 'QBSubmitted';
+			$msDynamicsKey = array_key_exists('TimeCardMSDynamicsSubmitted', $item) ? 'TimeCardMSDynamicsSubmitted' : 'MSDynamicsSubmitted';
 			
-            if ($item[$oasisKey] == "Yes" && $item[$qbKey] == "Yes" ){
+            if ($item[$oasisKey] == "Yes" && $item[$msDynamicsKey] == "Yes" ){
                 $submittedCount++;
             }
         }

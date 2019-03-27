@@ -537,7 +537,7 @@ class MileageCardController extends BaseActiveController
 	}
 	
 	/**
-	*Call sp to process mileage card data and generate account files for OASIS and ADP
+	*Call sp to process mileage card data and generate account files for OASIS and MSDYNAMICS
 	*Looks for JSON PUT body containing date range and project IDs to process
 	*@RETURNS JSON w/success flag and comment
 	*TODO consider extracting some submit functions out when time card v3 is created.
@@ -570,10 +570,10 @@ class MileageCardController extends BaseActiveController
 				$response->format = Response::FORMAT_JSON;
 				return $response;
 			}
-			$adpData = self::getSubmissionFileData($params, Constants::MILEAGE_CARD_ADP);
-			if($adpData === false)
+			$msDynamicsData = self::getSubmissionFileData($params, Constants::MSDYNAMICS_MILEAGECARD);
+			if($msDynamicsData === false)
 			{
-				$comments = 'Failed to get ADP Data.';
+				$comments = 'Failed to get MSDYNAMICS Data.';
 				self::resetSubmission($params, 'ALL', $comments);
 				$responseData['comments'] = $comments;
 				$response->data = $responseData;
@@ -592,10 +592,10 @@ class MileageCardController extends BaseActiveController
 				$response->format = Response::FORMAT_JSON;
 				return $response;
 			}
-			$adpWriteStatus = count($adpData) != 0 ? self::writeFileData($adpData, Constants::MILEAGE_CARD_ADP) : true;
-			if(!$adpWriteStatus)
+			$msDynamicsWriteStatus = count($msDynamicsData) != 0 ? self::writeFileData($msDynamicsData, Constants::MSDYNAMICS_MILEAGECARD) : true;
+			if(!$msDynamicsWriteStatus)
 			{
-				$comments = 'Failed to write ADP file.';
+				$comments = 'Failed to write MSDYNAMICS file.';
 				self::resetSubmission($params, 'ALL', $comments);
 				$responseData['comments'] = $comments;
 				$response->data = $responseData;
@@ -628,9 +628,9 @@ class MileageCardController extends BaseActiveController
 					$spName = 'spGenerateOasisMileageCardByProject';
 					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_OASIS;
 					break;
-				case Constants::MILEAGE_CARD_ADP:
+				case Constants::MSDYNAMICS_MILEAGECARD:
 					$spName = 'spGenerateMSDynamicsMileageCardByProject';
-					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_ADP;
+					$mcEventHistoryType = Constants::MILEAGE_CARD_SUBMISSION_MSDYNAMICS;
 					break;
 			}
 			
@@ -665,8 +665,8 @@ class MileageCardController extends BaseActiveController
 				case Constants::MILEAGE_CARD_OASIS:
 					$fileNamePrefix = Constants::OASIS_MILEAGE_FILE_NAME;
 					break;
-				case Constants::MILEAGE_CARD_ADP:
-					$fileNamePrefix = Constants::ADP_MILEAGE_FILE_NAME;
+				case Constants::MSDYNAMICS_MILEAGECARD:
+					$fileNamePrefix = Constants::MSDYNAMICS_MILEAGE_FILE_NAME;
 					break;
 			}
 			//get date and format for file name
@@ -864,10 +864,11 @@ class MileageCardController extends BaseActiveController
     private function CheckAllAssetsSubmitted($mileageCardsArr){
         foreach ($mileageCardsArr as $item)
 		{
-			//second option is only needed for the accountant view in timecard because the tables dont match
+			//second option is only needed for the accountant view in mileagecard because the tables dont match
 			$oasisKey = array_key_exists('MileageCardOasisSubmitted', $item) ? 'MileageCardOasisSubmitted' : 'OasisSubmitted';
+			$msDynamicsKey = array_key_exists('MileageCardMSDynamicsSubmitted', $item) ? 'MileageCardMSDynamicsSubmitted' : 'MSDynamicsSubmitted';
 			
-            if ($item[$oasisKey] == "No"){
+            if ($item[$oasisKey] == "No" || $item[$msDynamicsKey] == "No"){
                 return false;
             }
         }
