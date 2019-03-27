@@ -14,7 +14,7 @@ use Yii;
  * @property string $ApprovedBy
  * @property int $Total Mileage Cards
  * @property int $Approved Mileage Cards
- * @property string $QBSubmitted
+ * @property string $MSDynamicsSubmitted
  * @property string $OasisSubmitted
  * @property string $ADPSubmitted
  * @property int $ProjectID
@@ -35,8 +35,8 @@ class MileageCardAccountantSubmit extends \app\modules\v3\models\BaseActiveRecor
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'QBSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'required'],
-            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'QBSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'string'],
+            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'required'],
+            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'string'],
             [['StartDate', 'EndDate'], 'safe'],
             [['Total Mileage Cards', 'Approved Mileage Cards', 'ProjectID'], 'integer'],
         ];
@@ -55,7 +55,7 @@ class MileageCardAccountantSubmit extends \app\modules\v3\models\BaseActiveRecor
             'ApprovedBy' => 'Approved By',
             'Total Mileage Cards' => 'Total  Mileage  Cards',
             'Approved Mileage Cards' => 'Approved  Mileage  Cards',
-            'QBSubmitted' => 'Qbsubmitted',
+            'MSDynamicsSubmitted' => 'Msdynamics Submitted',
             'OasisSubmitted' => 'Oasis Submitted',
             'ADPSubmitted' => 'Adpsubmitted',
             'ProjectID' => 'Project ID',
