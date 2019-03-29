@@ -12,17 +12,17 @@ use Yii;
  * @property string $StartDate
  * @property string $EndDate
  * @property string $ApprovedBy
- * @property integer $Total Time Cards
- * @property integer $Approved Time Cards
- * @property string $QBSubmitted
+ * @property int $Total Time Cards
+ * @property int $Approved Time Cards
+ * @property string $MSDynamicsSubmitted
  * @property string $OasisSubmitted
  * @property string $ADPSubmitted
- * @property integer $ProjectID
+ * @property int $ProjectID
  */
 class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -30,20 +30,20 @@ class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'QBSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'required'],
-            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'QBSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'string'],
+            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'required'],
+            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'string'],
             [['StartDate', 'EndDate'], 'safe'],
             [['Total Time Cards', 'Approved Time Cards', 'ProjectID'], 'integer'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -55,7 +55,7 @@ class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
             'ApprovedBy' => 'Approved By',
             'Total Time Cards' => 'Total  Time  Cards',
             'Approved Time Cards' => 'Approved  Time  Cards',
-            'QBSubmitted' => 'Qbsubmitted',
+            'MSDynamicsSubmitted' => 'Msdynamics Submitted',
             'OasisSubmitted' => 'Oasis Submitted',
             'ADPSubmitted' => 'Adpsubmitted',
             'ProjectID' => 'Project ID',
