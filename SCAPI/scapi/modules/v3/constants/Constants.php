@@ -35,7 +35,7 @@ final class Constants
 	//Time Card File Types
 	const OASIS = 'OASIS';
 	//need to change to payroll instead of quickbooks
-	const QUICKBOOKS = 'QB';
+	const MSDYNAMICS_TIMECARD = 'tcMSDynamics';
 	const ADP = 'ADP';
 	const OT_PAYROLL_HOURS_ID = 5110;
 	
@@ -52,24 +52,24 @@ final class Constants
 	const TIME_CARD_APPROVAL = 'Supervisor Approval';
 	const TIME_CARD_PM_APPROVAL = 'PM Approval';
 	const TIME_CARD_SUBMISSION_OASIS = 'Oasis Submission';
-	const TIME_CARD_SUBMISSION_QB = 'QB Submission';
+	const TIME_CARD_SUBMISSION_MSDYNAMICS = 'MS Dynamics Submission';
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
 	const TIME_CARD_SUBMISSION_RESET = 'Reset Submission';
 	
 	//Mileage Card Submission File Name
 	const OASIS_MILEAGE_FILE_NAME = 'oasis_mileage_history_';
-	const ADP_MILEAGE_FILE_NAME = 'adp_mileage_history';
+	const MSDYNAMICS_MILEAGE_FILE_NAME = 'msdynamics_mileage_history';
 	
 	//Mileage Card Event History Types
 	const MILEAGE_CARD_APPROVAL = 'Supervisor Approval';
 	const MILEAGE_CARD_PM_APPROVAL = 'PM Approval';
 	const MILEAGE_CARD_SUBMISSION_OASIS = 'Oasis Submission';
-	const MILEAGE_CARD_SUBMISSION_ADP = 'ADP Submission';
+	const MILEAGE_CARD_SUBMISSION_MSDYNAMICS = 'MS Dynamics Submission';
 	const MILEAGE_CARD_SUBMISSION_RESET = 'Reset Submission';
 	
 	//Mileage Card File Types
 	const MILEAGE_CARD_OASIS = 'mcOASIS';
-	const MILEAGE_CARD_ADP = 'mcADP';
+	const MSDYNAMICS_MILEAGECARD = 'mcMSDynamics';
 	
 	//Mileage Card Submission File Locations
 	const DEV_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasisDev\\';
