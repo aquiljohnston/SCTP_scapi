@@ -524,6 +524,11 @@ class UserController extends BaseActiveController
     public function actionGetMe()
     {
         try {
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
             //set db target
             SCUser::setClient(BaseActiveController::urlPrefix());
 			
@@ -550,10 +555,20 @@ class UserController extends BaseActiveController
                 ->where(['EquipmentAssignedUserName' => $userName])
                 ->all();
 
-            //get users realtionship to projects
-            $projectUser = ProjectUser::find()
-                ->where("ProjUserUserID = $userID")
-                ->all();
+            //get users relationship to projects
+            $projectQuery = ProjectUser::find()
+                ->where("ProjUserUserID = $userID");
+				
+			//if current header is not scct only get projects for current header
+			if(!BaseActiveController::isSCCT($client)){
+				$urlPrefixProjects = Project::find()
+					->select('ProjectID')
+					->where (['ProjectUrlPrefix' => $client]);
+				yii::trace('matching projects' . json_encode($urlPrefixProjects));
+				$projectQuery->andWhere(['in', 'ProjUserProjectID', $urlPrefixProjects]);
+			}
+			
+			$projectUser = $projectQuery->all();
 
             //get projects based on relationship
             $projectUserLength = count($projectUser);
@@ -697,7 +712,7 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = null)
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = 'all')
     {
         try {
 			//get headers
@@ -714,31 +729,46 @@ class UserController extends BaseActiveController
 			$responseArray['assets'] = [];
 			$responseArray['pages'] = [];
 
+			//fetch data from db for projects and users
 			if(BaseActiveController::isSCCT($client))
 			{
+				$showProjectDropdown = true;
 				//get user id from auth token
 				$user = self::getUserFromToken();
 				
 				//create base query for projects
-				if($user->UserAppRoleType == 'Admin'){
+				if(PermissionsController::can('projectGetAll')){
 					$projectQuery = (new Query())->select('ProjUserProjectID')->distinct()->from('Project_User_Tb');
-				} else {
+				}elseif(PermissionsController::can('projectGetOwnProjects')){
 					$projectQuery = (new Query())->select('ProjUserProjectID')->from('Project_User_Tb')
 						->where(['ProjUserUserID' => $user->UserID]);
+				}else{
+					throw new ForbiddenHttpException;
 				}
 				
-				//filter by selected project
-				if($projectID != null)
-					$projectQuery->andWhere(['ProjUserProjectID' => $projectID]);
-				
+				//get projects for dropdown before applying filter
+				$projects = Project::find()->select('*')->where(['in', 'ProjectID', $projectQuery])->orderBy('ProjectName')->all();
+
 				//create base of user query
 				$userQuery = SCUser::find()->select('*')
-					->where(['in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')
-						->where(['in','ProjUserProjectID', $projectQuery])])
-					->andWhere(['[UserTb].UserActiveFlag' => 1]);
-			}
-			else
-			{
+					->where(['[UserTb].UserActiveFlag' => 1]);
+				//handle unassigned users
+				if($projectID == 'unassigned'){
+					$userQuery->andWhere(['not in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')
+						->where(['in','ProjUserProjectID', $projectQuery])]);
+				}elseif($projectID != 'all') {
+					// if($projectID != 'assigned') could be used to get all assigned users if this is a route we want to take in the future
+					//filter by selected project
+					$projectQuery->andWhere(['ProjUserProjectID' => $projectID]);				
+					//get assigned users based on selected project(s)
+					$userQuery->andWhere(['in', 'UserID', (new Query())->select('ProjUserUserID')->from('Project_User_Tb')
+							->where(['in','ProjUserProjectID', $projectQuery])]);
+				}
+			}else{
+				//get projects for dropdown
+				$showProjectDropdown = false;
+				PermissionsController::requirePermission('projectGetOwnProjects');
+				$projects = Project::find()->where(['ProjectUrlPrefix' => $client])->all();
 				BaseActiveRecord::setClient($client);
 				//create base of user query
 				$userQuery = Users::find();
@@ -755,27 +785,39 @@ class UserController extends BaseActiveController
 				['like', 'UserAppRoleType', $filter],
 				]);
 			}
+			
 			//check if paging parameters were sent
 			if ($page != null) 
 			{
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
+				//use updated query with pagination clause to get data
 				$usersArr = $paginationResponse['Query']
 					->orderBy('UserLastName, UserFirstName')
 					->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
-			}
-			else
-			{
+			}else{
 				//if no pagination params were sent use base query
 				$usersArr = $userQuery
 					->orderBy('UserLastName, UserFirstName')
 					->all();
 			}
+			
+			//structure project Dropdowns
+			$dropdownPairs = [
+					'all' => 'All',
+					'unassigned' => 'Unassigned'
+				];
+			//add projects
+			foreach($projects as $project)
+			{
+				$dropdownPairs[$project->ProjectID]= $project->ProjectName;
+			}
+			
 			//populate response array
             $responseArray['assets'] = $usersArr;
-            
+            $responseArray['showProjectDropdown'] = $showProjectDropdown;
+			$responseArray['projects'] = $dropdownPairs;
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->setStatusCode(200);

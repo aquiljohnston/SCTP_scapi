@@ -318,13 +318,14 @@ class BaseActiveController extends ActiveController
 
 		$success = false;
 
+		//should look into updating QB_PATH and MILEAGE_ADP_PATH to MSDYNAMICS
 		if($environment === Constants::API_CONFIG['DEV_HEADER'])
         {
         	switch ($type) {
 			    case Constants::OASIS:
 			        $filePath = Constants::DEV_DEFAULT_OASIS_PATH;
 			        break;
-			    case Constants::QUICKBOOKS:
+			    case Constants::MSDYNAMICS_TIMECARD:
 			        $filePath = Constants::DEV_DEFAULT_QB_PATH;
 			        break;
 			    case Constants::ADP:
@@ -333,7 +334,7 @@ class BaseActiveController extends ActiveController
 				case Constants::MILEAGE_CARD_OASIS:
 					$filePath = Constants::DEV_DEFAULT_MILEAGE_OASIS_PATH;
 			        break;
-				case Constants::MILEAGE_CARD_ADP:
+				case Constants::MSDYNAMICS_MILEAGECARD:
 					$filePath = Constants::DEV_DEFAULT_MILEAGE_ADP_PATH;
 			        break;
 			}
@@ -342,7 +343,7 @@ class BaseActiveController extends ActiveController
 			    case Constants::OASIS:
 			        $filePath = Constants::STAGE_DEFAULT_OASIS_PATH;
 			        break;
-			    case Constants::QUICKBOOKS:
+			    case Constants::MSDYNAMICS_TIMECARD:
 			        $filePath = Constants::STAGE_DEFAULT_QB_PATH;
 			        break;
 			    case Constants::ADP:
@@ -351,7 +352,7 @@ class BaseActiveController extends ActiveController
 				case Constants::MILEAGE_CARD_OASIS:
 					$filePath = Constants::STAGE_DEFAULT_MILEAGE_OASIS_PATH;
 			        break;
-				case Constants::MILEAGE_CARD_ADP:
+				case Constants::MSDYNAMICS_MILEAGECARD:
 					$filePath = Constants::STAGE_DEFAULT_MILEAGE_ADP_PATH;
 			        break;
 			}
@@ -360,7 +361,7 @@ class BaseActiveController extends ActiveController
 			    case Constants::OASIS:
 			        $filePath = Constants::PROD_DEFAULT_OASIS_PATH;
 			        break;
-			    case Constants::QUICKBOOKS:
+			    case Constants::MSDYNAMICS_TIMECARD:
 			        $filePath = Constants::PROD_DEFAULT_QB_PATH;
 			        break;
 			    case Constants::ADP:
@@ -369,7 +370,7 @@ class BaseActiveController extends ActiveController
 				case Constants::MILEAGE_CARD_OASIS:
 					$filePath = Constants::PROD_DEFAULT_MILEAGE_OASIS_PATH;
 			        break;
-				case Constants::MILEAGE_CARD_ADP:
+				case Constants::MSDYNAMICS_MILEAGECARD:
 					$filePath = Constants::PROD_DEFAULT_MILEAGE_ADP_PATH;
 			        break;
 			}

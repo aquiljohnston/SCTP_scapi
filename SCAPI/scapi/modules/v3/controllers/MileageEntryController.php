@@ -104,52 +104,75 @@ class MileageEntryController extends BaseActiveController
 		return $response;
     }
 	
-	public function actionDeactivate()
+	public function actionDeactivate($entryID)
 	{
 		try{
 			//set db target
 			MileageEntry::setClient(BaseActiveController::urlPrefix());
 			
-			// RBAC permission check
-			PermissionsController::requirePermission('mileageEntryDeactivate');
-			
-			//capture put body
-			$put = file_get_contents("php://input");
-			$entries = json_decode($put, true)['entries'];
-			
 			//create response
 			$response = Yii::$app->response;
 			$response ->format = Response::FORMAT_JSON;
 			
-			//get current user to set deactivated by
-			$username = BaseActiveController::getUserFromToken()->UserName;
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 			
-			foreach ($entries as $entry) {
-				//SPROC has no return so just in case we need a flag.
-				$success = 0;
-				//add variables to avoid pass by reference error
-				$taskString = json_encode($entry['taskName']);
-				$day = array_key_exists('day', $entry) ? $entry['day'] : null;
-				//call SPROC to deactivateTimeEntry
-				try {
-					$connection = BaseActiveRecord::getDb();
-					//TODO may want to move the transaction outside of the loop to allow full rollback of the request
-					$transaction = $connection->beginTransaction(); 
-					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateMileageEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
-					$timeCardCommand->bindParam(':PARAMETER1', $entry['mileageCardID'], \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':PARAMETER2', $taskString, \PDO::PARAM_STR);
-					$timeCardCommand->bindParam(':PARAMETER3', $day, \PDO::PARAM_STR);
-					$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
-					$timeCardCommand->execute();
-					$transaction->commit();
-					$success = 1;
-				} catch (Exception $e) {
-					$transaction->rollBack();
+			// RBAC permission check
+			PermissionsController::requirePermission('mileageEntryDeactivate');
+
+			//get date and current user
+			$modifiedBy = BaseActiveController::getUserFromToken()->UserName;
+			$modifiedDate = Parent::getDate();
+			
+			$mileageEntry = MileageEntry::findOne($entryID);
+			$successFlag = 0;
+			
+			try{
+				//pass current data to new history record
+				if(self::createHistoryRecord($mileageEntry, $modifiedBy, $modifiedDate, 'Deactivated')){
+					//delete the record, to avoid constraint issues
+					if($mileageEntry->delete()){
+						$successFlag = 1;
+					}
 				}
+			}catch(Exception $e){
+				$transaction->rollBack();
 			}
-			//TODO could update response to be formated with success flag per entry if we keep individual transactions
-			$response->data = $success; 
+			
+			$transaction->commit();
+			
+			$responseData = [
+				'EntryID' => $mileageEntry->MileageEntryID,
+				'SuccessFlag' => $successFlag
+			];
+			$response->data = $responseData;
 			return $response;
+			
+			//old deactivate
+			// foreach ($entries as $entry) {
+				// //SPROC has no return so just in case we need a flag.
+				// $success = 0;
+				// //add variables to avoid pass by reference error
+				// $taskString = json_encode($entry['taskName']);
+				// $day = array_key_exists('day', $entry) ? $entry['day'] : null;
+				// //call SPROC to deactivateTimeEntry
+				// try {
+					// $connection = BaseActiveRecord::getDb();
+					// //TODO may want to move the transaction outside of the loop to allow full rollback of the request
+					// $transaction = $connection->beginTransaction(); 
+					// $timeCardCommand = $connection->createCommand("EXECUTE spDeactivateMileageEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
+					// $timeCardCommand->bindParam(':PARAMETER1', $entry['mileageCardID'], \PDO::PARAM_INT);
+					// $timeCardCommand->bindParam(':PARAMETER2', $taskString, \PDO::PARAM_STR);
+					// $timeCardCommand->bindParam(':PARAMETER3', $day, \PDO::PARAM_STR);
+					// $timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
+					// $timeCardCommand->execute();
+					// $transaction->commit();
+					// $success = 1;
+				// } catch (Exception $e) {
+					// $transaction->rollBack();
+				// }
+			// }
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
@@ -218,22 +241,17 @@ class MileageEntryController extends BaseActiveController
 			$modifiedDate = Parent::getDate();
 			
 			//get current record
-			$entryModel = MileageEntry::findOne($data['MileageEntryID']);
-			//pass current data to new history record
-			$historyModel = new MileageEntryEventHistory;
-			$historyModel->Attributes = $entryModel->attributes;
-			$historyModel->ChangeMadeBy = $modifiedBy;
-			$historyModel->ChangeDateTime = $modifiedDate;
-			$historyModel->Change = 'Updated';
-			//updated record with new data
-			$entryModel->attributes = $data;  
-			$entryModel->MileageEntryModifiedBy = $modifiedBy;
-			$entryModel->MileageEntryModifiedDate = $modifiedDate;
+			$mileageEntry = MileageEntry::findOne($data['MileageEntryID']);
 			$successFlag = 0;
+			
 			try{
-				if($entryModel-> update()){
-					//insert history record
-					if($historyModel->save()){
+				//pass current data to new history record
+				if(self::createHistoryRecord($mileageEntry, $modifiedBy, $modifiedDate, 'Updated')){
+					//updated record with new data
+					$mileageEntry->attributes = $data;  
+					$mileageEntry->MileageEntryModifiedBy = $modifiedBy;
+					$mileageEntry->MileageEntryModifiedDate = $modifiedDate;
+					if($mileageEntry-> update()){
 						$successFlag = 1;
 					}
 				}
@@ -244,7 +262,7 @@ class MileageEntryController extends BaseActiveController
 			$transaction->commit();
 			
 			$responseData = [
-				'EntryID' => $entryModel->MileageEntryID,
+				'EntryID' => $mileageEntry->MileageEntryID,
 				'SuccessFlag' => $successFlag
 			];
 			$response->data = $responseData;
@@ -255,5 +273,21 @@ class MileageEntryController extends BaseActiveController
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	//helper function 
+	//params mileageEntry model, username of modifying user, and type of change being performed
+	//returns true if successful
+	private function createHistoryRecord($mileageEntry, $modifiedBy, $modifiedDate, $changeType){
+		//new history record
+		$historyModel = new MileageEntryEventHistory;
+		$historyModel->Attributes = $mileageEntry->attributes;
+		$historyModel->ChangeMadeBy = $modifiedBy;
+		$historyModel->ChangeDateTime = $modifiedDate;
+		$historyModel->Change = $changeType;
+		if($historyModel->save()){
+			return true;
+		}
+		return false;
 	}
 }
