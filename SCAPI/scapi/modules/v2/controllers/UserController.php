@@ -634,7 +634,37 @@ class UserController extends BaseActiveController
                 $mileageCardModel = AllMileageCardsCurrentWeek::find()
                     ->where("UserID = $userID")
                     ->andWhere("MileageCardProjectID = $projectID")
+					->asArray()
                     ->One();
+					
+				if($mileageCardModel != null){
+					//format mileage summary data
+					$totalMilesArray = [
+						(float)$mileageCardModel['Sun'],
+						(float)$mileageCardModel['Mon'],
+						(float)$mileageCardModel['Tue'],
+						(float)$mileageCardModel['Wed'],
+						(float)$mileageCardModel['Thu'],
+						(float)$mileageCardModel['Fri'],
+						(float)$mileageCardModel['Sat']
+					];
+					
+					//add total hours to response data
+					$mileageCardModel['MilesTraveled'] = $totalMilesArray;
+					//cast total hours to float
+					$mileageCardModel['WeeklyTotal'] = (float)$mileageCardModel['WeeklyTotal'];
+					
+					//remove day keys
+					unset(
+						$mileageCardModel['Sun'],
+						$mileageCardModel['Mon'],
+						$mileageCardModel['Tue'],
+						$mileageCardModel['Wed'],
+						$mileageCardModel['Thu'],
+						$mileageCardModel['Fri'],
+						$mileageCardModel['Sat']
+					);
+				}
 
                 //get job codes for project, for now just getting all job codes
                 $activityCodes = ActivityCode::find()
