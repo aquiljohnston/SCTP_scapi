@@ -56,7 +56,7 @@ class DispatchController extends Controller
 	}
 
 	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null, $officeName = null,
-		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
+		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC', $dateRange = null)
 	{
 		try
 		{
@@ -96,8 +96,17 @@ class DispatchController extends Controller
 				$envelope = 'mapGrids';
 				$assetQuery = AvailableWorkOrderByMapGrid::find();
 				
-				if($filter != null)
-				{
+				if($dateRange != null){
+					$explodedDateRange = explode(' ', $dateRange);
+					$startDate = $explodedDateRange[0];
+					$endDate = $explodedDateRange[2];
+					$assetQuery->andWhere(['or',
+						['between', 'ComplianceStart', $startDate, $endDate],
+						['between', 'ComplianceEnd', $startDate, $endDate],
+					]);
+				}
+				
+				if($filter != null){
 					$assetQuery->andFilterWhere([
 					'or',
 					['like', 'MapGrid', $filter],
@@ -147,8 +156,7 @@ class DispatchController extends Controller
 	public function actionGetAvailableAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1,
 		$inspectionType = null, $billingCode = null, $officeName = null)
 	{
-		try
-		{
+		try{
 			//set dbl
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
@@ -159,20 +167,14 @@ class DispatchController extends Controller
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
 
-			//handle null billing code
-			//as it is not always set.
-			$billingCode = $billingCode != '' ? $billingCode : null;
-	
 			//handle null or multiple inspection types
-			if($inspectionType != null)
-			{
+			if($inspectionType != null){
 				//handle potential multiple inspection types
 				$inspectionTypeFilter = ['or',
 				['InspectionType' => $inspectionType]];
 				$inspectionTypeArray = explode(',', $inspectionType);
 				$inspectionTypeCount = count($inspectionTypeArray);
-				for($i = 0; $i < $inspectionTypeCount; $i++)
-				{
+				for($i = 0; $i < $inspectionTypeCount; $i++){
 					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
 				}
 			}else{
@@ -182,17 +184,13 @@ class DispatchController extends Controller
 			
 			$assetQuery = AvailableWorkOrder::find()
 				->where(['MapGrid' => $mapGridSelected])
-				->andwhere($inspectionTypeFilter)
-				->andwhere(['BillingCode' => $billingCode])
-				->andwhere(['OfficeName' => $officeName]);
-
-			if($sectionNumberSelected !=null)
-			{
-				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
-			}
+				->andWhere($inspectionTypeFilter);
 			
-			if($filter != null)
-			{
+			if($billingCode != null) $assetQuery->andWhere(['BillingCode' => $billingCode]);
+			if($officeName != null) $assetQuery->andWhere(['OfficeName' => $officeName]);
+			if($sectionNumberSelected != null) $assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
+			
+			if($filter != null){
 				$assetQuery->andFilterWhere([
 				'or',
 				['like', 'InspectionType', $filter],
@@ -213,13 +211,11 @@ class DispatchController extends Controller
 				]);
 			}
 			
-			if($page != null)
-			{
+			if($page != null){
 				//pass query with pagination data to helper method
 				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
 				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
+				$data = $paginationResponse['Query']->orderBy($orderBy)->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
 				$responseArray[$envelope] = $data;
 			}
@@ -229,12 +225,9 @@ class DispatchController extends Controller
 			$response->data = $responseArray;
 			return $response;
 		}
-        catch(ForbiddenHttpException $e)
-        {
+        catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAvailableAssets', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
@@ -406,7 +399,7 @@ class DispatchController extends Controller
 	}
 	
 	public function actionGetAssigned($mapGridSelected = null, $inspectionType = null, $billingCode = null, $officeName = null,
-		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC')
+		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC', $dateRange = null)
 	{
 		try{
 			//set db
@@ -459,9 +452,18 @@ class DispatchController extends Controller
 						'InProgressFlag',
 						'OfficeName',
 					]);
-					
-				if($filter != null)
-				{
+				
+				if($dateRange != null){
+                    $explodedDateRange = explode(' ', $dateRange);
+                    $startDate = $explodedDateRange[0];
+                    $endDate = $explodedDateRange[2];
+                    $assetQuery->andWhere(['or',
+                        ['between', 'ComplianceStart', $startDate, $endDate],
+                        ['between', 'ComplianceEnd', $startDate, $endDate],
+                    ]);
+                }
+				
+				if($filter != null){
 					$assetQuery->andFilterWhere([
 						'or',
 						['like', 'UserFirstName ', $filter],
@@ -493,7 +495,8 @@ class DispatchController extends Controller
 				]);
 
 				//pass query with pagination data to helper method
-				$paginationResponse = self::countFunctionPaginationProcessor($assetQuery, $page, $listPerPage, $filter);
+				// $paginationResponse = self::countFunctionPaginationProcessor($assetQuery, $page, $listPerPage, $filter);
+				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
 				//add pagination data to response data
 				$responseArray['pages'] = $paginationResponse['pages'];	
 				//set asset query to returned value with added pagination clause
@@ -523,6 +526,9 @@ class DispatchController extends Controller
         }
 	}
 	
+	//function created to improve performance due to slow view
+	//view has since been improved so use has stopped 4/2/19
+	//keeping in place for now in case it is needed.
 	public function countFunctionPaginationProcessor($assetQuery, $page, $listPerPage, $filter)
     {
         // set pagination
@@ -550,8 +556,7 @@ class DispatchController extends Controller
 	public function actionGetAssignedAssets($mapGridSelected, $sectionNumberSelected = null, $filter = null, $listPerPage = 10, $page = 1,
 		$inspectionType = null, $billingCode = null, $officeName = null)
 	{
-		try
-		{
+		try{
 			//set db
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
@@ -561,20 +566,15 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$orderBy = 'ComplianceEnd';
 			$envelope = 'assets';
-			
-			//handle null billing code, as it is not always set.
-			$billingCode = $billingCode != '' ? $billingCode : null;
-			
+
 			//handle null or multiple inspection types
-			if($inspectionType != null)
-			{
+			if($inspectionType != null){
 				//handle potential multiple inspection types
 				$inspectionTypeFilter = ['or',
 				['InspectionType' => $inspectionType]];
 				$inspectionTypeArray = explode(',', $inspectionType);
 				$inspectionTypeCount = count($inspectionTypeArray);
-				for($i = 0; $i < $inspectionTypeCount; $i++)
-				{
+				for($i = 0; $i < $inspectionTypeCount; $i++){
 					$inspectionTypeFilter[] = ['InspectionType' => $inspectionTypeArray[$i]];
 				}
 			}else{
@@ -584,15 +584,13 @@ class DispatchController extends Controller
 			
 			$assetQuery = AssignedWorkQueue::find()
 				->where(['MapGrid' => $mapGridSelected])
-				->andwhere($inspectionTypeFilter)
-				->andwhere(['BillingCode' => $billingCode])
-				->andwhere(['OfficeName' => $officeName]);
-			if($sectionNumberSelected !=null)
-			{
-				$assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
-			}
-			if($filter != null)
-			{
+				->andwhere($inspectionTypeFilter);
+				
+			if($billingCode != null) $assetQuery->andWhere(['BillingCode' => $billingCode]);			
+			if($officeName != null) $assetQuery->andWhere(['OfficeName' => $officeName]);
+			if($sectionNumberSelected != null) $assetQuery->andWhere(['SectionNumber' => $sectionNumberSelected]);
+			
+			if($filter != null){
 				$assetQuery->andFilterWhere([
 				'or',
 				['like', 'InspectionType', $filter],
@@ -615,16 +613,12 @@ class DispatchController extends Controller
 				]);
 			}
 			
-			if($page != null)
-			{
-				//pass query with pagination data to helper method
-				$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
-				//use updated query with pagination caluse to get data
-				$data = $paginationResponse['Query']->orderBy($orderBy)
-				->all();
-				$responseArray['pages'] = $paginationResponse['pages'];
-				$responseArray[$envelope] = $data;
-			}
+			//pass query with pagination data to helper method
+			$paginationResponse = BaseActiveController::paginationProcessor($assetQuery, $page, $listPerPage);
+			//use updated query with pagination caluse to get data
+			$data = $paginationResponse['Query']->orderBy($orderBy)->all();
+			$responseArray['pages'] = $paginationResponse['pages'];
+			$responseArray[$envelope] = $data;
 			
 			//create response object
 			$response = Yii::$app->response;
@@ -632,12 +626,9 @@ class DispatchController extends Controller
 			$response->data = $responseArray;
 			return $response;
 		}
-        catch(ForbiddenHttpException $e)
-        {
+        catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAssignedAssets', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
