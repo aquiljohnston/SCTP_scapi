@@ -25,7 +25,7 @@ use yii\db\Query;
 /**
  * TimeCardController implements the CRUD actions for TimeCard model.
  */
-class TimeCardController extends BaseActiveController
+class TimeCardController extends BaseCardController
 {
 	public $modelClass = 'app\modules\v3\models\TimeCard';
 
@@ -309,16 +309,16 @@ class TimeCardController extends BaseActiveController
             }
 			
 			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromTimeCards($projectDropdownRecords, $projectAllOption);
+			$projectDropDown = self::extractProjectsFromCards('TimeCard', $projectDropdownRecords, $projectAllOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromTimeCards($employeeDropdownRecords);
+			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
 
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
             //check if approved time card exist in the data
-            $unapprovedTimeCardExist = $this->CheckUnapprovedTimeCardExist($timeCardsArr);
-            $projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCardsArr);
+            $unapprovedTimeCardExist = $this->checkUnapprovedCardExist('TimeCard', $timeCardsArr);
+            $projectWasSubmitted   = $this->checkAllAssetsSubmitted('TimeCard', $timeCardsArr);
             
             $responseArray['assets'] 				= $timeCardsArr;
             $responseArray['pages'] 				= $paginationResponse['pages'];
@@ -394,7 +394,7 @@ class TimeCardController extends BaseActiveController
             }
 
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjectsFromTimeCards($dropdownRecords, $allTheProjects);
+			$allTheProjects = self::extractProjectsFromCards('TimeCard', $dropdownRecords, $allTheProjects);
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
@@ -402,7 +402,7 @@ class TimeCardController extends BaseActiveController
 
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
-			$projectWasSubmitted   = $this->CheckAllAssetsSubmitted($timeCards);
+			$projectWasSubmitted   = $this->checkAllAssetsSubmitted('TimeCard', $timeCards);
 
             $responseArray['assets'] = $timeCards;
             $responseArray['pages'] = $paginationResponse['pages'];
@@ -740,52 +740,6 @@ class TimeCardController extends BaseActiveController
     }
 
     /**
-     * Check if there is at least one time card to be been approved
-     * @param $timeCardsArr
-     * @return boolean
-     */
-    private function CheckUnapprovedTimeCardExist($timeCardsArr){
-        $unapprovedTimeCardExist = false;
-        foreach ($timeCardsArr as $item){
-            if ($item['TimeCardApprovedFlag'] == 0){
-                $unapprovedTimeCardExist = true;
-                break;
-            }
-        }
-        return $unapprovedTimeCardExist;
-    }
-
-
-
-     /**
-     * Check if project was submitted to Oasis and MSDYNAMICS
-     * @param $timeCardsArr
-     * @return boolean
-     */
-    private function CheckAllAssetsSubmitted($timeCardsArr){
-        $allAssetsCount = count($timeCardsArr);
-        $submittedCount = 0;
-        $allSubmitted   = FALSE;
-		
-        foreach ($timeCardsArr as $item)
-		{
-			$oasisKey = array_key_exists('TimeCardOasisSubmitted', $item) ? 'TimeCardOasisSubmitted' : 'OasisSubmitted';
-			$msDynamicsKey = array_key_exists('TimeCardMSDynamicsSubmitted', $item) ? 'TimeCardMSDynamicsSubmitted' : 'MSDynamicsSubmitted';
-			
-            if ($item[$oasisKey] == "Yes" && $item[$msDynamicsKey] == "Yes" ){
-                $submittedCount++;
-            }
-        }
-
-        if ($allAssetsCount == $submittedCount){
-        	$allSubmitted = TRUE;
-        }
-
-        return $allSubmitted;
-         
-    }
-
-    /**
      * Check if submit button should be enabled/disabled by calling DB fnSubmit function
      * @return mixed
      * @throws ForbiddenHttpException
@@ -852,47 +806,7 @@ class TimeCardController extends BaseActiveController
             throw new \yii\web\HttpException(400);
         }
     }
-	
-	private function extractProjectsFromTimeCards($dropdownRecords, $projectAllOption)
-	{
-		$allTheProjects = [];
-		//iterate and stash project name $p['TimeCardProjectID']
-		foreach ($dropdownRecords as $p) {
-			//currently only two option exist for key would have to update this if more views/tables/functions use this function
-			$key = array_key_exists('TimeCardProjectID', $p) ? $p['TimeCardProjectID'] : $p['ProjectID'];
-			$value = $p['ProjectName'];
-			$allTheProjects[$key] = $value;
-		}
-		//remove dupes
-		$allTheProjects = array_unique($allTheProjects);
-		//abc order for all
-		asort($allTheProjects);
-		//appened all option to the front
-		$allTheProjects = $projectAllOption + $allTheProjects;
-		
-		return $allTheProjects;
-	}
-	
-	private function extractEmployeesFromTimeCards($dropdownRecords)
-	{
-		$employeeValues = [];
-		//iterate and stash user values
-		foreach ($dropdownRecords as $e) {
-			//build key value pair
-			$key = $e['UserID'];
-			$value = $e['UserFullName'];
-			$employeeValues[$key] = $value;
-		}
-		//remove dupes
-		$employeeValues = array_unique($employeeValues);
-		//abc order for all
-		asort($employeeValues);
-		//append all option to the front
-		$employeeValues = [""=>"All"] + $employeeValues;
-		
-		return $employeeValues;
-	}
-	
+
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
 	{
 		try
