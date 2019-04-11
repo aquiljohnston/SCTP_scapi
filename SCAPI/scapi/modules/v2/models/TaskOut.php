@@ -58,6 +58,7 @@ use Yii;
  * @property int $SurveyAboveGroundGrade2
  * @property int $SurveyAboveGroundGrade3
  * @property int $SurveyTotalAboveGround
+ * @property int $SurveyShortCasings
  *
  * @property UserTb $createdUser
  */
@@ -78,7 +79,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ActivityID', 'CreatedUserID'], 'required'],
-            [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure', 'CGECount', 'AdHocCount', 'FieldServiceWorkOrdersSkipped', 'FieldServiceWorkOrdersCompleted', 'FieldServiceRemediationsCompleted', 'ACWorkOrdersSkipped', 'ACWorkOrdersCompleted', 'ACRemediationsCompleted', 'MeterServiceWorkOrdersSkipped', 'MeterServiceWorkOrdersCompleted', 'LocatingTicketsCompleted', 'LocatingServicesCompleted', 'CGEServicesAttempted', 'CGEServicesCompleted', 'CGEBelowGroundGrade1', 'CGEBelowGroundGrade2', 'CGEBelowGroundGrade3', 'CGETotalBelowGround', 'CGEAboveGroundGrade1', 'CGEAboveGroundGrade2', 'CGEAboveGroundGrade3', 'CGETotalAboveGround', 'SurveySurveyFootage', 'SurveyNoOfServices', 'SurveyCGEs', 'SurveyBelowGroundGrade1', 'SurveyBelowGroundGrade2', 'SurveyBelowGroundGrade3', 'SurveyTotalBelowGround', 'SurveyAboveGroundGrade1', 'SurveyAboveGroundGrade2', 'SurveyAboveGroundGrade3', 'SurveyTotalAboveGround'], 'integer'],
+            [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure', 'CGECount', 'AdHocCount', 'FieldServiceWorkOrdersSkipped', 'FieldServiceWorkOrdersCompleted', 'FieldServiceRemediationsCompleted', 'ACWorkOrdersSkipped', 'ACWorkOrdersCompleted', 'ACRemediationsCompleted', 'MeterServiceWorkOrdersSkipped', 'MeterServiceWorkOrdersCompleted', 'LocatingTicketsCompleted', 'LocatingServicesCompleted', 'CGEServicesAttempted', 'CGEServicesCompleted', 'CGEBelowGroundGrade1', 'CGEBelowGroundGrade2', 'CGEBelowGroundGrade3', 'CGETotalBelowGround', 'CGEAboveGroundGrade1', 'CGEAboveGroundGrade2', 'CGEAboveGroundGrade3', 'CGETotalAboveGround', 'SurveySurveyFootage', 'SurveyNoOfServices', 'SurveyCGEs', 'SurveyBelowGroundGrade1', 'SurveyBelowGroundGrade2', 'SurveyBelowGroundGrade3', 'SurveyTotalBelowGround', 'SurveyAboveGroundGrade1', 'SurveyAboveGroundGrade2', 'SurveyAboveGroundGrade3', 'SurveyTotalAboveGround', 'SurveyShortCasings'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
             [['MapGrid', 'Comments'], 'string'],
             [['TotalMapTime'], 'number'],
@@ -143,6 +144,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
             'SurveyAboveGroundGrade2' => 'Survey Above Ground Grade2',
             'SurveyAboveGroundGrade3' => 'Survey Above Ground Grade3',
             'SurveyTotalAboveGround' => 'Survey Total Above Ground',
+            'SurveyShortCasings' => 'Survey Short Casings',
         ];
     }
 
