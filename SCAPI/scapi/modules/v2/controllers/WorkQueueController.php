@@ -38,8 +38,7 @@ class WorkQueueController extends Controller
 	
 	public function actionGet($userID)
 	{
-		try
-		{
+		try{
 			ini_set('memory_limit', '-1');
 			//set db
 			$client = getallheaders()['X-Client'];
@@ -82,7 +81,8 @@ class WorkQueueController extends Controller
 				,PipelineFootage
 				,SpecialInstructions
 				,AssignedToID
-				,AttemptCounter')
+				,AttemptCounter
+				,ScheduledDispatchDate')
 				->where(['AssignedToID' => $userID])
 				->all();
 					
@@ -91,13 +91,9 @@ class WorkQueueController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
         }
 	}
