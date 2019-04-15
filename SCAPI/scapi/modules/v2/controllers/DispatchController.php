@@ -58,8 +58,7 @@ class DispatchController extends Controller
 	public function actionGetAvailable($mapGridSelected = null, $inspectionType = null, $billingCode = null, $officeName = null,
 		$filter = null, $listPerPage = 10, $page = 1, $sortField = 'ComplianceEnd', $sortOrder = 'ASC', $dateRange = null)
 	{
-		try
-		{
+		try{
 			//get headers
 			$client = getallheaders()['X-Client'];
 			//set db
@@ -70,28 +69,22 @@ class DispatchController extends Controller
 			$responseArray = [];
 			$divisionFlag = self::getDivisionFlag();
 			
-			if($mapGridSelected != null)
-			{
+			if($mapGridSelected != null){
 				$orderBy = 'SectionNumber';
 				$envelope = 'sections';
 				$assetQuery = AvailableWorkOrderBySection::find()
 					->where(['MapGrid' => $mapGridSelected]);
 					
-				if($inspectionType != null)
-				{
+				if($inspectionType != null){
 					$assetQuery->andWhere(['InspectionType' => $inspectionType]);
 				}
-				if($billingCode != null)
-				{
+				if($billingCode != null){
 					$assetQuery->andWhere(['BillingCode' => $billingCode]);
 				}
-				if($officeName != null)
-				{
+				if($officeName != null){
 					$assetQuery->andWhere(['OfficeName' => $officeName]);
 				}
-			}
-			else
-			{
+			}else{
 				$orderBy = "$sortField $sortOrder";
 				$envelope = 'mapGrids';
 				$assetQuery = AvailableWorkOrderByMapGrid::find();
@@ -105,20 +98,33 @@ class DispatchController extends Controller
 						['between', 'ComplianceEnd', $startDate, $endDate],
 					]);
 				}
-				
-				if($filter != null){
-					$assetQuery->andFilterWhere([
-					'or',
-					['like', 'MapGrid', $filter],
-					['like', 'ComplianceStart', $filter],
-					['like', 'ComplianceEnd', $filter],
-					['like', 'AvailableWorkOrderCount', $filter],
-					['like', 'Frequency', $filter],
-					['like', 'Division', $filter],
-					['like', 'InspectionType', $filter],
-					['like', 'BillingCode', $filter],
-					['like', 'OfficeName', $filter],
-					]);
+
+				//handle filter
+				if($filter != null ){
+					//url decode filter value
+					$filter = urldecode($filter);
+					//explode by delimiter to allow for multi search
+					$delimiter = ',';
+					$filterArray = explode($delimiter, $filter);
+
+					//loop for multi search
+					for($i = 0; $i < count($filterArray); $i++){
+						//remove leading space from filter string
+						$trimmedFilter = trim($filterArray[$i]);
+						$filterQueryArray = ([
+							'or',
+							['like', 'MapGrid', $trimmedFilter],
+							['like', 'ComplianceStart', $trimmedFilter],
+							['like', 'ComplianceEnd', $trimmedFilter],
+							['like', 'AvailableWorkOrderCount', $trimmedFilter],
+							['like', 'Frequency', $trimmedFilter],
+							['like', 'Division', $trimmedFilter],
+							['like', 'InspectionType', $trimmedFilter],
+							['like', 'BillingCode', $trimmedFilter],
+							['like', 'OfficeName', $trimmedFilter]
+						]);
+						$assetQuery->andFilterWhere($filterQueryArray);
+					}
 				}
 				
 				//pass query with pagination data to helper method
@@ -129,10 +135,8 @@ class DispatchController extends Controller
 				$assetQuery = $paginationResponse['Query'];
 			}
 			
-			
 			//add order by to query and get data
-			$data = $assetQuery->orderBy($orderBy)
-				->all();
+			$data = $assetQuery->orderBy($orderBy)->all();
 			$responseArray['divisionFlag'] = $divisionFlag;
 			$responseArray[$envelope] = $data;
 			
@@ -141,13 +145,9 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAvailable', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
@@ -409,28 +409,22 @@ class DispatchController extends Controller
 			PermissionsController::requirePermission('dispatchGetAssigned', $client);
 			
 			$responseArray = [];
-			if($mapGridSelected != null)
-			{
+			if($mapGridSelected != null){
 				$orderBy = 'SectionNumber';
 				$envelope = 'sections';
 				$assetQuery = AssignedWorkQueueBySection::find()
 					->where(['MapGrid' => $mapGridSelected]);
 					
-				if($inspectionType != null)
-				{
+				if($inspectionType != null){
 					$assetQuery->andWhere(['InspectionType' => $inspectionType]);
 				}
-				if($billingCode != null)
-				{
+				if($billingCode != null){
 					$assetQuery->andWhere(['BillingCode' => $billingCode]);
 				}
-				if($officeName != null)
-				{
+				if($officeName != null){
 					$assetQuery->andWhere(['OfficeName' => $officeName]);
 				}
-			}
-			else
-			{
+			}else{
 				$orderBy = "$sortField $sortOrder";
 				$envelope = 'mapGrids';
 				
@@ -463,19 +457,32 @@ class DispatchController extends Controller
                     ]);
                 }
 				
-				if($filter != null){
-					$assetQuery->andFilterWhere([
-						'or',
-						['like', 'UserFirstName ', $filter],
-						['like', 'UserLastName  ', $filter],
-						['like', 'UserName', $filter],
-						['like', 'MapGrid', $filter],
-						['like', 'OfficeName', $filter],
-						['like', 'BillingCode', $filter],
-						['like', 'InspectionType', $filter],
-						['like', 'Cast(ComplianceStartDate as varchar(10))', $filter],
-						['like', 'Cast(CompliancenEndDate as varchar(10))', $filter],
-					]);
+				//handle filter
+				if($filter != null ){
+					//url decode filter value
+					$filter = urldecode($filter);
+					//explode by delimiter to allow for multi search
+					$delimiter = ',';
+					$filterArray = explode($delimiter, $filter);
+
+					//loop for multi search
+					for($i = 0; $i < count($filterArray); $i++){
+						//remove leading space from filter string
+						$trimmedFilter = trim($filterArray[$i]);
+						$filterQueryArray = ([
+							'or',
+							['like', 'UserFirstName ', $trimmedFilter],
+							['like', 'UserLastName  ', $trimmedFilter],
+							['like', 'UserName', $trimmedFilter],
+							['like', 'MapGrid', $trimmedFilter],
+							['like', 'OfficeName', $trimmedFilter],
+							['like', 'BillingCode', $trimmedFilter],
+							['like', 'InspectionType', $trimmedFilter],
+							['like', 'Cast(ComplianceStartDate as varchar(10))', $trimmedFilter],
+							['like', 'Cast(CompliancenEndDate as varchar(10))', $trimmedFilter]
+						]);
+						$assetQuery->andFilterWhere($filterQueryArray);
+					}
 				}
 				
 				$assetQuery->groupBy([
@@ -504,8 +511,7 @@ class DispatchController extends Controller
 			}
 			
 			//add order by to query and get data
-			$data = $assetQuery->orderBy($orderBy)
-				->all(BaseActiveRecord::getDb());
+			$data = $assetQuery->orderBy($orderBy)->all(BaseActiveRecord::getDb());
 			//add query data to response data
             $responseArray[$envelope] = $data;
 			
@@ -514,13 +520,9 @@ class DispatchController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
 			return $response;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAssigned', $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }

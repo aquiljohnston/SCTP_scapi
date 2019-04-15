@@ -29,7 +29,7 @@ use yii\db\query;
 /**
  * MileageCardController implements the CRUD actions for MileageCard model.
  */
-class MileageCardController extends BaseActiveController
+class MileageCardController extends BaseCardController
 {
     public $modelClass = 'app\modules\v3\models\MileageCard'; 
 	
@@ -318,19 +318,19 @@ class MileageCardController extends BaseActiveController
             }
 			
 			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromMileageCards($projectDropdownRecords, $projectAllOption);
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectDropdownRecords, $projectAllOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromMileageCards($employeeDropdownRecords);
+			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
 			
 			//add pagination and fetch mileage card data
             $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
             $mileageCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
 			
 			//check mileage card submission statuses
-            $unapprovedMileageCardExist = $this->CheckUnapprovedMileageCardExist($mileageCardsArr);
+            $unapprovedMileageCardExist = $this->checkUnapprovedCardExist('MileageCard', $mileageCardsArr);
 			//unsure of business rules for mileage submission
-            $projectWasSubmitted = $this->CheckAllAssetsSubmitted($mileageCardsArr);
+            $projectWasSubmitted = $this->checkAllAssetsSubmitted('MileageCard', $mileageCardsArr);
 			
 			$transaction->commit();
 			
@@ -408,7 +408,7 @@ class MileageCardController extends BaseActiveController
             }
 
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjectsFromMileageCards($dropdownRecords, $allTheProjects);
+			$allTheProjects = self::extractProjectsFromCards('MileageCard', $dropdownRecords, $allTheProjects);
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
@@ -416,7 +416,7 @@ class MileageCardController extends BaseActiveController
 
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
-			$projectWasSubmitted   = $this->CheckAllAssetsSubmitted($mileageCards);
+			$projectWasSubmitted   = $this->checkAllAssetsSubmitted('MileageCard', $mileageCards);
 
             $responseArray['assets'] = $mileageCards;
             $responseArray['pages'] = $paginationResponse['pages'];
@@ -797,82 +797,6 @@ class MileageCardController extends BaseActiveController
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
             throw new \yii\web\HttpException(400);
         }
-    }
-
-	//TODO consider creating cards parent controller and extracting out these 4 helper methods to combine with time cards
-	//extractProjectsFromMileageCards, extractEmployeesFromMileageCards, CheckUnapprovedMileageCardExist, CheckAllAssetsSubmitted
-	private function extractProjectsFromMileageCards($dropdownRecords, $projectAllOption)
-	{
-		$allTheProjects = [];
-		//iterate and stash project name
-		foreach ($dropdownRecords as $p) {
-			//second option is only needed for the accountant view in timecard because the tables dont match
-			//currently only two option exist for key would have to update this if more views/tables/functions use this function
-			$key = array_key_exists('MileageCardProjectID', $p) ? $p['MileageCardProjectID'] : $p['ProjectID'];
-			$value = $p['ProjectName'];
-			$allTheProjects[$key] = $value;
-		}
-		//remove dupes
-		$allTheProjects = array_unique($allTheProjects);
-		//abc order for all
-		asort($allTheProjects);
-		//appened all option to the front
-		$allTheProjects = $projectAllOption + $allTheProjects;
-		
-		return $allTheProjects;
-	}
-	
-	private function extractEmployeesFromMileageCards($dropdownRecords)
-	{
-		$employeeValues = [];
-		//iterate and stash user values
-		foreach ($dropdownRecords as $e) {
-			//build key value pair
-			$key = $e['UserID'];
-			$value = $e['UserFullName'];
-			$employeeValues[$key] = $value;
-		}
-		//remove dupes
-		$employeeValues = array_unique($employeeValues);
-		//abc order for all
-		asort($employeeValues);
-		//append all option to the front
-		$employeeValues = [""=>"All"] + $employeeValues;
-		
-		return $employeeValues;
-	}
-	
-	/**
-     * Check if there is at least one time card to be been approved
-     * @param $mileageCardsArr
-     * @return boolean
-     */
-    private function CheckUnapprovedMileageCardExist($mileageCardsArr){
-        foreach ($mileageCardsArr as $item){
-            if ($item['MileageCardApprovedFlag'] == 0){
-                return true;
-            }
-        }
-        return false;
-    }
-	
-	/**
-     * Check if project was submitted to Oasis and QB
-     * @param $mileageCardsArr
-     * @return boolean
-     */
-    private function CheckAllAssetsSubmitted($mileageCardsArr){
-        foreach ($mileageCardsArr as $item)
-		{
-			//second option is only needed for the accountant view in mileagecard because the tables dont match
-			$oasisKey = array_key_exists('MileageCardOasisSubmitted', $item) ? 'MileageCardOasisSubmitted' : 'OasisSubmitted';
-			$msDynamicsKey = array_key_exists('MileageCardMSDynamicsSubmitted', $item) ? 'MileageCardMSDynamicsSubmitted' : 'MSDynamicsSubmitted';
-			
-            if ($item[$oasisKey] == "No" || $item[$msDynamicsKey] == "No"){
-                return false;
-            }
-        }
-        return true;        
     }
 	
 	//inserts records into historical tables
