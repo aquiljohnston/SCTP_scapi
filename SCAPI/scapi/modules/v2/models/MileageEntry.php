@@ -31,6 +31,8 @@ use Yii;
  * @property string $MileageEntryPhoto1Path
  * @property string $MileageEntryPhoto2Path
  * @property string $MileageEntryPersonalMiles
+ * @property string $StartingMileageEntryComment
+ * @property string $EndingMileageEntryComment
  *
  * @property MileageCardTb $mileageEntryMileageCard
  */
@@ -52,7 +54,7 @@ class MileageEntry extends \app\modules\v2\models\BaseActiveRecord
         return [
             [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryTotalMiles', 'MileageEntryPersonalMiles'], 'number'],
             [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT'], 'safe'],
-            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'MileageEntryChartOfAccount', 'MileageEntryMileageType', 'MileageEntryPhoto1Path', 'MileageEntryPhoto2Path'], 'string'],
+            [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'MileageEntryChartOfAccount', 'MileageEntryMileageType', 'MileageEntryPhoto1Path', 'MileageEntryPhoto2Path', 'StartingMileageEntryComment', 'EndingMileageEntryComment'], 'string'],
             [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
             [['MileageEntryMileageCardID'], 'exist', 'skipOnError' => true, 'targetClass' => MileageCard::className(), 'targetAttribute' => ['MileageEntryMileageCardID' => 'MileageCardID']],
         ];
@@ -88,6 +90,8 @@ class MileageEntry extends \app\modules\v2\models\BaseActiveRecord
             'MileageEntryPhoto1Path' => 'Mileage Entry Photo1 Path',
             'MileageEntryPhoto2Path' => 'Mileage Entry Photo2 Path',
             'MileageEntryPersonalMiles' => 'Mileage Entry Personal Miles',
+            'StartingMileageEntryComment' => 'Starting Mileage Entry Comment',
+            'EndingMileageEntryComment' => 'Ending Mileage Entry Comment',
         ];
     }
 
