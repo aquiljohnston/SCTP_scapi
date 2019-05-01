@@ -415,6 +415,10 @@ class InspectionController extends Controller
 			if($workOrder->CompletedFlag !== 1){
 				$workOrder->ModifiedBy = $inspectionData['CreatedBy'];
 				$workOrder->ModifiedDateTime = $inspectionData['CreatedDate'];
+				//set compliance fields if they exist
+				if(array_key_exists('IsComplianceFlag', $inspectionData)) $workOrder->ComplianceFlag = $inspectionData['IsComplianceFlag'];
+				if(array_key_exists('IsOverrideFlag', $inspectionData)) $workOrder->OverrideFlag = $inspectionData['IsOverrideFlag'];
+				if(array_key_exists('ComplianceReason', $inspectionData)) $workOrder->ComplianceReason = $inspectionData['ComplianceReason'];
 				if($updateEventIndicator){
 					//have to check if it is set to 1 previously because value default on db is NULL
 					if($workOrder->EventIndicator !== Constants::WORK_ORDER_COMPLETED_WITH_EVENT && 
