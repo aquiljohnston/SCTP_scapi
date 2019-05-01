@@ -3,15 +3,14 @@
 namespace app\modules\v2\models;
 
 use Yii;
-use app\modules\v2\models\BaseUser;
 
 /**
  * This is the model class for table "tWorkOrder".
  *
- * @property integer $ID
+ * @property int $ID
  * @property string $ClientWorkOrderID
- * @property integer $CreatedBy
- * @property integer $ModifiedBy
+ * @property int $CreatedBy
+ * @property int $ModifiedBy
  * @property string $CreatedDateTime
  * @property string $ModifiedDateTime
  * @property string $InspectionType
@@ -37,14 +36,14 @@ use app\modules\v2\models\BaseUser;
  * @property string $AccountName
  * @property string $AccountTelephoneNumber
  * @property string $Comments
- * @property integer $CompletedFlag
+ * @property int $CompletedFlag
  * @property string $CompletedDate
- * @property integer $InspectionAttemptCounter
+ * @property int $InspectionAttemptCounter
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
- * @property integer $EventIndicator
- * @property integer $OrderProcessed
+ * @property int $EventIndicator
+ * @property int $OrderProcessed
  * @property string $Frequency
  * @property string $Division
  * @property string $BillingCode
@@ -55,6 +54,9 @@ use app\modules\v2\models\BaseUser;
  * @property string $OfficeName
  * @property string $RollUpOfficeName
  * @property string $BillingOfficeName
+ * @property int $ComplianceFlag
+ * @property int $OverrideFlag
+ * @property string $ComplianceReason
  *
  * @property TPipelinePoints[] $tPipelinePoints
  * @property UserTb $createdBy
@@ -63,7 +65,7 @@ use app\modules\v2\models\BaseUser;
 class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -71,13 +73,13 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Frequency', 'Division', 'BillingCode', 'Rollup', 'MeterLocation', 'SpecialInstructions', 'OfficeName', 'RollUpOfficeName', 'BillingOfficeName'], 'string'],
-            [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'EventIndicator', 'OrderProcessed'], 'integer'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'Frequency', 'Division', 'BillingCode', 'Rollup', 'MeterLocation', 'SpecialInstructions', 'OfficeName', 'RollUpOfficeName', 'BillingOfficeName', 'ComplianceReason'], 'string'],
+            [['CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'EventIndicator', 'OrderProcessed', 'ComplianceFlag', 'OverrideFlag'], 'integer'],
             [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
             [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd', 'PipelineFootage'], 'number'],
             [['CreatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['CreatedBy' => 'UserID']],
@@ -86,7 +88,7 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -138,6 +140,9 @@ class WorkOrder extends \app\modules\v2\models\BaseActiveRecord
             'OfficeName' => 'Office Name',
             'RollUpOfficeName' => 'Roll Up Office Name',
             'BillingOfficeName' => 'Billing Office Name',
+            'ComplianceFlag' => 'Compliance Flag',
+            'OverrideFlag' => 'Override Flag',
+            'ComplianceReason' => 'Compliance Reason',
         ];
     }
 
