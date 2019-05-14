@@ -14,16 +14,17 @@ use Yii;
  * @property string $InspectionDateTime
  * @property string $Image
  * @property string $MapGrid
- * @property integer $WorkOrderID
+ * @property int $WorkOrderID
  * @property string $SectionNumber
- * @property integer $ScheduleRequired
+ * @property int $ScheduleRequired
  * @property string $BillingCode
  * @property string $OfficeName
+ * @property string $CGEReason
  */
 class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -31,19 +32,19 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['CustomerInfo', 'InspectionType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid', 'SectionNumber', 'BillingCode', 'OfficeName'], 'string'],
+            [['CustomerInfo', 'InspectionType', 'Inspector', 'Address', 'InspectionDateTime', 'Image', 'MapGrid', 'SectionNumber', 'BillingCode', 'OfficeName', 'CGEReason'], 'string'],
             [['WorkOrderID'], 'required'],
             [['WorkOrderID', 'ScheduleRequired'], 'integer'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -60,6 +61,7 @@ class AvailableWorkOrderCGEByMapGridDetail extends \app\modules\v2\models\BaseAc
             'ScheduleRequired' => 'Schedule Required',
             'BillingCode' => 'Billing Code',
             'OfficeName' => 'Office Name',
+            'CGEReason' => 'Cgereason',
         ];
     }
 }
