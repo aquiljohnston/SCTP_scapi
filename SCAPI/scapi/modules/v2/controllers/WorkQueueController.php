@@ -82,7 +82,8 @@ class WorkQueueController extends Controller
 				,SpecialInstructions
 				,AssignedToID
 				,AttemptCounter
-				,ScheduledDispatchDate')
+				,ScheduledDispatchDate
+				,CGEReason')
 				->where(['AssignedToID' => $userID])
 				->all();
 					
