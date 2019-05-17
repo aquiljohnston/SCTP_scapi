@@ -7,26 +7,28 @@ use Yii;
 /**
  * This is the model class for table "MileageCardSumMilesCurrentWeekWithProjectName_vw".
  *
- * @property integer $MileageCardID
- * @property integer $UserID
+ * @property int $MileageCardID
+ * @property int $UserID
  * @property string $UserName
  * @property string $UserFirstName
  * @property string $UserLastName
- * @property integer $MileageCardProjectID
- * @property integer $ProjectID
- * @property string $ProjectName
- * @property integer $MileageCardTechID
- * @property string $SumMiles
- * @property string $MileageCardApprovedBy
- * @property string $MileageCardApprovedFlag
  * @property string $MileageStartDate
  * @property string $MileageEndDate
+ * @property int $ProjectID
+ * @property int $MileageCardProjectID
+ * @property string $ProjectName
+ * @property int $MileageCardTechID
+ * @property string $SumMiles
+ * @property string $MileageCardApprovedFlag
+ * @property string $MileageCardApprovedBy
  * @property string $MileageCardSupervisorName
+ * @property int $Count
+ * @property string $UserFullName
  */
-class MileageCardSumMilesCurrentWeekWithProjectName extends BaseActiveRecord
+class MileageCardSumMilesCurrentWeekWithProjectName extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -34,21 +36,21 @@ class MileageCardSumMilesCurrentWeekWithProjectName extends BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['MileageCardID', 'UserID', 'ProjectName'], 'required'],
-            [['ProjectID', 'UserID', 'MileageCardProjectID', 'MileageCardTechID', 'ProjectID', 'MileageCardTechID',], 'integer'],
-            [['UserName', 'UserFirstName', 'UserLastName', 'ProjectName', 'MileageCardApprovedBy', 'MileageCardApprovedFlag', 'MileageCardSupervisorName'], 'string'],
+            [['MileageCardID', 'UserID', 'ProjectID', 'MileageCardProjectID', 'MileageCardTechID', 'Count'], 'integer'],
+            [['UserID', 'ProjectID', 'ProjectName', 'SumMiles', 'Count'], 'required'],
+            [['UserName', 'UserFirstName', 'UserLastName', 'ProjectName', 'MileageCardApprovedFlag', 'MileageCardApprovedBy', 'MileageCardSupervisorName', 'UserFullName'], 'string'],
+            [['MileageStartDate', 'MileageEndDate'], 'safe'],
             [['SumMiles'], 'number'],
-            [['MileageStartDate', 'MileageEndDate'], 'safe']
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -58,16 +60,18 @@ class MileageCardSumMilesCurrentWeekWithProjectName extends BaseActiveRecord
             'UserName' => 'User Name',
             'UserFirstName' => 'User First Name',
             'UserLastName' => 'User Last Name',
-            'MileageCardProjectID' => 'Mileage Card Project ID',
-			'ProjectID' => 'ProjectID',
-            'ProjectName' => 'Project Name',
-			'MileageCardTechID' => 'MileageCardTechID',
-            'SumMiles' => 'Sum Miles',
-            'MileageCardApprovedBy' => 'Mileage Card Approved By',
-            'MileageCardApprovedFlag' => 'Mileage Card Approved Flag',
             'MileageStartDate' => 'Mileage Start Date',
             'MileageEndDate' => 'Mileage End Date',
-			'MileageCardSupervisorName' => 'MileageCardSupervisorName',
+            'ProjectID' => 'Project ID',
+            'MileageCardProjectID' => 'Mileage Card Project ID',
+            'ProjectName' => 'Project Name',
+            'MileageCardTechID' => 'Mileage Card Tech ID',
+            'SumMiles' => 'Sum Miles',
+            'MileageCardApprovedFlag' => 'Mileage Card Approved Flag',
+            'MileageCardApprovedBy' => 'Mileage Card Approved By',
+            'MileageCardSupervisorName' => 'Mileage Card Supervisor Name',
+            'Count' => 'Count',
+            'UserFullName' => 'User Full Name',
         ];
     }
 }
