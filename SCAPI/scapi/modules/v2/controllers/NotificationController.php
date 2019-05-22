@@ -10,7 +10,9 @@ use app\modules\v2\models\Project;
 use app\modules\v2\models\Notification;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\TimeCardSumHoursWorkedPriorWeekWithProjectName;
+use app\modules\v2\models\TimeCardSumHoursWorkedCurrentWeek;
 use app\modules\v2\models\MileageCardSumMilesPriorWeekWithProjectName;
+use app\modules\v2\models\MileageCardSumMilesCurrentWeekWithProjectName;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\db\Connection;
 use yii\data\ActiveDataProvider;
@@ -70,11 +72,12 @@ class NotificationController extends Controller
 			$notifications['timeCards'] = [];
 			$notifications['mileageCards'] = [];
 			$notificationTotal = 0;
-			$timeCardTotal = 0;
-			$mileageCardTotal = 0;
-			
-			if(BaseActiveController::isSCCT($client))
-			{
+			$timeCardPriorTotal = 0;
+			$timeCardCurrentTotal = 0;
+			$mileageCardPriorTotal = 0;
+			$mileageCardCurrentTotal = 0;
+
+			if(BaseActiveController::isSCCT($client)){
 				//get projects the user belongs to
 				$projectData = $user->projects;
 				$projectArray = array_map(function ($model) {
@@ -88,7 +91,6 @@ class NotificationController extends Controller
 					->all();
 				$projectSize = count($projectArray);
 			}
-
 			
 			//loop projects to get data
 			for ($i = 0; $i < $projectSize; $i++) {
@@ -101,17 +103,24 @@ class NotificationController extends Controller
 
 				//cast string results from sql counts to int values
 				//get count of unapproved time cards from last week for project
-				$timeCardCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
+				$timeCardPriorCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
 					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 0"])
 					->count();
 					
-				$mileageCardCount = (int)MileageCardSumMilesPriorWeekWithProjectName::find()
+				$timeCardCurrentCount = (int)TimeCardSumHoursWorkedCurrentWeek::find()
+					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 0"])
+					->count();	
+				
+				$mileageCardPriorCount = (int)MileageCardSumMilesPriorWeekWithProjectName::find()
+					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 0"])
+					->count();
+					
+				$mileageCardCurrentCount = (int)MileageCardSumMilesCurrentWeekWithProjectName::find()
 					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 0"])
 					->count();
 
 				//get count of notifications
-				if($projectUrlPrefix != null)
-				{
+				if($projectUrlPrefix != null){
 					//set db target to project db
 					BaseActiveRecord::setClient($projectUrlPrefix);
 					try{
@@ -123,25 +132,29 @@ class NotificationController extends Controller
 					}
 				}
 				
-				if($timeCardCount != 0){
+				if($timeCardPriorCount != 0 || $timeCardCurrentCount !=0){
 					//pass time card data for project
 					$timeCardData['Project'] = $projectName;
 					$timeCardData['ProjectID'] = $projectID;
-					$timeCardData['Number of Items'] = $timeCardCount;
+					$timeCardData['PriorWeekCount'] = $timeCardPriorCount;
+					$timeCardData['CurrentWeekCount'] = $timeCardCurrentCount;
 					//append data to response array
 					$notifications['timeCards'][] = $timeCardData;
 					//increment total count
-					$timeCardTotal += $timeCardCount;
+					$timeCardPriorTotal += $timeCardPriorCount;
+					$timeCardCurrentTotal += $timeCardCurrentCount;
 				}
-				if($mileageCardCount !=0){
+				if($mileageCardPriorCount !=0 || $mileageCardCurrentCount != 0){
 					//pass time card data for project
 					$mileageCardData['Project'] = $projectName;
 					$mileageCardData['ProjectID'] = $projectID;
-					$mileageCardData['Number of Items'] = $mileageCardCount;
+					$mileageCardData['PriorWeekCount'] = $mileageCardPriorCount;
+					$mileageCardData['CurrentWeekCount'] = $mileageCardCurrentCount;
 					//append data to response array
 					$notifications['mileageCards'][] = $mileageCardData;
 					//increment total count
-					$mileageCardTotal += $mileageCardCount;
+					$mileageCardPriorTotal += $mileageCardPriorCount;
+					$mileageCardCurrentTotal += $mileageCardCurrentCount;
 				}
 				if($notificationCount != 0){
 					//pass notification data for project
@@ -157,11 +170,13 @@ class NotificationController extends Controller
 
 			//pass time card data for total
 			$timeCardData['Project'] = 'Total';
-			$timeCardData['Number of Items'] = $timeCardTotal;
+			$timeCardData['PriorWeekCount'] = $timeCardPriorTotal;
+			$timeCardData['CurrentWeekCount'] = $timeCardCurrentTotal;
 			
 			//pass mileage card data for total
 			$mileageCardData['Project'] = 'Total';
-			$mileageCardData['Number of Items'] = $mileageCardTotal;
+			$mileageCardData['PriorWeekCount'] = $mileageCardPriorTotal;
+			$mileageCardData['CurrentWeekCount'] = $mileageCardCurrentTotal;
 
 			//pass notification data for total
 			$notificationData['Project'] = 'Total';

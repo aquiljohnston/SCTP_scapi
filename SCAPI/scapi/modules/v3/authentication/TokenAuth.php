@@ -42,7 +42,8 @@ class TokenAuth extends AuthMethod
 				}
 				
 			} catch (\Exception $e) {
-				Yii::warning("Valid token not found.");
+				//replace warning that was cluttering log files
+				Yii::trace("Valid token not found.");
 			}
 		}
         return null;
