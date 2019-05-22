@@ -7,11 +7,11 @@ use Yii;
 /**
  * This is the model class for table "vAssignedWorkQueue".
  *
- * @property integer $WorkQueueID
- * @property integer $WorkOrderID
+ * @property int $WorkOrderID
  * @property string $ClientWorkOrderID
- * @property integer $CreatedBy
- * @property integer $ModifiedBy
+ * @property int $WorkQueueID
+ * @property int $CreatedBy
+ * @property int $ModifiedBy
  * @property string $CreatedDateTime
  * @property string $ModifiedDateTime
  * @property string $InspectionType
@@ -37,23 +37,31 @@ use Yii;
  * @property string $AccountName
  * @property string $AccountTelephoneNumber
  * @property string $Comments
- * @property integer $CompletedFlag
+ * @property int $CompletedFlag
  * @property string $CompletedDate
- * @property integer $InspectionAttemptCounter
+ * @property int $InspectionAttemptCounter
  * @property string $SequenceNumber
  * @property string $SectionNumber
  * @property string $Shape
- * @property integer $WorkQueueStatus
+ * @property string $BillingCode
+ * @property int $WorkQueueStatus
  * @property string $AssignedTo
  * @property string $AssignedBy
- * @property integer $AssignedByID
- * @property integer $AssignedToID
+ * @property int $AssignedByID
+ * @property int $AssignedToID
  * @property string $Address
+ * @property string $MeterLocation
+ * @property double $PipelineFootage
+ * @property string $SpecialInstructions
+ * @property string $OfficeName
+ * @property int $AttemptCounter
+ * @property string $ScheduledDispatchDate
+ * @property string $CGEReason
  */
 class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -61,34 +69,33 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['WorkQueueID', 'WorkOrderID'], 'required'],
-            [['WorkQueueID', 'WorkOrderID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID'], 'integer'],
-            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'AssignedTo', 'AssignedBy', 'Address'], 'string'],
-            [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate'], 'safe'],
-            [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd'], 'number'],
+            [['WorkOrderID', 'WorkQueueID'], 'required'],
+            [['WorkOrderID', 'WorkQueueID', 'CreatedBy', 'ModifiedBy', 'CompletedFlag', 'InspectionAttemptCounter', 'WorkQueueStatus', 'AssignedByID', 'AssignedToID', 'AttemptCounter'], 'integer'],
+            [['ClientWorkOrderID', 'InspectionType', 'HouseNumber', 'Street', 'AptSuite', 'City', 'State', 'Zip', 'MeterNumber', 'MeterLocationDesc', 'LocationType', 'MapGrid', 'AccountNumber', 'AccountName', 'AccountTelephoneNumber', 'Comments', 'SequenceNumber', 'SectionNumber', 'Shape', 'BillingCode', 'AssignedTo', 'AssignedBy', 'Address', 'MeterLocation', 'SpecialInstructions', 'OfficeName', 'CGEReason'], 'string'],
+            [['CreatedDateTime', 'ModifiedDateTime', 'ComplianceStart', 'ComplianceEnd', 'CompletedDate', 'ScheduledDispatchDate'], 'safe'],
+            [['LocationLatitude', 'LocationLongitude', 'MapLatitudeBegin', 'MapLongitudeBegin', 'MapLatitudeEnd', 'MapLongitudeEnd', 'PipelineFootage'], 'number'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
         return [
-            'WorkQueueID' => 'Work Queue ID',
             'WorkOrderID' => 'Work Order ID',
             'ClientWorkOrderID' => 'Client Work Order ID',
+            'WorkQueueID' => 'Work Queue ID',
             'CreatedBy' => 'Created By',
             'ModifiedBy' => 'Modified By',
             'CreatedDateTime' => 'Created Date Time',
             'ModifiedDateTime' => 'Modified Date Time',
             'InspectionType' => 'Inspection Type',
-            'BillingCode' => 'Billing Code',
             'HouseNumber' => 'House Number',
             'Street' => 'Street',
             'AptSuite' => 'Apt Suite',
@@ -117,6 +124,7 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'SequenceNumber' => 'Sequence Number',
             'SectionNumber' => 'Section Number',
             'Shape' => 'Shape',
+            'BillingCode' => 'Billing Code',
             'WorkQueueStatus' => 'Work Queue Status',
             'AssignedTo' => 'Assigned To',
             'AssignedBy' => 'Assigned By',
@@ -126,6 +134,10 @@ class AssignedWorkQueue extends \app\modules\v2\models\BaseActiveRecord
             'MeterLocation' => 'Meter Location',
             'PipelineFootage' => 'Pipeline Footage',
             'SpecialInstructions' => 'Special Instructions',
+            'OfficeName' => 'Office Name',
+            'AttemptCounter' => 'Attempt Counter',
+            'ScheduledDispatchDate' => 'Scheduled Dispatch Date',
+            'CGEReason' => 'Cgereason',
         ];
     }
 }
