@@ -49,6 +49,7 @@ class TimeCardController extends BaseCardController
 					'get-accountant-details' => ['get'],
 					'p-m-submit' => ['put'],
 					'accountant-submit' => ['put'],
+					'accountant-reset' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -806,6 +807,44 @@ class TimeCardController extends BaseCardController
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionAccountantReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			$startDate = $params['dates']['startDate'];
+			$endDate = $params['dates']['endDate'];
+		
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spResetTimeCardSubmitFlag :startDate, :endDate");
+			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_ACCOUNTANT_RESET, null, $startDate, $endDate);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'accountantReset',
+				$e,
+				getallheaders()['X-Client'],
+				'Start Date: ' + $startDate,
+				'End Date: ' + $endDate
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
 
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
 	{
