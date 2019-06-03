@@ -46,8 +46,7 @@ class RbacController extends Controller
 		//generate array of all permissions to add
 		$this->createBasePermissions();
 		//if client is not scct add survey permissions, may be able to alter this based on project type in the future
-		if(!BaseActiveController::isSCCT($this->client))
-		{
+		if(!BaseActiveController::isSCCT($this->client)){
 			$this->createSurveyPermissions();
 		}
 		//bulk insert permissions from permissionArray
@@ -528,26 +527,49 @@ class RbacController extends Controller
         $this->permissionArray[] = $userView;
 		
 		//User Create Permissions
-
-        $userCreate = $this->auth->createPermission('userCreate');
-        $userCreate->description = 'Create a user';
-        $this->permissionAssociationArray['Supervisor'][] = $userCreate;
-        $this->permissionArray[] = $userCreate;
 		
-        $userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
-        $userCreateTechnician->description = 'Create user of role type technician';
-        $this->permissionAssociationArray['Supervisor'][] = $userCreateTechnician;
-        $this->permissionArray[] = $userCreateTechnician;
-		
-        $userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
-        $userCreateSupervisor->description = 'Create user of role type supervisor';
-        $this->permissionAssociationArray['Supervisor'][] = $userCreateSupervisor;
-        $this->permissionArray[] = $userCreateSupervisor;
-		
-        $userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
-        $userCreateProjectManager->description = 'Create user of role type project manager';
-        $this->permissionAssociationArray['ProjectManager'][] = $userCreateProjectManager;
-        $this->permissionArray[] = $userCreateProjectManager;
+		//temp change user create permissions for admin only in scct
+		if(BaseActiveController::isSCCT($this->client)){
+			$userCreate = $this->auth->createPermission('userCreate');
+			$userCreate->description = 'Create a user';
+			$this->permissionAssociationArray['Admin'][] = $userCreate;
+			$this->permissionArray[] = $userCreate;
+			
+			$userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
+			$userCreateTechnician->description = 'Create user of role type technician';
+			$this->permissionAssociationArray['Admin'][] = $userCreateTechnician;
+			$this->permissionArray[] = $userCreateTechnician;
+			
+			$userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
+			$userCreateSupervisor->description = 'Create user of role type supervisor';
+			$this->permissionAssociationArray['Admin'][] = $userCreateSupervisor;
+			$this->permissionArray[] = $userCreateSupervisor;
+			
+			$userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
+			$userCreateProjectManager->description = 'Create user of role type project manager';
+			$this->permissionAssociationArray['Admin'][] = $userCreateProjectManager;
+			$this->permissionArray[] = $userCreateProjectManager;
+		}else{
+			$userCreate = $this->auth->createPermission('userCreate');
+			$userCreate->description = 'Create a user';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreate;
+			$this->permissionArray[] = $userCreate;
+			
+			$userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
+			$userCreateTechnician->description = 'Create user of role type technician';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreateTechnician;
+			$this->permissionArray[] = $userCreateTechnician;
+			
+			$userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
+			$userCreateSupervisor->description = 'Create user of role type supervisor';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreateSupervisor;
+			$this->permissionArray[] = $userCreateSupervisor;
+			
+			$userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
+			$userCreateProjectManager->description = 'Create user of role type project manager';
+			$this->permissionAssociationArray['ProjectManager'][] = $userCreateProjectManager;
+			$this->permissionArray[] = $userCreateProjectManager;
+		}
 		
         $userCreateAnalyst = $this->auth->createPermission('userCreateAnalyst');
         $userCreateAnalyst->description = 'Create user of role type analyst';
