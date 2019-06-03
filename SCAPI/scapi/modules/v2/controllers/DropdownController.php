@@ -197,12 +197,10 @@ class DropdownController extends Controller
 	 * @return Response A JSON associative array containing pairs of AppRoleNames
 	 * @throws \yii\web\HttpException
 	 */
-	public function actionGetRolesDropdowns()
-	{
-		try
-		{
+	public function actionGetRolesDropdowns(){
+		try{
 			//set db target
-			AppRoles::setClient(BaseActiveController::urlPrefix());
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
 			PermissionsController::requirePermission('appRoleGetDropdown');
@@ -212,9 +210,11 @@ class DropdownController extends Controller
 			$namePairs = [];
 			$rolesSize = count($roles);
 			
-			for($i=0; $i < $rolesSize; $i++)
-			{
-				if(PermissionsController::can('userCreate' . $roles[$i]->AppRoleName))
+			//get active client db to check create permissions
+			$client = getallheaders()['X-Client'];
+			
+			for($i=0; $i < $rolesSize; $i++){
+				if(PermissionsController::can('userCreate' . $roles[$i]->AppRoleName, null, $client))
 					$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
 			}
 			
