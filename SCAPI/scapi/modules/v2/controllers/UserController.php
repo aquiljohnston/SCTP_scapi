@@ -100,10 +100,8 @@ class UserController extends BaseActiveController
         try {
 			//get client header
 			$client = getallheaders()['X-Client'];
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userCreate');
+			
+            PermissionsController::requirePermission('userCreate', $client);
 
             //read the post input (use this technique if you have no post variable name):
             $post = file_get_contents("php://input");
@@ -112,12 +110,15 @@ class UserController extends BaseActiveController
 			
 			$currentRole = $data['UserAppRoleType'];
 
-            PermissionsController::requirePermission('userCreate' . $currentRole);
+            PermissionsController::requirePermission('userCreate' . $currentRole, $client);
 
             //create response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
+			//set db target to base to handle scct user creation
+            SCUser::setClient(BaseActiveController::urlPrefix());
+			
             $existingUser = SCUser::find()
                 ->where(['UserName' => $data['UserName']])
                 ->all();
@@ -451,6 +452,9 @@ class UserController extends BaseActiveController
             $put = file_get_contents("php://input");
             //decode json post input as php array:
             $data = json_decode(utf8_decode($put), true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'ReactivateUser', BaseActiveController::getClientUser($client)->UserName, $client);
 
             //create response
             $response = Yii::$app->response;
