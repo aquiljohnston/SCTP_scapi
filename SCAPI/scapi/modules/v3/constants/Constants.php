@@ -55,6 +55,7 @@ final class Constants
 	const TIME_CARD_SUBMISSION_MSDYNAMICS = 'MS Dynamics Submission';
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
 	const TIME_CARD_SUBMISSION_RESET = 'Reset Submission';
+	const TIME_CARD_ACCOUNTANT_RESET = 'Accountant Reset';
 	
 	//Mileage Card Submission File Name
 	const OASIS_MILEAGE_FILE_NAME = 'oasis_mileage_history_';
