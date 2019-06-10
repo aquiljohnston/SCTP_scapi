@@ -68,18 +68,21 @@ class TimeEntryController extends BaseActiveController
 			foreach ($entries as $entry) {
 				//SPROC has no return so just in case we need a flag.
 				$success = 0;
+				//avoid pass by reference error in prod
+				$taskName = json_encode($entry['taskName']);
+				$taskDay = array_key_exists('day', $entry) ? $entry['day'] : null;
 				//call SPROC to deactivateTimeEntry
 				try {
-				$connection = BaseActiveRecord::getDb();
-				$transaction = $connection->beginTransaction(); 
-				$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
-				$timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
-				$timeCardCommand->bindParam(':PARAMETER2', json_encode($entry['taskName']), \PDO::PARAM_INT);
-				$timeCardCommand->bindParam(':PARAMETER3', array_key_exists('day', $entry) ? $entry['day'] : null, \PDO::PARAM_INT);
-				$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
-				$timeCardCommand->execute();
-				$transaction->commit();
-				$success = 1;
+					$connection = BaseActiveRecord::getDb();
+					$transaction = $connection->beginTransaction(); 
+					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
+					$timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':PARAMETER2', $taskName, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':PARAMETER3', $taskDay, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
+					$timeCardCommand->execute();
+					$transaction->commit();
+					$success = 1;
 				} catch (Exception $e) {
 					$transaction->rollBack();
 				}
@@ -89,6 +92,7 @@ class TimeEntryController extends BaseActiveController
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
