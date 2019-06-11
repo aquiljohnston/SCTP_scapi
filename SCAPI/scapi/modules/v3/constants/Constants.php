@@ -37,7 +37,7 @@ final class Constants
 	//need to change to payroll instead of quickbooks
 	const MSDYNAMICS_TIMECARD = 'tcMSDynamics';
 	const ADP = 'ADP';
-	const OT_PAYROLL_HOURS_ID = 5110;
+	const OT_PAYROLL_HOURS_ID = 4005;
 	
 	//Payment Method
 	const PAY_METHOD_SALARY = 'S';
