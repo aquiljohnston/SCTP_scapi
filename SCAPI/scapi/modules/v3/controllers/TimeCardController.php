@@ -836,11 +836,11 @@ class TimeCardController extends BaseCardController
 			return $response;
 		} catch(\Exception $e) {
 			BaseActiveController::archiveWebErrorJson(
-				'accountantReset',
+				'accountantResetTime',
 				$e,
 				getallheaders()['X-Client'],
-				'Start Date: ' + $startDate,
-				'End Date: ' + $endDate
+				'Start Date: ' . $startDate,
+				'End Date: ' . $endDate
 			);
 			throw new \yii\web\HttpException(400);
 		}

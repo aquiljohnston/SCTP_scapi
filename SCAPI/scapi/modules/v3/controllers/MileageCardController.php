@@ -52,7 +52,7 @@ class MileageCardController extends BaseCardController
 					'get-accountant-details' => ['get'],
 					'p-m-submit' => ['put'],
 					'accountant-submit' => ['put'],
-					'get-cards-export' => ['get'],
+					'accountant-reset' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -798,6 +798,44 @@ class MileageCardController extends BaseCardController
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionAccountantReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			$startDate = $params['dates']['startDate'];
+			$endDate = $params['dates']['endDate'];
+		
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spResetMileageCardSubmitFlag :startDate, :endDate");
+			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			
+			//log submission
+			self::logMileageCardHistory(Constants::MILEAGE_CARD_ACCOUNTANT_RESET, null, $startDate, $endDate);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'accountantResetMileage',
+				$e,
+				getallheaders()['X-Client'],
+				'Start Date: ' . $startDate,
+				'End Date: ' . $endDate
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
 	
 	//inserts records into historical tables
 	private function logMileageCardHistory($type, $mileageCardID = null, $startDate = null, $endDate = null, $comments = null)
