@@ -428,11 +428,16 @@ class ActivityController extends BaseActiveController
 			//create db transaction
 			$db = BaseActiveRecord::getDb();
 			$transaction = $db->beginTransaction();
-			
-			for($i = 0; $i<$activityCount; $i++)
-			{
-				$responseData['activity'][$i]['ActivityUID'] = $data[$i]['ActivityUID'];
-				$responseData['activity'][$i]['timeEntry'] = self::saveTimeEntry($data[$i]['timeEntry'], $data[$i]['ActivityUID'], $user);
+			try{
+				for($i = 0; $i<$activityCount; $i++)
+				{
+					$responseData['activity'][$i]['ActivityUID'] = $data[$i]['ActivityUID'];
+					$responseData['activity'][$i]['timeEntry'] = self::saveTimeEntry($data[$i]['timeEntry'], $data[$i]['ActivityUID'], $user);
+				}
+			}catch(\Exception $e){
+				//if an exception that cannot be handled gracefully occurs rollback to break transaction and rethrow to log
+				$transaction->rollback();
+				throw $e;
 			}
 			
 			//commit transaction
