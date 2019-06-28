@@ -4,6 +4,7 @@ namespace app\modules\v3\controllers;
 
 use Yii;
 use app\modules\v3\models\TimeEntry;
+use app\modules\v3\models\TimeEntryEventHistory;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
@@ -26,6 +27,7 @@ class TimeEntryController extends BaseActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'deactivate' => ['put'],
+					'deactivate-by-task' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -44,11 +46,60 @@ class TimeEntryController extends BaseActiveController
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
 	
-	public function actionDeactivate()
+	public function actionDeactivate($entryID){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('timeEntryDeactivate');
+
+			//get date and current user
+			$modifiedBy = BaseActiveController::getUserFromToken()->UserName;
+			$modifiedDate = Parent::getDate();
+			
+			$timeEntry = TimeEntry::findOne($entryID);
+			$successFlag = 0;
+			
+			try{
+				//pass current data to new history record
+				if(self::createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, 'Deactivated')){
+					//delete the record, to avoid constraint issues
+					if($timeEntry->delete()){
+						$successFlag = 1;
+					}
+				}
+			}catch(Exception $e){
+				$transaction->rollBack();
+			}
+			
+			$transaction->commit();
+			
+			$responseData = [
+				'EntryID' => $timeEntry->TimeEntryID,
+				'SuccessFlag' => $successFlag
+			];
+			$response->data = $responseData;
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionDeactivateByTask()
 	{		
 		try{
 			//set db target
-			$headers = getallheaders();
 			TimeEntry::setClient(BaseActiveController::urlPrefix());
 			
 			// RBAC permission check
@@ -95,5 +146,21 @@ class TimeEntryController extends BaseActiveController
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	//helper function 
+	//params timeEntry model, username of modifying user, and type of change being performed
+	//returns true if successful
+	private function createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, $changeType){
+		//new history record
+		$historyModel = new TimeEntryEventHistory;
+		$historyModel->Attributes = $timeEntry->attributes;
+		$historyModel->ChangeMadeBy = $modifiedBy;
+		$historyModel->ChangeDateTime = $modifiedDate;
+		$historyModel->Change = $changeType;
+		if($historyModel->save()){
+			return true;
+		}
+		return false;
 	}
 }
