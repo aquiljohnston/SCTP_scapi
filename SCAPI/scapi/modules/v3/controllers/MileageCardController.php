@@ -448,6 +448,8 @@ class MileageCardController extends BaseCardController
 				->where(['MileageCardProjectID' => $projectID])
 				->all(BaseActiveRecord::getDb());
 
+			$mileageCards = self::getCardsByProject($projectID, $startDate, $endDate);
+
 			//format response
 			$responseArray['details'] = $mileageCards;
             $response = Yii::$app->response;
@@ -835,6 +837,68 @@ class MileageCardController extends BaseCardController
 			);
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function actionPMReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$jsonArray = json_decode($put, true);
+			$data = $jsonArray['data'];
+			
+			//set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			$mileageCardIDs = [];
+			//get user
+			$username = self::getUserFromToken()->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson($put, Constants::MILEAGE_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
+			
+			//fetch all time cards for selected rows
+			for($i = 0; $i < count($data); $i++){
+				$projectID = $data[$i]['ProjectID'];
+				$startDate = $data[$i]['StartDate'];
+				$endDate = $data[$i]['EndDate'];
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate);
+				$newCards = array_column($newCards, 'MileageCardID');
+				$mileageCardIDs = array_merge($mileageCardIDs, $newCards);
+			}
+			//encode array to pass to sp
+			$mileageCardIDs = json_encode($mileageCardIDs);
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMileageCardResetPMApprovedFlag  :MileageCardIDJSON, :RequestedBy");
+			$resetCommand->bindParam(':MileageCardIDJSON', $mileageCardIDs,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				Constants::MILEAGE_CARD_PM_RESET,
+				$e,
+				getallheaders()['X-Client']
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	private function getCardsByProject($projectID, $startDate, $endDate){
+		$query = new Query;
+		$mileageCards = $query->select('*')
+			->from(["fnMileageCardByDate(:startDate, :endDate)"])
+			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+			->where(['MileageCardProjectID' => $projectID])
+			->all(BaseActiveRecord::getDb());
+			
+		return $mileageCards;
 	}
 	
 	//inserts records into historical tables

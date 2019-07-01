@@ -429,12 +429,7 @@ class TimeCardController extends BaseCardController
 			//RBAC permissions check
 			PermissionsController::requirePermission('timeCardGetAccountantDetails');
 
-			$detailsQuery = new Query;
-            $timeCards = $detailsQuery->select('*')
-                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
-                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-				->where(['TimeCardProjectID' => $projectID])
-				->all(BaseActiveRecord::getDb());
+			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate);
 
 			//format response
 			$responseArray['details'] = $timeCards;
@@ -845,7 +840,69 @@ class TimeCardController extends BaseCardController
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	public function actionPMReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$jsonArray = json_decode($put, true);
+			$data = $jsonArray['data'];
+			
+			//set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			$timeCardIDs = [];
+			//get user
+			$username = self::getUserFromToken()->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson($put, Constants::TIME_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
+			
+			//fetch all time cards for selected rows
+			for($i = 0; $i < count($data); $i++){
+				$projectID = $data[$i]['ProjectID'];
+				$startDate = $data[$i]['StartDate'];
+				$endDate = $data[$i]['EndDate'];
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate);
+				$newCards = array_column($newCards, 'TimeCardID');
+				$timeCardIDs = array_merge($timeCardIDs, $newCards);
+			}
+			//encode array to pass to sp
+			$timeCardIDs = json_encode($timeCardIDs);
 
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spTimeCardResetPMApprovedFlag :TimeCardIDJSON, :RequestedBy");
+			$resetCommand->bindParam(':TimeCardIDJSON', $timeCardIDs,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				Constants::TIME_CARD_PM_RESET,
+				$e,
+				getallheaders()['X-Client']
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
+
+	private function getCardsByProject($projectID, $startDate, $endDate){
+		$query = new Query;
+		$timeCards = $query->select('*')
+			->from(["fnTimeCardByDate(:startDate, :endDate)"])
+			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+			->where(['TimeCardProjectID' => $projectID])
+			->all(BaseActiveRecord::getDb());
+			
+		return $timeCards;
+	}
+	
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
 	{
 		try
