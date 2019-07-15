@@ -884,7 +884,7 @@ class MileageCardController extends BaseCardController
 			Constants::NOTIFICATION_TYPE_MILEAGE,
 			$mileageCardIDs,
 			Constants::NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE,
-			$user->UserAppRoleType);
+			Constants::APP_ROLE_PROJECT_MANAGER);
 			
 			$status['success'] = true;
 			$response->data = $status;	

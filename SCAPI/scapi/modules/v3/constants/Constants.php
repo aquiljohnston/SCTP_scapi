@@ -92,6 +92,14 @@ final class Constants
 	const NOTIFICATION_DESCRIPTION_RESET_PM_TIME = 'Reset PM Time Submission';
 	const NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE = 'Reset PM Mileage Submission';
 	
+	//App Role
+	const APP_ROLE_ADMIN = 'Admin';
+	const APP_ROLE_PROJECT_MANAGER = 'ProjectManager';
+	const APP_ROLE_SUPERVISOR = 'Supervisor';
+	const APP_ROLE_TECHNICIAN = 'Technician';
+	const APP_ROLE_ACCOUNTANT = 'Accountant';
+	const APP_ROLE_ANALYST = 'Analyst';
+	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',
 		'STAGE_HEADER' => 'apistage',
