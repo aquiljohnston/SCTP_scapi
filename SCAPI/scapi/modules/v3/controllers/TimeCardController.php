@@ -886,7 +886,7 @@ class TimeCardController extends BaseCardController
 				Constants::NOTIFICATION_TYPE_TIME,
 				$timeCardIDs,
 				Constants::NOTIFICATION_DESCRIPTION_RESET_PM_TIME,
-				$user->UserAppRoleType);
+				Constants::APP_ROLE_PROJECT_MANAGER);
 			
 			$status['success'] = true;
 			$response->data = $status;	
