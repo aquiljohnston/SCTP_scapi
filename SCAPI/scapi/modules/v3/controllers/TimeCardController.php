@@ -12,6 +12,7 @@ use app\modules\v3\models\TimeCardEventHistory;
 use app\modules\v3\models\AccountantSubmit;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
@@ -856,7 +857,8 @@ class TimeCardController extends BaseCardController
 			
 			$timeCardIDs = [];
 			//get user
-			$username = self::getUserFromToken()->UserName;
+			$user = self::getUserFromToken();
+			$username = $user->UserName;
 			
 			//archive json
 			BaseActiveController::archiveWebJson($put, Constants::TIME_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
@@ -877,7 +879,14 @@ class TimeCardController extends BaseCardController
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spTimeCardResetPMApprovedFlag :TimeCardIDJSON, :RequestedBy");
 			$resetCommand->bindParam(':TimeCardIDJSON', $timeCardIDs,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
-			$resetCommand->execute();  
+			$resetCommand->execute(); 
+
+			//create new notification
+			NotificationController::create(
+				Constants::NOTIFICATION_TYPE_TIME,
+				$timeCardIDs,
+				Constants::NOTIFICATION_DESCRIPTION_RESET_PM_TIME,
+				$user->UserAppRoleType);
 			
 			$status['success'] = true;
 			$response->data = $status;	

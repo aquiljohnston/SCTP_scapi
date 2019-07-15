@@ -214,16 +214,17 @@ class NotificationController extends Controller
     }
 	
 	//create a new notification based on params
-	// public function create($type, $itemIDArray, $description){
-		// //set db target headers
-        // BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+	public function create($type, $itemIDArray, $description, $appRoleType){
+		//set db target headers
+        BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		
-		// $connection = BaseActiveRecord::getDb();
-		// //TODO set sp name and params based on final SP
-		// $createCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spCreateNotification :Type, :ItemIDArray, :Description");
-		// $createCommand->bindParam(':Type', $type,  \PDO::PARAM_STR);
-		// $createCommand->bindParam(':ItemIDArray', $itemIDArray,  \PDO::PARAM_STR);
-		// $createCommand->bindParam(':Description', $description,  \PDO::PARAM_STR);
-		// $createCommand->execute(); 
-	// }
+		$connection = BaseActiveRecord::getDb();
+		//TODO set sp name and params based on final SP
+		$createCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spInsertNotifications :Type, :AppRoleName, :JSONItemIDs, :Description");
+		$createCommand->bindParam(':Type', $type,  \PDO::PARAM_STR);
+		$createCommand->bindParam(':AppRoleName', $appRoleType,  \PDO::PARAM_STR);
+		$createCommand->bindParam(':JSONItemIDs', $itemIDArray,  \PDO::PARAM_STR);
+		$createCommand->bindParam(':Description', $description,  \PDO::PARAM_STR);
+		$createCommand->execute(); 
+	}
 }
