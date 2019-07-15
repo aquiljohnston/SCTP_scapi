@@ -86,6 +86,12 @@ final class Constants
 	const PROD_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasis\\';
 	const PROD_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADP\\';
 	
+	//Notifications
+	const NOTIFICATION_TYPE_TIME = 'Time Card';
+	const NOTIFICATION_TYPE_MILEAGE = 'Mileage Card';
+	const NOTIFICATION_DESCRIPTION_RESET_PM_TIME = 'Reset PM Time Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE = 'Reset PM Mileage Submission';
+	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',
 		'STAGE_HEADER' => 'apistage',

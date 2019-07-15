@@ -17,6 +17,7 @@ use app\modules\v3\models\MileageCardAccountantSubmit;
 use app\modules\v3\models\MileageCardEventHistory;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -854,7 +855,8 @@ class MileageCardController extends BaseCardController
 			
 			$mileageCardIDs = [];
 			//get user
-			$username = self::getUserFromToken()->UserName;
+			$user = self::getUserFromToken();
+			$username = $user->UserName;
 			
 			//archive json
 			BaseActiveController::archiveWebJson($put, Constants::MILEAGE_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
@@ -875,7 +877,14 @@ class MileageCardController extends BaseCardController
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMileageCardResetPMApprovedFlag  :MileageCardIDJSON, :RequestedBy");
 			$resetCommand->bindParam(':MileageCardIDJSON', $mileageCardIDs,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
-			$resetCommand->execute();  
+			$resetCommand->execute();
+			
+			//create new notification
+			NotificationController::create(
+			Constants::NOTIFICATION_TYPE_MILEAGE,
+			$mileageCardIDs,
+			Constants::NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE,
+			$user->UserAppRoleType);
 			
 			$status['success'] = true;
 			$response->data = $status;	
