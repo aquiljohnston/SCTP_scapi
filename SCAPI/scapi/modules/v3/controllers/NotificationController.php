@@ -214,17 +214,18 @@ class NotificationController extends Controller
     }
 	
 	//create a new notification based on params
-	public function create($type, $itemIDArray, $description, $appRoleType){
+	public function create($type, $itemIDArray, $description, $appRoleType, $createdBy){
 		//set db target headers
         BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		
 		$connection = BaseActiveRecord::getDb();
 		//TODO set sp name and params based on final SP
-		$createCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spInsertNotifications :Type, :AppRoleName, :JSONItemIDs, :Description");
+		$createCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spInsertNotifications :Type, :AppRoleName, :JSONItemIDs, :Description, :CreatedBy");
 		$createCommand->bindParam(':Type', $type,  \PDO::PARAM_STR);
 		$createCommand->bindParam(':AppRoleName', $appRoleType,  \PDO::PARAM_STR);
 		$createCommand->bindParam(':JSONItemIDs', $itemIDArray,  \PDO::PARAM_STR);
 		$createCommand->bindParam(':Description', $description,  \PDO::PARAM_STR);
+		$createCommand->bindParam(':CreatedBy', $createdBy,  \PDO::PARAM_STR);
 		$createCommand->execute(); 
 	}
 }
