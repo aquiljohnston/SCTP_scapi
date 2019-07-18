@@ -91,6 +91,8 @@ final class Constants
 	const NOTIFICATION_TYPE_MILEAGE = 'Mileage Card';
 	const NOTIFICATION_DESCRIPTION_RESET_PM_TIME = 'Reset PM Time Submission';
 	const NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE = 'Reset PM Mileage Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_TIME = 'Request to Reset PM Time Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_MILEAGE = 'Request to Reset PM Mileage Submission';
 	
 	//App Role
 	const APP_ROLE_ADMIN = 'Admin';
