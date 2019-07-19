@@ -12,6 +12,7 @@ use app\modules\v3\models\TimeCardEventHistory;
 use app\modules\v3\models\AccountantSubmit;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
@@ -272,7 +273,7 @@ class TimeCardController extends BaseCardController
             }
 
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$projectDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			$preFilteredRecords = $timeCards->all(BaseActiveRecord::getDb());
 
 			//apply project filter
             if($projectID!= null && isset($timeCards)) {
@@ -283,7 +284,7 @@ class TimeCardController extends BaseCardController
             }
 
 			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$employeeDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			$projectFilteredRecords = $timeCards->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
 			if($employeeID!= null && isset($timeCards)) {
@@ -310,24 +311,28 @@ class TimeCardController extends BaseCardController
             }
 			
 			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromCards('TimeCard', $projectDropdownRecords, $projectAllOption);
+			$projectDropDown = self::extractProjectsFromCards('TimeCard', $preFilteredRecords, $projectAllOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
+			$employeeDropDown = self::extractEmployeesFromCards($projectFilteredRecords);
+			
+			//check if any unapproved cards exist in project filtered records
+			$unapprovedTimeCardInProject = $this->checkUnapprovedCardExist('TimeCard', $projectFilteredRecords);
 
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
             //check if approved time card exist in the data
-            $unapprovedTimeCardExist = $this->checkUnapprovedCardExist('TimeCard', $timeCardsArr);
+            $unapprovedTimeCardVisible = $this->checkUnapprovedCardExist('TimeCard', $timeCardsArr);
             $projectWasSubmitted   = $this->checkAllAssetsSubmitted('TimeCard', $timeCardsArr);
             
-            $responseArray['assets'] 				= $timeCardsArr;
-            $responseArray['pages'] 				= $paginationResponse['pages'];
-            $responseArray['projectDropDown'] 		= $projectDropDown;
-            $responseArray['employeeDropDown'] 		= $employeeDropDown;
-            $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
-			$responseArray['unapprovedTimeCardExist'] = $unapprovedTimeCardExist;
-            $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
+            $responseArray['assets'] = $timeCardsArr;
+            $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['projectDropDown'] = $projectDropDown;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+			$responseArray['unapprovedTimeCardInProject'] = $unapprovedTimeCardInProject;
+			$responseArray['unapprovedTimeCardVisible'] = $unapprovedTimeCardVisible;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
 			return $response;
@@ -429,7 +434,7 @@ class TimeCardController extends BaseCardController
 			//RBAC permissions check
 			PermissionsController::requirePermission('timeCardGetAccountantDetails');
 
-			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate);
+			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME);
 
 			//format response
 			$responseArray['details'] = $timeCards;
@@ -856,7 +861,8 @@ class TimeCardController extends BaseCardController
 			
 			$timeCardIDs = [];
 			//get user
-			$username = self::getUserFromToken()->UserName;
+			$user = self::getUserFromToken();
+			$username = $user->UserName;
 			
 			//archive json
 			BaseActiveController::archiveWebJson($put, Constants::TIME_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
@@ -866,7 +872,7 @@ class TimeCardController extends BaseCardController
 				$projectID = $data[$i]['ProjectID'];
 				$startDate = $data[$i]['StartDate'];
 				$endDate = $data[$i]['EndDate'];
-				$newCards = self::getCardsByProject($projectID, $startDate, $endDate);
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME);
 				$newCards = array_column($newCards, 'TimeCardID');
 				$timeCardIDs = array_merge($timeCardIDs, $newCards);
 			}
@@ -877,7 +883,15 @@ class TimeCardController extends BaseCardController
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spTimeCardResetPMApprovedFlag :TimeCardIDJSON, :RequestedBy");
 			$resetCommand->bindParam(':TimeCardIDJSON', $timeCardIDs,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
-			$resetCommand->execute();  
+			$resetCommand->execute(); 
+
+			//create new notification
+			NotificationController::create(
+				Constants::NOTIFICATION_TYPE_TIME,
+				$timeCardIDs,
+				Constants::NOTIFICATION_DESCRIPTION_RESET_PM_TIME,
+				Constants::APP_ROLE_PROJECT_MANAGER,
+				$username);
 			
 			$status['success'] = true;
 			$response->data = $status;	
@@ -890,17 +904,6 @@ class TimeCardController extends BaseCardController
 			);
 			throw new \yii\web\HttpException(400);
 		}
-	}
-
-	private function getCardsByProject($projectID, $startDate, $endDate){
-		$query = new Query;
-		$timeCards = $query->select('*')
-			->from(["fnTimeCardByDate(:startDate, :endDate)"])
-			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-			->where(['TimeCardProjectID' => $projectID])
-			->all(BaseActiveRecord::getDb());
-			
-		return $timeCards;
 	}
 	
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
