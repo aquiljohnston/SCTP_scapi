@@ -44,7 +44,6 @@ class NotificationController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-notifications' => ['get'],
-                    'get-notifications-landing' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -62,6 +61,7 @@ class NotificationController extends Controller
 
             //get user
             $user = BaseActiveController::getUserFromToken();
+			$userID = $user->UserID;
 			
 			//build response structure and instantiate variables
 			$notifications = [];
@@ -74,101 +74,61 @@ class NotificationController extends Controller
 			$mileageCardPriorTotal = 0;
 			$mileageCardCurrentTotal = 0;
 
-			if(BaseActiveController::isSCCT($client)){
-				//get projects the user belongs to
-				$projectData = $user->projects;
-				$projectArray = array_map(function ($model) {
-					return $model->attributes;
-				}, $projectData);
-				$projectSize = count($projectArray);
-			}else{
-				//get specific non scct client based on urlPrefix
-				$projectArray = Project::find()
-					->where(['ProjectUrlPrefix' => $client])
-					->asArray()
-					->all();
-				$projectSize = count($projectArray);
-			}
-			
-			//loop projects to get data
-			for ($i = 0; $i < $projectSize; $i++) {
-				//reset db target to scct
-				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-				
-				$projectID = $projectArray[$i]['ProjectID'];
-				$projectName = $projectArray[$i]['ProjectName'];
-
-				//cast string results from sql counts to int values
-				//get count of unapproved time cards from last week for project
-				$timeCardPriorCount = (int)TimeCardSumHoursWorkedPriorWeekWithProjectName::find()
-					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 0"])
-					->count();
-					
-				$timeCardCurrentCount = (int)TimeCardSumHoursWorkedCurrentWeek::find()
-					->where(['and', "TimeCardProjectID = $projectID", "TimeCardApprovedFlag = 0"])
-					->count();	
-				
-				$mileageCardPriorCount = (int)MileageCardSumMilesPriorWeekWithProjectName::find()
-					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 0"])
-					->count();
-					
-				$mileageCardCurrentCount = (int)MileageCardSumMilesCurrentWeekWithProjectName::find()
-					->where(['and', "MileageCardProjectID = $projectID", "MileageCardApprovedFlag = 0"])
-					->count();
-				
-				if($timeCardPriorCount != 0 || $timeCardCurrentCount !=0){
-					//pass time card data for project
-					$timeCardData['Project'] = $projectName;
-					$timeCardData['ProjectID'] = $projectID;
-					$timeCardData['PriorWeekCount'] = $timeCardPriorCount;
-					$timeCardData['CurrentWeekCount'] = $timeCardCurrentCount;
-					//append data to response array
-					$notifications['timeCards'][] = $timeCardData;
-					//increment total count
-					$timeCardPriorTotal += $timeCardPriorCount;
-					$timeCardCurrentTotal += $timeCardCurrentCount;
-				}
-				if($mileageCardPriorCount !=0 || $mileageCardCurrentCount != 0){
-					//pass time card data for project
-					$mileageCardData['Project'] = $projectName;
-					$mileageCardData['ProjectID'] = $projectID;
-					$mileageCardData['PriorWeekCount'] = $mileageCardPriorCount;
-					$mileageCardData['CurrentWeekCount'] = $mileageCardCurrentCount;
-					//append data to response array
-					$notifications['mileageCards'][] = $mileageCardData;
-					//increment total count
-					$mileageCardPriorTotal += $mileageCardPriorCount;
-					$mileageCardCurrentTotal += $mileageCardCurrentCount;
-				}
-				
-				//get notifications
-				$notificationData = self::getNotificationRecords($projectID, $user->UserAppRoleType);
-				
-				if($notificationData != null){
-					//append data to response array
-					$notifications['notifications'] = array_merge($notifications['notifications'], $notificationData);
-				}
+			$projectURLPrefix = null;
+			if(!BaseActiveController::isSCCT($client)){
+				$projectURLPrefix = $client;
 			}
 
-			//pass time card data for total
-			$timeCardTotalData['Project'] = 'Total';
-			$timeCardTotalData['PriorWeekCount'] = $timeCardPriorTotal;
-			$timeCardTotalData['CurrentWeekCount'] = $timeCardCurrentTotal;
+			$db = BaseActiveRecord::getDb();
 			
-			//pass mileage card data for total
-			$mileageCardTotalData['Project'] = 'Total';
-			$mileageCardTotalData['PriorWeekCount'] = $mileageCardPriorTotal;
-			$mileageCardTotalData['CurrentWeekCount'] = $mileageCardCurrentTotal;
-
+			$notificationSpCommand = $db->createCommand("SET NOCOUNT ON EXECUTE spListOfNotifications :userID, :projectURLPrefix");
+			$notificationSpCommand->bindParam(':userID', $userID, \PDO::PARAM_INT);
+			$notificationSpCommand->bindParam(':projectURLPrefix', $projectURLPrefix, \PDO::PARAM_STR);
+			$notificationData = $notificationSpCommand->queryAll();
+			
+			$timeCardSpCommand = $db->createCommand("SET NOCOUNT ON EXECUTE spCountUnApprovedTimeCardForCurrentAndPriorWeek :userID, :projectURLPrefix");
+			$timeCardSpCommand->bindParam(':userID', $userID, \PDO::PARAM_INT);
+			$timeCardSpCommand->bindParam(':projectURLPrefix', $projectURLPrefix, \PDO::PARAM_STR);
+			$timeCardData = $timeCardSpCommand->queryAll();
+			
+			$mileageCardSpCommand = $db->createCommand("SET NOCOUNT ON EXECUTE spCountUnApprovedMileageCardForCurrentAndPriorWeek :userID, :projectURLPrefix");
+			$mileageCardSpCommand->bindParam(':userID', $userID, \PDO::PARAM_INT);
+			$mileageCardSpCommand->bindParam(':projectURLPrefix', $projectURLPrefix, \PDO::PARAM_STR);
+			$mileageCardData = $mileageCardSpCommand->queryAll();
+			
 			//loop notification data for total
-			$notificationTotal = 0;
-			foreach($notifications['notifications'] as $notification){
+			foreach($notificationData as $notification){
 				//increment count
 				$notificationTotal += $notification['Count'];
 			}
 			$notificationTotalData['ProjectName'] = 'Total';
 			$notificationTotalData['Count'] = $notificationTotal;
+			$notificationTotalData['Count'] = 0;
+		
+			//loop time card data for total
+			foreach($timeCardData as $timeCard){
+				//increment count
+				$timeCardPriorTotal += $timeCard['PriorWeekCount'];
+				$timeCardCurrentTotal += $timeCard['CurrentWeekCount'];
+			}
+			$timeCardTotalData['ProjectName'] = 'Total';
+			$timeCardTotalData['PriorWeekCount'] = $timeCardPriorTotal;
+			$timeCardTotalData['CurrentWeekCount'] = $timeCardCurrentTotal;
 			
+			// //loop mileage card data for total
+			foreach($mileageCardData as $mileageCard){
+				//increment count
+				$mileageCardPriorTotal += $mileageCard['PriorWeekCount'];
+				$mileageCardCurrentTotal += $mileageCard['CurrentWeekCount'];
+			}
+			$mileageCardTotalData['ProjectName'] = 'Total';
+			$mileageCardTotalData['PriorWeekCount'] = $mileageCardPriorTotal;
+			$mileageCardTotalData['CurrentWeekCount'] = $mileageCardCurrentTotal;
+			
+			//build response array
+			$notifications['notifications'] = $notificationData;
+			$notifications['timeCards'] = $timeCardData;
+			$notifications['mileageCards'] = $mileageCardData;
 			//append totals to response array
 			$notifications['notifications'][] = $notificationTotalData;
 			$notifications['timeCards'][] = $timeCardTotalData;
@@ -179,32 +139,6 @@ class NotificationController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $notifications;
 			return $response;
-			
-        } catch (ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch (\Exception $e) {
-            throw new \yii\web\HttpException(400);
-        }
-    }
-
-	//get notification data by projectID and roletype from spListOfNotifications
-    private function getNotificationRecords($projectID, $roletype){
-        try {
-			//load data into array
-			$notificationData = [];
-
-			//set db
-			$headers = getallheaders();
-			BaseActiveRecord::setClient($headers['X-Client']);
-				
-			//if sp call fails concat sp name instead
-			$db = BaseActiveRecord::getDb();
-			$spCommand = $db->createCommand("SET NOCOUNT ON EXECUTE spListOfNotifications :projectID, :roletype");
-			$spCommand->bindParam(':projectID', $projectID, \PDO::PARAM_STR);
-			$spCommand->bindParam(':roletype', $roletype, \PDO::PARAM_STR);
-			$notificationData = $spCommand->queryAll();
-
-			return $notificationData;
 			
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
