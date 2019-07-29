@@ -103,7 +103,6 @@ class NotificationController extends Controller
 			}
 			$notificationTotalData['ProjectName'] = 'Total';
 			$notificationTotalData['Count'] = $notificationTotal;
-			$notificationTotalData['Count'] = 0;
 		
 			//loop time card data for total
 			foreach($timeCardData as $timeCard){
