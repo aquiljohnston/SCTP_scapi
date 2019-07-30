@@ -44,6 +44,7 @@ class NotificationController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'get-notifications' => ['get'],
+                    'read' => ['put'],
                 ],
             ];
         return $behaviors;
@@ -145,6 +146,73 @@ class NotificationController extends Controller
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionRead(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			$connection = BaseActiveRecord::getDb();
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true)['params'];
+
+			//get user
+			$user = BaseActiveController::getUserFromToken();
+			$appRole = $user['UserAppRoleType'];
+			
+			//archive json
+			BaseActiveController::archiveWebJson($put, 'Notification Read', $user['UserName'], BaseActiveController::urlPrefix());
+			
+			//put loop here in the future if doing multiple param sets
+			
+			$projectID = $data['ProjectID'];
+			$startDate = $data['StartDate'];
+			$endDate= $data['EndDate'];
+			$notificationType = $data['NotificationType'];
+			
+			//get item table and column names based on type
+			if($notificationType == Constants::NOTIFICATION_TYPE_TIME){
+				$itemTable = 'TimeCardTb';
+				$itemID = 'TimeCardID';
+				$itemStartDate = 'TimeCardStartDate';
+				$itemEndDate = 'TimeCardEndDate';
+			} elseif($notificationType == Constants::NOTIFICATION_TYPE_MILEAGE){
+				$itemTable = 'MileageCardTb';
+				$itemID = 'MileageCardID';
+				$itemStartDate = 'MileageStartDate';
+				$itemEndDate = 'MileageEndDate';
+			}
+			
+			$sqlString = "UPDATE ProjectNotificationTb
+				SET Status = 'Read' FROM ProjectNotificationTb PN
+				INNER JOIN NotificationTb N ON N.ID = PN.NotificationID
+				INNER JOIN NotificationTypeTb NT ON NT.ID = N.NotificationTypeID
+				INNER JOIN $itemTable ON $itemTable.$itemID = PN.ItemID
+				INNER JOIN AppRolesTb AR ON AR.AppRoleID = N.AppRoleID
+				WHERE Status = 'Unread'
+				AND PN.ProjectID = :projectID
+				AND NT.Type = :notificationType
+				AND ($itemTable.$itemStartDate = :startDate OR $itemTable.$itemEndDate = :endDate)
+				AND AR.AppRoleName = :appRole";		
+			$updateReadStatusCommand = $connection->createCommand($sqlString);
+			$updateReadStatusCommand->bindParam(':projectID', $projectID,  \PDO::PARAM_INT);
+			$updateReadStatusCommand->bindParam(':notificationType', $notificationType,  \PDO::PARAM_STR);
+			$updateReadStatusCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$updateReadStatusCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$updateReadStatusCommand->bindParam(':appRole', $appRole,  \PDO::PARAM_STR);
+			$updateReadStatusCommand->execute();
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'Notification Read',
+				$e,
+				getallheaders()['X-Client']
+			);
+            throw new \yii\web\HttpException(400);
+        }
+	}
 	
 	//create a new notification based on params
 	public function create($type, $itemIDArray, $description, $appRoleType, $createdBy){
