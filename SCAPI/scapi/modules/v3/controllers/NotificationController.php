@@ -219,8 +219,18 @@ class NotificationController extends Controller
 		//set db target headers
         BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		
+		//build params array for creation archive record
+		$params = [
+			'NotificationType' => $type,
+			'ItemIDArray' => $itemIDArray,
+			'Description' => $description,
+			'AppRoleType' => $appRoleType
+		];
+		$paramsJson = json_encode($params);
+		//archive json
+		BaseActiveController::archiveWebJson($paramsJson, 'Notification Create', $createdBy, BaseActiveController::urlPrefix());
+		
 		$connection = BaseActiveRecord::getDb();
-		//TODO set sp name and params based on final SP
 		$createCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spInsertNotifications :Type, :AppRoleName, :JSONItemIDs, :Description, :CreatedBy");
 		$createCommand->bindParam(':Type', $type,  \PDO::PARAM_STR);
 		$createCommand->bindParam(':AppRoleName', $appRoleType,  \PDO::PARAM_STR);
