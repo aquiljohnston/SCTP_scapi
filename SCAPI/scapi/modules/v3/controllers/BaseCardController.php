@@ -3,12 +3,106 @@
 namespace app\modules\v3\controllers;
 
 use Yii;
+use app\modules\v3\constants\Constants;
+use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
+use app\modules\v3\authentication\TokenAuth;
+use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use yii\web\Response;
+use yii\db\Query;
 
 /*
 * Implements basic functions for mileage and time cards
 */
 class BaseCardController extends BaseActiveController
 {
+	public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        //Implements Token Authentication to check for Auth Token in Json Header
+        $behaviors['authenticator'] =
+            [
+                'class' => TokenAuth::className(),
+            ];
+        $behaviors['verbs'] =
+            [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'p-m-reset-request' => ['post'],
+                ],
+            ];
+        return $behaviors;
+    }
+	
+	public function actionPMResetRequest(){
+		try{			
+			$post = file_get_contents("php://input");
+			$jsonArray = json_decode($post, true);
+			
+			//format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			//set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get user
+			$username = self::getUserFromToken()->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson($post, 'PM Reset Request', $username, BaseActiveController::urlPrefix());
+			
+			//set params based on reset type
+			if($jsonArray['requestType'] == 'time-card'){
+				$type = Constants::NOTIFICATION_TYPE_TIME;
+				$description = Constants::NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_TIME;
+				$cardIDName = 'TimeCardID';
+			}elseif($jsonArray['requestType'] == 'mileage-card'){
+				$type = Constants::NOTIFICATION_TYPE_MILEAGE;
+				$description = Constants::NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_MILEAGE;
+				$cardIDName = 'MileageCardID';
+			}
+			
+			//fetch all time cards for selected projects
+			$cardIDs = [];
+			$startDate = $jsonArray['dateRangeArray'][0];
+			$endDate = $jsonArray['dateRangeArray'][1];
+			for($i = 0; $i < count($jsonArray['projectIDArray']); $i++){
+				$projectID = $jsonArray['projectIDArray'][$i];
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate, $type);
+				$newCards = array_column($newCards, $cardIDName);
+				$cardIDs = array_merge($cardIDs, $newCards);
+			}
+			//encode array to pass to sp
+			$cardIDs = json_encode($cardIDs);
+			
+			//create new notification
+			NotificationController::create(
+				$type,
+				$cardIDs,
+				$description,
+				Constants::APP_ROLE_ACCOUNTANT,
+				$username);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'PM Reset Request',
+				$e,
+				getallheaders()['X-Client']
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
 	
 	protected function extractProjectsFromCards($type, $dropdownRecords, $projectAllOption)
 	{
@@ -82,4 +176,23 @@ class BaseCardController extends BaseActiveController
         }
         return true;
     }
+	
+	protected function getCardsByProject($projectID, $startDate, $endDate, $type){
+		//determine function to use based on type
+		if($type == Constants::NOTIFICATION_TYPE_TIME){
+			$function = 'fnTimeCardByDate';
+			$idName = 'TimeCardProjectID';
+		}elseif($type == Constants::NOTIFICATION_TYPE_MILEAGE){
+			$function = 'fnMileageCardByDate';
+			$idName = 'MileageCardProjectID';
+		}
+		$query = new Query;
+		$cards = $query->select('*')
+			->from(["$function(:startDate, :endDate)"])
+			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+			->where([$idName => $projectID])
+			->all(BaseActiveRecord::getDb());
+			
+		return $cards;
+	}
 }

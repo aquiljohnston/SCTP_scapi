@@ -86,6 +86,22 @@ final class Constants
 	const PROD_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasis\\';
 	const PROD_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADP\\';
 	
+	//Notifications
+	const NOTIFICATION_TYPE_TIME = 'Time Card';
+	const NOTIFICATION_TYPE_MILEAGE = 'Mileage Card';
+	const NOTIFICATION_DESCRIPTION_RESET_PM_TIME = 'Reset PM Time Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE = 'Reset PM Mileage Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_TIME = 'Request to Reset PM Time Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_MILEAGE = 'Request to Reset PM Mileage Submission';
+	
+	//App Role
+	const APP_ROLE_ADMIN = 'Admin';
+	const APP_ROLE_PROJECT_MANAGER = 'ProjectManager';
+	const APP_ROLE_SUPERVISOR = 'Supervisor';
+	const APP_ROLE_TECHNICIAN = 'Technician';
+	const APP_ROLE_ACCOUNTANT = 'Accountant';
+	const APP_ROLE_ANALYST = 'Analyst';
+	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',
 		'STAGE_HEADER' => 'apistage',

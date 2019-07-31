@@ -148,31 +148,6 @@ class MileageEntryController extends BaseActiveController
 			];
 			$response->data = $responseData;
 			return $response;
-			
-			//old deactivate
-			// foreach ($entries as $entry) {
-				// //SPROC has no return so just in case we need a flag.
-				// $success = 0;
-				// //add variables to avoid pass by reference error
-				// $taskString = json_encode($entry['taskName']);
-				// $day = array_key_exists('day', $entry) ? $entry['day'] : null;
-				// //call SPROC to deactivateTimeEntry
-				// try {
-					// $connection = BaseActiveRecord::getDb();
-					// //TODO may want to move the transaction outside of the loop to allow full rollback of the request
-					// $transaction = $connection->beginTransaction(); 
-					// $timeCardCommand = $connection->createCommand("EXECUTE spDeactivateMileageEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
-					// $timeCardCommand->bindParam(':PARAMETER1', $entry['mileageCardID'], \PDO::PARAM_INT);
-					// $timeCardCommand->bindParam(':PARAMETER2', $taskString, \PDO::PARAM_STR);
-					// $timeCardCommand->bindParam(':PARAMETER3', $day, \PDO::PARAM_STR);
-					// $timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
-					// $timeCardCommand->execute();
-					// $transaction->commit();
-					// $success = 1;
-				// } catch (Exception $e) {
-					// $transaction->rollBack();
-				// }
-			// }
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {

@@ -128,7 +128,7 @@ class WorkQueueController extends Controller
 					$successFlag = 0;
 					$workQueue = WorkQueue::find()
 						->where(['ID' => $data[$i]['WorkQueueID']])
-						->andWhere(['not in', 'WorkQueueStatus', [Constants::WORK_QUEUE_IN_PROGRESS, Constants::WORK_QUEUE_COMPLETED]])
+						->andWhere(['not in', 'WorkQueueStatus', [Constants::WORK_QUEUE_COMPLETED]])
 						->one();
 					if($workQueue != null)
 					{
