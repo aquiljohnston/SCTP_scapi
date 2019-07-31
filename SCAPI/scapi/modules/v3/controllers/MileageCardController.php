@@ -17,6 +17,7 @@ use app\modules\v3\models\MileageCardAccountantSubmit;
 use app\modules\v3\models\MileageCardEventHistory;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -280,7 +281,7 @@ class MileageCardController extends BaseCardController
 			}
 			
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$projectDropdownRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			$preFilteredRecords = $mileageCards->all(BaseActiveRecord::getDb());
 
 			//apply project filter
             if($projectID!= null && isset($mileageCards)) {
@@ -291,7 +292,7 @@ class MileageCardController extends BaseCardController
             }
 
 			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$employeeDropdownRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			$projectFilteredRecords = $mileageCards->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
 			if($employeeID!= null && isset($mileageCards)) {
@@ -318,17 +319,21 @@ class MileageCardController extends BaseCardController
             }
 			
 			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectDropdownRecords, $projectAllOption);
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $preFilteredRecords, $projectAllOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
+			$employeeDropDown = self::extractEmployeesFromCards($projectFilteredRecords);
+			
+			//check if any unapproved cards exist in project filtered records
+            $unapprovedMileageCardInProject = $this->checkUnapprovedCardExist('MileageCard', $projectFilteredRecords);
 			
 			//add pagination and fetch mileage card data
             $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
             $mileageCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
 			
 			//check mileage card submission statuses
-            $unapprovedMileageCardExist = $this->checkUnapprovedCardExist('MileageCard', $mileageCardsArr);
+            $unapprovedMileageCardVisible = $this->checkUnapprovedCardExist('MileageCard', $mileageCardsArr);
+
 			//unsure of business rules for mileage submission
             $projectWasSubmitted = $this->checkAllAssetsSubmitted('MileageCard', $mileageCardsArr);
 			
@@ -339,7 +344,8 @@ class MileageCardController extends BaseCardController
 			$responseArray['projectDropDown'] = $projectDropDown;
             $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
-			$responseArray['unapprovedMileageCardExist'] = $unapprovedMileageCardExist;
+			$responseArray['unapprovedMileageCardInProject'] = $unapprovedMileageCardInProject;
+			$responseArray['unapprovedMileageCardVisible'] = $unapprovedMileageCardVisible;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
@@ -448,7 +454,7 @@ class MileageCardController extends BaseCardController
 				->where(['MileageCardProjectID' => $projectID])
 				->all(BaseActiveRecord::getDb());
 
-			$mileageCards = self::getCardsByProject($projectID, $startDate, $endDate);
+			$mileageCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_MILEAGE);
 
 			//format response
 			$responseArray['details'] = $mileageCards;
@@ -854,7 +860,8 @@ class MileageCardController extends BaseCardController
 			
 			$mileageCardIDs = [];
 			//get user
-			$username = self::getUserFromToken()->UserName;
+			$user = self::getUserFromToken();
+			$username = $user->UserName;
 			
 			//archive json
 			BaseActiveController::archiveWebJson($put, Constants::MILEAGE_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
@@ -864,7 +871,7 @@ class MileageCardController extends BaseCardController
 				$projectID = $data[$i]['ProjectID'];
 				$startDate = $data[$i]['StartDate'];
 				$endDate = $data[$i]['EndDate'];
-				$newCards = self::getCardsByProject($projectID, $startDate, $endDate);
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_MILEAGE);
 				$newCards = array_column($newCards, 'MileageCardID');
 				$mileageCardIDs = array_merge($mileageCardIDs, $newCards);
 			}
@@ -875,7 +882,15 @@ class MileageCardController extends BaseCardController
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMileageCardResetPMApprovedFlag  :MileageCardIDJSON, :RequestedBy");
 			$resetCommand->bindParam(':MileageCardIDJSON', $mileageCardIDs,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
-			$resetCommand->execute();  
+			$resetCommand->execute();
+			
+			//create new notification
+			NotificationController::create(
+			Constants::NOTIFICATION_TYPE_MILEAGE,
+			$mileageCardIDs,
+			Constants::NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE,
+			Constants::APP_ROLE_PROJECT_MANAGER,
+			$username);
 			
 			$status['success'] = true;
 			$response->data = $status;	
@@ -888,17 +903,6 @@ class MileageCardController extends BaseCardController
 			);
 			throw new \yii\web\HttpException(400);
 		}
-	}
-	
-	private function getCardsByProject($projectID, $startDate, $endDate){
-		$query = new Query;
-		$mileageCards = $query->select('*')
-			->from(["fnMileageCardByDate(:startDate, :endDate)"])
-			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-			->where(['MileageCardProjectID' => $projectID])
-			->all(BaseActiveRecord::getDb());
-			
-		return $mileageCards;
 	}
 	
 	//inserts records into historical tables
