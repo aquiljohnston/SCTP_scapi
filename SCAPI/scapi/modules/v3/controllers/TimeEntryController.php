@@ -92,6 +92,7 @@ class TimeEntryController extends BaseActiveController
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson('TimeEntryID: ' . $entryID, $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
