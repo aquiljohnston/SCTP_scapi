@@ -390,6 +390,9 @@ class UserController extends BaseActiveController
     public function actionDeactivate($username)
 		{
         try {
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
 			//create response object
 			$response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -397,7 +400,10 @@ class UserController extends BaseActiveController
 			//get client header
 			$client = getallheaders()['X-Client'];
 			
-			 //set db target
+			//archive json
+			BaseActiveController::archiveWebJson($username, 'User Deactivate', self::getUserFromToken()->UserName, $client);
+			
+			//reset db target after external call
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			//get scct user
@@ -416,9 +422,7 @@ class UserController extends BaseActiveController
 			{
 				//if ct user call function to handle sp call and deactivation propagation
 				$responseData = self::deactivateInScct($user);
-			}
-			else
-			{
+			}else{
 				//if client user use helper method to deactivate only given client
 				$responseData['DeactivatedProjects'] = self::deactivateInProjects($user, $client);
 			} 
