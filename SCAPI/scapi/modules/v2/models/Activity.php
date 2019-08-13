@@ -53,6 +53,7 @@ use Yii;
  * @property string $ActivityMapGrid 
  * @property string $ActivityPhoneNumber
  * @property integer $ActivityIsManualEndTime 
+ * @property string $ActivityType
  */
 class Activity extends \app\modules\v2\models\BaseActiveRecord
 {
@@ -71,7 +72,7 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
     {
         return [
             [['ActivityStartTime', 'ActivityEndTime', 'ActivityCreateDate', 'ActivityModifiedDate', 'ActivitySrvDTLT', 'ActivitySrvDTLTOffset', 'ActivitySrcDTLT', 'srvUTCDatetime'], 'safe'],
-            [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName', 'ActivityMapGrid', 'ActivityPhoneNumber'], 'string'],
+            [['ActivityTitle', 'ActivityBillingCode', 'ActivityCreatedUserUID', 'ActivityModifiedUserUID', 'ActivityUID', 'ActivitySourceID', 'ActivityGPSType', 'ActivityGPSSentence', 'ActivityShape', 'ActivityComments', 'ActivityRevisionComments', 'ActivityGPSSource', 'ActivityGPSTime', 'ActivityChecksumData', 'ActivityGPSStatus', 'ActivityAppVersion', 'ActivityAppVersionName', 'ActivityMapGrid', 'ActivityPhoneNumber', 'ActivityType'], 'string'],
             [['ActivityCode', 'ActivityPayCode', 'ActivityArchiveFlag', 'ActivityProjectID', 'ActivityElapsedSec', 'ActivityNumberOfSatellites', 'ActivityNumberOfGPSAttempts', 'ActivityIsManualEndTime'], 'integer'],
             [['ActivityLatitude', 'ActivityLongitude', 'ActivityBatteryLevel', 'ActivityHDOP', 'ActivityAltitudemetersAboveMeanSeaLevel', 'ActivityHeightofGeoid', 'ActivityTimeSecondsSinceLastDGPS', 'ActivityBearing', 'ActivitySpeed', 'ActivityFixQuality'], 'number'],
         ];
@@ -129,6 +130,7 @@ class Activity extends \app\modules\v2\models\BaseActiveRecord
 			'ActivityMapGrid' => 'Activity Map Grid',
 			'ActivityPhoneNumber' => 'Activity Phone Number',
 			'ActivityIsManualEndTime' => 'Activity Is Manual End Time',
+			'ActivityType' => 'Activity Type',
         ];
     }
 }
