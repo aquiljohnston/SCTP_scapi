@@ -214,7 +214,7 @@ class DropdownController extends Controller
 			$client = getallheaders()['X-Client'];
 			
 			for($i=0; $i < $rolesSize; $i++){
-				if(PermissionsController::can('userCreate' . $roles[$i]->AppRoleName, null, $client))
+				if(PermissionsController::can('userUpdate' . $roles[$i]->AppRoleName, null, $client))
 					$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
 			}
 			
