@@ -38,6 +38,7 @@ final class Constants
 	const MSDYNAMICS_TIMECARD = 'tcMSDynamics';
 	const ADP = 'ADP';
 	const OT_PAYROLL_HOURS_ID = 4005;
+	const PTO_PAYROLL_HOURS_ID = 5020;
 	
 	//Payment Method
 	const PAY_METHOD_SALARY = 'S';
