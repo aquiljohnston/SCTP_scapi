@@ -206,9 +206,11 @@ class TaskController extends Controller
 			$startDateTime = $data['Date'] . ' ' . $data['StartTime'];
 			$endDateTime = $data['Date'] . ' ' . $data['EndTime'];
 			$isOverlap = self::checkTimeOverlap($data['TimeCardID'], $startDateTime, $endDateTime);
-			
-			if($isOverlap ==0)
-			{
+
+			if($isOverlap ==0){
+				//remove charge of account that is causing conflict in fnGeneratePayrollDataByProject
+				if($data['ChargeOfAccountType'] != Constants::PTO_PAYROLL_HOURS_ID) $data['ChargeOfAccountType'] = NULL;
+				
 				// set up db connection
 				$connection = BaseActiveRecord::getDb();
 				$processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType");
@@ -221,9 +223,7 @@ class TaskController extends Controller
 				$processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
 				$processJSONCommand->execute();
 				$successFlag = 1;
-			}
-			else
-			{
+			}else{
 				$warningMessage = 'Failed to save, new entry overlaps with existing time.';
 			}
 
