@@ -532,7 +532,7 @@ class RbacController extends Controller
 		if(BaseActiveController::isSCCT($this->client)){
 			$userCreate = $this->auth->createPermission('userCreate');
 			$userCreate->description = 'Create a user';
-			$this->permissionAssociationArray['Admin'][] = $userCreate;
+			$this->permissionAssociationArray['Supervisor'][] = $userCreate;
 			$this->permissionArray[] = $userCreate;
 			
 			$userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
@@ -542,12 +542,12 @@ class RbacController extends Controller
 			
 			$userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
 			$userCreateSupervisor->description = 'Create user of role type supervisor';
-			$this->permissionAssociationArray['Admin'][] = $userCreateSupervisor;
+			$this->permissionAssociationArray['Supervisor'][] = $userCreateSupervisor;
 			$this->permissionArray[] = $userCreateSupervisor;
 			
 			$userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
 			$userCreateProjectManager->description = 'Create user of role type project manager';
-			$this->permissionAssociationArray['Admin'][] = $userCreateProjectManager;
+			$this->permissionAssociationArray['ProjectManager'][] = $userCreateProjectManager;
 			$this->permissionArray[] = $userCreateProjectManager;
 		}else{
 			$userCreate = $this->auth->createPermission('userCreate');
