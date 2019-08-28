@@ -209,7 +209,7 @@ class TaskController extends Controller
 
 			if($isOverlap ==0){
 				//remove charge of account that is causing conflict in fnGeneratePayrollDataByProject
-				if($data['ChargeOfAccountType'] != Constants::PTO_PAYROLL_HOURS_ID) $data['ChargeOfAccountType'] = NULL;
+				if(!in_array($data['ChargeOfAccountType'], [Constants::PTO_PAYROLL_HOURS_ID, Constants::HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID])) $data['ChargeOfAccountType'] = NULL;
 				
 				// set up db connection
 				$connection = BaseActiveRecord::getDb();
