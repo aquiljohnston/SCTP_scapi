@@ -206,6 +206,32 @@ class ActivityController extends BaseActiveController
 							{
 								$e = BaseActiveController::modelValidationException($clientActivity);
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+								
+								//if activity id is not available try and get the record that should have saved
+								if($clientActivity->ActivityID == null){
+									$existingActivity = Activity::find()
+										->where(['ActivityUID' => $data['activity'][$i]['ActivityUID']])
+										->andWhere(['ActivitySrcDTLT' => $data['activity'][$i]['ActivitySrcDTLT']])
+										->one();
+									if($existingActivity != null){
+										$clientActivity->ActivityID = $existingActivity->ActivityID;
+									}else{
+										//if no activity is found create a new activity and attempt to save again
+										try{
+											$reAttemptActivity = new Activity();
+											$reAttemptActivity->attributes = $data['activity'][$i];
+											$reAttemptActivity->ActivityCreatedUserUID = (string)$createdBy;
+											if($reAttemptActivity->save()){
+												$clientActivity->ActivityID = $reAttemptActivity->ActivityID;
+											}else{
+												$e = BaseActiveController::modelValidationException($clientActivity);
+												BaseActiveController::archiveErrorJson('Activity Reattempt ' . file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+											}
+										}catch(\Exception $e){
+											BaseActiveController::archiveErrorJson('Activity Reattempt ' . file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+										}
+									}
+								}
 							}
 
 							//set success flag for activity
