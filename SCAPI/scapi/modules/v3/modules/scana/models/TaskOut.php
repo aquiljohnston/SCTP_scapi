@@ -45,7 +45,7 @@ class TaskOut extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['CreatedUserID'], 'required'],
+            [['ActivityID', 'CreatedUserID'], 'required'],
             [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
             [['MapGrid', 'Comments'], 'string'],
