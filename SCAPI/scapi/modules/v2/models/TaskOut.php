@@ -78,7 +78,7 @@ class TaskOut extends \app\modules\v2\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['CreatedUserID'], 'required'],
+            [['ActivityID', 'CreatedUserID'], 'required'],
             [['ActivityID', 'AboveGroundLeakCount', 'BelowGroundLeakCount', 'ServicesCount', 'FeetOfMain', 'CreatedUserID', 'DeletedFlag', 'FeetOfTransmission', 'FeetOfHighPressure', 'CGECount', 'AdHocCount', 'FieldServiceWorkOrdersSkipped', 'FieldServiceWorkOrdersCompleted', 'FieldServiceRemediationsCompleted', 'ACWorkOrdersSkipped', 'ACWorkOrdersCompleted', 'ACRemediationsCompleted', 'MeterServiceWorkOrdersSkipped', 'MeterServiceWorkOrdersCompleted', 'LocatingTicketsCompleted', 'LocatingServicesCompleted', 'CGEServicesAttempted', 'CGEServicesCompleted', 'CGEBelowGroundGrade1', 'CGEBelowGroundGrade2', 'CGEBelowGroundGrade3', 'CGETotalBelowGround', 'CGEAboveGroundGrade1', 'CGEAboveGroundGrade2', 'CGEAboveGroundGrade3', 'CGETotalAboveGround', 'SurveySurveyFootage', 'SurveyNoOfServices', 'SurveyCGEs', 'SurveyBelowGroundGrade1', 'SurveyBelowGroundGrade2', 'SurveyBelowGroundGrade3', 'SurveyTotalBelowGround', 'SurveyAboveGroundGrade1', 'SurveyAboveGroundGrade2', 'SurveyAboveGroundGrade3', 'SurveyTotalAboveGround', 'SurveyShortCasings'], 'integer'],
             [['SrcDTLT', 'SrvDTLT', 'SrvDTLTOffSet', 'StartDTLT', 'EndDTLT'], 'safe'],
             [['MapGrid', 'Comments'], 'string'],
