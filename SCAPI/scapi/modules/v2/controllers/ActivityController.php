@@ -6,8 +6,10 @@ use Yii;
 use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
+use app\modules\v2\models\TimeCard;
 use app\modules\v2\models\TimeEntry;
 use app\modules\v2\models\MileageEntry;	
+use app\modules\v2\models\MileageCard;	
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
@@ -253,33 +255,45 @@ class ActivityController extends BaseActiveController
 							$responseData['activity'][$i]['timeEntry'] = array();
 							$responseData['activity'][$i]['mileageEntry'] = array();
 							
+							//redirect to base db for time and mileage processing
+							BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+							
 							//add activityID to corresponding time entries
-							if($timeLength > 0)
-							{
-								for($t = 0; $t < $timeLength; $t++)
-								{
-									Activity::setClient(BaseActiveController::urlPrefix());
+							if($timeLength > 0){
+								//create timeCardTransaction
+								$db = BaseActiveRecord::getDb();
+								$timeCardTransaction = $db->beginTransaction();
+								for($t = 0; $t < $timeLength; $t++){
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
 									$timeEntry->TimeEntryUserID = $userID;
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									try{
-										if($timeEntry->save())
-										{
+										//fetch current time card id if none is provided
+										if($timeEntry->TimeEntryTimeCardID == null && $timeEntry->TimeEntryStartTime != null){
+											//get last sunday
+											$tcLastSunday = date('Y-m-d H:i:s', strtotime('last Sunday', strtotime($timeEntry->TimeEntryStartTime)));
+											$timeCard = TimeCard::find()
+											->where([
+												'TimeCardTechID' => $userID,
+												'TimeCardStartDate' => $tcLastSunday
+											])
+											->one();
+											$timeEntry->TimeEntryTimeCardID = $timeCard->TimeCardID;
+										}
+										if($timeEntry->save()){
 											$response->setStatusCode(201);
 											//set success flag for time entry
 											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
-										}
-										else
-										{
+										}else{
 											//log validation error
 											$e = BaseActiveController::modelValidationException($timeEntry);
 											//SQL Constraint
 											if(strpos($e, TimeEntry::SQL_CONSTRAINT_MESSAGE)){
 												//set success flag for time entry to success if validation was a sql constraint
 												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
-											} else {
+											}else{
 												BaseActiveController::archiveErrorJson(
 													file_get_contents("php://input"),
 													$e,
@@ -290,17 +304,13 @@ class ActivityController extends BaseActiveController
 												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
 											}
 										}
-									}
-									catch(yii\db\Exception $e)
-									{
+									}catch(yii\db\Exception $e){
 										//return $e->errorInfo;
 										//if db exception is 2601, duplicate contraint then success
-										if(in_array($e->errorInfo[1], array(2601, 2627)))
-										{
+										if(in_array($e->errorInfo[1], array(2601, 2627))){
 											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
-										}
-										else //log other errors and retrun failure
-										{
+										}else{ 
+											//log other errors and retrun failure
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
@@ -311,28 +321,37 @@ class ActivityController extends BaseActiveController
 										}
 									}
 								}
+								$timeCardTransaction->commit();
 							}
-													
 							
 							//add activityID to corresponding mileage entries
-							if($mileageLength > 0)
-							{	
-								for($m = 0; $m < $mileageLength; $m++)
-								{
-									Activity::setClient(BaseActiveController::urlPrefix());
+							if($mileageLength > 0){	
+								//create mileageCardTransaction
+								$db = BaseActiveRecord::getDb();
+								$mileageCardTransaction = $db->beginTransaction();
+								for($m = 0; $m < $mileageLength; $m++){
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
 									try{
-										if($mileageEntry->save())
-										{
+										//fetch current mileage card id if none is provided
+										if($mileageEntry->MileageEntryMileageCardID == null && $mileageEntry->MileageEntryStartDate != null){
+											//get last sunday
+											$mcLastSunday = date('Y-m-d H:i:s', strtotime('last Sunday', strtotime($mileageEntry->MileageEntryStartDate)));
+											$mileageCard = MileageCard::find()
+											->where([
+												'MileageCardTechID' => $userID,
+												'MileageStartDate' => $mcLastSunday
+											])
+											->one();
+											$mileageEntry->MileageEntryMileageCardID = $mileageCard->MileageCardID;
+										}
+										if($mileageEntry->save()){
 											$response->setStatusCode(201);
 											//set success flag for mileage entry
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
-										}
-										else
-										{
+										}else{
 											//log validation error
 											$e = BaseActiveController::modelValidationException($mileageEntry);
 											BaseActiveController::archiveErrorJson(
@@ -343,18 +362,13 @@ class ActivityController extends BaseActiveController
 												$data['activity'][$i]['mileageEntry'][$m]);
 											//set success flag for mileage entry
 											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>0];
-
 										}
-									}
-									catch(yii\db\Exception $e)
-									{
+									}catch(yii\db\Exception $e){
 										//if db exception is 2601, duplicate contraint then success
-										if(in_array($e->errorInfo[1], array(2601, 2627)))
-										{
+										if(in_array($e->errorInfo[1], array(2601, 2627))){
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
-										}
-										else //log other errors and return failure
-										{
+										}else{ 
+											//log other errors and return failure
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
@@ -366,16 +380,13 @@ class ActivityController extends BaseActiveController
 										}
 									}
 								}
+								$mileageCardTransaction->commit();
 							}
-						}
-						else
-						{
+						}else{
 							//activity model validation exception
 							throw BaseActiveController::modelValidationException($activity);
 						}
-					}
-					catch(\Exception $e)
-					{
+					}catch(\Exception $e){
 						//log activity error
 						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 						//set success flag for activity
