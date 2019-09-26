@@ -752,51 +752,51 @@ class TimeCardController extends BaseCardController
             $headers = getallheaders();
             //get client header
             $client = $headers['X-Client'];
-			
             //set db target
             TimeCard::setClient(BaseActiveController::urlPrefix());
+			
+			//default check to false
+			$submitButtonStatus = 0;
 			//RBAC permissions check
-			PermissionsController::requirePermission('checkSubmitButtonStatus');
+			if(PermissionsController::can('checkSubmitButtonStatus')){
+				//get body data
+				$data = file_get_contents("php://input");
+				$submitCheckData = json_decode($data, true)['submitCheck'];
+				$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
+				//if is not scct project name will always be the current client
+				if(BaseActiveController::isSCCT($client)){
+					$projectName  = $submitCheckData['ProjectName'];
+				}else{
+					$project = Project::find()
+						->where(['ProjectUrlPrefix' => $client])
+						->one();
+					$projectName = array($project->ProjectID);
+				}
 
-            //get body data
-            $data = file_get_contents("php://input");
-			$submitCheckData = json_decode($data, true)['submitCheck'];
-			$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
-			//if is not scct project name will always be the current client
-			if(BaseActiveController::isSCCT($client))
-			{
-				$projectName  = $submitCheckData['ProjectName'];
-			}else{
-				$project = Project::find()
-					->where(['ProjectUrlPrefix' => $client])
-					->one();
-				$projectName = array($project->ProjectID);
-			}
-
-            //build base query
-			$responseArray = new Query;
-			if($isAccountant) {
-	            $responseArray->select('*')
-					->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+				//build base query
+				$checkQuery = new Query;
+				if($isAccountant) {
+					$checkQuery->select('*')
+						->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+						->addParams([
+							//':ProjectName' => json_encode($projectName), 
+							':StartDate' => $submitCheckData['StartDate'], 
+							':EndDate' => $submitCheckData['EndDate']]);
+				} else {
+					$checkQuery->select('*')
+					->from(["fnSubmitPM(:ProjectName, :StartDate , :EndDate)"])
 					->addParams([
-						//':ProjectName' => json_encode($projectName), 
-						':StartDate' => $submitCheckData['StartDate'], 
-						':EndDate' => $submitCheckData['EndDate']]);
-			} else {
-				$responseArray->select('*')
-                ->from(["fnSubmitPM(:ProjectName, :StartDate , :EndDate)"])
-                ->addParams([
-					':ProjectName' => json_encode($projectName), 
-					':StartDate' => $submitCheckData['StartDate'], 
-					':EndDate' => $submitCheckData['EndDate']
-					]);
+							':ProjectName' => json_encode($projectName), 
+							':StartDate' => $submitCheckData['StartDate'], 
+							':EndDate' => $submitCheckData['EndDate']
+						]);
+				}
+				$submitButtonStatus = $checkQuery->one(BaseActiveRecord::getDb());
 			}
-            $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
-            $responseArray = $submitButtonStatus;
 
             $response = Yii::$app ->response;
             $response -> format = Response::FORMAT_JSON;
-            $response -> data = $responseArray;
+            $response -> data = $submitButtonStatus;
 
             return $response;
         } catch(ForbiddenHttpException $e) {
