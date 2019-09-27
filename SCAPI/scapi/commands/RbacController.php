@@ -811,6 +811,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $viewMileageCardMgmt;
         $this->permissionArray[] = $viewMileageCardMgmt;
 		
+		$viewExpenseMgmt = $this->auth->createPermission('viewExpenseMgmt');
+        $viewExpenseMgmt->description = 'View expense management menu item';
+        $this->permissionAssociationArray['Supervisor'][] = $viewExpenseMgmt;
+        $this->permissionAssociationArray['Accountant'][] = $viewExpenseMgmt;
+        $this->permissionArray[] = $viewExpenseMgmt;
+		
 		echo "Base Permissions Array Created.\n";		
 	}
 	
