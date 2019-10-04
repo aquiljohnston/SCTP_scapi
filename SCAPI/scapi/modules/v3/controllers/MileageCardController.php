@@ -231,47 +231,38 @@ class MileageCardController extends BaseCardController
 				->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 			
 			//if is scct website get all or own
-			if(BaseActiveController::isSCCT($client))
-			{
+			if(BaseActiveController::isSCCT($client)){
 				//set project dropdown to true for scct
 				$showProjectDropDown = true;
 				//rbac permission check
-				if (PermissionsController::can('mileageCardGetAllCards'))
-                {
+				if (PermissionsController::can('mileageCardGetAllCards')){
 					$projectAllOption = [""=>"All"];
-                }
-				elseif(PermissionsController::can('mileageCardGetOwnCards'))		
-				{
+                }elseif(PermissionsController::can('mileageCardGetOwnCards')){
 					$userID = self::getUserFromToken()->UserID;
 					//get user project relations array
 					$projects = ProjectUser::find()
 						->where("ProjUserUserID = $userID")
 						->all();
 					$projectsSize = count($projects);
-					if($projectsSize > 0)
-					{
+					if($projectsSize > 0){
 						$mileageCards->where(['MileageCardProjectID' => $projects[0]->ProjUserProjectID]);
-					} else {
+					}else{
 						//can only get own but has no project relations
 						throw new ForbiddenHttpException;
-					}
-                    if($projectsSize > 1)
-                    {
+					}if($projectsSize > 1){
 						//add all option to project dropdown if there will be more than one option
 						$projectAllOption = [""=>"All"];
-                        for($i=1; $i < $projectsSize; $i++)
-                        {
+                        for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
+							//could be an 'IN' instead
                             $mileageCards->orWhere(['MileageCardProjectID'=>$relatedProjectID]);
                         }
                     }
-				} else{
+				}else{
 					//no permissions for any cards
 					throw new ForbiddenHttpException;
 				}
-			}
-			else // get only cards for the current project.
-			{
+			}else{ // get only cards for the current project.
 				//get project based on client header
 				$project = Project::find()
 					->where(['ProjectUrlPrefix' => $client])
@@ -291,8 +282,12 @@ class MileageCardController extends BaseCardController
                 ]);
             }
 
-			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$projectFilteredRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			if($projectID == null){
+				$projectFilteredRecords = $preFilteredRecords;
+			}else{
+				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+				$projectFilteredRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			}
 			
 			//apply employee filter
 			if($employeeID!= null && isset($mileageCards)) {
@@ -306,8 +301,7 @@ class MileageCardController extends BaseCardController
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
-				for($i = 0; $i < count($filterArray); $i++)
-				{
+				for($i = 0; $i < count($filterArray); $i++){
 					//remove leading space from filter string
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
