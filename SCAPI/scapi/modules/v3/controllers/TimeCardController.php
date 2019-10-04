@@ -215,55 +215,38 @@ class TimeCardController extends BaseCardController
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
             //if is scct website get all or own
-            if(BaseActiveController::isSCCT($client))
-            {
+            if(BaseActiveController::isSCCT($client)){
+				//set project dropdown to true for scct
 				$showProjectDropDown = true;
-				/*
-                 * Check if user can get their own cards
-                 */
-                if (!PermissionsController::can('timeCardGetAllCards') && PermissionsController::can('timeCardGetOwnCards'))
-                {
+				//rbac permission check
+				if (PermissionsController::can('timeCardGetAllCards')){
+					$projectAllOption = [""=>"All"];
+				}elseif(PermissionsController::can('timeCardGetOwnCards')){
                     $userID = self::getUserFromToken()->UserID;
                     //get user project relations array
                     $projects = ProjectUser::find()
                         ->where("ProjUserUserID = $userID")
                         ->all();
                     $projectsSize = count($projects);
-                    if($projectsSize > 0)
-                    {
+                    if($projectsSize > 0){
                         $timeCards->where(['TimeCardProjectID' => $projects[0]->ProjUserProjectID]);
-                    }
-					else
-					{
+                    }else{
 						//can only get own but has no project relations
 						throw new ForbiddenHttpException;
-					}
-                    if($projectsSize > 1)
-                    {
+					}if($projectsSize > 1){
 						//add all option to project dropdown if there will be more than one option
 						$projectAllOption = [""=>"All"];
-                        for($i=1; $i < $projectsSize; $i++)
-                        {
+                        for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
+							//could be an 'IN' instead
                             $timeCards->orWhere(['TimeCardProjectID'=>$relatedProjectID]);
                         }
-                    }
-                }
-				/*
-                 * Check if user can get all cards
-                 */
-                elseif (PermissionsController::can('timeCardGetAllCards'))
-                {
-					$projectAllOption = [""=>"All"];
-                }
-				else
-				{
+                    }	
+                }else{
 					//no permissions to get cards
                     throw new ForbiddenHttpException;
 				}
-            }
-            else // get only cards for the current project.
-            {
+            }else{ // get only cards for the current project.
                 //get project based on client header
                 $project = Project::find()
                     ->where(['ProjectUrlPrefix' => $client])
@@ -283,8 +266,12 @@ class TimeCardController extends BaseCardController
                 ]);
             }
 
-			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$projectFilteredRecords = $timeCards->all(BaseActiveRecord::getDb());
+			if($projectID == null){
+				$projectFilteredRecords = $preFilteredRecords;
+			}else{
+				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+				$projectFilteredRecords = $timeCards->all(BaseActiveRecord::getDb());
+			}
 			
 			//apply employee filter
 			if($employeeID!= null && isset($timeCards)) {
@@ -298,8 +285,7 @@ class TimeCardController extends BaseCardController
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
-				for($i = 0; $i < count($filterArray); $i++)
-				{
+				for($i = 0; $i < count($filterArray); $i++){
 					//remove leading space from filter string
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
