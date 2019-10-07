@@ -8,3 +8,4 @@ SCAPI/scapi/config/dev_config_override.php
 /SCAPI/database/vCAT_PGE_GIS/vCAT_PGE_GIS/vCAT_PGE_GIS.dbmdl
 SCAPI/scapi/web/jar/mapQuestBigDistanceMatrixLog.txt
 SCAPI/scapi/web/jar/routeOptimizerLogOutput.txt
+sh.exe.stackdump
