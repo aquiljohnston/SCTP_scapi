@@ -1013,42 +1013,35 @@ class RbacController extends Controller
 				->all();
 		
 		$userSize = count($users);
-		//get vals for progress check
-		$userSize25 = intval(($userSize*.25));
-		$userSize50 = intval(($userSize*.50));
-		$userSize75 = intval(($userSize*.75));
 		$userRoleTypes = $this->auth->getRoles();
-		$bulkUserInsertArray = array();
+		$maxChunkSize = 500;
+		$chunkCount = ceil($userSize/$maxChunkSize);
 		
-		echo "Preparing Bulk Assignment of Roles to Users.\n";
-		//assign roles to users already in the system
-		for($i = 0; $i < $userSize; $i++)
-		{
-			//switch to log percentage progress. This may not be necessary with new performance enhancements.
-			switch($i)
+		echo "Preparing Bulk Assignment of Roles to Users for $userSize Users in $chunkCount User Groups.\n";
+		
+		//loop chunks of users to avoid error on 1000+ row insert
+		for($j = 0; $j < $chunkCount; $j++){		
+			$bulkUserInsertArray = array();
+			$chunkStartIndex = $maxChunkSize * $j;
+			$chunkSize = ($j < $chunkCount -1) ? $maxChunkSize : $userSize - ($maxChunkSize * $j);
+			echo "Preparing Bulk Assignment of Roles to Users for $chunkSize Users in Group " . ($j+1) . ".\n";
+			//assign roles to users already in the system
+			for($i = $chunkStartIndex; $i < $chunkSize; $i++)
 			{
-				case $userSize25:
-					echo "Preparing Bulk Assignment of Roles to Users 25% complete.\n";
-					break;
-				case $userSize50:
-					echo "Preparing Bulk Assignment of Roles to Users 50% complete.\n";
-					break;
-				case $userSize75:
-					echo "Preparing Bulk Assignment of Roles to Users 75% complete.\n";
-					break;
+				$userRole = $users[$i]['UserAppRoleType'];
+				if(array_key_exists($userRole, $userRoleTypes))
+				{
+					$bulkUserInsertArray[] = [
+						'user_id' => $users[$i]['UserID'],
+						'item_name' => $userRole,
+						'created_at' => time()
+					];
+				}
 			}
-			$userRole = $users[$i]['UserAppRoleType'];
-			if(array_key_exists($userRole, $userRoleTypes))
-			{
-				$bulkUserInsertArray[] = [
-					'user_id' => $users[$i]['UserID'],
-					'item_name' => $userRole,
-					'created_at' => time()
-				];
-			}
+			echo "Execute Bulk Assignment of Roles to Users for Group " . ($j+1) . ".\n";
+			$this->auth->bulkAssign($bulkUserInsertArray);
 		}
-		echo "Execute Bulk Assignment of Roles to Users.\n";
-		$this->auth->bulkAssign($bulkUserInsertArray);
+		
 		echo "Users Roles Assigned.\n";
     }
 }
