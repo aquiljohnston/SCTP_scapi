@@ -25,6 +25,8 @@ class ExpenseController extends Controller{
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get' => ['get'],
+					'get-accountant-view' => ['get'],
+					'get-accountant-details' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -115,7 +117,7 @@ class ExpenseController extends Controller{
 				])
 				->innerJoin('ProjectTb', '[Expense].[ProjectID] = [ProjectTb].[ProjectID]')
 				->innerJoin('UserTb', '[Expense].[UserName] = [UserTb].[UserName]')
-                ->where(['between', '[Expense].CreatedDate', $startDate, $endDate]);
+                ->where(['between', 'CreatedDate', $startDate, $endDate]);
 
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client)){
@@ -234,8 +236,138 @@ class ExpenseController extends Controller{
 		}
     }
 	
-	private function extractProjects($dropdownRecords, $projectAllOption)
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+		$sortField = 'ProjectName', $sortOrder = 'ASC')
 	{
+		try{
+			//url decode filter value
+            $filter = urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
+
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('expenseGetAccountantView');
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+			//response array of exepenses
+            $expenses = [];
+            $responseArray = [];
+			$allTheProjects = [""=>"All"];
+			$showProjectDropDown = true;
+
+			//build base query
+            $expenseQuery = Expense::find()
+				->select([
+					'Expense.ProjectID',
+					'ProjectName',
+					'IsSubmitted',
+					'CAST(MIN(CreatedDate) AS DATE) AS StartDate',
+					'CAST(MAX(CreatedDate) AS DATE) AS EndDate'
+				])
+				->distinct()
+				->innerJoin('ProjectTb', '[Expense].[ProjectID] = [ProjectTb].[ProjectID]')
+				->where(['between', 'CreatedDate', $startDate, $endDate]);
+
+			//get records for project dropdown(timing for this execution is very important)
+			$dropdownRecords = $expenseQuery
+				->asArray()
+				->groupBy(['Expense.ProjectID', 'ProjectName', 'IsSubmitted'])
+				->all(BaseActiveRecord::getDb());
+
+			//add project filter
+			if($projectID!= null)
+			{
+                $expenseQuery->andFilterWhere([
+                    'and',
+                    ['Expense.ProjectID' => $projectID],
+                ]);
+            }
+
+			//add search filter
+			if($filter != null)
+			{
+                $expenseQuery->andFilterWhere([
+                    'or',
+                    ['like', 'ProjectName', $filter],
+                ]);
+            }
+
+			//get project list for dropdown based on time cards available
+			$allTheProjects = self::extractProjects($dropdownRecords, $allTheProjects);
+
+			//paginate
+			$paginationResponse = BaseActiveController::paginationProcessor($expenseQuery, $page, $listPerPage);
+            $expenses = $paginationResponse['Query']
+				->orderBy("$sortField $sortOrder")
+				->groupBy(['Expense.ProjectID', 'ProjectName', 'IsSubmitted'])
+				->all(BaseActiveRecord::getDb());
+
+			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
+			//this check seems to have some issue and is only currently being applied to the post filter data set.
+			$projectWasSubmitted = $this->checkAllAssetsSubmitted($expenses);
+
+            $responseArray['assets'] = $expenses;
+            $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
+
+			$response->data = $responseArray;
+			return $response;
+		} catch(ForbiddenHttpException $e) {
+			throw $e;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	{
+		try{
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('expenseGetAccountantDetails');
+			
+			//add a day to end date to account for datetimes
+			$endDate = date('Y-m-d H:i:s', strtotime($endDate . ' +1 day'));
+			
+			$expenses = Expense::find()
+				->select([
+					'ID',
+					'ProjectID',
+					'UserID',
+					'Expense.UserName',
+					'ChargeAccount',
+					'Quantity',
+					'CreatedDate',
+					'IsApproved',
+				])
+				->innerJoin('UserTb', '[Expense].[UserName] = [UserTb].[UserName]')
+				->where(['between', 'CreatedDate', $startDate, $endDate])
+				->andWhere(['ProjectID' => $projectID])
+				->asArray()
+				->all();
+
+			//format response
+			$responseArray['details'] = $expenses;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+		} catch(ForbiddenHttpException $e) {
+			throw $e;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	private function extractProjects($dropdownRecords, $projectAllOption){
 		$allTheProjects = [];
 		//iterate and stash project name $p['ProjectID']
 		foreach ($dropdownRecords as $p) {		
@@ -253,8 +385,7 @@ class ExpenseController extends Controller{
 		return $allTheProjects;
 	}
 	
-	private function extractEmployees($dropdownRecords)
-	{
+	private function extractEmployees($dropdownRecords){
 		$employeeValues = [];
 		//iterate and stash user values
 		foreach ($dropdownRecords as $e) {
@@ -292,7 +423,7 @@ class ExpenseController extends Controller{
     * @param $expesnseArray
     * @return boolean
     */
-    protected function checkAllAssetsSubmitted($expesnseArray){
+    private function checkAllAssetsSubmitted($expesnseArray){
         foreach ($expesnseArray as $item)
 		{
 			if ($item['IsSubmitted'] == 0){
