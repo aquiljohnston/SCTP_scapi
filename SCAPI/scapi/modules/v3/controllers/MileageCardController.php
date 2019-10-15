@@ -205,6 +205,9 @@ class MileageCardController extends BaseCardController
 			//TODO consider adding global delimiter constant
 			$delimiter = ',';
 			$filterArray = explode($delimiter, $filter);
+			//set start date to last Sunday add a day to prevent issue occuring if current day is sunday
+			$startDate = date('Y-m-d',strtotime($startDate . '+1 day'));
+			$startDate = date('Y-m-d',strtotime($startDate . 'last sunday'));
 			
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
