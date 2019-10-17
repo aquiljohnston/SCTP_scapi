@@ -7,6 +7,7 @@ use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\modules\v3\authentication\TokenAuth;
+use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\BaseActiveRecord;
@@ -25,6 +26,7 @@ class ExpenseController extends Controller{
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'get' => ['get'],
+					'approve'  => ['put'],
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
                 ],  
@@ -235,6 +237,71 @@ class ExpenseController extends Controller{
 		   throw new \yii\web\HttpException(400);
 		}
     }
+	
+	public function actionApprove(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			// RBAC permission check
+			PermissionsController::requirePermission('expenseApprove');
+
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			//get username
+			$approvedBy = BaseActiveController::getUserFromToken()->UserName;
+
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Expense Approve', $approvedBy, BaseActiveController::urlPrefix());
+
+			//parse json
+			$expenses = $data['expenseArray'];
+			$approvedExpenses = []; // Prevents empty array from causing crash
+			//get expenses
+			$approvedExpenses = Expense::find()
+				->where(['in', 'ID', $expenses])
+				->all();
+
+			//try to approve time cards
+			try{
+				//create transaction
+				$connection = Expense::getDb();
+				$transaction = $connection->beginTransaction();
+
+				foreach ($approvedExpenses as $expense){
+					$expense->IsApproved = 1;
+					$expense->ApprovedBy = $approvedBy;
+					$expense->update();
+					//log approvals TODO no history table in place
+					//self::logExpenseHistory(Constants::EXPENSE_APPROVAL, $expense->ID);
+				}
+				$transaction->commit();
+				//log approval of cards
+				$response->setStatusCode(200);
+				$response->data = $approvedExpenses;
+				return $response;
+			}catch(\Exception $e){ //if transaction fails rollback changes and send error
+				$transaction->rollBack();
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+				return $response;
+			}
+		}catch (ForbiddenHttpException $e){
+			throw new ForbiddenHttpException;
+		}catch(\Exception $e) {
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
+		}
+	}
 	
 	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
 		$sortField = 'ProjectName', $sortOrder = 'ASC')
