@@ -524,6 +524,11 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Admin'][] = $expenseGetAll;
         $this->permissionArray[] = $expenseGetAll;
 		
+		$expenseApprove = $this->auth->createPermission('expenseApprove');
+        $expenseApprove->description = 'Approve expense records';
+        $this->permissionAssociationArray['Supervisor'][] = $expenseApprove;
+        $this->permissionArray[] = $expenseApprove;
+		
 		$expenseGetAccountantView = $this->auth->createPermission('expenseGetAccountantView');
         $expenseGetAccountantView->description = 'View the Accountant flavor of the expense screen';
         $this->permissionAssociationArray['Accountant'][] = $expenseGetAccountantView;

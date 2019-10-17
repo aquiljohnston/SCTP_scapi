@@ -88,6 +88,9 @@ final class Constants
 	const PROD_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasis\\';
 	const PROD_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADP\\';
 	
+	//Exepnse Event History Types
+	const EXPENSE_APPROVAL = 'PM/Supervisor Approval';
+	
 	//Notifications
 	const NOTIFICATION_TYPE_TIME = 'Time Card';
 	const NOTIFICATION_TYPE_MILEAGE = 'Mileage Card';
