@@ -14,6 +14,7 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\ExpenseEventHistory;
 use app\modules\v3\models\Expense;
 
 class ExpenseController extends Controller{
@@ -269,7 +270,7 @@ class ExpenseController extends Controller{
 				->where(['in', 'ID', $expenses])
 				->all();
 
-			//try to approve time cards
+			//try to approve expenses
 			try{
 				//create transaction
 				$connection = Expense::getDb();
@@ -279,11 +280,10 @@ class ExpenseController extends Controller{
 					$expense->IsApproved = 1;
 					$expense->ApprovedBy = $approvedBy;
 					$expense->update();
-					//log approvals TODO no history table in place
-					//self::logExpenseHistory(Constants::EXPENSE_APPROVAL, $expense->ID);
+					//log approvals
+					self::logExpenseHistory(Constants::EXPENSE_APPROVAL, $expense->ID);
 				}
 				$transaction->commit();
-				//log approval of cards
 				$response->setStatusCode(200);
 				$response->data = $approvedExpenses;
 				return $response;
@@ -532,7 +532,7 @@ class ExpenseController extends Controller{
 				->all();
 
 			//log submission
-			//self::logExpenseHistory($eventHistoryType, null, $startDate, $endDate);
+			self::logExpenseHistory(Constants::EXPENSE_SUBMISSION, null, $startDate, $endDate);
 			
 			return $fileData;
 		} catch(\Exception $e) {
@@ -635,4 +635,27 @@ class ExpenseController extends Controller{
         }
         return true;
     }
+	
+	private function logExpenseHistory($type, $expenseID = null, $startDate = null, $endDate = null, $comments = null){
+		try{
+			//create and populate model
+			$historyRecord = new ExpenseEventHistory;
+			$historyRecord->Date = BaseActiveController::getDate();
+			$historyRecord->Name = BaseActiveController::getUserFromToken()->UserName;
+			$historyRecord->Type = $type;
+			$historyRecord->ExpenseID = $expenseID;
+			$historyRecord->StartDate = $startDate;
+			$historyRecord->EndDate = $endDate;
+			$historyRecord->Comments = $comments;
+			
+			//save
+			if(!$historyRecord->save()){
+				//throw error on failure
+				throw BaseActiveController::modelValidationException($newInspection);
+			}
+		}catch(\Exception $e){
+			//catch and log errors
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+		}
+	}
 }
