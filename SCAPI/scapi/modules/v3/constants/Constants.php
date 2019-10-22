@@ -88,8 +88,20 @@ final class Constants
 	const PROD_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasis\\';
 	const PROD_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADP\\';
 	
+	//Expense Submission file namespace
+	const EXPENSE_FILE_NAME = 'expense_history_';
+	
 	//Exepnse Event History Types
 	const EXPENSE_APPROVAL = 'PM/Supervisor Approval';
+	const EXPENSE_SUBMISSION = 'Submission';
+	
+	//Expense File Types
+	const EXPENSE_OUTPUT = 'expense';
+	
+	//Expense Submission File Locations
+	const DEV_DEFAULT_EXPENSE_PATH = 'C:\\ClientShare\\ExpenseDev\\';
+	const STAGE_DEFAULT_EXPENSE_PATH = 'C:\\ClientShare\\ExpenseStage\\';
+	const PROD_DEFAULT_EXPENSE_PATH = 'C:\\ClientShare\\Expense\\';
 	
 	//Notifications
 	const NOTIFICATION_TYPE_TIME = 'Time Card';

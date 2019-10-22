@@ -3,17 +3,18 @@
 namespace app\modules\v3\controllers;
 
 use Yii;
+use yii\db\Query;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
+use yii\web\ForbiddenHttpException;
+use yii\web\BadRequestHttpException;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\Expense;
-use yii\web\ForbiddenHttpException;
-use yii\web\BadRequestHttpException;
 
 class ExpenseController extends Controller{
 
@@ -431,6 +432,141 @@ class ExpenseController extends Controller{
 			throw $e;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	/**
+	*Call sp to process expense data and generate account file
+	*Looks for JSON PUT body containing date range and project IDs to process
+	*@RETURNS JSON w/success flag and comment
+	*/
+	public function actionAccountantSubmit(){
+		try{
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//RBAC permissions check
+			PermissionsController::requirePermission('timeCardSubmit');
+			
+			//get put data
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			
+			//format response
+			$responseData = [];
+			$responseData['success'] = 0;
+			$responseData['comments'] = '';
+			
+			//call function to get file data, check after each file for failure
+			$outputData = self::getSubmissionFileData($params);
+			if($outputData === false){
+				$comments = 'Failed to get Output Data.';
+				//self::resetSubmission($params, $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			
+			//call function to write files, check after each file for failure
+			$writeStatus = count($outputData) != 0 ? self::writeFileData($outputData, Constants::EXPENSE_OUTPUT) : true;
+			if(!$writeStatus){
+				$comments = 'Failed to write expense file.';
+				//self::resetSubmission($params, $comments);
+				$responseData['comments'] = $comments;
+				$response->data = $responseData;
+				return $response;
+			}
+			
+			//if all process run successfully return success
+			$responseData['success'] = 1;
+			$responseData['comments'] = 'Expense submission processed successfully.';
+			$response = Yii::$app->response;
+			$response->data = $responseData;
+			$response->format = Response::FORMAT_JSON;
+			return $response;	
+		} catch(ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+        }	
+	}
+	
+	private static function getSubmissionFileData($params){
+		try{
+			$projectIDs = $params['params']['projectIDArray'];
+			$startDate = $params['params']['startDate'];
+			$endDate = $params['params']['endDate'];
+			$spName = 'spGenerateExpenseByProject';
+			$eventHistoryType = Constants::EXPENSE_SUBMISSION;
+			
+			//submit files and get output data
+			// $db = BaseActiveRecord::getDb();
+			// $getFileDataCommand = $db->createCommand("SET NOCOUNT ON EXECUTE $spName :projectIDs, :startDate, :endDate");
+			// $getFileDataCommand->bindParam(':projectIDs', $projectIDs, \PDO::PARAM_STR);
+			// $getFileDataCommand->bindParam(':startDate', $startDate, \PDO::PARAM_STR);
+			// $getFileDataCommand->bindParam(':endDate', $endDate, \PDO::PARAM_STR);
+			// $fileData = $getFileDataCommand->query();
+			
+			//json decode to array
+			$projectIDs = json_decode($projectIDs);
+			
+			$conditions = ['and',
+				['>', 'CreatedDate', $startDate],
+				['<', 'CreatedDate', $endDate],
+				['in', 'ProjectID', $projectIDs],
+			];
+			
+			//update submit status
+			Expense::updateAll([
+					'IsSubmitted' => 1,
+					'SubmittedBy' => BaseActiveController::getUserFromToken()->UserName,
+					'SubmittedDate' => BaseActiveController::getDate(),
+			], $conditions);
+			
+			//fetch stub data for file
+			$fileData = Expense::find()
+				->where(['and',
+					['>', 'CreatedDate', $startDate],
+					['<', 'CreatedDate', $endDate],
+					['in', 'ProjectID', $projectIDs],
+				])
+				->asArray()
+				->all();
+
+			//log submission
+			//self::logExpenseHistory($eventHistoryType, null, $startDate, $endDate);
+			
+			return $fileData;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'getSubmissionFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Params: ' . json_encode($params),
+				'Type: ' . Constants::EXPENSE_OUTPUT
+			);
+			return false;
+		}
+	}
+	
+	private static function writeFileData($data){
+		try{
+			$fileNamePrefix = Constants::EXPENSE_FILE_NAME;
+			//get date and format for file name
+			$date = BaseActiveController::getDate();
+			$formatedDate = str_replace([' ', ':'], '_', $date);
+			$fileName = $fileNamePrefix . $formatedDate;
+			
+			//data is the sp response for the given file, file name payroll_history_2018-03-27_9_36_36.csv, type is type of file being written
+			BaseActiveController::processAndWriteCsv($data,$fileName,Constants::EXPENSE_OUTPUT);
+			return true;
+		}catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'writeFileData',
+				$e,
+				getallheaders()['X-Client'],
+				'Data: ' . json_encode($data),
+				'Type: ' . Constants::EXPENSE_OUTPUT
+			);
+			return false;
 		}
 	}
 	
