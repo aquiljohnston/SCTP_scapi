@@ -337,6 +337,9 @@ class BaseActiveController extends ActiveController
 				case Constants::MSDYNAMICS_MILEAGECARD:
 					$filePath = Constants::DEV_DEFAULT_MILEAGE_ADP_PATH;
 			        break;
+				case Constants::EXPENSE_OUTPUT:
+					$filePath = Constants::DEV_DEFAULT_EXPENSE_PATH;
+			        break;
 			}
         } elseif($environment === Constants::API_CONFIG['STAGE_HEADER']) {
         	switch ($type) {
@@ -355,6 +358,9 @@ class BaseActiveController extends ActiveController
 				case Constants::MSDYNAMICS_MILEAGECARD:
 					$filePath = Constants::STAGE_DEFAULT_MILEAGE_ADP_PATH;
 			        break;
+				case Constants::EXPENSE_OUTPUT:
+					$filePath = Constants::STAGE_DEFAULT_EXPENSE_PATH;
+			        break;
 			}
         } elseif($environment === Constants::API_CONFIG['AZURE_PROD_HEADER']) {
 			switch ($type) {
@@ -372,6 +378,9 @@ class BaseActiveController extends ActiveController
 			        break;
 				case Constants::MSDYNAMICS_MILEAGECARD:
 					$filePath = Constants::PROD_DEFAULT_MILEAGE_ADP_PATH;
+			        break;
+				case Constants::EXPENSE_OUTPUT:
+					$filePath = Constants::PROD_DEFAULT_EXPENSE_PATH;
 			        break;
 			}
 		}
