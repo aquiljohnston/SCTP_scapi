@@ -46,6 +46,7 @@ class ExpenseController extends Controller{
 				$successFlag = 0;
 				$expense = new Expense;
 				$expense->attributes = $data;
+				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;;
 
 				if ($expense->save()) {
 					$successFlag = 1;
@@ -54,11 +55,12 @@ class ExpenseController extends Controller{
 				}
 			}catch(\Exception $e){
 				//if db exception is 2601, duplicate contraint then success
-				//if(in_array($e->errorInfo[1], array(2601, 2627))){
-				//	$successFlag = 1;
-				//}else{
-				BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
-				$successFlag = 0;
+				if(in_array($e->errorInfo[1], array(2601, 2627))){
+					$successFlag = 1;
+				}else{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+					$successFlag = 0;
+				}
 			}
 			$responseData = [
 				'CreatedDate' => $data['CreatedDate'],
@@ -111,7 +113,7 @@ class ExpenseController extends Controller{
 					'ID',
 					'Expense.ProjectID',
 					'ProjectName',
-					'UserID',
+					'Expense.UserID',
 					'Expense.UserName',
 					'ChargeAccount',
 					'Quantity',
@@ -186,7 +188,7 @@ class ExpenseController extends Controller{
 			if($employeeID!= null && isset($expenses)) {
                 $expenses->andFilterWhere([
                     'and',
-                    ['UserID' => $employeeID],
+                    ['Expense.UserID' => $employeeID],
                 ]);
             }
 			
