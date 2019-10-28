@@ -14,8 +14,10 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\BaseActiveRecord;
-use app\modules\v3\models\ExpenseEventHistory;
 use app\modules\v3\models\Expense;
+use app\modules\v3\models\GetExpenses;
+use app\modules\v3\models\ExpenseEventHistory;
+
 
 class ExpenseController extends Controller{
 
@@ -31,6 +33,7 @@ class ExpenseController extends Controller{
 					'approve'  => ['put'],
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
+					'show-entries' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -48,7 +51,7 @@ class ExpenseController extends Controller{
 				$expense->attributes = $data;
 				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;;
 
-				if ($expense->save()) {
+				if ($expense->save()){
 					$successFlag = 1;
 				} else {
 					throw BaseActiveController::modelValidationException($expense);
@@ -107,23 +110,10 @@ class ExpenseController extends Controller{
 			$allTheProjects = [];
 			$showProjectDropDown = false;
 
-            //build base query
-            $expenses = Expense::find()
-				->select([
-					'ID',
-					'Expense.ProjectID',
-					'ProjectName',
-					'Expense.UserID',
-					'Expense.UserName',
-					'ChargeAccount',
-					'Quantity',
-					'CreatedDate',
-					'IsApproved',
-					'IsSubmitted'
-				])
-				->innerJoin('ProjectTb', '[Expense].[ProjectID] = [ProjectTb].[ProjectID]')
-				->innerJoin('UserTb', '[Expense].[UserName] = [UserTb].[UserName]')
-                ->where(['between', 'CreatedDate', $startDate, $endDate]);
+			$expenses = new Query;
+            $expenses->select('*')
+                ->from(["fnGetExpensesByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
             //if is scct website get all or own
             if(BaseActiveController::isSCCT($client)){
@@ -140,7 +130,7 @@ class ExpenseController extends Controller{
                         ->all();
                     $projectsSize = count($projects);
                     if($projectsSize > 0){
-                        $expenses->where(['Expense.ProjectID' => $projects[0]->ProjUserProjectID]);
+                        $expenses->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
                     }else{
 						//can only get own but has no project relations
 						throw new ForbiddenHttpException;
@@ -150,7 +140,7 @@ class ExpenseController extends Controller{
                         for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
 							//could be an 'IN' instead
-                            $expenses->orWhere(['Expense.ProjectID'=>$relatedProjectID]);
+                            $expenses->orWhere(['ProjectID'=>$relatedProjectID]);
                         }
                     }	
                 }else{
@@ -163,17 +153,17 @@ class ExpenseController extends Controller{
                     ->where(['ProjectUrlPrefix' => $client])
                     ->one();
                 //add project where to query
-                $expenses->where(['Expense.ProjectID' => $project->ProjectID]);
+                $expenses->where(['ProjectID' => $project->ProjectID]);
             }
 
 			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$preFilteredRecords = $expenses->asArray()->all(BaseActiveRecord::getDb());
+			$preFilteredRecords = $expenses->all(BaseActiveRecord::getDb());
 
 			//apply project filter
-            if($projectID!= null && isset($expenses)) {
+            if($projectID!= null && isset($expenses)){
                 $expenses->andFilterWhere([
                     'and',
-                    ['Expense.ProjectID' => $projectID],
+                    ['ProjectID' => $projectID],
                 ]);
             }
 
@@ -181,18 +171,18 @@ class ExpenseController extends Controller{
 				$projectFilteredRecords = $preFilteredRecords;
 			}else{
 				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-				$projectFilteredRecords = $expenses->asArray()->all(BaseActiveRecord::getDb());
+				$projectFilteredRecords = $expenses->all(BaseActiveRecord::getDb());
 			}
 			
 			//apply employee filter
-			if($employeeID!= null && isset($expenses)) {
+			if($employeeID!= null && isset($expenses)){
                 $expenses->andFilterWhere([
                     'and',
-                    ['Expense.UserID' => $employeeID],
+                    ['UserID' => $employeeID],
                 ]);
             }
 			
-			if($filterArray!= null && isset($expenses)) { //Empty strings or nulls will result in false
+			if($filterArray!= null && isset($expenses)){ //Empty strings or nulls will result in false
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
@@ -200,7 +190,7 @@ class ExpenseController extends Controller{
 					//remove leading space from filter string
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
-						['like', 'Expense.UserName', $trimmedFilter],
+						['like', 'UserName', $trimmedFilter],
 						['like', 'Quantity', $trimmedFilter],
 						['like', 'ChargeAccount', $trimmedFilter],
 						['like', 'CreatedDate', $trimmedFilter]
@@ -351,8 +341,7 @@ class ExpenseController extends Controller{
 				->all(BaseActiveRecord::getDb());
 
 			//add project filter
-			if($projectID!= null)
-			{
+			if($projectID!= null){
                 $expenseQuery->andFilterWhere([
                     'and',
                     ['Expense.ProjectID' => $projectID],
@@ -360,8 +349,7 @@ class ExpenseController extends Controller{
             }
 
 			//add search filter
-			if($filter != null)
-			{
+			if($filter != null){
                 $expenseQuery->andFilterWhere([
                     'or',
                     ['like', 'ProjectName', $filter],
@@ -390,15 +378,14 @@ class ExpenseController extends Controller{
 
 			$response->data = $responseArray;
 			return $response;
-		} catch(ForbiddenHttpException $e) {
+		} catch(ForbiddenHttpException $e){
 			throw $e;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
 	
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
-	{
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate){
 		try{
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -433,6 +420,54 @@ class ExpenseController extends Controller{
 		} catch(ForbiddenHttpException $e) {
 			throw $e;
 		} catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionShowEntries($userID, $projectID, $startDate, $endDate){		
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+
+			// RBAC permission check
+			PermissionsController::requirePermission('expenseGetEntries');
+
+			$dataArray = [];
+			
+			$entries = GetExpenses::find()
+				->where(['and', 
+					['UserID' => $userID],
+					['ProjectID' => $projectID],
+					['between', 'CreatedDate', $startDate, $endDate],
+				])
+				->orderBy('CreatedDate ASC')
+				->all();
+				
+			$groupingQuery = new Query;
+			$groupingQuery->select(['ProjectName', 'UserName', 'Quantity', 'IsApproved', 'IsSubmitted'])
+				->from(["fnGetExpensesByDate(:startDate, :endDate)"])
+				->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+				->where(['and', 
+					['UserID' => $userID],
+					['ProjectID' => $projectID],
+				]);
+			$grouping = $groupingQuery->one(BaseActiveRecord::getDb());
+			
+			$transaction->commit();
+
+			$dataArray['entries'] = $entries;
+			$dataArray['groupData'] = $grouping;
+
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $dataArray;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -511,8 +546,7 @@ class ExpenseController extends Controller{
 			$projectIDs = json_decode($projectIDs);
 			
 			$conditions = ['and',
-				['>', 'CreatedDate', $startDate],
-				['<', 'CreatedDate', $endDate],
+				['between', 'CreatedDate', $startDate, $endDate],
 				['in', 'ProjectID', $projectIDs],
 			];
 			
@@ -526,8 +560,7 @@ class ExpenseController extends Controller{
 			//fetch stub data for file
 			$fileData = Expense::find()
 				->where(['and',
-					['>', 'CreatedDate', $startDate],
-					['<', 'CreatedDate', $endDate],
+					['between', 'CreatedDate', $startDate, $endDate],
 					['in', 'ProjectID', $projectIDs],
 				])
 				->asArray()
