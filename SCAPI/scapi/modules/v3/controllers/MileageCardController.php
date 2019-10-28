@@ -147,8 +147,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 	
-	public function actionShowEntries($cardID)
-	{		
+	public function actionShowEntries($cardID){		
 		try{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
