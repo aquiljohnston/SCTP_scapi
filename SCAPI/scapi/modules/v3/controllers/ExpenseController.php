@@ -322,29 +322,20 @@ class ExpenseController extends Controller{
 			$showProjectDropDown = true;
 
 			//build base query
-            $expenseQuery = Expense::find()
-				->select([
-					'Expense.ProjectID',
-					'ProjectName',
-					'IsSubmitted',
-					'CAST(MIN(CreatedDate) AS DATE) AS StartDate',
-					'CAST(MAX(CreatedDate) AS DATE) AS EndDate'
-				])
-				->distinct()
-				->innerJoin('ProjectTb', '[Expense].[ProjectID] = [ProjectTb].[ProjectID]')
-				->where(['between', 'CreatedDate', $startDate, $endDate]);
+            $expenseQuery = new Query;
+            $expenseQuery->select('*')
+                ->from(["fnGetExpensesByDateGroupByProject(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
 			//get records for project dropdown(timing for this execution is very important)
 			$dropdownRecords = $expenseQuery
-				->asArray()
-				->groupBy(['Expense.ProjectID', 'ProjectName', 'IsSubmitted'])
 				->all(BaseActiveRecord::getDb());
 
 			//add project filter
 			if($projectID!= null){
                 $expenseQuery->andFilterWhere([
                     'and',
-                    ['Expense.ProjectID' => $projectID],
+                    ['ProjectID' => $projectID],
                 ]);
             }
 
@@ -353,6 +344,7 @@ class ExpenseController extends Controller{
                 $expenseQuery->andFilterWhere([
                     'or',
                     ['like', 'ProjectName', $filter],
+                    ['like', 'ManagerName', $filter],
                 ]);
             }
 
@@ -363,7 +355,6 @@ class ExpenseController extends Controller{
 			$paginationResponse = BaseActiveController::paginationProcessor($expenseQuery, $page, $listPerPage);
             $expenses = $paginationResponse['Query']
 				->orderBy("$sortField $sortOrder")
-				->groupBy(['Expense.ProjectID', 'ProjectName', 'IsSubmitted'])
 				->all(BaseActiveRecord::getDb());
 
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
@@ -391,27 +382,14 @@ class ExpenseController extends Controller{
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('expenseGetAccountantDetails');
+				
+			$expenseQuery = new Query;
+			$expenseQuery->select('*')
+                ->from(["fnGetExpensesByDate(:startDate, :endDate)"])
+                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
+				->where(['ProjectID' => $projectID]);	
+			$expenses = $expenseQuery->all(BaseActiveRecord::getDb());
 			
-			//add a day to end date to account for datetimes
-			$endDate = date('Y-m-d H:i:s', strtotime($endDate . ' +1 day'));
-			
-			$expenses = Expense::find()
-				->select([
-					'ID',
-					'ProjectID',
-					'UserID',
-					'Expense.UserName',
-					'ChargeAccount',
-					'Quantity',
-					'CreatedDate',
-					'IsApproved',
-				])
-				->innerJoin('UserTb', '[Expense].[UserName] = [UserTb].[UserName]')
-				->where(['between', 'CreatedDate', $startDate, $endDate])
-				->andWhere(['ProjectID' => $projectID])
-				->asArray()
-				->all();
-
 			//format response
 			$responseArray['details'] = $expenses;
             $response = Yii::$app->response;
@@ -471,6 +449,53 @@ class ExpenseController extends Controller{
 			throw new \yii\web\HttpException(400);
 		}
 	}
+	
+	/**
+     * Check if submit button should be enabled/disabled by calling DB fnSubmit function
+     * @return mixed
+     * @throws ForbiddenHttpException
+     * @throws \yii\web\HttpException
+     */
+    public function actionCheckSubmitButtonStatus(){
+        try{
+			//get headers
+            $headers = getallheaders();
+            //get client header
+            $client = $headers['X-Client'];
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//default check to false
+			$submitButtonStatus = 0;
+			//RBAC permissions check
+			if(PermissionsController::can('checkSubmitButtonStatus')){
+				//get body data
+				$data = file_get_contents("php://input");
+				$submitCheckData = json_decode($data, true)['submitCheck'];
+
+				//build base query
+				$checkQuery = new Query;
+				$checkQuery->select('*')
+					->from(["fnExpenseSubmitCheck(:StartDate , :EndDate)"])
+					->addParams([
+						':StartDate' => $submitCheckData['StartDate'], 
+						':EndDate' => $submitCheckData['EndDate']]);
+				$submitButtonStatus = $checkQuery->one(BaseActiveRecord::getDb());
+			}
+
+            $response = Yii::$app ->response;
+            $response -> format = Response::FORMAT_JSON;
+            $response -> data = $submitButtonStatus;
+			
+            return $response;
+        } catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+            throw new \yii\web\HttpException(400);
+        }
+    }
 	
 	/**
 	*Call sp to process expense data and generate account file
