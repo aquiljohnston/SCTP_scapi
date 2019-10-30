@@ -556,41 +556,19 @@ class ExpenseController extends Controller{
 			$projectIDs = $params['params']['projectIDArray'];
 			$startDate = $params['params']['startDate'];
 			$endDate = $params['params']['endDate'];
-			$spName = 'spGenerateExpenseByProject';
+			$createdBy = BaseActiveController::getUserFromToken()->UserName;
+			$spName = 'spExpenseSubmission';
 			$eventHistoryType = Constants::EXPENSE_SUBMISSION;
 			
 			//submit files and get output data
-			// $db = BaseActiveRecord::getDb();
-			// $getFileDataCommand = $db->createCommand("SET NOCOUNT ON EXECUTE $spName :projectIDs, :startDate, :endDate");
-			// $getFileDataCommand->bindParam(':projectIDs', $projectIDs, \PDO::PARAM_STR);
-			// $getFileDataCommand->bindParam(':startDate', $startDate, \PDO::PARAM_STR);
-			// $getFileDataCommand->bindParam(':endDate', $endDate, \PDO::PARAM_STR);
-			// $fileData = $getFileDataCommand->query();
+			$db = BaseActiveRecord::getDb();
+			$getFileDataCommand = $db->createCommand("SET NOCOUNT ON EXECUTE $spName :projectIDs, :startDate, :endDate, :createdBy");
+			$getFileDataCommand->bindParam(':projectIDs', $projectIDs, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':startDate', $startDate, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':endDate', $endDate, \PDO::PARAM_STR);
+			$getFileDataCommand->bindParam(':createdBy', $createdBy, \PDO::PARAM_STR);
+			$fileData = $getFileDataCommand->query();
 			
-			//json decode to array
-			$projectIDs = json_decode($projectIDs);
-			
-			$conditions = ['and',
-				['between', 'CreatedDate', $startDate, $endDate],
-				['in', 'ProjectID', $projectIDs],
-			];
-			
-			//update submit status
-			Expense::updateAll([
-					'IsSubmitted' => 1,
-					'SubmittedBy' => BaseActiveController::getUserFromToken()->UserName,
-					'SubmittedDate' => BaseActiveController::getDate(),
-			], $conditions);
-			
-			//fetch stub data for file
-			$fileData = Expense::find()
-				->where(['and',
-					['between', 'CreatedDate', $startDate, $endDate],
-					['in', 'ProjectID', $projectIDs],
-				])
-				->asArray()
-				->all();
-
 			//log submission
 			self::logExpenseHistory(Constants::EXPENSE_SUBMISSION, null, $startDate, $endDate);
 			
