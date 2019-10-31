@@ -510,6 +510,46 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $timeEntryDeactivate;
         $this->permissionArray[] = $timeEntryDeactivate;
 		
+		//Expense Permissions//////////////////////////////////////////////////////////////
+		
+		$expenseGetOwn = $this->auth->createPermission('expenseGetOwn');
+        $expenseGetOwn->description = 'View expenses for associated projects';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseGetOwn;
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetOwn;
+        $this->permissionArray[] = $expenseGetOwn;
+		
+		$expenseGetAll = $this->auth->createPermission('expenseGetAll');
+        $expenseGetAll->description = 'View all expenses';
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetAll;
+        $this->permissionAssociationArray['Admin'][] = $expenseGetAll;
+        $this->permissionArray[] = $expenseGetAll;
+		
+		$expenseGetEntries = $this->auth->createPermission('expenseGetEntries');
+        $expenseGetEntries->description = 'Get expense entries for a user, project, and date range';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseGetEntries;
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetEntries;
+        $this->permissionArray[] = $expenseGetEntries;
+		
+		$expenseApprove = $this->auth->createPermission('expenseApprove');
+        $expenseApprove->description = 'Approve expense records';
+        $this->permissionAssociationArray['Supervisor'][] = $expenseApprove;
+        $this->permissionArray[] = $expenseApprove;
+		
+		$expenseSubmit = $this->auth->createPermission('expenseSubmit');
+        $expenseSubmit->description = 'Submit expenses and generate output file';
+        $this->permissionAssociationArray['Accountant'][] = $expenseSubmit;
+        $this->permissionArray[] = $expenseSubmit;
+		
+		$expenseGetAccountantView = $this->auth->createPermission('expenseGetAccountantView');
+        $expenseGetAccountantView->description = 'View the Accountant flavor of the expense screen';
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetAccountantView;
+        $this->permissionArray[] = $expenseGetAccountantView;
+		
+		$expenseGetAccountantDetails = $this->auth->createPermission('expenseGetAccountantDetails');
+        $expenseGetAccountantDetails->description = 'View expanded section details on the Accountant flavor of the expense screen';
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetAccountantDetails;
+        $this->permissionArray[] = $expenseGetAccountantDetails;
+		
 		//User permissions/////////////////////////////////////////////////////////////////
 
         $userGetActive = $this->auth->createPermission('userGetActive');
