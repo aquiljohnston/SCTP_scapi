@@ -1066,7 +1066,7 @@ class RbacController extends Controller
 			$chunkSize = ($j < $chunkCount -1) ? $maxChunkSize : $userSize - ($maxChunkSize * $j);
 			echo "Preparing Bulk Assignment of Roles to Users for $chunkSize Users in Group " . ($j+1) . ".\n";
 			//assign roles to users already in the system
-			for($i = $chunkStartIndex; $i < $chunkSize; $i++)
+			for($i = $chunkStartIndex; $i < $maxChunkSize * $j + $chunkSize; $i++)
 			{
 				$userRole = $users[$i]['UserAppRoleType'];
 				if(array_key_exists($userRole, $userRoleTypes))
