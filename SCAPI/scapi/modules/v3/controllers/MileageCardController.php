@@ -207,6 +207,8 @@ class MileageCardController extends BaseCardController
 			//set start date to last Sunday add a day to prevent issue occuring if current day is sunday
 			$startDate = date('Y-m-d',strtotime($startDate . '+1 day'));
 			$startDate = date('Y-m-d',strtotime($startDate . 'last sunday'));
+			$endDate = date('Y-m-d',strtotime($endDate . '-1 day'));
+			$endDate = date('Y-m-d',strtotime($endDate . 'next saturday'));
 			
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
