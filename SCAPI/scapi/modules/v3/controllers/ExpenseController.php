@@ -66,7 +66,7 @@ class ExpenseController extends Controller{
 				}
 			}
 			$responseData = [
-				'CreatedDate' => $data['CreatedDate'],
+				'CreatedDate' => $data['CreatedDateTime'],
 				'ChargeAccount' => $data['ChargeAccount'],
 				'SuccessFlag' => $successFlag
 			];
