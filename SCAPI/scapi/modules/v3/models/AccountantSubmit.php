@@ -18,6 +18,7 @@ use Yii;
  * @property string $OasisSubmitted
  * @property string $ADPSubmitted
  * @property int $ProjectID
+ * @property string $User Full Name
  */
 class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -36,7 +37,7 @@ class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
     {
         return [
             [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'required'],
-            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted'], 'string'],
+            [['ProjectName', 'ProjectManager', 'ApprovedBy', 'MSDynamicsSubmitted', 'OasisSubmitted', 'ADPSubmitted', 'User Full Name'], 'string'],
             [['StartDate', 'EndDate'], 'safe'],
             [['Total Time Cards', 'Approved Time Cards', 'ProjectID'], 'integer'],
         ];
@@ -59,6 +60,7 @@ class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
             'OasisSubmitted' => 'Oasis Submitted',
             'ADPSubmitted' => 'Adpsubmitted',
             'ProjectID' => 'Project ID',
+            'User Full Name' => 'User  Full  Name',
         ];
     }
 }
