@@ -358,6 +358,18 @@ class TimeCardController extends BaseCardController
 
 			//build base query
             $cardQuery = AccountantSubmit::find()
+				->select(['ProjectName', 
+					'ProjectManager',
+					'StartDate',
+					'EndDate',
+					'ApprovedBy',
+					'[Total Time Cards]',
+					'[Approved Time Cards]',
+					'MSDynamicsSubmitted',
+					'OasisSubmitted',
+					'ADPSubmitted',
+					'ProjectID'])
+				->distinct()
 				->where(['between', 'StartDate', $startDate, $endDate])
                 ->orWhere(['between', 'EndDate', $startDate, $endDate])
                 ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
@@ -382,6 +394,7 @@ class TimeCardController extends BaseCardController
                     ['like', 'ProjectName', $filter],
                     ['like', 'ProjectManager', $filter],
                     ['like', 'ApprovedBy', $filter],
+                    ['like', '[User Full Name]', $filter],
                 ]);
             }
 
