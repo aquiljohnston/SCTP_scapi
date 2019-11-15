@@ -60,8 +60,8 @@ class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
     {
         return [
             [['BreadcrumbUID', 'BreadcrumbActivityUID', 'BreadcrumbSourceID', 'BreadcrumbHeading', 'BreadcrumbDeviceID', 'BreadcrumbGPSAccuracy', 'BreadcrumbGPSType', 'BreadcrumbGPSSentence', 'BreadcrumbShape', 'BreadcrumbWorkQueueFilter', 'BreadcrumbActivityType', 'BreadcrumbMapPlat', 'BreadcrumbComments', 'BreadcrumbCreatedUserUID', 'SpeedAttribute'], 'string'],
-            [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel', 'PaceOfTravel', 'DistanceTraveled', 'OriginBreadcrumbLatitude', 'OriginBreadcrumbLongitude'], 'number'],
-            [['BreadcrumbTrackingGroupID', 'BreadcrumbSatellites', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsDistanceBased'], 'integer'],
+            [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbSatellites', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel', 'PaceOfTravel', 'DistanceTraveled', 'OriginBreadcrumbLatitude', 'OriginBreadcrumbLongitude'], 'number'],
+            [['BreadcrumbTrackingGroupID', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsDistanceBased'], 'integer'],
             [['BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate', 'BreadcrumbGPSTime'], 'safe'],
         ];
     }
