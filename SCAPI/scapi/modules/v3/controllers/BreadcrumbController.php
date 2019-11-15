@@ -40,8 +40,7 @@ class BreadcrumbController extends Controller
 	{
 		//TODO handle SCCT as client header and avoid double save
 		//Consider implementing constraints similar to pge and reworking format as such
-		try
-		{
+		try{
 			//get http headers
 			$headers = getallheaders();
 			
@@ -67,12 +66,12 @@ class BreadcrumbController extends Controller
 			$responseArray = [];
 			
 			//traverse breadcrumb array
-			for($i = 0; $i < $breadcrumbCount; $i++)
-			{
+			for($i = 0; $i < $breadcrumbCount; $i++){
 				//try catch to log individual breadcrumb errors
-				try
-				{	
+				try{	
 					$successFlag = 0;
+					//rounding possible decimal satellite value up to nearest int
+					$breadcrumbs[$i]['BreadcrumbSatellites'] = ceil($breadcrumbs[$i]['BreadcrumbSatellites']);
 					
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					$breadcrumb = new Breadcrumb;
@@ -102,22 +101,15 @@ class BreadcrumbController extends Controller
 						throw BaseActiveController::modelValidationException($clientBreadcrumb);
 					}
 					$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => $successFlag];
-				}
-				catch(yii\db\Exception $e)
-				{
-					if(in_array($e->errorInfo[1], array(2601, 2627)))
-					{
+				}catch(yii\db\Exception $e){
+					if(in_array($e->errorInfo[1], array(2601, 2627))){
 						$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
-					}
-					else
-					{
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
+					}else{
+						// BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
 						$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 					}
-				}
-				catch(\Exception $e)
-				{
-					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
+				}catch(\Exception $e){
+					// BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
 					$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 				}
 			}
@@ -129,7 +121,7 @@ class BreadcrumbController extends Controller
 		} catch(UnauthorizedHttpException $e){
 			throw new UnauthorizedHttpException();
         } catch(\Exception $e) {
-			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+			// BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
             throw new \yii\web\HttpException(400);
         }
 	}
