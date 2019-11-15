@@ -699,6 +699,7 @@ class UserController extends BaseActiveController
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					$projectTask = [];
 				}
+
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
 				
                 $projectData['ProjectID'] = $projectModel->ProjectID;
