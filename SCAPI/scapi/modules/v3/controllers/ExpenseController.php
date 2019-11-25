@@ -13,6 +13,8 @@ use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
+use app\modules\v3\models\Project;
+use app\modules\v3\models\BaseUser;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\Expense;
 use app\modules\v3\models\GetExpenses;
@@ -34,6 +36,8 @@ class ExpenseController extends Controller{
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
 					'show-entries' => ['get'],
+					'get-modal-dropdown' => ['get'],
+					'create' => ['post'],
                 ],  
             ];
 		return $behaviors;	
@@ -450,6 +454,124 @@ class ExpenseController extends Controller{
 		}
 	}
 	
+	public function actionGetModalDropdown($projectID = null){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			//format response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+				
+			$projectArray = [''=>'Select'];
+			$userArray = [''=>'Select'];
+			if (PermissionsController::can('expenseGetAll')){
+				//all projects that have user relations
+				$projects = Project::find()
+					->select(['ProjectID', "concat(ProjectName, '(' , ProjectReferenceID , ')') as ProjectName"])
+					->innerJoin('Project_User_Tb', '[ProjectTb].[ProjectID] = [Project_User_Tb].[ProjUserProjectID]')
+					->distinct()
+					->all();
+			}elseif(PermissionsController::can('expenseGetOwn')){
+				//get requesting user
+				$userID = BaseActiveController::getUserFromToken()->UserID;
+				//get user project relations array
+				$projects = Project::find()
+					->select(['ProjectID', "concat(ProjectName, '(' , ProjectReferenceID ,')') as ProjectName"])
+					->innerJoin('Project_User_Tb', '[ProjectTb].[ProjectID] = [Project_User_Tb].[ProjUserProjectID]')
+					->where(['ProjUserUserID'=>$userID])
+					->distinct()
+					->all();
+			}
+			
+			$relatedProjectIDs = [];
+			//get project ids or user query
+			foreach ($projects as $p){
+				$relatedProjectIDs[] = $p->ProjectID;
+			}
+			
+			$users = BaseUser::find()
+				->select(['UserID', "concat(UserFirstName , ', ' , UserLastName , '(' , UserName , ')') as UserName"])
+				->innerJoin('Project_User_Tb', '[UserTb].[UserID] = [Project_User_Tb].[ProjUserUserID]');
+				
+			if($projectID != null){
+				$users->where(['ProjUserProjectID' => $projectID]);
+			}else{
+				$users->where(['in', 'ProjUserProjectID' , $relatedProjectIDs]);
+			}
+				
+			$users = $users->distinct()
+				->all();
+			
+			$projectArray = self::extractProjects($projects, $projectArray);
+			$userArray = self::extractEmployees($users, $userArray);
+			
+			$responseArray['projectDropdown'] = $projectArray;
+			$responseArray['employeeDropdown'] = $userArray;
+			//hardcoded coa for now
+			$responseArray['coaDropdown'] = [4450 => 'Per Deim'];
+			$response->data = $responseArray;
+			$response->setStatusCode(200);
+			return $response;
+		}catch(ForbiddenHttpException $e) {
+			throw $e;
+		}catch(\Exception $e){
+		   throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionCreate(){
+		try{
+			//set client header
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('expenseCreate');
+			
+			//get body data
+            $body = file_get_contents("php://input");
+            $data = json_decode($body, true);
+	
+			//try catch to log expense object error
+			try{					
+				$successFlag = 0;
+				$expense = new Expense;
+				$expense->attributes = $data;
+				//get username based off id given
+				$user = BaseUser::find()
+					->select('UserName')
+					->where(['UserID' => $data['UserID']])
+					->one();
+				$username = $user->UserName;
+				$expense->Username = $username;
+
+				if ($expense->save()){
+					$successFlag = 1;
+				} else {
+					throw BaseActiveController::modelValidationException($expense);
+				}
+			}catch(\Exception $e){
+				//if db exception is 2601, duplicate contraint then success
+				if(in_array($e->errorInfo[1], array(2601, 2627))){
+					$successFlag = 1;
+				}else{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+					$successFlag = 0;
+				}
+			}
+			$responseData = [
+				'SuccessFlag' => $successFlag
+			];
+			//return response data
+			return $responseData;
+		}catch(ForbiddenHttpException $e){
+            throw new ForbiddenHttpException;
+        }catch(\Exception $e){
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
 	/**
      * Check if submit button should be enabled/disabled by calling DB fnSubmit function
      * @return mixed
@@ -626,7 +748,7 @@ class ExpenseController extends Controller{
 		return $allTheProjects;
 	}
 	
-	private function extractEmployees($dropdownRecords){
+	private function extractEmployees($dropdownRecords, $employeeAllOption = null){
 		$employeeValues = [];
 		//iterate and stash user values
 		foreach ($dropdownRecords as $e) {
@@ -640,7 +762,8 @@ class ExpenseController extends Controller{
 		//abc order for all
 		asort($employeeValues);
 		//append all option to the front
-		$employeeValues = [""=>"All"] + $employeeValues;
+		$employeeAllOption = $employeeAllOption == null ? [""=>"All"] : $employeeAllOption;
+		$employeeValues = $employeeAllOption + $employeeValues;
 		
 		return $employeeValues;
 	}
