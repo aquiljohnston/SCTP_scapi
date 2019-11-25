@@ -53,7 +53,8 @@ class ExpenseController extends Controller{
 				$successFlag = 0;
 				$expense = new Expense;
 				$expense->attributes = $data;
-				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;;
+				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;
+				$expense->CreatedDate = $data['CreatedDateTime'];
 
 				if ($expense->save()){
 					$successFlag = 1;
@@ -544,6 +545,7 @@ class ExpenseController extends Controller{
 					->one();
 				$username = $user->UserName;
 				$expense->Username = $username;
+				$expense->CreatedDate = $data['CreatedDateTime'];
 
 				if ($expense->save()){
 					$successFlag = 1;
