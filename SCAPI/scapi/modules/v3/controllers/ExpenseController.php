@@ -13,10 +13,13 @@ use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
+use app\modules\v3\models\Project;
+use app\modules\v3\models\BaseUser;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\Expense;
 use app\modules\v3\models\GetExpenses;
 use app\modules\v3\models\ExpenseEventHistory;
+use app\modules\v3\models\ExpenseEntryEventHistory;
 
 
 class ExpenseController extends Controller{
@@ -31,9 +34,12 @@ class ExpenseController extends Controller{
                 'actions' => [
 					'get' => ['get'],
 					'approve'  => ['put'],
+					'deactivate'  => ['put'],
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
 					'show-entries' => ['get'],
+					'get-modal-dropdown' => ['get'],
+					'create' => ['post'],
                 ],  
             ];
 		return $behaviors;	
@@ -49,7 +55,8 @@ class ExpenseController extends Controller{
 				$successFlag = 0;
 				$expense = new Expense;
 				$expense->attributes = $data;
-				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;;
+				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;
+				$expense->CreatedDate = $data['CreatedDateTime'];
 
 				if ($expense->save()){
 					$successFlag = 1;
@@ -191,9 +198,10 @@ class ExpenseController extends Controller{
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
 						['like', 'UserName', $trimmedFilter],
+						['like', 'ProjectName', $trimmedFilter],
 						['like', 'Quantity', $trimmedFilter],
-						['like', 'ChargeAccount', $trimmedFilter],
-						['like', 'CreatedDate', $trimmedFilter]
+						['like', 'StartDate', $trimmedFilter],
+						['like', 'EndDate', $trimmedFilter]
 					);
 				}
 				$expenses->andFilterWhere($filterQueryArray);
@@ -296,6 +304,67 @@ class ExpenseController extends Controller{
 		}
 	}
 	
+	public function actionDeactivate(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('expenseDeactivate');
+
+			//get date and current user
+			$modifiedBy = BaseActiveController::getUserFromToken()->UserName;
+			$modifiedDate = BaseActiveController::getDate();
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Expense Deactivate', $modifiedBy, BaseActiveController::urlPrefix());
+			
+			//parse json
+			$expenses = $data['expenseArray'];
+			$deactivatedExpenses = []; // Prevents empty array from causing crash
+			//get expenses
+			$deactivatedExpenses = Expense::find()
+				->where(['in', 'ID', $expenses])
+				->all();
+			
+			try{
+				foreach ($deactivatedExpenses as $expense){
+					if(self::createHistoryRecord($expense, $modifiedBy, $modifiedDate,Constants::EXPENSE_DEACTIVATE)){
+						//delete the record, to avoid constraint issues
+						$expense->delete();
+					}
+				}
+				$transaction->commit();
+				$response->setStatusCode(200);
+				$response->data = $deactivatedExpenses;
+			}catch(Exception $e){
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				$transaction->rollBack();
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
 	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
 		$sortField = 'ProjectName', $sortOrder = 'ASC')
 	{
@@ -344,7 +413,9 @@ class ExpenseController extends Controller{
                 $expenseQuery->andFilterWhere([
                     'or',
                     ['like', 'ProjectName', $filter],
-                    ['like', 'ManagerName', $filter],
+                    ['like', 'ProjectManager', $filter],
+                    ['like', 'StartDate', $filter],
+                    ['like', 'EndDate', $filter]
                 ]);
             }
 
@@ -448,6 +519,126 @@ class ExpenseController extends Controller{
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function actionGetModalDropdown($projectID = null){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			//format response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+				
+			$projectArray = [''=>'Select'];
+			$userArray = [''=>'Select'];
+			if (PermissionsController::can('expenseGetAll')){
+				//all projects that have user relations
+				$projects = Project::find()
+					->select(['ProjectID', "concat(ProjectName, '(' , ProjectReferenceID , ')') as ProjectName"])
+					->innerJoin('Project_User_Tb', '[ProjectTb].[ProjectID] = [Project_User_Tb].[ProjUserProjectID]')
+					->distinct()
+					->all();
+			}elseif(PermissionsController::can('expenseGetOwn')){
+				//get requesting user
+				$userID = BaseActiveController::getUserFromToken()->UserID;
+				//get user project relations array
+				$projects = Project::find()
+					->select(['ProjectID', "concat(ProjectName, '(' , ProjectReferenceID ,')') as ProjectName"])
+					->innerJoin('Project_User_Tb', '[ProjectTb].[ProjectID] = [Project_User_Tb].[ProjUserProjectID]')
+					->where(['ProjUserUserID'=>$userID])
+					->distinct()
+					->all();
+			}
+			
+			$relatedProjectIDs = [];
+			//get project ids or user query
+			foreach ($projects as $p){
+				$relatedProjectIDs[] = $p->ProjectID;
+			}
+			
+			$users = BaseUser::find()
+				->select(['UserID', "concat(UserFirstName , ', ' , UserLastName , '(' , UserName , ')') as UserName"])
+				->innerJoin('Project_User_Tb', '[UserTb].[UserID] = [Project_User_Tb].[ProjUserUserID]');
+				
+			if($projectID != null){
+				$users->where(['ProjUserProjectID' => $projectID]);
+			}else{
+				$users->where(['in', 'ProjUserProjectID' , $relatedProjectIDs]);
+			}
+				
+			$users = $users->distinct()
+				->andWhere(['<>','UserAppRoleType', 'Admin'])
+				->all();
+			
+			$projectArray = self::extractProjects($projects, $projectArray);
+			$userArray = self::extractEmployees($users, $userArray);
+			
+			$responseArray['projectDropdown'] = $projectArray;
+			$responseArray['employeeDropdown'] = $userArray;
+			//hardcoded coa for now
+			$responseArray['coaDropdown'] = [4450 => 'Per Deim'];
+			$response->data = $responseArray;
+			$response->setStatusCode(200);
+			return $response;
+		}catch(ForbiddenHttpException $e) {
+			throw $e;
+		}catch(\Exception $e){
+		   throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionCreate(){
+		try{
+			//set client header
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//RBAC permissions check
+			PermissionsController::requirePermission('expenseCreate');
+			
+			//get body data
+            $body = file_get_contents("php://input");
+            $data = json_decode($body, true);
+	
+			//try catch to log expense object error
+			try{					
+				$successFlag = 0;
+				$expense = new Expense;
+				$expense->attributes = $data;
+				//get username based off id given
+				$user = BaseUser::find()
+					->select('UserName')
+					->where(['UserID' => $data['UserID']])
+					->one();
+				$username = $user->UserName;
+				$expense->Username = $username;
+				$expense->CreatedDate = $data['CreatedDateTime'];
+
+				if ($expense->save()){
+					$successFlag = 1;
+				} else {
+					throw BaseActiveController::modelValidationException($expense);
+				}
+			}catch(\Exception $e){
+				//if db exception is 2601, duplicate contraint then success
+				if(in_array($e->errorInfo[1], array(2601, 2627))){
+					$successFlag = 1;
+				}else{
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+					$successFlag = 0;
+				}
+			}
+			$responseData = [
+				'SuccessFlag' => $successFlag
+			];
+			//return response data
+			return $responseData;
+		}catch(ForbiddenHttpException $e){
+            throw new ForbiddenHttpException;
+        }catch(\Exception $e){
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
+            throw new \yii\web\HttpException(400);
+        }
 	}
 	
 	/**
@@ -626,7 +817,7 @@ class ExpenseController extends Controller{
 		return $allTheProjects;
 	}
 	
-	private function extractEmployees($dropdownRecords){
+	private function extractEmployees($dropdownRecords, $employeeAllOption = null){
 		$employeeValues = [];
 		//iterate and stash user values
 		foreach ($dropdownRecords as $e) {
@@ -640,7 +831,8 @@ class ExpenseController extends Controller{
 		//abc order for all
 		asort($employeeValues);
 		//append all option to the front
-		$employeeValues = [""=>"All"] + $employeeValues;
+		$employeeAllOption = $employeeAllOption == null ? [""=>"All"] : $employeeAllOption;
+		$employeeValues = $employeeAllOption + $employeeValues;
 		
 		return $employeeValues;
 	}
@@ -685,7 +877,7 @@ class ExpenseController extends Controller{
 			$historyRecord->StartDate = $startDate;
 			$historyRecord->EndDate = $endDate;
 			$historyRecord->Comments = $comments;
-			
+
 			//save
 			if(!$historyRecord->save()){
 				//throw error on failure
@@ -695,5 +887,22 @@ class ExpenseController extends Controller{
 			//catch and log errors
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 		}
+	}
+	
+	//helper function 
+	//params expense model, username of modifying user, and type of change being performed
+	//returns true if successful
+	private function createHistoryRecord($expense, $modifiedBy, $modifiedDate, $changeType){
+		//new history record
+		$historyModel = new ExpenseEntryEventHistory;
+		$historyModel->Attributes = $expense->attributes;
+		$historyModel->ExpenseID = $expense->ID;
+		$historyModel->ChangeMadeBy = $modifiedBy;
+		$historyModel->ChangeDateTime = $modifiedDate;
+		$historyModel->Change = $changeType;
+		if($historyModel->save()){
+			return true;
+		}
+		return false;
 	}
 }

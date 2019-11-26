@@ -94,6 +94,7 @@ final class Constants
 	//Exepnse Event History Types
 	const EXPENSE_APPROVAL = 'PM/Supervisor Approval';
 	const EXPENSE_SUBMISSION = 'Submission';
+	const EXPENSE_DEACTIVATE = 'Deactivate';
 	
 	//Expense File Types
 	const EXPENSE_OUTPUT = 'expense';
