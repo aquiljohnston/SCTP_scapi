@@ -693,7 +693,7 @@ class RbacController extends Controller
 		
         $userDeactivate = $this->auth->createPermission('userDeactivate');
         $userDeactivate->description = 'Deactivate user';
-        $this->permissionAssociationArray['Supervisor'][] = $userDeactivate;
+        $this->permissionAssociationArray['Admin'][] = $userDeactivate;
         $this->permissionArray[] = $userDeactivate;
 		
         $userReactivate = $this->auth->createPermission('userReactivate');
