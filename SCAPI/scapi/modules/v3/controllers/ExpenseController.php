@@ -19,6 +19,7 @@ use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\Expense;
 use app\modules\v3\models\GetExpenses;
 use app\modules\v3\models\ExpenseEventHistory;
+use app\modules\v3\models\ExpenseEntryEventHistory;
 
 
 class ExpenseController extends Controller{
@@ -33,6 +34,7 @@ class ExpenseController extends Controller{
                 'actions' => [
 					'get' => ['get'],
 					'approve'  => ['put'],
+					'deactivate'  => ['put'],
 					'get-accountant-view' => ['get'],
 					'get-accountant-details' => ['get'],
 					'show-entries' => ['get'],
@@ -301,6 +303,67 @@ class ExpenseController extends Controller{
 		}
 	}
 	
+	public function actionDeactivate(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+			
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('expenseDeactivate');
+
+			//get date and current user
+			$modifiedBy = BaseActiveController::getUserFromToken()->UserName;
+			$modifiedDate = BaseActiveController::getDate();
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Expense Deactivate', $modifiedBy, BaseActiveController::urlPrefix());
+			
+			//parse json
+			$expenses = $data['expenseArray'];
+			$deactivatedExpenses = []; // Prevents empty array from causing crash
+			//get expenses
+			$deactivatedExpenses = Expense::find()
+				->where(['in', 'ID', $expenses])
+				->all();
+			
+			try{
+				foreach ($deactivatedExpenses as $expense){
+					if(self::createHistoryRecord($expense, $modifiedBy, $modifiedDate,Constants::EXPENSE_DEACTIVATE)){
+						//delete the record, to avoid constraint issues
+						$expense->delete();
+					}
+				}
+				$transaction->commit();
+				$response->setStatusCode(200);
+				$response->data = $deactivatedExpenses;
+			}catch(Exception $e){
+				//archive error
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				$transaction->rollBack();
+				$response->setStatusCode(400);
+				$response->data = "Http:400 Bad Request";
+			}
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
 	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
 		$sortField = 'ProjectName', $sortOrder = 'ASC')
 	{
@@ -502,6 +565,7 @@ class ExpenseController extends Controller{
 			}
 				
 			$users = $users->distinct()
+				->andWhere(['<>','UserAppRoleType', 'Admin'])
 				->all();
 			
 			$projectArray = self::extractProjects($projects, $projectArray);
@@ -810,7 +874,7 @@ class ExpenseController extends Controller{
 			$historyRecord->StartDate = $startDate;
 			$historyRecord->EndDate = $endDate;
 			$historyRecord->Comments = $comments;
-			
+
 			//save
 			if(!$historyRecord->save()){
 				//throw error on failure
@@ -820,5 +884,22 @@ class ExpenseController extends Controller{
 			//catch and log errors
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 		}
+	}
+	
+	//helper function 
+	//params expense model, username of modifying user, and type of change being performed
+	//returns true if successful
+	private function createHistoryRecord($expense, $modifiedBy, $modifiedDate, $changeType){
+		//new history record
+		$historyModel = new ExpenseEntryEventHistory;
+		$historyModel->Attributes = $expense->attributes;
+		$historyModel->ExpenseID = $expense->ID;
+		$historyModel->ChangeMadeBy = $modifiedBy;
+		$historyModel->ChangeDateTime = $modifiedDate;
+		$historyModel->Change = $changeType;
+		if($historyModel->save()){
+			return true;
+		}
+		return false;
 	}
 }
