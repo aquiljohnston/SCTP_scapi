@@ -530,6 +530,18 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $expenseGetEntries;
         $this->permissionArray[] = $expenseGetEntries;
 		
+		$expenseCreate = $this->auth->createPermission('expenseCreate');
+        $expenseCreate->description = 'Create an expense entry';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseCreate;
+        $this->permissionAssociationArray['Accountant'][] = $expenseCreate;
+        $this->permissionArray[] = $expenseCreate;
+		
+		$expenseDeactivate = $this->auth->createPermission('expenseDeactivate');
+        $expenseDeactivate->description = 'Deactiavte expense entries';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseDeactivate;
+        $this->permissionAssociationArray['Accountant'][] = $expenseDeactivate;
+        $this->permissionArray[] = $expenseDeactivate;
+		
 		$expenseApprove = $this->auth->createPermission('expenseApprove');
         $expenseApprove->description = 'Approve expense records';
         $this->permissionAssociationArray['Supervisor'][] = $expenseApprove;
