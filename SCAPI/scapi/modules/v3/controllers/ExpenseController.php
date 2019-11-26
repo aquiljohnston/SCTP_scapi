@@ -198,9 +198,10 @@ class ExpenseController extends Controller{
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
 						['like', 'UserName', $trimmedFilter],
+						['like', 'ProjectName', $trimmedFilter],
 						['like', 'Quantity', $trimmedFilter],
-						['like', 'ChargeAccount', $trimmedFilter],
-						['like', 'CreatedDate', $trimmedFilter]
+						['like', 'StartDate', $trimmedFilter],
+						['like', 'EndDate', $trimmedFilter]
 					);
 				}
 				$expenses->andFilterWhere($filterQueryArray);
@@ -412,7 +413,9 @@ class ExpenseController extends Controller{
                 $expenseQuery->andFilterWhere([
                     'or',
                     ['like', 'ProjectName', $filter],
-                    ['like', 'ManagerName', $filter],
+                    ['like', 'ProjectManager', $filter],
+                    ['like', 'StartDate', $filter],
+                    ['like', 'EndDate', $filter]
                 ]);
             }
 
