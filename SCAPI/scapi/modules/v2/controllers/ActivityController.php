@@ -8,7 +8,7 @@ use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
 use app\modules\v2\models\TimeCard;
 use app\modules\v2\models\TimeEntry;
-use app\modules\v2\models\MileageEntry;	
+use app\modules\v3\models\MileageEntry;	
 use app\modules\v2\models\MileageCard;	
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
