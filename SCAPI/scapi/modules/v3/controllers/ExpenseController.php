@@ -137,19 +137,18 @@ class ExpenseController extends Controller{
                         ->all();
                     $projectsSize = count($projects);
                     if($projectsSize > 0){
-                        $expenses->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
-                    }else{
-						//can only get own but has no project relations
-						throw new ForbiddenHttpException;
-					}if($projectsSize > 1){
 						//add all option to project dropdown if there will be more than one option
 						$projectAllOption = [""=>"All"];
-                        for($i=1; $i < $projectsSize; $i++){
+                        $expenses->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
+						for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
 							//could be an 'IN' instead
                             $expenses->orWhere(['ProjectID'=>$relatedProjectID]);
                         }
-                    }	
+                    }else{
+						//can only get own but has no project relations
+						throw new ForbiddenHttpException;
+					}	
                 }else{
 					//no permissions to get cards
                     throw new ForbiddenHttpException;
