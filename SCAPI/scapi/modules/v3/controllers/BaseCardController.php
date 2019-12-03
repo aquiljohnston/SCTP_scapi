@@ -191,6 +191,7 @@ class BaseCardController extends BaseActiveController
 			->from(["$function(:startDate, :endDate)"])
 			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
 			->where([$idName => $projectID])
+			->orderBy('UserFullName ASC')
 			->all(BaseActiveRecord::getDb());
 			
 		return $cards;
