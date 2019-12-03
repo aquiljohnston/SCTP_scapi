@@ -258,6 +258,8 @@ class ActivityController extends BaseActiveController
 							
 							//redirect to base db for time and mileage processing
 							BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+							TimeEntry::setClient(BaseActiveController::urlPrefix());
+							MileageEntry::setClient(BaseActiveController::urlPrefix());
 							
 							//add activityID to corresponding time entries
 							if($timeLength > 0){
