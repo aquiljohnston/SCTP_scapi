@@ -299,7 +299,7 @@ class DropdownController extends Controller
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
 			//have to set MileageRate because it is a v3 model
-			MileageRate::setClient($client);
+			MileageRate::setClient(BaseActiveController::urlPrefix());
 			// RBAC permission check
             PermissionsController::requirePermission('getTabletSurveyDropdowns', $client);
 			
