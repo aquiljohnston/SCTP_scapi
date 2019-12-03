@@ -11,6 +11,7 @@ use app\modules\v2\models\EmployeeType;
 use app\modules\v2\models\DropDown;
 use app\modules\v2\models\AppRoles;
 use app\modules\v2\models\Project;
+use app\modules\v3\models\MileageRate;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\web\Response;
 use \DateTime;
@@ -293,13 +294,18 @@ class DropdownController extends Controller
 	//route to provide data for all survey dropdowns on the tablet
 	public function actionGetTabletSurveyDropdowns()
 	{
-		try
-        {
+		try{
 			//set db target
 			$client = getallheaders()['X-Client'];
 			BaseActiveRecord::setClient($client);
+			//have to set MileageRate because it is a v3 model
+			MileageRate::setClient($client);
 			// RBAC permission check
             PermissionsController::requirePermission('getTabletSurveyDropdowns', $client);
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 			
 			$tabletDropDowns = DropDown::find()
 				->select(['FilterName', 'SortSeq', 'FieldDisplay', 'FieldValue'])
@@ -311,9 +317,32 @@ class DropdownController extends Controller
 					])
 				->all();
 			$responseArray['TabletDropDowns'] = [];
+			
+			$mileageRate = MileageRate::find()
+				->select(['ID as SortSeq', 'MileageType as FieldDisplay', 'Rate as FieldValue'])
+				->asArray()
+				->all();
+			
+			$transaction->commit();
+			
+			//add mileage rate to dropdowns
+			$filterName = 'MileageRate';
+			$responseArray['TabletDropDowns'][$filterName][] = [
+				'SortSeq' => 0,
+				'FieldDisplay' => 'Select Rate',
+				'FieldValue' => null,
+				'FilterName' => $filterName
+			];
+			foreach($mileageRate as $mileage){
+				$mileage['FilterName'] = $filterName;
+				//convert data types back after asArray
+				$mileage['SortSeq'] = (int)$mileage['SortSeq'];
+				$mileage['FieldValue'] = (float)$mileage['FieldValue'];
+				$responseArray['TabletDropDowns'][$filterName][] = $mileage;
+			}
+
 			//loop data to format response
-			foreach($tabletDropDowns as $dropDown)
-			{
+			foreach($tabletDropDowns as $dropDown){
 				$responseArray['TabletDropDowns'][$dropDown->FilterName][] = $dropDown;
 			}
 			
@@ -322,9 +351,9 @@ class DropdownController extends Controller
             $response -> data = $responseArray;
 
             return $response;
-		} catch(ForbiddenHttpException $e) {
+		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
+        }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
         }
 	}
