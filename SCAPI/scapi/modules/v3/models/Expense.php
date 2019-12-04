@@ -45,7 +45,6 @@ class Expense extends \app\modules\v3\models\BaseActiveRecord
             [['Quantity'], 'number'],
             [['Username', 'ApprovedBy', 'SubmittedBy'], 'string'],
             [['CreatedDateTime', 'ApprovedDate', 'SubmittedDate', 'CreatedDate'], 'safe'],
-            [['CreatedDate', 'ProjectID', 'UserID'], 'unique', 'targetAttribute' => ['CreatedDate', 'ProjectID', 'UserID']],
             [['UserID'], 'exist', 'skipOnError' => true, 'targetClass' => BaseUser::className(), 'targetAttribute' => ['UserID' => 'UserID']],
         ];
     }
