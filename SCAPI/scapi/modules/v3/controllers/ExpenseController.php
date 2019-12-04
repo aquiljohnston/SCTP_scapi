@@ -63,7 +63,7 @@ class ExpenseController extends Controller{
 				} else {
 					throw BaseActiveController::modelValidationException($expense);
 				}
-			}catch(\Exception $e){
+			}catch(yii\db\Exception $e){
 				//if db exception is 2601, duplicate contraint then success
 				if(in_array($e->errorInfo[1], array(2601, 2627))){
 					$successFlag = 1;
@@ -618,7 +618,7 @@ class ExpenseController extends Controller{
 				} else {
 					throw BaseActiveController::modelValidationException($expense);
 				}
-			}catch(\Exception $e){
+			}catch(yii\db\Exception $e){
 				//if db exception is 2601, duplicate contraint then success
 				if(in_array($e->errorInfo[1], array(2601, 2627))){
 					$successFlag = 1;
