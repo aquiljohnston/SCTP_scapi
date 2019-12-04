@@ -5,6 +5,7 @@ namespace app\modules\v3\controllers;
 use Yii;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\MileageEntry;
+use app\modules\v3\models\MileageRate;
 use app\modules\v3\models\MileageEntryEventHistory;
 use app\modules\v3\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
@@ -71,12 +72,13 @@ class MileageEntryController extends BaseActiveController
 			
 			// set up db connection
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spAddMileage :MileageCardID , :Date, :TotalMiles, :MileageType, :CreatedByUserName");
+			$processJSONCommand = $connection->createCommand("EXECUTE spAddMileage :MileageCardID , :Date, :TotalMiles, :MileageType, :CreatedByUserName, :MileageRate");
 			$processJSONCommand->bindParam(':MileageCardID', $data['MileageCardID'], \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':TotalMiles', $data['TotalMiles']);
 			$processJSONCommand->bindParam(':MileageType', $data['MileageType'], \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':MileageRate', (float)$data['MileageRate'], \PDO::PARAM_STR);
 			$processJSONCommand->execute();
 			$successFlag = 1;			
         } catch (ForbiddenHttpException $e) {
@@ -156,8 +158,7 @@ class MileageEntryController extends BaseActiveController
 		}
 	}
 	
-	public function actionViewEntries($cardID, $date)
-	{
+	public function actionViewEntries($cardID, $date){
 		try{
 			//set db target
 			MileageEntry::setClient(BaseActiveController::urlPrefix());
@@ -179,15 +180,27 @@ class MileageEntryController extends BaseActiveController
 				->addParams([':cardID' => $cardID, ':date' => $date]);
 			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
 			
+			$mileageRate = MileageRate::find()
+				->select(["concat(MileageType, '(' , Rate , ')') as MileageType", 'Rate'])
+				->all();
+				
+			$rates = [];
+			$rates[''] = 'Select';
+			//loop data to format response
+			foreach($mileageRate as $rate){
+				$rates[(string)$rate->Rate] = $rate->MileageType;
+			}
+			
 			$transaction->commit();
 
 			$dataArray['entries'] = $entries;
+			$dataArray['rates'] = $rates;
 				
 			$response->data = $dataArray; 
 			return $response;
-		} catch (ForbiddenHttpException $e) {
+		}catch (ForbiddenHttpException $e){
 			throw new ForbiddenHttpException;
-		} catch(\Exception $e) {
+		}catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}
