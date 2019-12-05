@@ -233,6 +233,10 @@ class MileageEntryController extends BaseActiveController
 			$mileageEntry = MileageEntry::findOne($data['MileageEntryID']);
 			$successFlag = 0;
 			
+			//unset milegerate if value is blank to not override data
+			if($data['MileageRate'] == null)
+				unset($data['MileageRate']);
+			
 			try{
 				//pass current data to new history record
 				if(self::createHistoryRecord($mileageEntry, $modifiedBy, $modifiedDate, 'Updated')){
