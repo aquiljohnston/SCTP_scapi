@@ -330,7 +330,7 @@ class DropdownController extends Controller
 			$responseArray['TabletDropDowns'][$filterName][] = [
 				'SortSeq' => 0,
 				'FieldDisplay' => 'Select Rate',
-				'FieldValue' => null,
+				'FieldValue' => '',
 				'FilterName' => $filterName
 			];
 			foreach($mileageRate as $mileage){
