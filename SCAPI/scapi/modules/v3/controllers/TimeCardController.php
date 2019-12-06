@@ -424,7 +424,7 @@ class TimeCardController extends BaseCardController
 		}
 	}
 
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null)
 	{
 		try
 		{
@@ -433,7 +433,7 @@ class TimeCardController extends BaseCardController
 			//RBAC permissions check
 			PermissionsController::requirePermission('timeCardGetAccountantDetails');
 
-			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME);
+			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME, $filter);
 
 			//format response
 			$responseArray['details'] = $timeCards;
