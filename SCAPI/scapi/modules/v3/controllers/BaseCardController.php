@@ -177,7 +177,7 @@ class BaseCardController extends BaseActiveController
         return true;
     }
 	
-	protected function getCardsByProject($projectID, $startDate, $endDate, $type){
+	protected function getCardsByProject($projectID, $startDate, $endDate, $type, $filter = null){
 		//determine function to use based on type
 		if($type == Constants::NOTIFICATION_TYPE_TIME){
 			$function = 'fnTimeCardByDate';
@@ -187,11 +187,21 @@ class BaseCardController extends BaseActiveController
 			$idName = 'MileageCardProjectID';
 		}
 		$query = new Query;
-		$cards = $query->select('*')
+		$cardQuery = $query->select('*')
 			->from(["$function(:startDate, :endDate)"])
 			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-			->where([$idName => $projectID])
-			->orderBy('UserFullName ASC')
+			->where([$idName => $projectID]);
+			
+		//add search filter
+		if($filter != null){
+			$cardQuery->andFilterWhere([
+				'or',
+				['like', 'ProjectName', $filter],
+				['like', 'UserFullName', $filter],
+			]);
+		}
+			
+		$cards = $cardQuery->orderBy('UserFullName ASC')
 			->all(BaseActiveRecord::getDb());
 			
 		return $cards;
