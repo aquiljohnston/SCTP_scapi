@@ -70,6 +70,8 @@ class MileageEntryController extends BaseActiveController
             $body = file_get_contents("php://input");
             $data = json_decode($body, true);
 			
+			$mileageRate = (float)$data['MileageRate'];
+			
 			// set up db connection
 			$connection = BaseActiveRecord::getDb();
 			$processJSONCommand = $connection->createCommand("EXECUTE spAddMileage :MileageCardID , :Date, :TotalMiles, :MileageType, :CreatedByUserName, :MileageRate");
@@ -78,7 +80,7 @@ class MileageEntryController extends BaseActiveController
 			$processJSONCommand->bindParam(':TotalMiles', $data['TotalMiles']);
 			$processJSONCommand->bindParam(':MileageType', $data['MileageType'], \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
-			$processJSONCommand->bindParam(':MileageRate', (float)$data['MileageRate'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':MileageRate', $mileageRate, \PDO::PARAM_STR);
 			$processJSONCommand->execute();
 			$successFlag = 1;			
         } catch (ForbiddenHttpException $e) {
