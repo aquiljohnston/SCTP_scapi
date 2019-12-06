@@ -408,6 +408,7 @@ class MileageCardController extends BaseCardController
                     ['like', 'ProjectName', $filter],
                     ['like', 'ProjectManager', $filter],
                     ['like', 'ApprovedBy', $filter],
+                    ['like', '[User Full Name]', $filter],
                 ]);
             }
 
@@ -437,7 +438,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null)
 	{
 		try{
 			//set db target
@@ -452,7 +453,7 @@ class MileageCardController extends BaseCardController
 				->where(['MileageCardProjectID' => $projectID])
 				->all(BaseActiveRecord::getDb());
 
-			$mileageCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_MILEAGE);
+			$mileageCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_MILEAGE, $filter);
 
 			//format response
 			$responseArray['details'] = $mileageCards;
