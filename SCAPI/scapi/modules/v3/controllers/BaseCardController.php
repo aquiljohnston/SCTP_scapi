@@ -21,8 +21,7 @@ use yii\db\Query;
 */
 class BaseCardController extends BaseActiveController
 {
-	public function behaviors()
-    {
+	public function behaviors(){
         $behaviors = parent::behaviors();
         //Implements Token Authentication to check for Auth Token in Json Header
         $behaviors['authenticator'] =
@@ -104,8 +103,7 @@ class BaseCardController extends BaseActiveController
 		}
 	}
 	
-	protected function extractProjectsFromCards($type, $dropdownRecords, $projectAllOption)
-	{
+	protected function extractProjectsFromCards($type, $dropdownRecords, $projectAllOption){
 		$allTheProjects = [];
 		//iterate and stash project name $p['ProjectID']
 		foreach ($dropdownRecords as $p) {
@@ -118,15 +116,14 @@ class BaseCardController extends BaseActiveController
 		//remove dupes
 		$allTheProjects = array_unique($allTheProjects);
 		//abc order for all
-		asort($allTheProjects);
+		natcasesort($allTheProjects);
 		//appened all option to the front
 		$allTheProjects = $projectAllOption + $allTheProjects;
 		
 		return $allTheProjects;
 	}
 	
-	protected function extractEmployeesFromCards($dropdownRecords)
-	{
+	protected function extractEmployeesFromCards($dropdownRecords){
 		$employeeValues = [];
 		//iterate and stash user values
 		foreach ($dropdownRecords as $e) {
@@ -138,7 +135,7 @@ class BaseCardController extends BaseActiveController
 		//remove dupes
 		$employeeValues = array_unique($employeeValues);
 		//abc order for all
-		asort($employeeValues);
+		natcasesort($employeeValues);
 		//append all option to the front
 		$employeeValues = [""=>"All"] + $employeeValues;
 		
@@ -177,7 +174,7 @@ class BaseCardController extends BaseActiveController
         return true;
     }
 	
-	protected function getCardsByProject($projectID, $startDate, $endDate, $type, $filter = null){
+	protected function getCardsByProject($projectID, $startDate, $endDate, $type, $filter = null, $employeeID = null){
 		//determine function to use based on type
 		if($type == Constants::NOTIFICATION_TYPE_TIME){
 			$function = 'fnTimeCardByDate';
@@ -191,6 +188,10 @@ class BaseCardController extends BaseActiveController
 			->from(["$function(:startDate, :endDate)"])
 			->addParams([':startDate' => $startDate, ':endDate' => $endDate])
 			->where([$idName => $projectID]);
+			
+		//add employeeID filter
+		if($employeeID != null)
+			$cardQuery->andWhere(['UserID' => $employeeID]);
 			
 		//add search filter
 		if($filter != null){
