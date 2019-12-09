@@ -264,13 +264,10 @@ class TimeCardController extends BaseCardController
                     'and',
                     ['TimeCardProjectID' => $projectID],
                 ]);
-            }
-
-			if($projectID == null){
-				$projectFilteredRecords = $preFilteredRecords;
-			}else{
 				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
 				$projectFilteredRecords = $timeCards->all(BaseActiveRecord::getDb());
+            }else{
+				$projectFilteredRecords = $preFilteredRecords;
 			}
 			
 			//apply employee filter
@@ -330,7 +327,7 @@ class TimeCardController extends BaseCardController
     }
 
 	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
-		$sortField = 'ProjectName', $sortOrder = 'ASC')
+		$sortField = 'ProjectName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		try{
 			//url decode filter value
@@ -351,7 +348,7 @@ class TimeCardController extends BaseCardController
 			//response array of time cards
             $timeCards = [];
             $responseArray = [];
-			$allTheProjects = [""=>"All"];
+			$projectDropDown = [""=>"All"];
 			$showProjectDropDown = true;
 			//used to get current week if date range falls in the middle of the week
 			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
@@ -368,38 +365,53 @@ class TimeCardController extends BaseCardController
 					'MSDynamicsSubmitted',
 					'OasisSubmitted',
 					'ADPSubmitted',
-					'ProjectID'])
+					'ProjectID',
+					'UserFullName',
+					'UserID'])
 				->distinct()
 				->where(['between', 'StartDate', $startDate, $endDate])
                 ->orWhere(['between', 'EndDate', $startDate, $endDate])
                 ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
 
 			//get records for project dropdown(timing for this execution is very important)
-			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+			$projectDropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
 
 			//add project filter
-			if($projectID!= null)
-			{
+			if($projectID!= null){
                 $cardQuery->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
+				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+				$employeeDropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+            }else{
+				$employeeDropdownRecords = $projectDropdownRecords;
+			}
+			
+			//apply employee filter
+			if($employeeID!= null) {
+                $cardQuery->andFilterWhere([
+                    'and',
+                    ['UserID' => $employeeID],
+                ]);
             }
 
 			//add search filter
-			if($filter != null)
-			{
+			if($filter != null){
                 $cardQuery->andFilterWhere([
                     'or',
                     ['like', 'ProjectName', $filter],
                     ['like', 'ProjectManager', $filter],
                     ['like', 'ApprovedBy', $filter],
-                    ['like', '[User Full Name]', $filter],
+                    ['like', 'UserFullName', $filter],
                 ]);
             }
 
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjectsFromCards('TimeCard', $dropdownRecords, $allTheProjects);
+			$projectDropDown = self::extractProjectsFromCards('TimeCard', $projectDropdownRecords, $projectDropDown);
+			
+			//get employee list for dropdown based on time cards available
+			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
@@ -411,7 +423,8 @@ class TimeCardController extends BaseCardController
 
             $responseArray['assets'] = $timeCards;
             $responseArray['pages'] = $paginationResponse['pages'];
-            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['projectDropDown'] = $projectDropDown;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
 
@@ -424,16 +437,14 @@ class TimeCardController extends BaseCardController
 		}
 	}
 
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null)
-	{
-		try
-		{
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null, $employeeID = null){
+		try{
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('timeCardGetAccountantDetails');
 
-			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME, $filter);
+			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME, $filter, $employeeID);
 
 			//format response
 			$responseArray['details'] = $timeCards;
