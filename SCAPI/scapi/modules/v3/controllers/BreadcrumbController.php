@@ -70,6 +70,8 @@ class BreadcrumbController extends Controller
 				//try catch to log individual breadcrumb errors
 				try{	
 					$successFlag = 0;
+					//fix to prevent scientific notation pace of travel from causing errors
+					$breadcrumbs[$i]['PaceOfTravel'] = round($breadcrumbs[$i]['PaceOfTravel'], 5);
 					
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					$breadcrumb = new Breadcrumb;
