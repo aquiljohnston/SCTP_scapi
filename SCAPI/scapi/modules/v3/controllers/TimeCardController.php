@@ -365,16 +365,14 @@ class TimeCardController extends BaseCardController
 					'MSDynamicsSubmitted',
 					'OasisSubmitted',
 					'ADPSubmitted',
-					'ProjectID',
-					'UserFullName',
-					'UserID'])
+					'ProjectID'])
 				->distinct()
 				->where(['between', 'StartDate', $startDate, $endDate])
                 ->orWhere(['between', 'EndDate', $startDate, $endDate])
                 ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
 
 			//get records for project dropdown(timing for this execution is very important)
-			$projectDropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+			$projectDropdownRecords = clone $cardQuery;
 
 			//add project filter
 			if($projectID!= null){
@@ -383,10 +381,14 @@ class TimeCardController extends BaseCardController
                     ['ProjectID' => $projectID],
                 ]);
 				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-				$employeeDropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+				$employeeDropdownRecords = clone $cardQuery;
             }else{
-				$employeeDropdownRecords = $projectDropdownRecords;
+				$employeeDropdownRecords = clone $projectDropdownRecords;
 			}
+			
+			//complete queries for projects and employees
+			$projectDropdownRecords = $projectDropdownRecords->all(BaseActiveRecord::getDb());
+			$employeeDropdownRecords = $employeeDropdownRecords->addSelect(['UserFullName', 'UserID'])->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
 			if($employeeID!= null) {
