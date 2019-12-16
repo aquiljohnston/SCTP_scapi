@@ -213,7 +213,7 @@ class TaskController extends Controller
 				
 				// set up db connection
 				$connection = BaseActiveRecord::getDb();
-				$processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType");
+				$processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType, :TimeReason");
 				$processJSONCommand->bindParam(':TimeCardID', $data['TimeCardID'], \PDO::PARAM_STR);
 				$processJSONCommand->bindParam(':TaskName', $data['TaskName'], \PDO::PARAM_STR);
 				$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
@@ -221,6 +221,7 @@ class TaskController extends Controller
 				$processJSONCommand->bindParam(':EndTime', $data['EndTime'], \PDO::PARAM_STR);
 				$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
 				$processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
+				$processJSONCommand->bindParam(':TimeReason', $data['TimeReason'], \PDO::PARAM_STR);
 				$processJSONCommand->execute();
 				$successFlag = 1;
 			}else{
