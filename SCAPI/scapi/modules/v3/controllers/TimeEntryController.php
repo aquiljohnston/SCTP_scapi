@@ -46,10 +46,14 @@ class TimeEntryController extends BaseActiveController
 	use UpdateMethodNotAllowed;
 	use DeleteMethodNotAllowed;
 	
-	public function actionDeactivate($entryID){
+	public function actionDeactivate(){
 		try{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true)['data'];
 			
 			//create response
 			$response = Yii::$app->response;
@@ -66,12 +70,12 @@ class TimeEntryController extends BaseActiveController
 			$modifiedBy = BaseActiveController::getUserFromToken()->UserName;
 			$modifiedDate = Parent::getDate();
 			
-			$timeEntry = TimeEntry::findOne($entryID);
+			$timeEntry = TimeEntry::findOne($data['entryID']);
 			$successFlag = 0;
 			
 			try{
 				//pass current data to new history record
-				if(self::createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, 'Deactivated')){
+				if(self::createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, 'Deactivated', $data['timeReason'])){
 					//delete the record, to avoid constraint issues
 					if($timeEntry->delete()){
 						$successFlag = 1;
@@ -92,13 +96,12 @@ class TimeEntryController extends BaseActiveController
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
-			BaseActiveController::archiveWebErrorJson('TimeEntryID: ' . $entryID, $e, BaseActiveController::urlPrefix());
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
 	
-	public function actionDeactivateByTask()
-	{		
+	public function actionDeactivateByTask(){		
 		try{
 			//set db target
 			TimeEntry::setClient(BaseActiveController::urlPrefix());
@@ -127,11 +130,12 @@ class TimeEntryController extends BaseActiveController
 				try {
 					$connection = BaseActiveRecord::getDb();
 					$transaction = $connection->beginTransaction(); 
-					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
-					$timeCardCommand->bindParam(':PARAMETER1', $entry['timeCardID'], \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':PARAMETER2', $taskName, \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':PARAMETER3', $taskDay, \PDO::PARAM_INT);
-					$timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
+					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :TimeCardID,:TimeEntryTitleJSON,:TimeEntryDate,:UserName,:TimeReason");
+					$timeCardCommand->bindParam(':TimeCardID', $entry['timeCardID'], \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':TimeEntryTitleJSON', $taskName, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':TimeEntryDate', $taskDay, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':UserName', $username, \PDO::PARAM_STR);
+					$timeCardCommand->bindParam(':TimeReason', $entry['timeReason'], \PDO::PARAM_STR);
 					$timeCardCommand->execute();
 					$transaction->commit();
 					$success = 1;
@@ -152,13 +156,14 @@ class TimeEntryController extends BaseActiveController
 	//helper function 
 	//params timeEntry model, username of modifying user, and type of change being performed
 	//returns true if successful
-	private function createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, $changeType){
+	private function createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, $changeType, $timeReason){
 		//new history record
 		$historyModel = new TimeEntryEventHistory;
 		$historyModel->Attributes = $timeEntry->attributes;
 		$historyModel->ChangeMadeBy = $modifiedBy;
 		$historyModel->ChangeDateTime = $modifiedDate;
 		$historyModel->Change = $changeType;
+		$historyModel->TimeEntryComment = $timeReason;
 		if($historyModel->save()){
 			return true;
 		}
