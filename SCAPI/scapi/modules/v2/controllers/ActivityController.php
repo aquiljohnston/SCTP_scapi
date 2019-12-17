@@ -104,10 +104,8 @@ class ActivityController extends BaseActiveController
 	 * @return \yii\console\Response|Response
 	 * @throws \yii\web\HttpException
 	 */
-	public function actionCreate($data = null)
-	{		
-		try
-		{
+	public function actionCreate($data = null){		
+		try{
 			//set db target
 			$headers = getallheaders();
 			
@@ -120,8 +118,7 @@ class ActivityController extends BaseActiveController
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
 			
-			if($data == null)
-			{
+			if($data == null){
 				//capture and decode the input json
 				$post = file_get_contents("php://input");
 				$data = json_decode(utf8_decode($post), true);
@@ -136,47 +133,36 @@ class ActivityController extends BaseActiveController
 			$responseData = [];
 			
 			//handle activity data
-			if ($data != null)
-			{
+			if ($data != null){
 				//get number of activities
 				$activitySize = count($data['activity']);
 				
-				for($i = 0; $i < $activitySize; $i++)
-				{
+				for($i = 0; $i < $activitySize; $i++){
 					//wrap individual activity in try catch for error logging
-					try
-					{
+					try{
 						//save json to archive
 						BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
 
 						//handle app version from tablet TODO fix this later so it is consistent between web and tablet
-						if(array_key_exists('AppVersion', $data['activity'][$i]))
-						{
+						if(array_key_exists('AppVersion', $data['activity'][$i])){
 							$data['activity'][$i]['ActivityAppVersion'] = $data['activity'][$i]['AppVersion'];
-						}
-						if(array_key_exists('AppVersionName', $data['activity'][$i]))
-						{
+						}if(array_key_exists('AppVersionName', $data['activity'][$i])){
 							$data['activity'][$i]['ActivityAppVersionName'] = $data['activity'][$i]['AppVersionName'];
 						}
 						//check array data
 						$timeLength = 0;
 						$mileageLength = 0;
-						if ($data['activity'][$i]['timeEntry'] != null)
-						{
+						if ($data['activity'][$i]['timeEntry'] != null){
 							$timeArray = $data['activity'][$i]['timeEntry'];
 							//Get first and last time entry from timeArray and pass to ActivityStartTime and ActivityEndTime
 							$timeLength = count($timeArray);
-							if(array_key_exists('TimeEntryStartTime', $timeArray[0]))
-							{
+							if(array_key_exists('TimeEntryStartTime', $timeArray[0])){
 								$data['activity'][$i]['ActivityStartTime'] = $timeArray[0]['TimeEntryStartTime'];
-							}
-							if(array_key_exists('TimeEntryEndTime', $timeArray[$timeLength-1]))
-							{
+							}if(array_key_exists('TimeEntryEndTime', $timeArray[$timeLength-1])){
 								$data['activity'][$i]['ActivityEndTime'] = $timeArray[$timeLength-1]['TimeEntryEndTime'];
 							}
 						}
-						if ($data['activity'][$i]['mileageEntry'] != null)
-						{
+						if ($data['activity'][$i]['mileageEntry'] != null){
 							$mileageArray = $data['activity'][$i]['mileageEntry'];
 							$mileageLength = count($mileageArray);
 						}
@@ -191,8 +177,7 @@ class ActivityController extends BaseActiveController
 						$activity->ActivityCreatedUserUID = (string)$createdBy;
 						
 						//if client is not SCCT create client activity model and load data
-						if(!BaseActiveController::isScct($headers['X-Client']))
-						{
+						if(!BaseActiveController::isScct($headers['X-Client'])){
 							$clientActivity = new Activity();
 							$clientActivity->attributes = $data['activity'][$i];
 							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
@@ -200,13 +185,11 @@ class ActivityController extends BaseActiveController
 
 						Activity::setClient(BaseActiveController::urlPrefix());
 						//save activity to ct
-						if($activity->save())
-						{
+						if($activity->save()){
 							//change db path to save on client db
 							Activity::setClient($headers['X-Client']);
 							//save client activity and log error
-							if(isset($clientActivity) && !$clientActivity->save())
-							{
+							if(isset($clientActivity) && !$clientActivity->save()){
 								$e = BaseActiveController::modelValidationException($clientActivity);
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
 								
@@ -300,7 +283,7 @@ class ActivityController extends BaseActiveController
 												BaseActiveController::archiveErrorJson(
 													file_get_contents("php://input"),
 													$e,
-													getallheaders()['X-Client'],
+													BaseActiveController::urlPrefix(),
 													$data['activity'][$i],
 													$data['activity'][$i]['timeEntry'][$t]);
 												//set success flag for time entry
@@ -317,7 +300,7 @@ class ActivityController extends BaseActiveController
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
-												getallheaders()['X-Client'],
+												BaseActiveController::urlPrefix(),
 												$data['activity'][$i],
 												$data['activity'][$i]['timeEntry'][$t]);
 											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
@@ -360,7 +343,7 @@ class ActivityController extends BaseActiveController
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
-												getallheaders()['X-Client'],
+												BaseActiveController::urlPrefix(),
 												$data['activity'][$i],
 												$data['activity'][$i]['mileageEntry'][$m]);
 											//set success flag for mileage entry
@@ -375,7 +358,7 @@ class ActivityController extends BaseActiveController
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
-												getallheaders()['X-Client'],
+												BaseActiveController::urlPrefix(),
 												$data['activity'][$i],
 												$data['activity'][$i]['mileageEntry'][$m]
 												);
@@ -391,7 +374,7 @@ class ActivityController extends BaseActiveController
 						}
 					}catch(\Exception $e){
 						//log activity error
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix(), $data['activity'][$i]);
 						//set success flag for activity
 						$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
 					}
