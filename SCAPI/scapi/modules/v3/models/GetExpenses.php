@@ -16,6 +16,7 @@ use Yii;
  * @property int $ChargeAccount
  * @property string $Quantity
  * @property int $IsApproved
+ * @property int $IsSubmitted
  */
 class GetExpenses extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -34,7 +35,7 @@ class GetExpenses extends \app\modules\v3\models\BaseActiveRecord
     {
         return [
             [['ID', 'ProjectID', 'ChargeAccount', 'Quantity'], 'required'],
-            [['ID', 'UserID', 'ProjectID', 'ChargeAccount', 'IsApproved'], 'integer'],
+            [['ID', 'UserID', 'ProjectID', 'ChargeAccount', 'IsApproved', 'IsSubmitted'], 'integer'],
             [['UserName', 'ProjectName'], 'string'],
             [['CreatedDate'], 'safe'],
             [['Quantity'], 'number'],
@@ -56,6 +57,7 @@ class GetExpenses extends \app\modules\v3\models\BaseActiveRecord
             'ChargeAccount' => 'Charge Account',
             'Quantity' => 'Quantity',
             'IsApproved' => 'Is Approved',
+            'IsSubmitted' => 'Is Submitted',
         ];
     }
 }

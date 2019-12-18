@@ -278,6 +278,7 @@ class ExpenseController extends Controller{
 				foreach ($approvedExpenses as $expense){
 					$expense->IsApproved = 1;
 					$expense->ApprovedBy = $approvedBy;
+					$expense->ApprovedDate = BaseActiveController::getDate();
 					$expense->update();
 					//log approvals
 					self::logExpenseHistory(Constants::EXPENSE_APPROVAL, $expense->ID);
@@ -337,9 +338,16 @@ class ExpenseController extends Controller{
 			$deactivatedExpenses = Expense::find()
 				->where(['in', 'ID', $expenses])
 				->all();
+			$deactivatedHistoryRecords = ExpenseEventHistory::find()
+				->where(['in', 'ExpenseID', $expenses])
+				->all();
 			
 			try{
-				foreach ($deactivatedExpenses as $expense){
+				//remove history record to avoid constraint
+				foreach($deactivatedHistoryRecords as $historyRecord){
+					$historyRecord->delete();
+				}
+				foreach($deactivatedExpenses as $expense){
 					if(self::createHistoryRecord($expense, $modifiedBy, $modifiedDate,Constants::EXPENSE_DEACTIVATE)){
 						//delete the record, to avoid constraint issues
 						$expense->delete();
@@ -349,9 +357,9 @@ class ExpenseController extends Controller{
 				$response->setStatusCode(200);
 				$response->data = $deactivatedExpenses;
 			}catch(Exception $e){
-				//archive error
-				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$transaction->rollBack();
+				//archive error after rollback
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				$response->setStatusCode(400);
 				$response->data = "Http:400 Bad Request";
 			}
