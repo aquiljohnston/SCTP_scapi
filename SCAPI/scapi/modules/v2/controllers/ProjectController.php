@@ -533,6 +533,37 @@ class ProjectController extends BaseActiveController
 					$projUser = ProjectUser::find()
 						->where(['and', "ProjUserUserID = $i", "ProjUserProjectID = $projectID"])
 						->one();
+					 // update history table with user data
+					 $histProjUserId = $projUser->ProjUserID;
+					 $histProjUserUserId = $projUser->ProjUserUserID;
+					 $histProjUserProjId = $projUser->ProjUserProjectID;
+					 $histComment = "User set to inactive status and row archived";
+					 $histArchiveFlag = "Yes";
+					 $histProjUserCreatedBy = $projUser->ProjUserCreatedBy;
+					 $histModifiedDate = Date('Y-m-d H:i:s', strtotime(BaseActiveController::getDate()));
+					 $histModifiedBy = BaseActiveController::getUserFromToken()->UserName;
+					 $sql = "insert into [history].[HistoryProject_User_Tb] (
+						 [HistProjUserID]
+							 ,[HistProjUserUserID]
+							 ,[HistProjUserProjectID]
+							 ,[HistProjUserComment]
+							 ,[HistProjUserArchiveFlag]
+							 ,[HistProjUserCreatedBy]
+							 ,[HistProjUserModifiedDate]
+							 ,[HistProjUserModifiedBy])
+						 values (:histProjUserId, :histProjUserUserId, :histProjUserProjId, :histComment, :histArchiveFlag, 
+						 :HistProjUserCreatedBy, :histModifiedDate, :HistProjUserModifiedBy)";
+					 $historyResults = $connection->createCommand($sql);
+					 $historyResults->bindParam(':histProjUserId', $histProjUserId, \PDO::PARAM_INT);
+					 $historyResults->bindParam(':histProjUserUserId', $histProjUserUserId, \PDO::PARAM_INT);
+					 $historyResults->bindParam(':histProjUserProjId', $histProjUserProjId, \PDO::PARAM_INT);
+					 $historyResults->bindParam(':histComment', $histComment, \PDO::PARAM_STR);
+					 $historyResults->bindParam(':histArchiveFlag', $histArchiveFlag, \PDO::PARAM_STR);
+					 $historyResults->bindParam(':HistProjUserCreatedBy', $histProjUserCreatedBy, \PDO::PARAM_STR);
+					 $historyResults->bindParam(':histModifiedDate', $histModifiedDate, \PDO::PARAM_STR);
+					 $historyResults->bindParam(':HistProjUserModifiedBy', $histModifiedBy, \PDO::PARAM_STR);
+					 $historyResults->execute();
+					 // proceed with user delete
 					$projUser->delete();
 					$timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
 					$timeCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
