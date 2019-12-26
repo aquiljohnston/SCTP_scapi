@@ -490,6 +490,36 @@ class ProjectController extends BaseActiveController
 			$mileageCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
 			$mileageCardCommand->execute();
 			$transaction->commit();
+			// update history table with user data
+			$histProjUserId = $projUser->ProjUserID;
+			$histProjUserUserId = $projUser->ProjUserUserID;
+			$histProjUserProjId = $projUser->ProjUserProjectID;
+			$histComment = "User added to project";
+			$histArchiveFlag = "Yes";
+			$histProjUserCreatedBy = $projUser->ProjUserCreatedBy;
+			$histModifiedDate = Date('Y-m-d H:i:s', strtotime(BaseActiveController::getDate()));
+			$histModifiedBy = BaseActiveController::getUserFromToken()->UserName;
+			$sql = "insert into [history].[HistoryProject_User_Tb] (
+				[HistProjUserID]
+					,[HistProjUserUserID]
+					,[HistProjUserProjectID]
+					,[HistProjUserComment]
+					,[HistProjUserArchiveFlag]
+					,[HistProjUserCreatedBy]
+					,[HistProjUserModifiedDate]
+					,[HistProjUserModifiedBy])
+				values (:histProjUserId, :histProjUserUserId, :histProjUserProjId, :histComment, :histArchiveFlag, 
+				:HistProjUserCreatedBy, :histModifiedDate, :HistProjUserModifiedBy)";
+			$historyResults = $connection->createCommand($sql);
+			$historyResults->bindParam(':histProjUserId', $histProjUserId, \PDO::PARAM_INT);
+			$historyResults->bindParam(':histProjUserUserId', $histProjUserUserId, \PDO::PARAM_INT);
+			$historyResults->bindParam(':histProjUserProjId', $histProjUserProjId, \PDO::PARAM_INT);
+			$historyResults->bindParam(':histComment', $histComment, \PDO::PARAM_STR);
+			$historyResults->bindParam(':histArchiveFlag', $histArchiveFlag, \PDO::PARAM_STR);
+			$historyResults->bindParam(':HistProjUserCreatedBy', $histProjUserCreatedBy, \PDO::PARAM_STR);
+			$historyResults->bindParam(':histModifiedDate', $histModifiedDate, \PDO::PARAM_STR);
+			$historyResults->bindParam(':HistProjUserModifiedBy', $histModifiedBy, \PDO::PARAM_STR);
+			$historyResults->execute();
 			
 		}
 		catch(Exception $e)
