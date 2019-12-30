@@ -9,6 +9,7 @@ use app\modules\v2\models\SCUser;
 use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\MenusModuleMenu;
 use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v3\models\HistoryProject_User;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
@@ -397,10 +398,8 @@ class ProjectController extends BaseActiveController
 	* @returns json containing two user arrays that were processed
 	* @throws \yii\web\HttpException
     */	
-	public function actionAddRemoveUsers($projectID)
-	{
-		try
-		{
+	public function actionAddRemoveUsers($projectID){
+		try{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
@@ -417,12 +416,9 @@ class ProjectController extends BaseActiveController
 			//decode post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
-
-			
 			
 			//check if key exist
-			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data))
-			{
+			if(array_key_exists("usersAdded", $data) && array_key_exists("usersRemoved", $data)){
 				//parse post data
 				$usersAdded = $data['usersAdded'];
 				$usersRemoved = $data['usersRemoved'];
@@ -440,14 +436,12 @@ class ProjectController extends BaseActiveController
                     //find user
                     $user = SCUser::findOne($i);
                     //create user in project db
-                    if(UserController::createInProject($user, $project->ProjectUrlPrefix, $project))
-					{
+                    if(UserController::createInProject($user, $project->ProjectUrlPrefix, $project)){
 						//reset target db after external call
 						BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					}
                 }
             }
-			
 			//deactivate user records, cards and remove project relationships
 			self::removeFromProject($usersRemoved, $project);
 			
@@ -456,31 +450,42 @@ class ProjectController extends BaseActiveController
 			$response -> data = $data;
 			
 			return $response;
-		}
-		catch(ForbiddenHttpException $e)
-		{
+		}catch(ForbiddenHttpException $e){
 			throw new ForbiddenHttpException;
-		}
-		catch(\Exception $e)  
-		{
+		}catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}
 	
 	//used in user/create-in-project
-	public static function addToProject($user, $project)
-	{
+	public static function addToProject($user, $project){
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		$userID = $user->UserID;
-		$projectID = $project->ProjectID;
-		//link user to project
-		//add created by via third param extraColumns array http://www.yiiframework.com/doc-2.0/yii-db-baseactiverecord.html#link()-detail
-		$user->link('projects',$project, ['ProjUserCreatedBy' => self::getUserFromToken()->UserName]);
-		//call sps to create new time cards and mileage cards
-		try
-		{
+		$projectID = $project->ProjectID;	
+		try{
 			$connection = SCUser::getDb();
 			$transaction = $connection-> beginTransaction();
+			//create proj user record
+			$projUser = new ProjectUser();
+			$projUser->ProjUserUserID = $userID;
+			$projUser->ProjUserProjectID = $projectID;
+			$projUser->ProjUserCreatedBy = self::getUserFromToken()->UserName;
+			$projUser->ProjUserCreateDate = BaseActiveController::getDate();
+			$projUser->save();
+			//update history table with user data
+			HistoryProject_User::setClient(BaseActiveController::urlPrefix());
+			$historyModel = new HistoryProject_User();
+			$historyModel->HistProjUserID = $projUser->ProjUserID;
+			$historyModel->HistProjUserUserID = $projUser->ProjUserUserID;
+			$historyModel->HistProjUserProjectID = $projUser->ProjUserProjectID;
+			$historyModel->HistProjUserComment = 'User added to project';
+			$historyModel->HistProjUserArchiveFlag = 'Yes';
+			$historyModel->HistProjUserCreateDate = $projUser->ProjUserCreateDate;
+			$historyModel->HistProjUserCreatedBy = $projUser->ProjUserCreatedBy;
+			$historyModel->HistProjUserModifiedDate = BaseActiveController::getDate();
+			$historyModel->HistProjUserModifiedBy = BaseActiveController::getUserFromToken()->UserName;
+			$historyModel->save();
+			//call sps to create new time cards and mileage cards
 			$timeCardCommand = $connection->createCommand("EXECUTE PopulateTimeCardTbForUserToProjectCatchErrors_proc :TechID,:ProjectID");
 			$timeCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
 			$timeCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
@@ -489,18 +494,7 @@ class ProjectController extends BaseActiveController
 			$mileageCardCommand->bindParam(':TechID', $userID,  \PDO::PARAM_INT);
 			$mileageCardCommand->bindParam(':ProjectID', $projectID,  \PDO::PARAM_INT);
 			$mileageCardCommand->execute();
-			$transaction->commit();
-			
-		}
-		catch(Exception $e)
-		{
-			$transaction->rollBack();
-		}
-		//call sps to ensure time/mileage cards are active.
-		try
-		{
-			$connection = SCUser::getDb();
-			$transaction = $connection-> beginTransaction();
+			//call sps to ensure time/mileage cards are active.
 			$timeCardCommand = $connection->createCommand("EXECUTE ActivateTimeCardByUserByProject_proc :UserParam,:ProjectParam");
 			$timeCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
 			$timeCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
@@ -509,11 +503,8 @@ class ProjectController extends BaseActiveController
 			$mileageCardCommand->bindParam(':UserParam', $userID,  \PDO::PARAM_INT);
 			$mileageCardCommand->bindParam(':ProjectParam', $projectID,  \PDO::PARAM_INT);
 			$mileageCardCommand->execute();
-			$transaction->commit();
-			
-		}
-		catch(Exception $e)
-		{
+			$transaction->commit();	
+		}catch(Exception $e){
 			$transaction->rollBack();
 		}
 	}
@@ -533,38 +524,22 @@ class ProjectController extends BaseActiveController
 					$projUser = ProjectUser::find()
 						->where(['and', "ProjUserUserID = $i", "ProjUserProjectID = $projectID"])
 						->one();
-					 // update history table with user data
-					 $histProjUserId = $projUser->ProjUserID;
-					 $histProjUserUserId = $projUser->ProjUserUserID;
-					 $histProjUserProjId = $projUser->ProjUserProjectID;
-					 $histComment = "User set to inactive status and row archived";
-					 $histArchiveFlag = "Yes";
-					 $histProjUserCreatedBy = $projUser->ProjUserCreatedBy;
-					 $histModifiedDate = Date('Y-m-d H:i:s', strtotime(BaseActiveController::getDate()));
-					 $histModifiedBy = BaseActiveController::getUserFromToken()->UserName;
-					 $sql = "insert into [history].[HistoryProject_User_Tb] (
-						 [HistProjUserID]
-							 ,[HistProjUserUserID]
-							 ,[HistProjUserProjectID]
-							 ,[HistProjUserComment]
-							 ,[HistProjUserArchiveFlag]
-							 ,[HistProjUserCreatedBy]
-							 ,[HistProjUserModifiedDate]
-							 ,[HistProjUserModifiedBy])
-						 values (:histProjUserId, :histProjUserUserId, :histProjUserProjId, :histComment, :histArchiveFlag, 
-						 :HistProjUserCreatedBy, :histModifiedDate, :HistProjUserModifiedBy)";
-					 $historyResults = $connection->createCommand($sql);
-					 $historyResults->bindParam(':histProjUserId', $histProjUserId, \PDO::PARAM_INT);
-					 $historyResults->bindParam(':histProjUserUserId', $histProjUserUserId, \PDO::PARAM_INT);
-					 $historyResults->bindParam(':histProjUserProjId', $histProjUserProjId, \PDO::PARAM_INT);
-					 $historyResults->bindParam(':histComment', $histComment, \PDO::PARAM_STR);
-					 $historyResults->bindParam(':histArchiveFlag', $histArchiveFlag, \PDO::PARAM_STR);
-					 $historyResults->bindParam(':HistProjUserCreatedBy', $histProjUserCreatedBy, \PDO::PARAM_STR);
-					 $historyResults->bindParam(':histModifiedDate', $histModifiedDate, \PDO::PARAM_STR);
-					 $historyResults->bindParam(':HistProjUserModifiedBy', $histModifiedBy, \PDO::PARAM_STR);
-					 $historyResults->execute();
-					 // proceed with user delete
+					//update history table with user data
+					HistoryProject_User::setClient(BaseActiveController::urlPrefix());
+					$historyModel = new HistoryProject_User();
+					$historyModel->HistProjUserID = $projUser->ProjUserID;
+					$historyModel->HistProjUserUserID = $projUser->ProjUserUserID;
+					$historyModel->HistProjUserProjectID = $projUser->ProjUserProjectID;
+					$historyModel->HistProjUserComment = 'User set to inactive status and row archived';
+					$historyModel->HistProjUserArchiveFlag = 'Yes';
+					$historyModel->HistProjUserCreateDate = $projUser->ProjUserCreateDate;
+					$historyModel->HistProjUserCreatedBy = $projUser->ProjUserCreatedBy;
+					$historyModel->HistProjUserModifiedDate = BaseActiveController::getDate();
+					$historyModel->HistProjUserModifiedBy = BaseActiveController::getUserFromToken()->UserName;
+					$historyModel->save();
+					//delete record after archival
 					$projUser->delete();
+					//deactivate time/mileage cards
 					$timeCardCommand = $connection->createCommand("EXECUTE DeactivateTimeCardByUserByProject_proc :PARAMETER1,:PARAMETER2");
 					$timeCardCommand->bindParam(':PARAMETER1', $userID, \PDO::PARAM_INT);
 					$timeCardCommand->bindParam(':PARAMETER2', $projectID, \PDO::PARAM_INT);
