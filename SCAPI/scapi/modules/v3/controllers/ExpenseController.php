@@ -166,29 +166,26 @@ class ExpenseController extends Controller{
 			$preFilteredRecords = $expenses->all(BaseActiveRecord::getDb());
 
 			//apply project filter
-            if($projectID!= null && isset($expenses)){
+            if($projectID!= null) {
                 $expenses->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
-            }
-
-			if($projectID == null){
-				$projectFilteredRecords = $preFilteredRecords;
-			}else{
 				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
 				$projectFilteredRecords = $expenses->all(BaseActiveRecord::getDb());
+            }else{
+				$projectFilteredRecords = $preFilteredRecords;
 			}
-			
+
 			//apply employee filter
-			if($employeeID!= null && isset($expenses)){
+			if($employeeID!= null){
                 $expenses->andFilterWhere([
                     'and',
                     ['UserID' => $employeeID],
                 ]);
             }
 			
-			if($filterArray!= null && isset($expenses)){ //Empty strings or nulls will result in false
+			if($filterArray!= null){
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
@@ -373,7 +370,7 @@ class ExpenseController extends Controller{
 	}
 	
 	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
-		$sortField = 'ProjectName', $sortOrder = 'ASC')
+		$sortField = 'ProjectName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		try{
 			//url decode filter value
@@ -399,13 +396,20 @@ class ExpenseController extends Controller{
 
 			//build base query
             $expenseQuery = new Query;
-            $expenseQuery->select('*')
+            $expenseQuery->select(['ProjectID', 
+					'ProjectName',
+					'ProjectManager',
+					'StartDate',
+					'EndDate',
+					'ApprovedCount',
+					'TotalCount',
+					'IsSubmitted'])
+				->distinct()
                 ->from(["fnGetExpensesByDateGroupByProject(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
 			//get records for project dropdown(timing for this execution is very important)
-			$dropdownRecords = $expenseQuery
-				->all(BaseActiveRecord::getDb());
+			$projectDropdownRecords = clone $expenseQuery;
 
 			//add project filter
 			if($projectID!= null){
@@ -413,21 +417,47 @@ class ExpenseController extends Controller{
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
-            }
-
-			//add search filter
-			if($filter != null){
+            	//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+				$employeeDropdownRecords = clone $expenseQuery;
+            }else{
+				$employeeDropdownRecords = clone $projectDropdownRecords;
+			}
+			
+			//complete queries for projects and employees
+			$projectDropdownRecords = $projectDropdownRecords->all(BaseActiveRecord::getDb());
+			$employeeDropdownRecords = $employeeDropdownRecords->addSelect(['UserName', 'UserID'])->all(BaseActiveRecord::getDb());
+			
+			//apply employee filter
+			if($employeeID!= null) {
                 $expenseQuery->andFilterWhere([
-                    'or',
-                    ['like', 'ProjectName', $filter],
-                    ['like', 'ProjectManager', $filter],
-                    ['like', 'StartDate', $filter],
-                    ['like', 'EndDate', $filter]
+                    'and',
+                    ['UserID' => $employeeID],
                 ]);
+            }
+			
+			if($filterArray!= null){
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++){
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'ProjectName', $trimmedFilter],
+						['like', 'ProjectManager', $trimmedFilter],
+						['like', 'StartDate', $trimmedFilter],
+						['like', 'EndDate', $trimmedFilter],
+						['like', 'UserName', $trimmedFilter]
+					);
+				}
+				$expenseQuery->andFilterWhere($filterQueryArray);
             }
 
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjects($dropdownRecords, $allTheProjects);
+			$allTheProjects = self::extractProjects($projectDropdownRecords, $allTheProjects);
+			
+			//get employee list for dropdown based on time cards available
+			$employeeDropDown = self::extractEmployees($employeeDropdownRecords);
 
 			//paginate
 			$paginationResponse = BaseActiveController::paginationProcessor($expenseQuery, $page, $listPerPage);
@@ -442,6 +472,7 @@ class ExpenseController extends Controller{
             $responseArray['assets'] = $expenses;
             $responseArray['pages'] = $paginationResponse['pages'];
             $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
 
@@ -454,18 +485,44 @@ class ExpenseController extends Controller{
 		}
 	}
 	
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate){
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null, $employeeID = null){
 		try{
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('expenseGetAccountantDetails');
+			
+			//url decode filter value
+            $filter = urldecode($filter);
+			//explode by delimiter to allow for multi search
+			$delimiter = ',';
+			$filterArray = explode($delimiter, $filter);
 				
 			$expenseQuery = new Query;
 			$expenseQuery->select('*')
                 ->from(["fnGetExpensesByDate(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-				->where(['ProjectID' => $projectID]);	
+				->where(['ProjectID' => $projectID]);
+
+			//apply employee filter
+			if($employeeID!= null){
+                $expenseQuery->andWhere(['UserID' => $employeeID]);
+            }
+			
+			if($filterArray!= null){
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++){
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'UserName', $trimmedFilter]
+					);
+				}
+				$expenseQuery->andFilterWhere($filterQueryArray);
+            }
+	
 			$expenses = $expenseQuery->all(BaseActiveRecord::getDb());
 			
 			//format response
