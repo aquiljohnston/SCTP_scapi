@@ -423,16 +423,22 @@ class MileageCardController extends BaseCardController
                     ['UserID' => $employeeID],
                 ]);
             }
-
-			//add search filter
-			if($filter != null){
-                $cardQuery->andFilterWhere([
-                    'or',
-                    ['like', 'ProjectName', $filter],
-                    ['like', 'ProjectManager', $filter],
-                    ['like', 'ApprovedBy', $filter],
-                    ['like', 'UserFullName', $filter],
-                ]);
+			
+			if($filterArray!= null){
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++){
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'ProjectName', $trimmedFilter],
+						['like', 'ProjectManager', $trimmedFilter],
+						['like', 'ApprovedBy', $trimmedFilter],
+						['like', 'UserFullName', $trimmedFilter]
+					);
+				}
+				$cardQuery->andFilterWhere($filterQueryArray);
             }
 
 			//get project list for dropdown based on time cards available
