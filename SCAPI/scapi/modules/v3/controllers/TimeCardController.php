@@ -141,10 +141,8 @@ class TimeCardController extends BaseCardController
 		}
 	}
 
-	public function actionShowEntries($cardID)
-	{
-		try
-		{
+	public function actionShowEntries($cardID){
+		try{
 			//set db target
 			TimeCard::setClient(BaseActiveController::urlPrefix());
 
@@ -152,6 +150,8 @@ class TimeCardController extends BaseCardController
 			PermissionsController::requirePermission('timeCardGetEntries');
 
 			$dataArray = [];
+			
+			//TODO transaction?
 
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
@@ -164,9 +164,16 @@ class TimeCardController extends BaseCardController
 				->from("fnTimeCardByID(:cardID)")
 				->addParams([':cardID' => $cardID]);
 			$card = $cardQuery->one(BaseActiveRecord::getDb());
-
-			$dataArray['show-entries'] = $entries;
+			
+			$lunchQuery = new Query;
+			$lunchQuery->select('*')
+				->from("fnLunchActivityByTimeCard(:cardID)")
+				->addParams([':cardID' => $cardID]);
+			$lunchEntries = $lunchQuery->all(BaseActiveRecord::getDb());
+			
 			$dataArray['card'] = $card;
+			$dataArray['show-entries'] = $entries;
+			$dataArray['lunch-entries'] = $lunchEntries;			
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
