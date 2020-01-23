@@ -175,6 +175,12 @@ class BaseCardController extends BaseActiveController
     }
 	
 	protected function getCardsByProject($projectID, $startDate, $endDate, $type, $filter = null, $employeeID = null){
+		//url decode filter value
+		$filter = urldecode($filter);
+		//explode by delimiter to allow for multi search
+		$delimiter = ',';
+		$filterArray = explode($delimiter, $filter);
+		
 		//determine function to use based on type
 		if($type == Constants::NOTIFICATION_TYPE_TIME){
 			$function = 'fnTimeCardByDate';
@@ -192,14 +198,20 @@ class BaseCardController extends BaseActiveController
 		//add employeeID filter
 		if($employeeID != null)
 			$cardQuery->andWhere(['UserID' => $employeeID]);
-			
-		//add search filter
-		if($filter != null){
-			$cardQuery->andFilterWhere([
-				'or',
-				['like', 'ProjectName', $filter],
-				['like', 'UserFullName', $filter],
-			]);
+		
+		if($filterArray!= null){
+			//initialize array for filter query values
+			$filterQueryArray = array('or');
+			//loop for multi search
+			for($i = 0; $i < count($filterArray); $i++){
+				//remove leading space from filter string
+				$trimmedFilter = trim($filterArray[$i]);
+				array_push($filterQueryArray,
+					['like', 'ProjectName', $trimmedFilter],
+					['like', 'UserFullName', $trimmedFilter]
+				);
+			}
+			$cardQuery->andFilterWhere($filterQueryArray);
 		}
 			
 		$cards = $cardQuery->orderBy('UserFullName ASC')
