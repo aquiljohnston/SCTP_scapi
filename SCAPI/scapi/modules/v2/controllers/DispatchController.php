@@ -478,8 +478,8 @@ class DispatchController extends Controller
 							['like', 'OfficeName', $trimmedFilter],
 							['like', 'BillingCode', $trimmedFilter],
 							['like', 'InspectionType', $trimmedFilter],
-							['like', 'Cast(ComplianceStartDate as varchar(10))', $trimmedFilter],
-							['like', 'Cast(CompliancenEndDate as varchar(10))', $trimmedFilter]
+							['like', 'ComplianceStart', $trimmedFilter],
+							['like', 'ComplianceEnd', $trimmedFilter],
 						]);
 						$assetQuery->andFilterWhere($filterQueryArray);
 					}
