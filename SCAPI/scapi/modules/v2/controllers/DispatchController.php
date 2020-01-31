@@ -117,7 +117,6 @@ class DispatchController extends Controller
 							['like', 'ComplianceStart', $trimmedFilter],
 							['like', 'ComplianceEnd', $trimmedFilter],
 							['like', 'AvailableWorkOrderCount', $trimmedFilter],
-							['like', 'Frequency', $trimmedFilter],
 							['like', 'Division', $trimmedFilter],
 							['like', 'InspectionType', $trimmedFilter],
 							['like', 'BillingCode', $trimmedFilter],
