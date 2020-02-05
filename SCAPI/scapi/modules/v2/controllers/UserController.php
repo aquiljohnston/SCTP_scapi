@@ -750,7 +750,7 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = 'all')
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = 'all', $sortField = 'UserLastName', $sortOrder = 'ASC')
     {
         try {
 			//get headers
@@ -816,11 +816,11 @@ class UserController extends BaseActiveController
 			if($filter != null)
 			{
 				$userQuery->andFilterWhere([
-				'or',
-				['like', 'UserName', $filter],
-				['like', 'UserFirstName', $filter],
-				['like', 'UserLastName', $filter],
-				['like', 'UserAppRoleType', $filter],
+					'or',
+					['like', 'UserName', $filter],
+					['like', 'UserFirstName', $filter],
+					['like', 'UserLastName', $filter],
+					['like', 'UserAppRoleType', $filter],
 				]);
 			}
 			
@@ -831,13 +831,13 @@ class UserController extends BaseActiveController
 				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
 				//use updated query with pagination clause to get data
 				$usersArr = $paginationResponse['Query']
-					->orderBy('UserLastName, UserFirstName')
+					->orderBy("$sortField $sortOrder")
 					->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
 			}else{
 				//if no pagination params were sent use base query
 				$usersArr = $userQuery
-					->orderBy('UserLastName, UserFirstName')
+					->orderBy("$sortField $sortOrder")
 					->all();
 			}
 			
