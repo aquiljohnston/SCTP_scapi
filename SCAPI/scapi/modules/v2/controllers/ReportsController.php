@@ -46,6 +46,7 @@ class ReportsController extends Controller {
         $result = Report::find()
             ->select('ReportDisplayName, ReportSPName, ParmDateFlag, ParmDateOverrideFlag, ParmBetweenDateFlag, ExportFlag, ParmInspectorFlag, ParmDropDownFlag, ParmProjectFlag, Parm, ReportType, ActiveFlag, ParmClientFlag')
             ->where(['ActiveFlag' => 1])
+            ->orderBy(['ReportDisplayName'=>SORT_ASC])
             ->asArray()
             ->all();
 
