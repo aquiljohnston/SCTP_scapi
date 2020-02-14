@@ -154,9 +154,9 @@ class WorkQueueController extends Controller
 					'SuccessFlag' => $successFlag
 				];
 			}
-			//log counts if greater than 0
-			if ($acceptedCount>0) BaseActiveController::archiveJson((string)$acceptedCount, 'WorkQueuesAccepted', $modifiedUsername, $client);
-			if ($completedCount>0) BaseActiveController::archiveJson((string)$completedCount, 'WorkQueuesCompleted', $modifiedUsername, $client);
+			//log counts
+			$logString = 'Total Work Queues: ' . $workQueueCount . ', Accepted Work Queues: ' . $acceptedCount . ', Completed Work Queues: ' . $completedCount;
+			BaseActiveController::archiveJson($logString, 'WorkQueuesProcessed ', $modifiedUsername, $client);
 			
 			$transaction->commit();
 			return $responseData;
