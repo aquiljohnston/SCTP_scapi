@@ -231,7 +231,7 @@ class MileageCardController extends BaseCardController
 			//build base query
 			$mileageCards = new Query;
 			$mileageCards->select('*')
-				->from(["fnMileageCardByDate(:startDate, :endDate)"])
+				->from(["fnMileageCardByDatePerformance(:startDate, :endDate)"])
 				->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 			
 			//if is scct website get all or own
@@ -275,8 +275,9 @@ class MileageCardController extends BaseCardController
 				$mileageCards->where(['MileageCardProjectID' => $project->ProjectID]);
 			}
 			
-			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$preFilteredRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			//get project records post user/permissions filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $mileageCards;
+			$projectRecords = $projectQuery->select(['ProjectName', 'MileageCardProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
 			//apply project filter
             if($projectID!= null && isset($mileageCards)) {
@@ -284,11 +285,12 @@ class MileageCardController extends BaseCardController
                     'and',
                     ['MileageCardProjectID' => $projectID],
                 ]);
-				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-				$projectFilteredRecords = $mileageCards->all(BaseActiveRecord::getDb());
-            }else{
-				$projectFilteredRecords = $preFilteredRecords;
-			}
+            }
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeRecordsQuery = clone $mileageCards;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
+			$approvedStatusQuery = clone $mileageCards;
+			$approvedStatus = $employeeRecordsQuery->select('MileageCardApprovedFlag')->distinct()->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
 			if($employeeID!= null && isset($mileageCards)) {
@@ -314,13 +316,13 @@ class MileageCardController extends BaseCardController
             }
 			
 			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromCards('MileageCard', $preFilteredRecords, $projectAllOption);
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectRecords, $projectAllOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromCards($projectFilteredRecords);
+			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
 			
 			//check if any unapproved cards exist in project filtered records
-            $unapprovedMileageCardInProject = $this->checkUnapprovedCardExist('MileageCard', $projectFilteredRecords);
+            $unapprovedMileageCardInProject = $this->checkUnapprovedCardExist('MileageCard', $approvedStatus);
 			
 			//add pagination and fetch mileage card data
             $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
