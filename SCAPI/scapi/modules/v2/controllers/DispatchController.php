@@ -372,7 +372,7 @@ class DispatchController extends Controller
 						$createdBy,
 						array_key_exists('IsCge', $data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['IsCge'] : false,
 						null,
-						$data['dispatchAsset'][$i]['SectionNumber'],
+						array_key_exists('SectionNumber',$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['SectionNumber'] : null,
 						$data['dispatchAsset'][$i]['WorkOrderID'],
 						array_key_exists('ScheduledDate',$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null
 					);
