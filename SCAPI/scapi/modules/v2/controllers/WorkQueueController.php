@@ -100,51 +100,50 @@ class WorkQueueController extends Controller
 	}
 	
 	//fuction called by activity to parse and accept work queues
-	public static function accept($data, $client)
-	{
-		try
-		{
+	public static function accept($data, $client){
+		try{
 			//set db
 			BaseActiveRecord::setClient($client);
 			
 			//get requesting userID
 			$modifiedBy = BaseActiveController::getClientUser($client)->UserID;
+			$modifiedUsername = BaseActiveController::getClientUser($client)->UserName;
 			
 			//create response format
 			$responseData = [];
 			
-			//count number of items to accept
-			$acceptedCount = count($data);
+			//count number of items to update
+			$workQueueCount = count($data);
+			
+			//counts for accepted and complete work
+			$acceptedCount = 0;
+			$completedCount = 0;
 			
 			$db = BaseActiveRecord::getDb();
 			$transaction = $db->beginTransaction();
 			//process accepted
-			for($i = 0; $i < $acceptedCount; $i++)
-			{
+			for($i = 0; $i < $workQueueCount; $i++){
 				//try catch to log individual errors
-				try
-				{
+				try{
 					$workQueue = (object)[];
 					$successFlag = 0;
 					$workQueue = WorkQueue::find()
 						->where(['ID' => $data[$i]['WorkQueueID']])
 						->andWhere(['not in', 'WorkQueueStatus', [Constants::WORK_QUEUE_COMPLETED]])
 						->one();
-					if($workQueue != null)
-					{
+					if($workQueue != null){
 						$workQueue->WorkQueueStatus = $data[$i]['WorkQueueStatus'];
 						$workQueue->ModifiedBy = $modifiedBy;
 						$workQueue->ModifiedDate = $data[$i]['ModifiedDate'];
-						if($workQueue->update())
-						{
+						if($workQueue->update()){
 							$successFlag = 1;
-						}
-						else
-						{
+							//increment counts for logging
+							if($workQueue->WorkQueueStatus == 101) $acceptedCount++;
+							if($workQueue->WorkQueueStatus == 102) $completedCount++;
+						}else{
 							throw BaseActiveController::modelValidationException($workQueue);
 						}
-					}
-					else{
+					}else{
 						$successFlag = 0;
 					}
 				} catch(\Exception $e) {
@@ -155,15 +154,15 @@ class WorkQueueController extends Controller
 					'SuccessFlag' => $successFlag
 				];
 			}
+			//log counts
+			$logString = 'Total Work Queues: ' . $workQueueCount . ', Accepted Work Queues: ' . $acceptedCount . ', Completed Work Queues: ' . $completedCount;
+			BaseActiveController::archiveJson($logString, 'WorkQueuesProcessed ', $modifiedUsername, $client);
+			
 			$transaction->commit();
 			return $responseData;
-		}
-        catch(ForbiddenHttpException $e)
-        {
+		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
-        }
-        catch(\Exception $e)
-        {
+        }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
         }
 	}
