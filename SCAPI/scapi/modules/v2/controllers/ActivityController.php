@@ -320,6 +320,7 @@ class ActivityController extends BaseActiveController
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
+									$mileageEntry->CreatedDate = $mileageEntry->MileageEntrySrcDTLT;
 									try{
 										//fetch current mileage card id if none is provided
 										if($mileageEntry->MileageEntryMileageCardID == null && $mileageEntry->MileageEntryStartDate != null){

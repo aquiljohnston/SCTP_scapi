@@ -34,6 +34,7 @@ use Yii;
  * @property string $StartingMileageEntryComment
  * @property string $EndingMileageEntryComment
  * @property double $MileageRate
+ * @property string $CreatedDate
  *
  * @property MileageCardTb $mileageEntryMileageCard
  */
@@ -54,7 +55,7 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
     {
         return [
             [['MileageEntryStartingMileage', 'MileageEntryEndingMileage', 'MileageEntryTotalMiles', 'MileageEntryPersonalMiles', 'MileageRate'], 'number'],
-            [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT'], 'safe'],
+            [['MileageEntryStartDate', 'MileageEntryEndDate', 'MileageEntryModifiedDate', 'MileageEntrySrcDTLT', 'MileageEntrySrvDTLT', 'CreatedDate'], 'safe'],
             [['MileageEntryWeekDay', 'MileageEntryType', 'MileageEntryApprovedBy', 'MileageEntryComment', 'MileageEntryCreatedBy', 'MileageEntryModifiedBy', 'MileageEntryUserName', 'MileageEntryChartOfAccount', 'MileageEntryMileageType', 'MileageEntryPhoto1Path', 'MileageEntryPhoto2Path', 'StartingMileageEntryComment', 'EndingMileageEntryComment'], 'string'],
             [['MileageEntryMileageCardID', 'MileageEntryActivityID', 'MileageEntryActiveFlag'], 'integer'],
             [['MileageEntryMileageCardID'], 'exist', 'skipOnError' => true, 'targetClass' => MileageCard::className(), 'targetAttribute' => ['MileageEntryMileageCardID' => 'MileageCardID']],
@@ -94,6 +95,7 @@ class MileageEntry extends \app\modules\v3\models\BaseActiveRecord
             'StartingMileageEntryComment' => 'Starting Mileage Entry Comment',
             'EndingMileageEntryComment' => 'Ending Mileage Entry Comment',
             'MileageRate' => 'Mileage Rate',
+            'CreatedDate' => 'Created Date',
         ];
     }
 
