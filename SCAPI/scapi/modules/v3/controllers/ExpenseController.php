@@ -622,7 +622,7 @@ class ExpenseController extends Controller{
 			}
 			
 			$users = BaseUser::find()
-				->select(['UserID', "concat(UserFirstName , ', ' , UserLastName , '(' , UserName , ')') as UserName"])
+				->select(['UserID', "concat(UserLastName , ', ' , UserFirstName , '(' , UserName , ')') as UserName"])
 				->innerJoin('Project_User_Tb', '[UserTb].[UserID] = [Project_User_Tb].[ProjUserUserID]');
 				
 			if($projectID != null){
@@ -633,6 +633,7 @@ class ExpenseController extends Controller{
 				
 			$users = $users->distinct()
 				->andWhere(['<>','UserAppRoleType', 'Admin'])
+				->orderBy('UserName ASC')
 				->all();
 			
 			$projectArray = self::extractProjects($projects, $projectArray);
@@ -892,8 +893,6 @@ class ExpenseController extends Controller{
 		}
 		//remove dupes
 		$employeeValues = array_unique($employeeValues);
-		//abc order for all
-		asort($employeeValues);
 		//append all option to the front
 		$employeeAllOption = $employeeAllOption == null ? [""=>"All"] : $employeeAllOption;
 		$employeeValues = $employeeAllOption + $employeeValues;
