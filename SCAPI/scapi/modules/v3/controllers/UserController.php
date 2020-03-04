@@ -220,27 +220,11 @@ class UserController extends BaseActiveController
 				$abcCodes = ABCCodes::find()
 					->where(['ProjectID' => $projectID])
 					->andWhere(['IsActive' => 1])
+					->andWhere(['IsSource' => 1])
                     ->all();
 				$abcCodesArray = array_map(function ($model) {
                     return $model->attributes;
                 }, $abcCodes);
-
-                //get job codes for project, for now just getting all job codes
-                $activityCodes = ActivityCode::find()
-                    ->all();
-                $activityCodesArray = array_map(function ($model) {
-                    return $model->attributes;
-                }, $activityCodes);
-                $activityCodesLength = count($activityCodesArray);
-                $payCodes = PayCode::find()
-                    ->all();
-                $payCodesArray = array_map(function ($model) {
-                    return $model->attributes;
-                }, $payCodes);
-                for ($j = 0; $j < $activityCodesLength; $j++) {
-                    //get payroll code
-                    $activityCodesArray[$j]['PayrollCode'] = 'TODO';
-                }
 				
 				//error handling to avoid breaking get me if task are not avaliable.
 				try{
@@ -270,9 +254,7 @@ class UserController extends BaseActiveController
 				$projectData['ProjectTask'] = $projectTask;
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
-                $projectData['ActivityCodes'] = $activityCodesArray;
                 $projectData['ABCCodes'] = $abcCodesArray;
-                $projectData['PayCodes'] = $payCodesArray;
 
                 $projects[] = $projectData;
             }
