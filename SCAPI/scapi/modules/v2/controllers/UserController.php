@@ -1073,7 +1073,7 @@ class UserController extends BaseActiveController
 	}
 	
 	//deactivate user in all accociated non PG&E clients or given non pge client based on optional param
-	private static function deactivateInProjects($user, $client = null)
+	public static function deactivateInProjects($user, $client = null)
 	{
 		try {
 			$response = [];
