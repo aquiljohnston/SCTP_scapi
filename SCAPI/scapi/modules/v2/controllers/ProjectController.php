@@ -2,13 +2,13 @@
 
 namespace app\modules\v2\controllers;
 
-use app\modules\v2\models\MenusProjectModule;
 use Yii;
 use app\modules\v2\models\Project;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\ProjectUser;
 use app\modules\v2\models\MenusModuleMenu;
 use app\modules\v2\models\BaseActiveRecord;
+use app\modules\v2\models\MenusProjectModule;
 use app\modules\v3\models\HistoryProject_User;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
@@ -515,6 +515,7 @@ class ProjectController extends BaseActiveController
 		$projectID = $project->ProjectID;
 		if (count($usersRemoved) > 0 && $usersRemoved[0] != null) {
 			foreach ($usersRemoved as $i) {
+				//set active db to base
 				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 				//call sps to deactivate time cards and mileage cards
 				try {
@@ -554,24 +555,11 @@ class ProjectController extends BaseActiveController
 					//continue to break loop and avoid deactivating user in the event of a failure
 					continue;
 				}
-				//deactivate user if the project is not SCCT
-				if(!BaseActiveController::isSCCT($project->ProjectUrlPrefix)){
-					//find user
-					$user = SCUser::findOne($i);
-					//get user model based on project 
-					$userModel = BaseActiveRecord::getUserModel($project->ProjectUrlPrefix);
-					if($userModel != null){
-						BaseActiveRecord::setClient($project->ProjectUrlPrefix);
-						$existingUser = $userModel::find()
-							->where(['UserName' => $user->UserName])
-							->one();
-						//deactivate user if they are currently active
-						if($existingUser != null && $existingUser->UserActiveFlag == 1) {
-							$existingUser->UserActiveFlag = 0;
-							$existingUser->update();
-						}
-					}
-				}
+				//deactivate user in project
+				$client = $project->ProjectUrlPrefix;
+				//find user
+				$user = SCUser::findOne($i);
+				UserController::deactivateInProjects($user, $client);
 			}
 		}
 	}
