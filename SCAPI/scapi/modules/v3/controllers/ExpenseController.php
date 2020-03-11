@@ -162,8 +162,9 @@ class ExpenseController extends Controller{
                 $expenses->where(['ProjectID' => $project->ProjectID]);
             }
 
-			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$preFilteredRecords = $expenses->all(BaseActiveRecord::getDb());
+			//get project records post user/permissions filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $expenses;
+			$projectRecords = $projectQuery->select(['ProjectName', 'ProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
 			//apply project filter
             if($projectID!= null) {
@@ -171,11 +172,13 @@ class ExpenseController extends Controller{
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
-				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-				$projectFilteredRecords = $expenses->all(BaseActiveRecord::getDb());
-            }else{
-				$projectFilteredRecords = $preFilteredRecords;
 			}
+			
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeRecordsQuery = clone $expenses;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserName'])->distinct()->orderBy('UserName ASC')->all(BaseActiveRecord::getDb());
+			$approvedStatusQuery = clone $expenses;
+			$approvedStatus = $approvedStatusQuery->select('IsApproved')->distinct()->all(BaseActiveRecord::getDb());
 
 			//apply employee filter
 			if($employeeID!= null){
@@ -204,13 +207,13 @@ class ExpenseController extends Controller{
             }
 			
 			//get project list for dropdown based on expenses available
-			$projectDropDown = self::extractProjects($preFilteredRecords, $projectAllOption);
+			$projectDropDown = self::extractProjects($projectRecords, $projectAllOption);
 			
 			//get employee list for dropdown based on expenses available
-			$employeeDropDown = self::extractEmployees($projectFilteredRecords);
+			$employeeDropDown = self::extractEmployees($employeeRecords);
 			
 			//check if any unapproved expenses exist in project filtered records
-			$unapprovedExpenseInProject = $this->checkUnapprovedExist($projectFilteredRecords);
+			$unapprovedExpenseInProject = $this->checkUnapprovedExist($approvedStatus);
 
             $paginationResponse = BaseActiveController::paginationProcessor($expenses, $page, $listPerPage);
             $expensesArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
@@ -425,7 +428,7 @@ class ExpenseController extends Controller{
 			
 			//complete queries for projects and employees
 			$projectDropdownRecords = $projectDropdownRecords->all(BaseActiveRecord::getDb());
-			$employeeDropdownRecords = $employeeDropdownRecords->addSelect(['UserName', 'UserID'])->all(BaseActiveRecord::getDb());
+			$employeeDropdownRecords = $employeeDropdownRecords->addSelect(['UserName', 'UserID'])->orderBy('UserName ASC')->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
 			if($employeeID!= null) {
