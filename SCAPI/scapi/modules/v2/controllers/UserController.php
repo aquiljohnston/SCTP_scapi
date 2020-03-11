@@ -693,7 +693,7 @@ class UserController extends BaseActiveController
 				
 				//error handling to avoid breaking get me if task are not avaliable.
 				try{
-					$projectTask = Yii::$app->runAction('v2/task/get-by-project', ['projectID'=>$projectID])->data['assets'];
+					$projectTask = TaskController::getTask($projectID);
 				}catch(\Exception $e){
 					//set client back to ct after external call, logging of error will retarget db
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());

@@ -51,12 +51,7 @@ class TaskController extends Controller
 			//RBAC permissions check
 			PermissionsController::requirePermission('taskGetByProject');
 
-			$data['assets'] = TaskAndProject::find()
-				->select(['TaskID', 'TaskName', 'TaskQBReferenceID', 'Category'])
-				->where(['projectID' => $projectID])
-				->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
-				->asArray()
-				->all();
+			$data['assets'] = self::getTask($ProjectID);
 
 			//build and return response
 			$response = Yii::$app->response;
@@ -254,6 +249,15 @@ class TaskController extends Controller
         $response->format = Response::FORMAT_JSON;
         $response->data = $dataArray;
     }
+	
+	public static function getTask($ProjectID){
+		return TaskAndProject::find()
+			->select(['TaskID', 'TaskName', 'TaskQBReferenceID', 'Category'])
+			->where(['projectID' => $projectID])
+			->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
+			->asArray()
+			->all();
+	}
 	
 	private static function checkTimeOverlap($cardID, $startTime, $endTime)
 	{
