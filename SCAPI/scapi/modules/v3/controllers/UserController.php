@@ -12,6 +12,7 @@ use app\modules\v3\models\AllTimeCardsCurrentWeek;
 use app\modules\v3\models\AllMileageCardsCurrentWeek;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\ABCCodes;
+use app\modules\v2\controllers\TaskController;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\PermissionsController;
 use app\modules\v3\authentication\TokenAuth;
@@ -226,7 +227,7 @@ class UserController extends BaseActiveController
 				
 				//error handling to avoid breaking get me if task are not avaliable.
 				try{
-					$projectTask = Yii::$app->runAction('v2/task/get-by-project', ['projectID'=>$projectID])->data['assets'];
+					$projectTask = TaskController::getTask($projectID);
 				}catch(\Exception $e){
 					//set client back to ct after external call, logging of error will retarget db
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
