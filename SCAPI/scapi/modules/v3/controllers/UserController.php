@@ -70,8 +70,7 @@ class UserController extends BaseActiveController
      * @returns json body containing userdata, equipment, and projects
      * @throws \yii\web\HttpException
      */
-    public function actionGetMe()
-    {
+    public function actionGetMe(){
         try {
 			//get headers
 			$headers = getallheaders();

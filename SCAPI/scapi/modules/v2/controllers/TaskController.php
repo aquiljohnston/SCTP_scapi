@@ -51,7 +51,7 @@ class TaskController extends Controller
 			//RBAC permissions check
 			PermissionsController::requirePermission('taskGetByProject');
 
-			$data['assets'] = self::getTask($ProjectID);
+			$data['assets'] = self::getTask($projectID);
 
 			//build and return response
 			$response = Yii::$app->response;
@@ -250,7 +250,8 @@ class TaskController extends Controller
         $response->data = $dataArray;
     }
 	
-	public static function getTask($ProjectID){
+	public static function getTask($projectID){
+		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		return TaskAndProject::find()
 			->select(['TaskID', 'TaskName', 'TaskQBReferenceID', 'Category'])
 			->where(['projectID' => $projectID])
