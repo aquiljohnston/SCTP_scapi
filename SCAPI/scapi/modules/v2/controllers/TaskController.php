@@ -253,7 +253,7 @@ class TaskController extends Controller
 	public static function getTask($projectID){
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 		return TaskAndProject::find()
-			->select(['TaskID', 'TaskName', 'TaskQBReferenceID', 'Category'])
+			->select(['TaskID', 'TaskName', 'TaskReferenceID', 'Category'])
 			->where(['projectID' => $projectID])
 			->orderBy(['TaskID' => SORT_ASC, 'TaskName' => SORT_ASC])
 			->asArray()
