@@ -14,6 +14,7 @@ use Yii;
  * @property string $SrvDTLT
  * @property string $Value
  * @property string $Date
+ * @property string $ABCTaskOutUID
  */
 class ABCTaskOut extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -32,7 +33,7 @@ class ABCTaskOut extends \app\modules\v3\models\BaseActiveRecord
     {
         return [
             [['SCCEmployeeID', 'ProjectID'], 'integer'],
-            [['ReportingTaskID', 'Value'], 'string'],
+            [['ReportingTaskID', 'Value', 'ABCTaskOutUID'], 'string'],
             [['SrvDTLT', 'Date'], 'safe'],
         ];
     }
@@ -50,6 +51,7 @@ class ABCTaskOut extends \app\modules\v3\models\BaseActiveRecord
             'SrvDTLT' => 'Srv Dtlt',
             'Value' => 'Value',
             'Date' => 'Date',
+            'ABCTaskOutUID' => 'Abctask Out Uid',
         ];
     }
 }

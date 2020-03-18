@@ -54,7 +54,7 @@ class AbcCodesController extends Controller{
 			$response->format = Response::FORMAT_JSON;
 	
 			//pass data to insert function
-			$responseData = self::save($data['ABCCodes']);
+			$responseData['ABCCodes'] = self::save($data['ABCCodes']);
 			
 			//return response data
 			$response->data = $responseData;
@@ -96,6 +96,7 @@ class AbcCodesController extends Controller{
 				$successFlag = 0;
 			}
 			$responseData[] = [
+				'ABCTaskOutUID ' => $data[$i]['ABCTaskOutUID'],
 				'ProjectID' => $data[$i]['ProjectID'],
 				'ReportingTaskID' => $data[$i]['ReportingTaskID'],
 				'SuccessFlag' => $successFlag
