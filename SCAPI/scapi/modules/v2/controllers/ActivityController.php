@@ -417,7 +417,7 @@ class ActivityController extends BaseActiveController
 			$taskOutResponse = TaskOutController::processTaskOut($activityData['TaskOut'], $client, $clientActivityID);
 			$responseData['TaskOut'] = $taskOutResponse;
 		}
-		//handle creation of new task out records
+		//handle creation of new expense records
 		if (array_key_exists('Expense', $activityData)){
 			$expenseResponse = ExpenseController::processExpense($activityData['Expense'], $client);
 			$responseData['Expense'] = $expenseResponse;
