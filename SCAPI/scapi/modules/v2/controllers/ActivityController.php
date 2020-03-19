@@ -225,9 +225,9 @@ class ActivityController extends BaseActiveController
 							//client data parse
 							if(BaseActiveController::isScct($headers['X-Client']))
 							{
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $userID, $activity->ActivityID);
 							} else {
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $userID, $clientActivity->ActivityID);
 							}
 							$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 						
@@ -393,7 +393,7 @@ class ActivityController extends BaseActiveController
 	}
 	
 	//helper method, to parse activity data and send to appropriate controller.
-	public static function parseActivityData($activityData, $client, $createdBy, $clientActivityID)
+	public static function parseActivityData($activityData, $client, $createdBy, $userID, $clientActivityID)
 	{	
 		$responseData = [];
 	
@@ -419,7 +419,7 @@ class ActivityController extends BaseActiveController
 		}
 		//handle creation of new expense records
 		if (array_key_exists('Expense', $activityData)){
-			$expenseResponse = ExpenseController::processExpense($activityData['Expense'], $client);
+			$expenseResponse = ExpenseController::processExpense($activityData['Expense'], $client, $userID);
 			$responseData['Expense'] = $expenseResponse;
 		}
 		
