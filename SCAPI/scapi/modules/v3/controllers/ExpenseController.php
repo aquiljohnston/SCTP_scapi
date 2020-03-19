@@ -56,7 +56,6 @@ class ExpenseController extends Controller{
 				$expense = new Expense;
 				$expense->attributes = $data;
 				$expense->UserID = $userID;
-				// $expense->UserID = BaseActiveController::getUserFromToken()->UserID;
 				$expense->CreatedDate = $data['CreatedDateTime'];
 
 				if ($expense->save()){
