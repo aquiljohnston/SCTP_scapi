@@ -852,10 +852,21 @@ class UserController extends BaseActiveController
 				$dropdownPairs[$project->ProjectID]= $project->ProjectName;
 			}
 			
+			//get project data for add user modal
+			foreach($projects as $project)
+			{
+				$addUserProjects[]= [
+					"ProjectID" => $project->ProjectID,
+					"ProjectName" => $project->ProjectName,
+					"ProjectReferenceID" => $project->ProjectReferenceID
+				];
+			}
+			
 			//populate response array
             $responseArray['assets'] = $usersArr;
             $responseArray['showProjectDropdown'] = $showProjectDropdown;
-			$responseArray['projects'] = $dropdownPairs;
+			$responseArray['projectDropdown'] = $dropdownPairs;
+			$responseArray['addUserProjects'] = $addUserProjects;
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->setStatusCode(200);
