@@ -44,6 +44,12 @@ class BreadcrumbController extends Controller
 			//get http headers
 			$headers = getallheaders();
 			
+			//set db
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get user before execution to prevent toke replacement
+			$userName = BaseActiveController::getUserFromToken()->UserName;
+			
 			//get post data
 			$post = file_get_contents("php://input");
 			$data = json_decode($post, true);
@@ -52,11 +58,8 @@ class BreadcrumbController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('breadcrumbCreate');
-			
-			$userName = BaseActiveController::getUserFromToken()->UserName;
 			
 			//save json to archive
 			BaseActiveController::archiveBreadcrumbJson($post, $userName, $headers['X-Client']);

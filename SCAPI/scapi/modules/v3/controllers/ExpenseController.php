@@ -45,7 +45,7 @@ class ExpenseController extends Controller{
 		return $behaviors;	
 	}
 	
-	public static function processExpense($data, $client){
+	public static function processExpense($data, $client, $userID){
 		try{
 			//set client header
 			BaseActiveRecord::setClient($client);
@@ -55,7 +55,7 @@ class ExpenseController extends Controller{
 				$successFlag = 0;
 				$expense = new Expense;
 				$expense->attributes = $data;
-				$expense->UserID = BaseActiveController::getUserFromToken()->UserID;
+				$expense->UserID = $userID;
 				$expense->CreatedDate = $data['CreatedDateTime'];
 
 				if ($expense->save()){
