@@ -9,7 +9,7 @@ use Yii;
  *
  * @property int $ID
  * @property int $SCCEmployeeID
- * @property int $ProjectID
+ * @property string $RefProjectID
  * @property string $ReportingTaskID
  * @property string $SrvDTLT
  * @property string $Value
@@ -32,8 +32,8 @@ class ABCTaskOut extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['SCCEmployeeID', 'ProjectID'], 'integer'],
-            [['ReportingTaskID', 'Value', 'ABCTaskOutUID'], 'string'],
+            [['SCCEmployeeID'], 'integer'],
+            [['RefProjectID', 'ReportingTaskID', 'Value', 'ABCTaskOutUID'], 'string'],
             [['SrvDTLT', 'Date'], 'safe'],
         ];
     }
@@ -46,7 +46,7 @@ class ABCTaskOut extends \app\modules\v3\models\BaseActiveRecord
         return [
             'ID' => 'ID',
             'SCCEmployeeID' => 'Sccemployee ID',
-            'ProjectID' => 'Project ID',
+            'RefProjectID' => 'Ref Project ID',
             'ReportingTaskID' => 'Reporting Task ID',
             'SrvDTLT' => 'Srv Dtlt',
             'Value' => 'Value',
