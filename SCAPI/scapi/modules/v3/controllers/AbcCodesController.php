@@ -97,7 +97,7 @@ class AbcCodesController extends Controller{
 			}
 			$responseData[] = [
 				'ABCTaskOutUID' => $data[$i]['ABCTaskOutUID'],
-				'ProjectID' => $data[$i]['ProjectID'],
+				'RefProjectID' => $data[$i]['RefProjectID'],
 				'ReportingTaskID' => $data[$i]['ReportingTaskID'],
 				'SuccessFlag' => $successFlag
 			];
