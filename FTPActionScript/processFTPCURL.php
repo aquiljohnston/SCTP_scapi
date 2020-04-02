@@ -5,22 +5,24 @@
     // URLs: Login authentication, FTP request
 	$urlLoginDev = 'http://apidev.southerncrossinc.com/index.php?r=v2%2Flogin%2Fuser-login';
     $urlLoginStage = 'http://apistage.southerncrossinc.com/index.php?r=v2%2Flogin%2Fuser-login';
-    $urlLoginProd = 'http://api.southerncrossinc.com/index.php?r=v2%2Flogin%2Fuser-login';
+    $urlLoginProd = 'http://azureapi.southerncrossinc.com/index.php?r=v2%2Flogin%2Fuser-login';
     $urlFTPActionDev = 'http://apidev.southerncrossinc.com/index.php?r=v3%2Ff-t-p%2Fget-f-t-p-file';
     $urlFTPActionStage = 'http://apistage.southerncrossinc.com/index.php?r=v3%2Ff-t-p%2Fget-f-t-p-file';
-    $urlFTPActionProd = 'http://api.southerncrossinc.com/index.php?r=v3%2Ff-t-p%2Fget-f-t-p-file';
+    $urlFTPActionProd = 'http://azureapi.southerncrossinc.com/index.php?r=v3%2Ff-t-p%2Fget-f-t-p-file';
 
     try {
         echo nl2br("TimeTracker FTP process starting.\n");
         // authentication body
         $postData = array(
-              'UserName' => 'jtech', 
-              'Password' => 'pXrB9EpNPznSDM6UcUVxgQ=='
+			// 'UserName' => 'jtech', 
+			// 'Password' => 'pXrB9EpNPznSDM6UcUVxgQ=='
+			'UserName' => 'Automation', 
+			'Password' => '7IgOgUIc8tBGdGzpAAW3sg=='
         );
 		$postData = json_encode($postData);
 		//set headers
 		$headers = array(
-			'X-Client:scctdev',
+			'X-Client:scct',
 			'Accept:application/json',
 			'Content-Type:application/json',
 			'Content-Length: ' . strlen($postData)
@@ -31,7 +33,7 @@
             // execute login
 			$loginCurl = curl_init();
 			//set curl options
-			curl_setopt($loginCurl, CURLOPT_URL, $urlLoginDev);
+			curl_setopt($loginCurl, CURLOPT_URL, $urlLoginProd);
 			curl_setopt($loginCurl, CURLOPT_POST, 1);
 			curl_setopt($loginCurl, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($loginCurl, CURLOPT_POSTFIELDS,$postData);
@@ -57,7 +59,7 @@
 				
 				// prep ftp headers
 				$ftpHeaders = array(
-					'X-Client:scctdev',
+					'X-Client:scct',
 					'Accept:application/json',
 					'Content-Type:application/json',
 					'Authorization: Basic '. base64_encode($responseJson->AuthToken . ':')
@@ -66,7 +68,7 @@
                 // execute login
 				$ftpCurl = curl_init();
 				//set curl options
-				curl_setopt($ftpCurl, CURLOPT_URL, $urlFTPActionDev);
+				curl_setopt($ftpCurl, CURLOPT_URL, $urlFTPActionProd);
 				curl_setopt($ftpCurl, CURLOPT_RETURNTRANSFER, true);
 				curl_setopt($ftpCurl, CURLOPT_HTTPHEADER, $ftpHeaders);
 				//execute curl
