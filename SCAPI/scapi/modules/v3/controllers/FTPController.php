@@ -12,8 +12,7 @@ use yii\web\BadRequestHttpException;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\models\ABCTaskOut;
 use app\modules\v3\models\BaseActiveRecord;
-use yii\web\UploadedFile;
-use yii2mod\ftp\FtpClient;
+use phpseclib\Net\SFTP;
 
 /**
  * This is the model class for table "tAsset".
@@ -22,10 +21,10 @@ use yii2mod\ftp\FtpClient;
  */
 class FTPController extends Controller {
     // todo: remove clear text, encrypt/decrypt @ runtime
-    private $host = 'scctimagesdev.southerncrosslighthouse.com';
-    private $username = 'scctimagesdev.southerncrosslighthouse.com|scbot';
-    private $password = 'Pa$$word';
-    private static $remoteDir = '/ABCCodes';
+    private $host = 'sftp.southerncrossinc.com';
+    private $username = 'ttsot';
+    private $password = 'Pr4ExBTf8MAFGoxaDDc9t6';
+    private static $remoteDir = '/ttsot/ABC';
     private static $localDir = '/relative/or/absolute/local/path';
 	
 	public function behaviors()
@@ -48,59 +47,58 @@ class FTPController extends Controller {
     public function actionGetFTPFile() {
 		try{
 			$responseData = [];
-			//create ssh connection
-			$ftp = new \yii2mod\ftp\FtpClient();
-			//port 22 for sftp
-			// $ftp->connect($this->host, true, 22);
-			//false ssl, port 21 for ftp
-			$ftp->connect($this->host, false, 21);
-			$ftp->login($this->username, $this->password);
-			$ftp->pasv(true);
+			$sftp = new SFTP($this->host);
+			if (!$sftp->login($this->username, $this->password)) {
+				throw new Exception('Login failed');
+			}
+			
 			//Change directory
-			$ftp->chdir(self::$remoteDir);
+			$sftp->chdir(self::$remoteDir);
 			// get file list of current directory
-			$file_list = $ftp->nlist();
+			$file_list = $sftp->nlist();
+
 			//Check if archive directory exist
 			if(!in_array('./archive', $file_list)) 
 				// Create the archive directory
-				$ftp->mkdir(self::$remoteDir . '/archive');
+				$sftp->mkdir(self::$remoteDir . '/archive');
 			//loop current directory items
 			foreach($file_list as $file){
 				try{
 					//skip archive directory
-					if($file == './archive')
+					if(!strpos($file, '.csv'))
 						continue;
 					//status flags
 					$saveFlag = 0;
 					$archiveFlag = 0;
+					
 					//get filename/extension for error handling and response
 					$fileInfo = pathinfo($file);
 					$fileName = $fileInfo['filename'];
 					$fileExt = $fileInfo['extension'];
-					
-					//get handler for php temp stream
-					$handler = fopen('php://temp', 'r+');
+
 					//get file data
-					$ftp->fget($handler, $file, FTP_BINARY, 0);
-					//get file size then reset pointer and read
-					$fstats = fstat($handler);
-					fseek($handler, 0);
-					$csv = fread($handler, $fstats['size']); 
-					//close temp stream
-					fclose($handler);
+					$csv = $sftp->get($file);
+
 					//convert csv string to associative array
-					$rows = array_map('str_getcsv', explode("\n", $csv));
+					$rowCount = count(explode("\n", $csv));
+					$delimiterArray = [];
+					while($rowCount  > 0){
+						$delimiterArray[] = '|';
+						$rowCount--;
+					}
+					$rows = array_map('str_getcsv', explode("\n", $csv), $delimiterArray);
 					$header = array_shift($rows);
 					foreach ($rows as $row) {
-						$csvArray[] = array_combine($header, $row);
+						if(count($row) == 5)
+							$csvArray[] = array_combine($header, $row);
 					}
 					
 					//save in db
 					$saveFlag = self::ftpUpload($csvArray, $fileName);
 					//success, move file to archive
 					if($saveFlag){
-						$newFileName = 'archive/' . $fileName . '_' . date('m-d-Y-His') . '.' . $fileExt;
-						if ($ftp->rename($file, $newFileName)) {
+						$newFileName = 'archive/' . $fileName . '_Processed_' . date('m-d-Y-His') . '.' . $fileExt;
+						if ($sftp->rename($file, $newFileName)) {
 						   $archiveFlag = 1;
 						}
 					}
@@ -141,6 +139,7 @@ class FTPController extends Controller {
 				//create model
                 $abcTaskOut = new ABCTaskOut;
                 $abcTaskOut->attributes = $data;
+				$abcTaskOut->RefProjectID = $data['ProjectID'];
                 if ($abcTaskOut->save()){
                     $successFlag = 1;
                 }else{
