@@ -52,9 +52,13 @@ class AbcCodesController extends Controller{
 			//create response
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
-	
-			//pass data to insert function
-			$responseData['ABCCodes'] = self::save($data['ABCCodes']);
+			
+			if(array_key_exists('ABCCodes', $data)){
+				//pass data to insert function
+				$responseData['ABCCodes'] = self::save($data['ABCCodes']);
+			}else{
+				$responseData= (object)[];
+			}
 			
 			//return response data
 			$response->data = $responseData;
