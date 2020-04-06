@@ -505,7 +505,7 @@ class TimeCardController extends BaseCardController
 			for ($x = 0; $x < $max; $x++) {
 				$queryString = "Select TimeCardID from [dbo].[TimeCardTb] tc
 								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod in ('H', 'C')) u on u.UserID = tc.TimeCardTechID
-								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and tc.TimeCardActiveFlag = 1 and TimeCardPMApprovedFlag != 1";
+								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and tc.TimeCardApprovedFlag = 1 and TimeCardPMApprovedFlag != 1";
 				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();
 			}
 			//try to approve time cards
