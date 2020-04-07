@@ -788,6 +788,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Technician'][] = $abcCodesCreateTaskOut;
         $this->permissionArray[] = $abcCodesCreateTaskOut;
 		
+		////// Question Controller Permissions //////
+		$questionCreate = $this->auth->createPermission('questionCreate');
+        $questionCreate->description = 'Create question records.';
+        $this->permissionAssociationArray['Technician'][] = $questionCreate;
+        $this->permissionArray[] = $questionCreate;
+		
 		////// Route Controller Permissions //////
 		
 		$routeOptimization1 = $this->auth->createPermission('routeOptimization1');
