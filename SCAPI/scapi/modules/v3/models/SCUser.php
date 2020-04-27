@@ -43,6 +43,7 @@ use app\modules\v3\models\Auth;
  * @property string $UserQuickBooksID
  * @property string $UserADPID
  * @property int $hasPersonalVehicle
+ * @property double $PTOBalance
  *
  * @property EquipmentTb[] $equipmentTbs
  * @property ProjectUserTb[] $projectUserTbs
@@ -67,6 +68,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
         return [
             [['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType', 'UserPhone', 'UserCompanyName', 'UserCompanyPhone', 'UserAppRoleType', 'UserComments', 'UserCreatedUID', 'UserModifiedUID', 'UserUID', 'UserPassword', 'UserOasisID', 'UserAddress', 'UserCity', 'UserState', 'UserZip', 'UserLocation', 'UserPayMethod', 'UserPreferredEmail', 'UserQuickBooksID', 'UserADPID'], 'string'],
             [['UserActiveFlag', 'UserPaySourceID', 'SCCEmployeeID', 'hasPersonalVehicle'], 'integer'],
+            [['PTOBalance'], 'number'],
             [['UserCreatedDTLTOffset', 'UserModifiedDTLTOffset', 'UserCreatedDate', 'UserModifiedDate', 'UserRefreshDateTime', 'UserInactiveDTLTOffset'], 'safe'],
             [['UserName'], 'unique'],
         ];
@@ -112,6 +114,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
             'UserQuickBooksID' => 'User Quick Books ID',
             'UserADPID' => 'User Adpid',
             'hasPersonalVehicle' => 'Has Personal Vehicle',
+			'PTOBalance' => 'P T O Balance',
         ];
     }
 
