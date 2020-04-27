@@ -194,7 +194,7 @@ class TaskController extends Controller
 			
 			//RBAC permissions check
 			PermissionsController::requirePermission('createTaskEntry');
-
+			
 			$successFlag = 0;
 			$warningMessage = '';
 			
@@ -202,31 +202,9 @@ class TaskController extends Controller
             $body = file_get_contents("php://input");
             $data = json_decode($body, true);
 			
-			//check time overlap on new entry
-			$startDateTime = $data['Date'] . ' ' . $data['StartTime'];
-			$endDateTime = $data['Date'] . ' ' . $data['EndTime'];
-			$isOverlap = self::checkTimeOverlap($data['TimeCardID'], $startDateTime, $endDateTime);
-
-			if($isOverlap ==0){
-				//remove charge of account that is causing conflict in fnGeneratePayrollDataByProject
-				if(!in_array($data['ChargeOfAccountType'], [Constants::PTO_PAYROLL_HOURS_ID, Constants::HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID])) $data['ChargeOfAccountType'] = NULL;
-				
-				// set up db connection
-				$connection = BaseActiveRecord::getDb();
-				$processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType, :TimeReason");
-				$processJSONCommand->bindParam(':TimeCardID', $data['TimeCardID'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':TaskName', $data['TaskName'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':StartTime', $data['StartTime'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':EndTime', $data['EndTime'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
-				$processJSONCommand->bindParam(':TimeReason', $data['TimeReason'], \PDO::PARAM_STR);
-				$processJSONCommand->execute();
-				$successFlag = 1;
-			}else{
-				$warningMessage = 'Failed to save, new entry overlaps with existing time.';
-			}
+			$results = self::addActivityAndTime($data);
+			$successFlag = $results['successFlag'];
+			$warningMessage = $results['warningMessage'];			
 
         } catch (ForbiddenHttpException $e) {
             throw new ForbiddenHttpException;
@@ -253,6 +231,44 @@ class TaskController extends Controller
         $response->format = Response::FORMAT_JSON;
         $response->data = $dataArray;
     }
+	
+	public static function addActivityAndTime($data){
+		$successFlag = 0;
+		$warningMessage = '';
+		
+		//check time overlap on new entry
+		$startDateTime = $data['Date'] . ' ' . $data['StartTime'];
+		$endDateTime = $data['Date'] . ' ' . $data['EndTime'];
+		$isOverlap = self::checkTimeOverlap($data['TimeCardID'], $startDateTime, $endDateTime);
+
+		if($isOverlap ==0){
+			//remove charge of account that is causing conflict in fnGeneratePayrollDataByProject
+			if(!in_array($data['ChargeOfAccountType'], [Constants::PTO_PAYROLL_HOURS_ID, Constants::HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID])) $data['ChargeOfAccountType'] = NULL;
+			
+			// set up db connection
+			$connection = BaseActiveRecord::getDb();
+			$processJSONCommand = $connection->createCommand("EXECUTE spAddActivityAndTime :TimeCardID, :TaskName , :Date, :StartTime, :EndTime, :CreatedByUserName, :ChargeOfAccountType, :TimeReason");
+			$processJSONCommand->bindParam(':TimeCardID', $data['TimeCardID'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':TaskName', $data['TaskName'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':StartTime', $data['StartTime'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':EndTime', $data['EndTime'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':ChargeOfAccountType', $data['ChargeOfAccountType'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':TimeReason', $data['TimeReason'], \PDO::PARAM_STR);
+			$processJSONCommand->execute();
+			$successFlag = 1;
+		}else{
+			$warningMessage = 'Failed to save, new entry overlaps with existing time.';
+		}
+		
+		$results = [
+			'successFlag' => $successFlag,
+			'warningMessage' => $warningMessage
+		];
+		
+		return $results;
+	}
 	
 	private static function checkTimeOverlap($cardID, $startTime, $endTime)
 	{

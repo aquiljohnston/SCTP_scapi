@@ -13,10 +13,12 @@ use yii\web\BadRequestHttpException;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
-use app\modules\v3\models\Question;
+use app\modules\v3\controllers\TaskController;
+use app\modules\v3\models\PTO;
+use app\modules\v3\models\TimeEntry;
 use app\modules\v3\models\BaseActiveRecord;
 
-class QuestionController extends Controller{
+class PtoController extends Controller{
 
 	public function behaviors(){
 		$behaviors = parent::behaviors();
@@ -40,7 +42,7 @@ class QuestionController extends Controller{
 			$createdBy = BaseActiveController::getUserFromToken()->UserName;
 
 			// RBAC permission check
-			PermissionsController::requirePermission('questionCreate');
+			PermissionsController::requirePermission('ptoCreate');
 
 			//capture post body
 			$post = file_get_contents("php://input");
@@ -49,41 +51,53 @@ class QuestionController extends Controller{
 			//archive json
 			BaseActiveController::archiveJson(json_encode($data), 'QuestionCreate', $createdBy, BaseActiveController::urlPrefix());
 			
-			if(array_key_exists('Questions', $data)){
+			if(array_key_exists('PTO', $data)){
 				//pull data from envelope
-				$data = $data['Questions'];
+				$data = $data['PTO'];
 				//start transaction
 				$db = BaseActiveRecord::getDb();
 				$transaction = $db->beginTransaction();
 
 				//create response array
 				$responseData = [];
-				
-				//count number of items to insert
-				$questionCount = count($data);
-				for($i = 0; $i < $questionCount; $i++){
-					//try catch to log expense object error
-					try{					
-						$successFlag = 0;
-						$question = new Question;
-						$question->attributes = $data[$i];
 
-						if ($question->save()){
-							$successFlag = 1;
-						} else {
-							throw BaseActiveController::modelValidationException($question);
+				//try catch to log expense object error
+				try{					
+					$successFlag = 0;
+					$timeEntryResults = [];
+					$pto = new PTO;
+					$pto->attributes = $data;
+					//pto does not currently contain a timecardid, 
+					//but based on json structure assuming time card id will be consistent
+					if(array_key_exists('TimeEntry', $data) && $data['TimeEntry'] != null)
+						$pto->TimeCardID = $data['TimeEntry'][0]['TimeCardID'];
+
+					if ($pto->save()){
+						//save time entries
+						foreach($data['TimeEntry'] as $entry){
+							$results = TaskController::addActivityAndTime($entry);
+							$timeEntryResults[] = [
+								'TaskName' => $entry['TaskName'],
+								'Date' => $entry['Date'],
+								'successFlag' => $results['successFlag']
+							];
 						}
-					}catch(yii\db\Exception $e){
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data[$i], $data);
-						$successFlag = 0;
+						$successFlag  = 1;
+					} else {
+						throw BaseActiveController::modelValidationException($pto);
 					}
-					$responseData['Questions'][] = [
-						'QuestionUID' => $data[$i]['QuestionUID'],
-						'RefProjectID' => $data[$i]['RefProjectID'],
-						'RefQuestionID' => $data[$i]['RefQuestionID'],
-						'SuccessFlag' => $successFlag
-					];
+				}catch(yii\db\Exception $e){
+					$transaction->rollback();
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+					$successFlag = 0;
 				}
+				$responseData['PTO'][] = [
+					'PTOUID' => $data['PTOUID'],
+					'RefProjectID' => $data['RefProjectID'],
+					'SCCEmployeeID' => $data['SCCEmployeeID'],
+					'SuccessFlag' => $successFlag,
+					'TimeEntry' => $timeEntryResults
+				];
 			
 				//commit transaction
 				$transaction->commit();
