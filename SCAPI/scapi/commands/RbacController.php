@@ -794,6 +794,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Technician'][] = $questionCreate;
         $this->permissionArray[] = $questionCreate;
 		
+		////// Pto Controller Permissions //////
+		$ptoCreate = $this->auth->createPermission('ptoCreate');
+        $ptoCreate->description = 'Create pto records.';
+        $this->permissionAssociationArray['Technician'][] = $ptoCreate;
+        $this->permissionArray[] = $ptoCreate;
+		
 		////// Route Controller Permissions //////
 		
 		$routeOptimization1 = $this->auth->createPermission('routeOptimization1');
