@@ -67,10 +67,6 @@ class PtoController extends Controller{
 					$timeEntryResults = [];
 					$pto = new PTO;
 					$pto->attributes = $data;
-					//pto does not currently contain a timecardid, 
-					//but based on json structure assuming time card id will be consistent
-					if(array_key_exists('TimeEntry', $data) && $data['TimeEntry'] != null)
-						$pto->TimeCardID = $data['TimeEntry'][0]['TimeCardID'];
 
 					if ($pto->save()){
 						//save time entries
