@@ -186,7 +186,7 @@ class BaseCardController extends BaseActiveController
 			$function = 'fnTimeCardByDate';
 			$idName = 'TimeCardProjectID';
 		}elseif($type == Constants::NOTIFICATION_TYPE_MILEAGE){
-			$function = 'fnMileageCardByDate';
+			$function = 'fnMileageCardByDatePerformance';
 			$idName = 'MileageCardProjectID';
 		}
 		$query = new Query;
