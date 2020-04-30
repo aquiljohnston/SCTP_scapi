@@ -527,7 +527,7 @@ class MileageCardController extends BaseCardController
 			for ($x = 0; $x < $max; $x++) {
 				$queryString = "Select MileageCardID from [dbo].[MileageCardTb] mc
 								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod in ('H', 'C')) u on u.UserID = mc.MileageCardTechID
-								Where mc.MileageStartDate = '" . $data["dateRangeArray"][0] . "' and mc.MileageCardProjectID = " . $cardIDs[$x] . " and mc.MileageCardActiveFlag = 1 and MileageCardPMApprovedFlag != 1";
+								Where mc.MileageStartDate = '" . $data["dateRangeArray"][0] . "' and mc.MileageCardProjectID = " . $cardIDs[$x] . " and mc.MileageCardApprovedFlag = 1 and MileageCardPMApprovedFlag != 1";
 				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();	
 			}
 			//try to approve mileage cards
