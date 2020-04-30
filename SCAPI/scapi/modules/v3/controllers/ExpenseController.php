@@ -573,10 +573,19 @@ class ExpenseController extends Controller{
 				]);
 			$grouping = $groupingQuery->one(BaseActiveRecord::getDb());
 			
+			//check if user is still active in the project
+			$isActive = ProjectUser::find()
+				->where(['and',
+					['ProjUserProjectID' => $projectID],
+					['ProjUserUserID' => $userID]
+				])
+				->count();
+				
 			$transaction->commit();
 
 			$dataArray['entries'] = $entries;
 			$dataArray['groupData'] = $grouping;
+			$dataArray['isActive'] = $isActive;
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
