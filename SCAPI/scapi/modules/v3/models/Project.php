@@ -123,6 +123,25 @@ class Project extends \app\modules\v3\models\BaseActiveRecord
         return $this->hasMany(SCUser::className(), ['UserID' => 'ProjUserUserID'])
 			->via('projectUserTbs');
     }
+	
+	/**
+	* Gets query for [[RQuestionDataProjects]].
+	*
+	* @return \yii\db\ActiveQuery
+	*/
+    public function getQuestionDataProjects()
+    {
+        return $this->hasMany(QuestionDataProject::className(), ['ProjectID' => 'ProjectID']);
+    }
+	
+	/**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getQuestionData()
+    {
+        return $this->hasMany(QuestionData::className(), ['ID' => 'QuestionID'])
+			->via('questionDataProjects');
+    }
 
     /**
      * @return \yii\db\ActiveQuery

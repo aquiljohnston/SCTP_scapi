@@ -235,6 +235,9 @@ class UserController extends BaseActiveController
 
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
 				
+				//get questions list for apk
+				$questionsArray = $projectModel->getQuestionData()->all();				
+				
                 $projectData['ProjectID'] = $projectModel->ProjectID;
                 $projectData['RefProjectID'] = $projectModel->ProjectReferenceID;
                 $projectData['ProjectName'] = $projectModel->ProjectName;
@@ -254,6 +257,7 @@ class UserController extends BaseActiveController
                 $projectData['TimeCard'] = $timeCardModel;
                 $projectData['MileageCard'] = $mileageCardModel;
                 $projectData['ABCCodes'] = $abcCodesArray;
+                $projectData['QuestionData'] = $questionsArray;
 
                 $projects[] = $projectData;
             }
