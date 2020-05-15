@@ -24,6 +24,8 @@ use Yii;
  * @property string|null $RefProjectID
  * @property string|null $PTOUID
  * @property int|null $TimeCardID
+ * @property float|null $PreviousBalance
+ * @property float|null $NewBalance
  */
 class PTO extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -49,7 +51,7 @@ class PTO extends \app\modules\v3\models\BaseActiveRecord
     public function rules()
     {
         return [
-            [['Quantity'], 'number'],
+            [['Quantity', 'PreviousBalance', 'NewBalance'], 'number'],
             [['Memo', 'RefProjectID', 'PTOUID'], 'string'],
             [['StartDate', 'EndDate', 'ApprovedDateTime', 'SubmittedDateTime', 'SrcCreatedDateTime', 'SrvCreatedDateTime'], 'safe'],
             [['SCCEmployeeID', 'IsApproved', 'ApprovedByID', 'IsSubmitted', 'SubmittedByID', 'TimeCardID'], 'integer'],
@@ -79,6 +81,8 @@ class PTO extends \app\modules\v3\models\BaseActiveRecord
             'RefProjectID' => 'Ref Project ID',
             'PTOUID' => 'Ptouid',
             'TimeCardID' => 'Time Card ID',
+            'PreviousBalance' => 'Previous Balance',
+            'NewBalance' => 'New Balance',
         ];
     }
 }
