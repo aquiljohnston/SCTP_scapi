@@ -9,6 +9,7 @@ use app\modules\v3\models\Task;
 use app\modules\v3\models\TaskAndProject;
 use app\modules\v3\models\ChartOfAccountType;
 use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\PTO;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\Response;
@@ -203,6 +204,18 @@ class TaskController extends Controller
             $data = json_decode($body, true);
 			
 			$results = self::addActivityAndTime($data);
+			$isPTO = $data['ChargeOfAccountType'] == Constants::PTO_PAYROLL_HOURS_ID;
+			$ptoSuccessFlag = 0;
+			if($isPTO && $results['successFlag']){
+				//if task is pto and saved successfully create pto record
+				$pto = new PTO;
+				$pto->attributes = $data['PTOData'];
+				if ($pto->save()){
+					$ptoSuccessFlag  = 1;
+				} else {
+					throw BaseActiveController::modelValidationException($pto);
+				}
+			}
 			$successFlag = $results['successFlag'];
 			$warningMessage = $results['warningMessage'];			
 
@@ -227,6 +240,8 @@ class TaskController extends Controller
             'SuccessFlag' => $successFlag,
 			'warningMessage' => $warningMessage
         ];
+		//if is pto add to response
+		if($isPTO) $dataArray['PTOSuccessFlag'] = $ptoSuccessFlag;
         $response = Yii::$app->response;
         $response->format = Response::FORMAT_JSON;
         $response->data = $dataArray;

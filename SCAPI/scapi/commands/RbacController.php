@@ -800,6 +800,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Technician'][] = $ptoCreate;
         $this->permissionArray[] = $ptoCreate;
 		
+		$ptoGetBalance = $this->auth->createPermission('ptoGetBalance');
+        $ptoGetBalance->description = 'Get the PTO blanace of a user based on timecard.';
+		$this->permissionAssociationArray['Dispatcher'][] = $ptoGetBalance;
+        $this->permissionAssociationArray['Accountant'][] = $ptoGetBalance;
+        $this->permissionArray[] = $ptoGetBalance;
+		
 		////// Route Controller Permissions //////
 		
 		$routeOptimization1 = $this->auth->createPermission('routeOptimization1');

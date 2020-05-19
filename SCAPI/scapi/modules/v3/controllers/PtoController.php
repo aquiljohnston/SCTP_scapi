@@ -15,8 +15,9 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\TaskController;
 use app\modules\v3\models\PTO;
-use app\modules\v3\models\TimeEntry;
 use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\TimeEntry;
+use app\modules\v3\models\SCUser;
 
 class PtoController extends Controller{
 
@@ -29,6 +30,7 @@ class PtoController extends Controller{
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'create' => ['post'],
+					'get-balance' => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -107,6 +109,42 @@ class PtoController extends Controller{
 
 			//return response data
 			$response->data = $responseData;
+			return $response;
+		}catch(ForbiddenHttpException $e){
+            throw new ForbiddenHttpException;
+        }catch(UnauthorizedHttpException $e) {
+            throw new UnauthorizedHttpException;
+        }catch(\Exception $e){
+			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+            throw new \yii\web\HttpException(400);
+        }
+	}
+	
+	//get user PTO balance from time card ID
+	public function actionGetBalance($timeCardID){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			// RBAC permission check
+			PermissionsController::requirePermission('ptoGetBalance');
+			
+			$ptoQuery = new Query;
+			$ptoQuery->select('PTOBalance, SCCEmployeeID, ProjectReferenceID')
+				->from('UserTb')
+				->innerJoin('TimeCardTb', 'TimeCardTb.TimeCardTechID = UserTb.UserID')
+				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
+				->where(['TimeCardTb.TimeCardID' => $timeCardID]);
+			$ptoData = $ptoQuery->one(BaseActiveRecord::getDb());
+			
+			//create response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			
+			$responseArray['ptoData'] = $ptoData;
+
+			//return response data
+			$response->data = $responseArray;
 			return $response;
 		}catch(ForbiddenHttpException $e){
             throw new ForbiddenHttpException;
