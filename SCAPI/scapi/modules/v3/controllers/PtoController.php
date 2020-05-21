@@ -90,9 +90,15 @@ class PtoController extends Controller{
 					//commit transaction
 					$transaction->commit();
 				}catch(yii\db\Exception $e){
-					$transaction->rollback();
-					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
-					$successFlag = 0;
+					//if db exception is 2601/2627, duplicate contraint then success
+					if(in_array($e->errorInfo[1], array(2601, 2627))){
+						//if duplicate constraint
+						$successFlag  = 1;
+					}else{
+						$transaction->rollback();
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+						$successFlag = 0;
+					}
 				}
 				$responseData['PTO'][] = [
 					'PTOUID' => $data['PTOUID'],
