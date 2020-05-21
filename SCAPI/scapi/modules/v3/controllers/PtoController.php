@@ -161,7 +161,8 @@ class PtoController extends Controller{
 		//get userID from ref ID
 		$userID = SCUser::find()
 			->select('UserID')
-			->where(['SCCEmployeeID' => $pto->SCCEmployeeID])
+			->innerJoin('TimeCardTb', 'TimeCardTb.TimeCardTechID = UserTb.UserID')
+			->where(['TimeCardID' => $pto->TimeCardID])
 			->one();
 		
 		$ptoMediator = new PTOMediator;
