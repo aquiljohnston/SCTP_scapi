@@ -203,6 +203,10 @@ class TaskController extends Controller
             $body = file_get_contents("php://input");
             $data = json_decode($body, true);
 			
+			//start transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
 			$results = self::addActivityAndTime($data);
 			$isPTO = $data['ChargeOfAccountType'] == Constants::PTO_PAYROLL_HOURS_ID;
 			$ptoSuccessFlag = 0;
@@ -211,8 +215,16 @@ class TaskController extends Controller
 				$pto = new PTO;
 				$pto->attributes = $data['PTOData'];
 				if ($pto->save()){
+					//save PTOMediatorRecord
+					PtoController::savePTOMediator($pto);
 					$ptoSuccessFlag  = 1;
+					//commit transaction
+					$transaction->commit();
 				} else {
+					//rollback on pto failure
+					$transaction->rollback();
+					$results['successFlag'] = 0;
+					$results['warningMessage'] = 'Encountered Error Saving PTO Record.';
 					throw BaseActiveController::modelValidationException($pto);
 				}
 			}

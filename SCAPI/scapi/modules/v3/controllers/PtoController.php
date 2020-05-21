@@ -15,6 +15,7 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\TaskController;
 use app\modules\v3\models\PTO;
+use app\modules\v3\models\PTOMediator;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\TimeEntry;
 use app\modules\v3\models\SCUser;
@@ -51,7 +52,7 @@ class PtoController extends Controller{
 			$data = json_decode($post, true);
 
 			//archive json
-			BaseActiveController::archiveJson(json_encode($data), 'QuestionCreate', $createdBy, BaseActiveController::urlPrefix());
+			BaseActiveController::archiveJson(json_encode($data), 'PTOCreate', $createdBy, BaseActiveController::urlPrefix());
 			
 			if(array_key_exists('PTO', $data)){
 				//pull data from envelope
@@ -71,6 +72,8 @@ class PtoController extends Controller{
 					$pto->attributes = $data;
 
 					if ($pto->save()){
+						//save PTOMediatorRecord
+						self::savePTOMediator($pto);
 						//save time entries
 						foreach($data['TimeEntry'] as $entry){
 							$results = TaskController::addActivityAndTime($entry);
@@ -84,6 +87,8 @@ class PtoController extends Controller{
 					} else {
 						throw BaseActiveController::modelValidationException($pto);
 					}
+					//commit transaction
+					$transaction->commit();
 				}catch(yii\db\Exception $e){
 					$transaction->rollback();
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
@@ -96,9 +101,6 @@ class PtoController extends Controller{
 					'SuccessFlag' => $successFlag,
 					'TimeEntry' => $timeEntryResults
 				];
-			
-				//commit transaction
-				$transaction->commit();
 			}else{
 				$responseData = (object)[];
 			}
@@ -129,13 +131,11 @@ class PtoController extends Controller{
 			// RBAC permission check
 			PermissionsController::requirePermission('ptoGetBalance');
 			
-			$ptoQuery = new Query;
-			$ptoQuery->select('PTOBalance, SCCEmployeeID, ProjectReferenceID')
-				->from('UserTb')
-				->innerJoin('TimeCardTb', 'TimeCardTb.TimeCardTechID = UserTb.UserID')
-				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
-				->where(['TimeCardTb.TimeCardID' => $timeCardID]);
-			$ptoData = $ptoQuery->one(BaseActiveRecord::getDb());
+			//start transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
+			$ptoData = self::queryBalance($timeCardID, $db);
 			
 			//create response
 			$response = Yii::$app->response;
@@ -154,5 +154,56 @@ class PtoController extends Controller{
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
             throw new \yii\web\HttpException(400);
         }
+	}
+	
+	//save PTOMediator Record
+	public static function savePTOMediator($pto){
+		//get userID from ref ID
+		$userID = SCUser::find()
+			->select('UserID')
+			->where(['SCCEmployeeID' => $pto->SCCEmployeeID])
+			->one();
+		
+		$ptoMediator = new PTOMediator;
+		$ptoMediator->PendingBalance = $pto->NewBalance;
+		$ptoMediator->DeltaChange = $pto->PreviousBalance - $pto->NewBalance;
+		$ptoMediator->DeltaTimeStamp = $pto->SrcCreatedDateTime;
+		$ptoMediator->PTOID = $pto->ID;
+		$ptoMediator->UserID = $userID->UserID;
+		
+		if(!$ptoMediator->save())
+			throw BaseActiveController::modelValidationException($ptoMediator);
+	}
+	
+	//execute query to fetch PTOBalance Data
+	public static function queryBalance($timeCardID, $db){
+		//check if pto mediator record exist, if true grab most recent value else grab balance from userTB
+		$mediatorQuery = new Query;
+		$mediatorQuery->select('ID')
+			->from('PTOMediator')
+			->innerJoin('TimeCardTb', 'TimeCardTb.TimeCardTechID = PTOMediator.UserID')
+			->where(['TimeCardTb.TimeCardID' => $timeCardID]);
+		$mediatorCount = $mediatorQuery->count('*', $db);
+		if($mediatorCount){
+			$ptoQuery = new Query;
+			$ptoQuery->select('PTOMediator.PendingBalance AS PTOBalance, UserTb.SCCEmployeeID, ProjectTb.ProjectReferenceID')
+				->from('PTOMediator')
+				->innerJoin('UserTb', 'UserTb.UserID = PTOMediator.UserID')
+				->innerJoin('TimeCardTb', 'TimeCardTb.TimeCardTechID = PTOMediator.UserID')
+				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
+				->where(['TimeCardTb.TimeCardID' => $timeCardID])
+				->orderBy('PTOMediator.DeltaTimeStamp DESC');
+			$ptoData = $ptoQuery->one($db);
+		}else{			
+			$ptoQuery = new Query;
+			$ptoQuery->select('UserTb.PTOBalance, UserTb.SCCEmployeeID, ProjectTb.ProjectReferenceID')
+				->from('UserTb')
+				->innerJoin('TimeCardTb', 'TimeCardTb.TimeCardTechID = UserTb.UserID')
+				->innerJoin('ProjectTb', 'ProjectTb.ProjectID = TimeCardTb.TimeCardProjectID')
+				->where(['TimeCardTb.TimeCardID' => $timeCardID]);
+			$ptoData = $ptoQuery->one($db);
+		}
+		
+		return $ptoData;
 	}
 }

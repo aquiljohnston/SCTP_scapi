@@ -12,7 +12,7 @@ use app\modules\v3\models\AllTimeCardsCurrentWeek;
 use app\modules\v3\models\AllMileageCardsCurrentWeek;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\ABCCodes;
-use app\modules\v2\controllers\TaskController;
+use app\modules\v2\controllers\TaskController; //using getTask currently only in v2 TODO update for v3
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\PermissionsController;
 use app\modules\v3\authentication\TokenAuth;
@@ -148,6 +148,10 @@ class UserController extends BaseActiveController
                     ->andWhere("TimeCardProjectID = $projectID")
 					->asArray()
                     ->One();
+					
+				//get ptoBalance, and pass it to user data array
+				$ptoBalance = PtoController::queryBalance($timeCardModel['TimeCardID'], $db)['PTOBalance'];
+				$user['PTOBalance'] = $ptoBalance;
 				
 				if($timeCardModel != null){
 					//format time summary data
