@@ -227,6 +227,8 @@ class TaskController extends Controller
 					$results['warningMessage'] = 'Encountered Error Saving PTO Record.';
 					throw BaseActiveController::modelValidationException($pto);
 				}
+			} else {
+				$transaction->commit();
 			}
 			$successFlag = $results['successFlag'];
 			$warningMessage = $results['warningMessage'];			
