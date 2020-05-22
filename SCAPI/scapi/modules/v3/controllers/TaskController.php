@@ -203,6 +203,9 @@ class TaskController extends Controller
             $body = file_get_contents("php://input");
             $data = json_decode($body, true);
 			
+			//archive json
+			BaseActiveController::archiveWebJson($body, 'Create Task Entry', BaseActiveController::getUserFromToken()->UserName, BaseActiveController::urlPrefix());
+			
 			//start transaction
 			$db = BaseActiveRecord::getDb();
 			$transaction = $db->beginTransaction();
