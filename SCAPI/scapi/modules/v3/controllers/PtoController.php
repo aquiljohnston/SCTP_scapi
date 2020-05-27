@@ -15,10 +15,11 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\TaskController;
 use app\modules\v3\models\PTO;
+use app\modules\v3\models\PTOHistory;
 use app\modules\v3\models\PTOMediator;
 use app\modules\v3\models\BaseActiveRecord;
-use app\modules\v3\models\TimeEntry;
 use app\modules\v3\models\SCUser;
+use DateTime;
 
 class PtoController extends Controller{
 
@@ -174,7 +175,7 @@ class PtoController extends Controller{
 		$ptoMediator = new PTOMediator;
 		$ptoMediator->PendingBalance = $pto->NewBalance;
 		$ptoMediator->DeltaChange = $pto->PreviousBalance - $pto->NewBalance;
-		$ptoMediator->DeltaTimeStamp = $pto->SrcCreatedDateTime;
+		$ptoMediator->DeltaTimeStamp = BaseActiveController::getDate();
 		$ptoMediator->PTOID = $pto->ID;
 		$ptoMediator->UserID = $userID->UserID;
 		
@@ -210,7 +211,109 @@ class PtoController extends Controller{
 				->where(['TimeCardTb.TimeCardID' => $timeCardID]);
 			$ptoData = $ptoQuery->one($db);
 		}
-		
 		return $ptoData;
+	}
+	
+	//updates pto records when PTO time entries are deactivated
+	public static function updatePTO($timeEntryArray){
+		//loop time entries
+		foreach($timeEntryArray as $timeEntry){
+			//calculate time entry quantity
+			$timeEntryQuantity = self::calcFloatTimeDiff($timeEntry->TimeEntryStartTime, $timeEntry->TimeEntryEndTime);
+			//find accompanying PTO records
+			$ptoRecordArray = PTO::find()
+				->where(['TimeCardID' => $timeEntry->TimeEntryTimeCardID])
+				->andWhere(['and',
+					['<=', 'StartDate', $timeEntry->TimeEntryStartTime],
+					['>=', 'EndDate', $timeEntry->TimeEntryStartTime],
+				])
+				->all();
+			//Loop PTO Records until time entry quantity has been accounted for
+			foreach($ptoRecordArray as $ptoRecord){
+				//save pto history record
+				$ptoHistory = new PTOHistory;
+				$ptoHistory->attributes = $ptoRecord->attributes;
+				if($ptoHistory->save()){
+					//grab current time entry qunatity to prevent overwrite issues
+					$currentTimeEntryQunatity = $timeEntryQuantity;
+					//compare PTO quantity to calc value  else delete
+					//if pto > than time entry, update pto 
+					if($ptoRecord->Quantity > $currentTimeEntryQunatity){
+						//subtract pto quantity from time quantity
+						$timeEntryQuantity -= $ptoRecord->Quantity;
+						$ptoRecord->Quantity -= $currentTimeEntryQunatity;
+						//call func to update mediator
+						self::updateMediator($ptoRecord);
+						if(!$ptoRecord->update())
+							throw BaseActiveController::modelValidationException($ptoRecord);
+					}
+					//else pto is <=  time entry, delete pto record
+					else{
+						//subtract pto quantity from time quantity
+						$timeEntryQuantity -= $ptoRecord->Quantity;
+						$ptoRecord->Quantity -= $currentTimeEntryQunatity;
+						//call func to update mediator
+						self::updateMediator($ptoRecord);
+						if(!$ptoRecord->delete())
+							throw BaseActiveController::modelValidationException($ptoRecord);
+					}
+					//if timeEntryQuantity is <= 0 break out of loop
+					if($timeEntryQuantity <= 0)
+						break;
+				}else{
+					//ptoHistory failed to save
+					throw BaseActiveController::modelValidationException($ptoHistory);
+				}
+			}
+		}
+	}
+	
+	//calculates the float value in hours of the difference between two date time strings
+	//may move this to base controller if more uses are found
+	private static function calcFloatTimeDiff($startDate, $endDate){
+		$d1 = new DateTime($startDate);
+		$d2 = new DateTime($endDate);
+		$diff = $d2->diff($d1);
+		return (float)((($diff->h*60) + $diff->i)/60.0);
+	}
+	
+	//preform cascade update/deletes of pto mediator records
+	private static function updateMediator($ptoRecord){
+		//find PTOMediator by PTOID
+		$ptoMediator = PTOMediator::find()
+			->where(['PTOID' => $ptoRecord->ID])
+			->andWhere(['or',
+				['IS', 'IsInSync', null],
+				['<>', 'IsInSync', 1]
+			])
+			->one();
+		//get difference in qunatity to update pending balances
+		$balanceChange = $ptoMediator->DeltaChange - $ptoRecord->Quantity;
+		//if qunatity <0 than 0 delete record else update to new quantity
+		if($ptoRecord->Quantity <= 0){
+			if(!$ptoMediator->delete())
+				throw BaseActiveController::modelValidationException($ptoMediator);
+		}else{
+			$ptoMediator->DeltaChange = $ptoRecord->Quantity;
+			$ptoMediator->PendingBalance += $balanceChange;
+			if(!$ptoMediator->update())
+				throw BaseActiveController::modelValidationException($ptoMediator);
+		}
+		//find any subsequent PTOMediator records
+		//find PTOMediator by PTOID
+		$subsequentRecords = PTOMediator::find()
+			->where(['UserID' => $ptoMediator->UserID])
+			->andWhere(['or',
+				['IS', 'IsInSync', null],
+				['<>', 'IsInSync', 1]
+			])
+			->andWhere([ '>', 'DeltaTimeStamp', $ptoMediator->DeltaTimeStamp])
+			->all();
+		//loop and update PendingBalance for subsequent PTOMediator records
+		foreach($subsequentRecords as $subsequentRecord){
+			$subsequentRecord->PendingBalance += $balanceChange;
+			if(!$subsequentRecord->update())
+				throw BaseActiveController::modelValidationException($subsequentRecord);
+		}
 	}
 }

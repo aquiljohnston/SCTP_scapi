@@ -7,6 +7,8 @@ use app\modules\v3\models\TimeEntry;
 use app\modules\v3\models\TimeEntryEventHistory;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\PtoController;
+use app\modules\v3\constants\Constants;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -74,6 +76,13 @@ class TimeEntryController extends BaseActiveController
 			$successFlag = 0;
 			
 			try{
+				//check if record is PTO then pass to function as array to update pto record
+				if($timeEntry->TimeEntryChartOfAccount == Constants::PTO_PAYROLL_HOURS_ID){
+					$timeEntryArray = [];
+					$timeEntryArray[] = $timeEntry;
+					PtoController::updatePTO($timeEntryArray);
+				}
+				
 				//pass current data to new history record
 				if(self::createHistoryRecord($timeEntry, $modifiedBy, $modifiedDate, 'Deactivated', $data['timeReason'])){
 					//delete the record, to avoid constraint issues
@@ -83,6 +92,7 @@ class TimeEntryController extends BaseActiveController
 				}
 			}catch(Exception $e){
 				$transaction->rollBack();
+				BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			}
 			
 			$transaction->commit();
@@ -124,14 +134,29 @@ class TimeEntryController extends BaseActiveController
 				//SPROC has no return so just in case we need a flag.
 				$success = 0;
 				//avoid pass by reference error in prod
+				$timeCardID = $entry['timeCardID'];
 				$taskName = json_encode($entry['taskName']);
 				$taskDay = array_key_exists('day', $entry) ? $entry['day'] : null;
 				//call SPROC to deactivateTimeEntry
 				try {
 					$connection = BaseActiveRecord::getDb();
-					$transaction = $connection->beginTransaction(); 
+					$transaction = $connection->beginTransaction();
+					//if PTO get affected time entries
+					if($taskName == '["Task OTHER [PTO]"]'){
+						$timeEntryArray = [];
+						$timeEntryQuery = TimeEntry::find()
+							->where([ 'and',
+								['TimeEntryTimeCardID' => $timeCardID],
+								['TimeEntryChartOfAccount' => Constants::PTO_PAYROLL_HOURS_ID]
+							]);
+						if($taskDay != null)
+							$timeEntryQuery->andWhere(['CAST(TimeEntryStartTime AS date)' => $taskDay]);
+						$timeEntryArray = $timeEntryQuery->all();
+						//pass time entries to function for updating pto records
+						PtoController::updatePTO($timeEntryArray);
+					}
 					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :TimeCardID,:TimeEntryTitleJSON,:TimeEntryDate,:UserName,:TimeReason");
-					$timeCardCommand->bindParam(':TimeCardID', $entry['timeCardID'], \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':TimeCardID', $timeCardID, \PDO::PARAM_INT);
 					$timeCardCommand->bindParam(':TimeEntryTitleJSON', $taskName, \PDO::PARAM_INT);
 					$timeCardCommand->bindParam(':TimeEntryDate', $taskDay, \PDO::PARAM_INT);
 					$timeCardCommand->bindParam(':UserName', $username, \PDO::PARAM_STR);
@@ -141,6 +166,7 @@ class TimeEntryController extends BaseActiveController
 					$success = 1;
 				} catch (Exception $e) {
 					$transaction->rollBack();
+					BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 				}
 			}
 			$response->data = $success; 
