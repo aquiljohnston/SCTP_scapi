@@ -7,6 +7,7 @@ use yii\db\Query;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
+use yii\base\ErrorException;
 use yii\web\ForbiddenHttpException;
 use yii\web\UnauthorizedHttpException;
 use yii\web\BadRequestHttpException;
@@ -82,7 +83,9 @@ class PtoController extends Controller{
 								'TaskName' => $entry['TaskName'],
 								'Date' => $entry['Date'],
 								'successFlag' => $results['successFlag']
-							];
+							];			
+							if($results['successFlag'] == 0)
+								throw new ErrorException('PTO Time Overlap', 42, 2);
 						}
 						$successFlag  = 1;
 					} else {
@@ -100,6 +103,10 @@ class PtoController extends Controller{
 						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
 						$successFlag = 0;
 					}
+				}catch(\Exception $e){
+					$transaction->rollback();
+					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data);
+					$successFlag = 0;
 				}
 				$responseData['PTO'][] = [
 					'PTOUID' => $data['PTOUID'],

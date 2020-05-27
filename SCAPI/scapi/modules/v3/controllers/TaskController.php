@@ -273,7 +273,7 @@ class TaskController extends Controller
 		$endDateTime = $data['Date'] . ' ' . $data['EndTime'];
 		$isOverlap = self::checkTimeOverlap($data['TimeCardID'], $startDateTime, $endDateTime);
 
-		if($isOverlap ==0){
+		if($isOverlap == 0){
 			//remove charge of account that is causing conflict in fnGeneratePayrollDataByProject
 			if(!in_array($data['ChargeOfAccountType'], [Constants::PTO_PAYROLL_HOURS_ID, Constants::HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID])) $data['ChargeOfAccountType'] = NULL;
 			
