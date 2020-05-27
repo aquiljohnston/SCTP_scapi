@@ -881,6 +881,11 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $viewExpenseMgmt;
         $this->permissionArray[] = $viewExpenseMgmt;
 		
+		$viewBreadcrumbDisplay = $this->auth->createPermission('viewBreadcrumbDisplay');
+        $viewBreadcrumbDisplay->description = 'View breadcrumb display menu item';
+        $this->permissionAssociationArray['Supervisor'][] = $viewBreadcrumbDisplay;
+        $this->permissionArray[] = $viewBreadcrumbDisplay;
+		
 		echo "Base Permissions Array Created.\n";		
 	}
 	
