@@ -38,14 +38,6 @@ class PTO extends \app\modules\v3\models\BaseActiveRecord
     }
 
     /**
-     * @return \yii\db\Connection the database connection used by this AR class.
-     */
-    public static function getDb()
-    {
-        return Yii::$app->get('ctDevDb');
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function rules()
