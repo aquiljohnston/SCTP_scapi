@@ -12,6 +12,7 @@ use app\modules\v3\models\AllTimeCardsCurrentWeek;
 use app\modules\v3\models\AllMileageCardsCurrentWeek;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\ABCCodes;
+use app\modules\v3\models\ProjectConfiguration;
 use app\modules\v2\controllers\TaskController; //using getTask currently only in v2 TODO update for v3
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\PermissionsController;
@@ -240,7 +241,11 @@ class UserController extends BaseActiveController
                 $clientModel = Client::findOne($projectModel->ProjectClientID);
 				
 				//get questions list for apk
-				$questionsArray = $projectModel->getQuestionData()->all();				
+				$questionsArray = $projectModel->getQuestionData()->all();
+
+				$projectConfig = ProjectConfiguration::find()
+					->where(['ProjectID' => $projectID])
+					->one();
 				
                 $projectData['ProjectID'] = $projectModel->ProjectID;
                 $projectData['RefProjectID'] = $projectModel->ProjectReferenceID;
@@ -262,6 +267,8 @@ class UserController extends BaseActiveController
                 $projectData['MileageCard'] = $mileageCardModel;
                 $projectData['ABCCodes'] = $abcCodesArray;
                 $projectData['QuestionData'] = $questionsArray;
+				//get project config values if not available default to 0
+                $projectData['IsEndOfDayTaskOut'] = $projectConfig != null ? $projectConfig->IsEndOfDayTaskOut : 0;
 
                 $projects[] = $projectData;
             }
