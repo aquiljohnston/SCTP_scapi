@@ -389,6 +389,16 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Admin'][] = $projectAddRemoveModules;
         $this->permissionArray[] = $projectAddRemoveModules;
 		
+		$projectViewConfig = $this->auth->createPermission('projectViewConfig');
+        $projectViewConfig->description = 'View a project configuration';
+        $this->permissionAssociationArray['ProjectManager'][] = $projectViewConfig;
+        $this->permissionArray[] = $projectViewConfig;
+		
+		$projectUpdateConfig = $this->auth->createPermission('projectUpdateConfig');
+        $projectUpdateConfig->description = 'Update a project configuration';
+        $this->permissionAssociationArray['ProjectManager'][] = $projectUpdateConfig;
+        $this->permissionArray[] = $projectUpdateConfig;
+		
 		//State Code permissions/////////////////////////////////////////////////////////////////
 
         $stateCodeGetDropdown = $this->auth->createPermission('stateCodeGetDropdown');
@@ -861,7 +871,7 @@ class RbacController extends Controller
 
         $viewProjectMgmt = $this->auth->createPermission('viewProjectMgmt');
         $viewProjectMgmt->description = 'View project management  menu item';
-        $this->permissionAssociationArray['Admin'][] = $viewProjectMgmt;
+        $this->permissionAssociationArray['ProjectManager'][] = $viewProjectMgmt;
         $this->permissionArray[] = $viewProjectMgmt;
 
         $viewUserMgmt = $this->auth->createPermission('viewUserMgmt');
