@@ -29,6 +29,7 @@ class ProjectController extends BaseActiveController
 			[
                 'class' => VerbFilter::className(),
                 'actions' => [
+					'view'  => ['get'],
 					'get-all'  => ['get'],
 					'get-config'  => ['get'],
 					'update-config'  => ['put'],
@@ -48,6 +49,45 @@ class ProjectController extends BaseActiveController
 	}
 	
 	use DeleteMethodNotAllowed;
+	
+	/**
+	* Gets the data for a project based on a project id
+	* @param $id the id of a project record
+	* @returns Response json body of the project data
+	* @throws \yii\web\HttpException
+	*/	
+	public function actionView($id){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('projectView');
+			
+			$project = Project::find()
+				->where(['ProjectID' => $id])
+				->asArray()
+				->one();
+			
+			$projectConfig = ProjectConfiguration::find()
+				->where(['ProjectID' => $id])
+				->one();
+				
+			$project['IsEndOfDayTaskOut'] = $projectConfig != null ? $projectConfig->IsEndOfDayTaskOut : 0;
+			
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+			$response->data = $project;
+			
+			return $response;
+		}catch(ForbiddenHttpException $e){
+            throw new ForbiddenHttpException;
+        }catch(UnauthorizedHttpException $e) {
+            throw new UnauthorizedHttpException;
+        }catch(\Exception $e){
+            throw new \yii\web\HttpException(400);
+        }
+	} 
 
 	/**
 	* Gets all of the subclass's model's records
@@ -62,7 +102,7 @@ class ProjectController extends BaseActiveController
 			try
 			{
 				//set db target
-				Project::setClient(BaseActiveController::urlPrefix());
+				BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
 				$projects = Project::find();
 			}
