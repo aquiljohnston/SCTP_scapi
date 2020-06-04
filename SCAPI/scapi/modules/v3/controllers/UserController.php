@@ -249,6 +249,16 @@ class UserController extends BaseActiveController
 			//cast user as an array to add SystemDateTime
 			$user = (array)$user->attributes;
 			$user['SystemDateTime'] = BaseActiveController::getDate();
+			
+			//add user per diem rate to get me call
+			$user['hasPerDiem'] = $user['Division'] == null ? 0 : 1;
+			
+			$perDiem = PerDiem::find()
+				->select('Rate')
+				->where(['ID' => $user['Division']])
+				->one();
+				
+			$user['PerDiem'] = $perDiem != null ? $perDiem['Rate'] : null;
 
             $equipment = [];
             //get equipment for user
