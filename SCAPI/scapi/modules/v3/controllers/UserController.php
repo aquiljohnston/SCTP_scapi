@@ -13,6 +13,7 @@ use app\modules\v3\models\AllMileageCardsCurrentWeek;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\ABCCodes;
 use app\modules\v3\models\ProjectConfiguration;
+use app\modules\v3\models\PerDiem;
 use app\modules\v2\controllers\TaskController; //using getTask currently only in v2 TODO update for v3
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\PermissionsController;
@@ -97,6 +98,16 @@ class UserController extends BaseActiveController
 			//cast user as an array to add SystemDateTime
 			$user = (array)$user->attributes;
 			$user['SystemDateTime'] = BaseActiveController::getDate();
+			
+			//add user per diem rate to get me call
+			$user['hasPerDiem'] = $user['Division'] == null ? 0 : 1;
+			
+			$perDiem = PerDiem::find()
+				->select('Rate')
+				->where(['ID' => $user['Division']])
+				->one();
+				
+			$user['PerDiem'] = $perDiem != null ? $perDiem['Rate'] : null;
 
             $equipment = [];
             //get equipment for user
