@@ -31,15 +31,18 @@ final class Constants
 	const PROD_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\Oasis\\';
 	const PROD_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooks\\';
 	const PROD_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADP\\';
+	
+	//COA Values
+	const OT_PAYROLL_HOURS_ID = 4005;
+	const HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID = 5015;
+	const PTO_PAYROLL_HOURS_ID = 5020;
+	const PERDIEM_EXPENSE_ID = 4450;
 
 	//Time Card File Types
 	const OASIS = 'OASIS';
 	//need to change to payroll instead of quickbooks
 	const MSDYNAMICS_TIMECARD = 'tcMSDynamics';
 	const ADP = 'ADP';
-	const OT_PAYROLL_HOURS_ID = 4005;
-	const HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID = 5015;
-	const PTO_PAYROLL_HOURS_ID = 5020;
 	
 	//Payment Method
 	const PAY_METHOD_SALARY = 'S';

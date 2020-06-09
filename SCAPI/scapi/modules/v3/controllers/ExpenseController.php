@@ -14,7 +14,7 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\ProjectUser;
 use app\modules\v3\models\Project;
-use app\modules\v3\models\BaseUser;
+use app\modules\v3\models\BaseUser; //probably want to change this to SCUser
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\Expense;
 use app\modules\v3\models\GetExpenses;
@@ -654,7 +654,7 @@ class ExpenseController extends Controller{
 			$responseArray['projectDropdown'] = $projectArray;
 			$responseArray['employeeDropdown'] = $userArray;
 			//hardcoded coa for now
-			$responseArray['coaDropdown'] = [4450 => 'Per Deim'];
+			$responseArray['coaDropdown'] = [Constants::PERDIEM_EXPENSE_ID => 'Per Diem'];
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
 			return $response;
