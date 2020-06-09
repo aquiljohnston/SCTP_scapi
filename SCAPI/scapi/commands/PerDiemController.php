@@ -38,6 +38,7 @@ class PerDiemController extends Controller
 				//get project id for all projects user has recorded work against this week
 				$timeCardProjectID = TimeCard::find()
 					->select(['[TimeCardTb].[TimeCardProjectID]'])
+					->distinct()
 					->innerJoin('TimeEntryTb', '[TimeEntryTb].[TimeEntryTimeCardID] = [TimeCardTb].[TimeCardID]')
 					->innerJoin('ActivityTb', '[ActivityTb].[ActivityID] = [TimeEntryTb].[TimeEntryActivityID]')
 					->where(['TimeCardTechID' => $user['UserID']])
