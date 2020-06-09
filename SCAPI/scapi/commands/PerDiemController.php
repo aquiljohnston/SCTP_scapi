@@ -17,7 +17,7 @@ class PerDiemController extends Controller
      * Purpose of this file is to generate new daily per diem records for contracted employees.
     **/
     
-	//Cmd: yii per-diem/create
+	//Cmd: yii per-diem/create scctdev
 	public function actionCreate($client){
 		try{
 			//set db target
@@ -29,8 +29,6 @@ class PerDiemController extends Controller
 			$contractedUsers = SCUser::find()
 				->select(['[UserTb].[UserID]', '[UserTb].[UserName]', '[refPerDiem].[Rate]', '[refPerDiem].[No Of Days]'])
 				->innerJoin('refPerDiem', '[refPerDiem].[ID] = [UserTb].[Division]')
-				//1481, 4614
-				->andWhere(['in', 'UserID', [1481]]) //temp user restriction for testing
 				->asArray()
 				->all();
 			//get date
