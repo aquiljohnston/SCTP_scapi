@@ -572,6 +572,11 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $expenseGetAccountantDetails;
         $this->permissionArray[] = $expenseGetAccountantDetails;
 		
+		$expenseTestPerDiem = $this->auth->createPermission('expenseTestPerDiem');
+        $expenseTestPerDiem->description = 'Route to test execution on php script to create weekly per diem records.';
+        $this->permissionAssociationArray['Admin'][] = $expenseTestPerDiem;
+        $this->permissionArray[] = $expenseTestPerDiem;
+		
 		//User permissions/////////////////////////////////////////////////////////////////
 
         $userGetActive = $this->auth->createPermission('userGetActive');

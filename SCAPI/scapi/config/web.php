@@ -90,6 +90,9 @@ $config = [
 			// 'enablePrettyUrl' => true,
 			// 'showScriptName' => false,
 		// ],
+		'consoleRunner' => [
+			'class' => 'toriphes\console\Runner'
+		],
     ],
     'params' => $params,
 ];
