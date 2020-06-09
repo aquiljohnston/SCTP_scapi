@@ -21,7 +21,6 @@ use app\modules\v3\models\GetExpenses;
 use app\modules\v3\models\ExpenseEventHistory;
 use app\modules\v3\models\ExpenseEntryEventHistory;
 
-
 class ExpenseController extends Controller{
 
 	public function behaviors(){
@@ -817,6 +816,18 @@ class ExpenseController extends Controller{
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
         }	
+	}
+	
+	public function actionTestPerDiem(){
+		$client = BaseActiveController::urlPrefix();
+		//set target db for permission check
+		BaseActiveRecord::setClient($client);
+		//RBAC permissions check
+		PermissionsController::requirePermission('expenseTestPerDiem');
+		//call script to create records
+		$output = '';
+		Yii::$app->consoleRunner->run('per-diem/create scctdev', $output);	
+		return $output;
 	}
 	
 	private static function getSubmissionFileData($params){
