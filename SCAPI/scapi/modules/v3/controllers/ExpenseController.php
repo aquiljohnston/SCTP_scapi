@@ -826,7 +826,9 @@ class ExpenseController extends Controller{
 		PermissionsController::requirePermission('expenseTestPerDiem');
 		//call script to create records
 		$output = '';
-		Yii::$app->consoleRunner->run('per-diem/create scctdev', $output);	
+		//file path for dev php cli
+		Yii::$app->consoleRunner->phpexec = 'C:\PHP_7.2.9\php';
+		Yii::$app->consoleRunner->run('per-diem/create ' . $client, $output);	
 		return $output;
 	}
 	
