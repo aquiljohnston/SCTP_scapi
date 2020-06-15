@@ -17,8 +17,8 @@ class PerDiemController extends Controller
      * Purpose of this file is to generate new daily per diem records for contracted employees.
     **/
     
-	//Cmd: yii per-diem/create scctdev
-	public function actionCreate($client){
+	//Cmd: yii per-diem/create scctdev "2020-06-13 22:00:00.000"(optional)
+	public function actionCreate($client, $datetime = null){
 		try{
 			//set db target
 			BaseActiveRecord::setClient($client);
@@ -31,8 +31,13 @@ class PerDiemController extends Controller
 				->innerJoin('refPerDiem', '[refPerDiem].[ID] = [UserTb].[Division]')
 				->asArray()
 				->all();
-			//get date
-			$date = BaseActiveController::getDate();
+			//get datetime
+			if($datetime == null){
+				$datetime = BaseActiveController::getDate();
+			}
+			//get date part of datetime
+			$date = date('Y-m-d', strtotime($datetime)); 
+			echo nl2br("Date: " . $date . "\n");
 			//loop users
 			foreach($contractedUsers as $user){
 				//get project id for all projects user has recorded work against this week
@@ -61,14 +66,23 @@ class PerDiemController extends Controller
 					$perDiem = new Expense;
 					$perDiem->Username = $user['UserName'];
 					$perDiem->CreatedDate = $date;
-					$perDiem->CreatedDateTime = $date;
+					$perDiem->CreatedDateTime = $datetime;
 					$perDiem->Quantity = $user['Rate'] * $user['No Of Days'];
 					$perDiem->ChargeAccount = Constants::PERDIEM_EXPENSE_ID;
 					$perDiem->ProjectID = $projectID['TimeCardProjectID'];
 					$perDiem->UserID = $user['UserID'];
-					//save per diem
-					if(!$perDiem->save()){
-						throw BaseActiveController::modelValidationException($perDiem);
+					try{
+						//save per diem
+						if(!$perDiem->save()){
+							throw BaseActiveController::modelValidationException($perDiem);
+						}
+					}catch(yii\db\Exception $e){
+						//if db exception is 2601/2627, duplicate constraint then skip
+						if(in_array($e->errorInfo[1], array(2601, 2627))){
+							BaseActiveController::archiveErrorJson('PerDiem Generation Constraint', $e, $client);
+						}else{
+							throw $e;
+						}
 					}
 				}
 			}
