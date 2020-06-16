@@ -14,6 +14,7 @@ use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\ABCCodes;
 use app\modules\v3\models\ProjectConfiguration;
 use app\modules\v3\models\PerDiem;
+use app\modules\v3\models\Users;
 use app\modules\v2\controllers\TaskController; //using getTask currently only in v2 TODO update for v3
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\controllers\PermissionsController;
@@ -24,7 +25,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\base\ErrorException;
 use yii\db\Exception;
-
+use yii\db\Query;
 
 /**
  * UserController implements the routes for the User model.
@@ -48,7 +49,8 @@ class UserController extends BaseActiveController
             [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'get-me' => ['get']
+                    'get-me' => ['get'],
+                    'get-active' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -64,6 +66,155 @@ class UserController extends BaseActiveController
         unset($actions['update']);
         unset($actions['delete']);
         return $actions;
+    }
+
+	/**
+     * Gets a users data for all users with an active flag of 1 for active
+     * @param $listPerPage
+     * @param $page
+     * @returns json body of users
+     * @throws \yii\web\HttpException
+     */
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = 'all', $sortField = 'UserLastName', $sortOrder = 'ASC'){
+        try{
+			//get headers
+			$headers = getallheaders();
+			//get client header
+			$client = $headers['X-Client'];
+			
+            //set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            PermissionsController::requirePermission('userGetActive');
+			
+			//initialize response array
+			$responseArray['assets'] = [];
+			$responseArray['pages'] = [];
+
+			//fetch data from db for projects and users
+			if(BaseActiveController::isSCCT($client)){
+				$showProjectDropdown = true;
+				//get user id from auth token
+				$user = self::getUserFromToken();
+				
+				//create base query for projects
+				if(PermissionsController::can('projectGetAll')){
+					$projectQuery = (new Query())
+						->select('ProjUserProjectID')
+						->distinct()
+						->from('Project_User_Tb');
+				}elseif(PermissionsController::can('projectGetOwnProjects')){
+					$projectQuery = (new Query())
+						->select('ProjUserProjectID')
+						->from('Project_User_Tb')
+						->where(['ProjUserUserID' => $user->UserID]);
+				}else{
+					throw new ForbiddenHttpException;
+				}
+				
+				//get projects for dropdown before applying filter
+				$projects = Project::find()
+					->select(['ProjectID', 'ProjectName', 'ProjectReferenceID'])
+					->where(['in', 'ProjectID', $projectQuery])
+					->orderBy('ProjectName')
+					->all();
+
+				//create base of user query
+				$userQuery = SCUser::find()
+					->select(['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType'])
+					->where(['[UserTb].UserActiveFlag' => 1]);
+				//handle unassigned users
+				if($projectID == 'unassigned'){
+					$userQuery->andWhere(['not in', 'UserID', (new Query())
+						->select('ProjUserUserID')
+						->from('Project_User_Tb')
+						->where(['in','ProjUserProjectID', $projectQuery])
+					]);
+				}elseif($projectID != 'all'){
+					// if($projectID != 'assigned') could be used to get all assigned users if this is a route we want to take in the future
+					//filter by selected project
+					$projectQuery->andWhere(['ProjUserProjectID' => $projectID]);				
+					//get assigned users based on selected project(s)
+					$userQuery->andWhere(['in', 'UserID', (new Query())
+						->select('ProjUserUserID')
+						->from('Project_User_Tb')
+						->where(['in','ProjUserProjectID', $projectQuery])
+					]);
+				}
+			}else{
+				//get projects for dropdown
+				$showProjectDropdown = false;
+				PermissionsController::requirePermission('projectGetOwnProjects');
+				$projects = Project::find()
+					->select(['ProjectID', 'ProjectName', 'ProjectReferenceID'])
+					->where(['ProjectUrlPrefix' => $client])
+					->all();
+				BaseActiveRecord::setClient($client);
+				//create base of user query
+				$userQuery = Users::find()
+					->select(['UserName', 'UserFirstName', 'UserLastName', 'UserEmployeeType']);
+			}
+			
+			//apply filter to query
+			if($filter != null){
+				$userQuery->andFilterWhere([
+					'or',
+					['like', 'UserName', $filter],
+					['like', 'UserFirstName', $filter],
+					['like', 'UserLastName', $filter],
+					['like', 'UserEmployeeType', $filter],
+				]);
+			}
+			
+			//check if paging parameters were sent
+			if ($page != null){
+				//pass query with pagination data to helper method
+				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
+				//use updated query with pagination clause to get data
+				$usersArr = $paginationResponse['Query']
+					->orderBy("$sortField $sortOrder")
+					->all();
+				$responseArray['pages'] = $paginationResponse['pages'];
+			}else{
+				//if no pagination params were sent use base query
+				$usersArr = $userQuery
+					->orderBy("$sortField $sortOrder")
+					->all();
+			}
+			
+			//structure project Dropdowns
+			$dropdownPairs = [
+				'all' => 'All',
+				'unassigned' => 'Unassigned'
+			];
+			//add projects
+			foreach($projects as $project){
+				$dropdownPairs[$project->ProjectID] = $project->ProjectName;
+			}
+			
+			//get project data for add user modal
+			foreach($projects as $project){
+				$addUserProjects[]= [
+					'ProjectID' => $project->ProjectID,
+					'ProjectName' => $project->ProjectName,
+					'ProjectReferenceID' => $project->ProjectReferenceID
+				];
+			}
+			
+			//populate response array
+            $responseArray['assets'] = $usersArr;
+            $responseArray['showProjectDropdown'] = $showProjectDropdown;
+			$responseArray['projectDropdown'] = $dropdownPairs;
+			$responseArray['addUserProjects'] = $addUserProjects;
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->setStatusCode(200);
+			$response->data = $responseArray;
+        } catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch (\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
     }
 
     /**
