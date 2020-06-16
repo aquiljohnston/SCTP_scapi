@@ -47,6 +47,7 @@ class FTPController extends Controller {
     public function actionGetFTPFile() {
 		try{
 			$responseData = [];
+			$csvArray = [];
 			$sftp = new SFTP($this->host);
 			if (!$sftp->login($this->username, $this->password)) {
 				throw new Exception('Login failed');
@@ -133,7 +134,11 @@ class FTPController extends Controller {
 			$db = BaseActiveRecord::getDb();
 			$transaction = $db->beginTransaction();
 			
-			$successFlag = 0;
+			if($csvArray != null){
+				$successFlag = 0;
+			}else{
+				$successFlag = 1;
+			}
 			
             foreach($csvArray as $data){
 				//create model
