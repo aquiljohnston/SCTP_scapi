@@ -103,7 +103,27 @@ class BaseCardController extends BaseActiveController
 		}
 	}
 	
-	protected function extractProjectsFromCards($type, $dropdownRecords, $projectAllOption){
+	protected function extractClientFromCards($dropdownRecords, $allOption){
+		$allClients = [];
+		//iterate and stash client name $c['ClientID']
+		foreach ($dropdownRecords as $c) {
+			//currently only two option exist for key would have to update this if more views/tables/functions use this function
+			//should look into standardizing this field			
+			$key = $c['ClientID'];
+			$value = $c['ClientName'];
+			$allClients[$key] = $value;
+		}
+		//remove dupes
+		$allClients = array_unique($allClients);
+		//abc order for all
+		natcasesort($allClients);
+		//appened all option to the front
+		$allClients = $allOption + $allClients;
+		
+		return $allClients;
+	}
+	
+	protected function extractProjectsFromCards($type, $dropdownRecords, $allOption){
 		$allTheProjects = [];
 		//iterate and stash project name $p['ProjectID']
 		foreach ($dropdownRecords as $p) {
@@ -118,7 +138,7 @@ class BaseCardController extends BaseActiveController
 		//abc order for all
 		natcasesort($allTheProjects);
 		//appened all option to the front
-		$allTheProjects = $projectAllOption + $allTheProjects;
+		$allTheProjects = $allOption + $allTheProjects;
 		
 		return $allTheProjects;
 	}
