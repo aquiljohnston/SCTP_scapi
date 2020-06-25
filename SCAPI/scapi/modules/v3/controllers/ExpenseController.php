@@ -86,7 +86,7 @@ class ExpenseController extends Controller{
         }
 	}
 	
-	public function actionGet($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null, $employeeID = null,
+	public function actionGet($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null, $employeeID = null,
 		$sortField = 'Username', $sortOrder = 'ASC')
     {
         // RBAC permission check is embedded in this action
@@ -104,6 +104,10 @@ class ExpenseController extends Controller{
 
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 
             //format response
             $response = Yii::$app->response;
@@ -112,8 +116,7 @@ class ExpenseController extends Controller{
             //response array of expenses
             $expensesArr = [];
             $responseArray = [];
-			$projectAllOption = [];
-			$allTheProjects = [];
+			$allOption = [];
 			$showProjectDropDown = false;
 
 			$expenses = new Query;
@@ -127,7 +130,7 @@ class ExpenseController extends Controller{
 				$showProjectDropDown = true;
 				//rbac permission check
 				if (PermissionsController::can('expenseGetAll')){
-					$projectAllOption = [""=>"All"];
+					$allOption = [""=>"All"];
 				}elseif(PermissionsController::can('expenseGetOwn')){
                     $userID = BaseActiveController::getUserFromToken()->UserID;
                     //get user project relations array
@@ -137,7 +140,7 @@ class ExpenseController extends Controller{
                     $projectsSize = count($projects);
                     if($projectsSize > 0){
 						//add all option to project dropdown if there will be more than one option
-						$projectAllOption = [""=>"All"];
+						$allOption = [""=>"All"];
                         $expenses->where(['ProjectID' => $projects[0]->ProjUserProjectID]);
 						for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
@@ -159,6 +162,18 @@ class ExpenseController extends Controller{
                     ->one();
                 //add project where to query
                 $expenses->where(['ProjectID' => $project->ProjectID]);
+            }
+			
+			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
+			$clientQuery = clone $expenses;
+			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply client filter
+            if($clientID!= null && isset($expenses)) {
+                $expenses->andFilterWhere([
+                    'and',
+                    ['ClientID' => $clientID],
+                ]);
             }
 
 			//get project records post user/permissions filter for project dropdown(timing for this execution is very important)
@@ -205,8 +220,11 @@ class ExpenseController extends Controller{
 				$expenses->andFilterWhere($filterQueryArray);
             }
 			
+			//get project list for dropdown based on time cards available
+			$clientDropDown = self::extractClients($clientRecords, $allOption);
+			
 			//get project list for dropdown based on expenses available
-			$projectDropDown = self::extractProjects($projectRecords, $projectAllOption);
+			$projectDropDown = self::extractProjects($projectRecords, $allOption);
 			
 			//get employee list for dropdown based on expenses available
 			$employeeDropDown = self::extractEmployees($employeeRecords);
@@ -220,8 +238,11 @@ class ExpenseController extends Controller{
             $unapprovedExpenseVisible = $this->checkUnapprovedExist($expensesArr);
             $projectWasSubmitted   = $this->checkAllAssetsSubmitted($expensesArr);
             
+			$transaction->commit();
+			
             $responseArray['assets'] = $expensesArr;
             $responseArray['pages'] = $paginationResponse['pages'];
+            $responseArray['clientDropDown'] = $clientDropDown;
             $responseArray['projectDropDown'] = $projectDropDown;
             $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
@@ -371,7 +392,7 @@ class ExpenseController extends Controller{
 		}
 	}
 	
-	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
 		$sortField = 'ProjectName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		try{
@@ -385,7 +406,11 @@ class ExpenseController extends Controller{
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('expenseGetAccountantView');
-
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+			
             //format response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -393,7 +418,7 @@ class ExpenseController extends Controller{
 			//response array of exepenses
             $expenses = [];
             $responseArray = [];
-			$allTheProjects = [""=>"All"];
+			$allOption = [""=>"All"];
 			$showProjectDropDown = true;
 
 			//build base query
@@ -410,34 +435,43 @@ class ExpenseController extends Controller{
                 ->from(["fnGetExpensesByDateGroupByProject(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
-			//get records for project dropdown(timing for this execution is very important)
-			$projectDropdownRecords = clone $expenseQuery;
+			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
+			$clientQuery = clone $expenseQuery;
+			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply client filter
+            if($clientID!= null && isset($expenseQuery)) {
+                $expenseQuery->andFilterWhere([
+                    'and',
+                    ['ClientID' => $clientID],
+                ]);
+            }
+			
+			//get project records post client filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $expenseQuery;
+			$projectRecords = $projectQuery->select(['ProjectName', 'ProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
-			//add project filter
-			if($projectID!= null){
+			//apply project filter
+            if($projectID!= null && isset($expenseQuery)) {
                 $expenseQuery->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
-            	//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-				$employeeDropdownRecords = clone $expenseQuery;
-            }else{
-				$employeeDropdownRecords = clone $projectDropdownRecords;
-			}
+            }
 			
-			//complete queries for projects and employees
-			$projectDropdownRecords = $projectDropdownRecords->all(BaseActiveRecord::getDb());
-			$employeeDropdownRecords = $employeeDropdownRecords->addSelect(['UserName', 'UserID'])->orderBy('UserName ASC')->all(BaseActiveRecord::getDb());
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeRecordsQuery = clone $expenseQuery;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserName'])->distinct()->orderBy('UserName ASC')->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
-			if($employeeID!= null) {
+			if($employeeID!= null && isset($expenseQuery)) {
                 $expenseQuery->andFilterWhere([
                     'and',
                     ['UserID' => $employeeID],
                 ]);
             }
 			
-			if($filterArray!= null){
+			if($filterArray!= null && isset($expenseQuery)){
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
@@ -454,12 +488,15 @@ class ExpenseController extends Controller{
 				}
 				$expenseQuery->andFilterWhere($filterQueryArray);
             }
+			
+			//get project list for dropdown based on time cards available
+			$clientDropDown = self::extractClients($clientRecords, $allOption);
 
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjects($projectDropdownRecords, $allTheProjects);
+			$projectDropDown = self::extractProjects($projectRecords, $allOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployees($employeeDropdownRecords);
+			$employeeDropDown = self::extractEmployees($employeeRecords);
 
 			//paginate
 			$paginationResponse = BaseActiveController::paginationProcessor($expenseQuery, $page, $listPerPage);
@@ -471,9 +508,12 @@ class ExpenseController extends Controller{
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
 			$projectWasSubmitted = $this->checkAllAssetsSubmitted($expenses);
 
+			$transaction->commit();
+
             $responseArray['assets'] = $expenses;
             $responseArray['pages'] = $paginationResponse['pages'];
-            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['clientDropDown'] = $clientDropDown;
+            $responseArray['projectDropDown'] = $projectDropDown;
             $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
@@ -889,7 +929,25 @@ class ExpenseController extends Controller{
 		}
 	}
 	
-	private function extractProjects($dropdownRecords, $projectAllOption){
+	private function extractClients($dropdownRecords, $allOption){
+		$clients = [];
+		//iterate and stash client name $p['ClientID']
+		foreach ($dropdownRecords as $p) {		
+			$key = $p['ClientID'];
+			$value = $p['ClientName'];
+			$clients[$key] = $value;
+		}
+		//remove dupes
+		$clients = array_unique($clients);
+		//abc order for all
+		asort($clients);
+		//appened all option to the front
+		$clients = $allOption + $clients;
+		
+		return $clients;
+	}
+	
+	private function extractProjects($dropdownRecords, $allOption){
 		$allTheProjects = [];
 		//iterate and stash project name $p['ProjectID']
 		foreach ($dropdownRecords as $p) {		
@@ -902,12 +960,12 @@ class ExpenseController extends Controller{
 		//abc order for all
 		asort($allTheProjects);
 		//appened all option to the front
-		$allTheProjects = $projectAllOption + $allTheProjects;
+		$allTheProjects = $allOption + $allTheProjects;
 		
 		return $allTheProjects;
 	}
 	
-	private function extractEmployees($dropdownRecords, $employeeAllOption = null){
+	private function extractEmployees($dropdownRecords, $allOption = null){
 		$employeeValues = [];
 		//iterate and stash user values
 		foreach ($dropdownRecords as $e) {
@@ -919,8 +977,8 @@ class ExpenseController extends Controller{
 		//remove dupes
 		$employeeValues = array_unique($employeeValues);
 		//append all option to the front
-		$employeeAllOption = $employeeAllOption == null ? [""=>"All"] : $employeeAllOption;
-		$employeeValues = $employeeAllOption + $employeeValues;
+		$allOption = $allOption == null ? [""=>"All"] : $allOption;
+		$employeeValues = $allOption + $employeeValues;
 		
 		return $employeeValues;
 	}
