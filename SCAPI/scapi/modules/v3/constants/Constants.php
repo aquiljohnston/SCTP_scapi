@@ -37,9 +37,6 @@ final class Constants
 	const HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID = 5015;
 	const PTO_PAYROLL_HOURS_ID = 5020;
 	const PERDIEM_EXPENSE_ID = 4450;
-	
-	//Time Reason Values
-	const TIME_REASON_PTO_HOLIDAY = 'PTO/Holiday/Bereavement/Jury Duty';
 
 	//Time Card File Types
 	const OASIS = 'OASIS';

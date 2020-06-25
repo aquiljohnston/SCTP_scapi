@@ -188,7 +188,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 	
-	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
+	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
 		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		// RBAC permission check is embedded in this action	
@@ -224,7 +224,8 @@ class MileageCardController extends BaseCardController
 			//response array of mileage cards
             $mileageCardsArr = [];
             $responseArray = [];
-			$allOption = [];
+			$projectAllOption = [];
+			$allProjects = [];
 			$showProjectDropDown = false;
 			
 			//build base query
@@ -239,7 +240,7 @@ class MileageCardController extends BaseCardController
 				$showProjectDropDown = true;
 				//rbac permission check
 				if (PermissionsController::can('mileageCardGetAllCards')){
-					$allOption = [""=>"All"];
+					$projectAllOption = [""=>"All"];
                 }elseif(PermissionsController::can('mileageCardGetOwnCards')){
 					$userID = self::getUserFromToken()->UserID;
 					//get user project relations array
@@ -254,7 +255,7 @@ class MileageCardController extends BaseCardController
 						throw new ForbiddenHttpException;
 					}if($projectsSize > 1){
 						//add all option to project dropdown if there will be more than one option
-						$allOption = [""=>"All"];
+						$projectAllOption = [""=>"All"];
                         for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
 							//could be an 'IN' instead
@@ -274,19 +275,7 @@ class MileageCardController extends BaseCardController
 				$mileageCards->where(['MileageCardProjectID' => $project->ProjectID]);
 			}
 			
-			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
-			$clientQuery = clone $mileageCards;
-			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
-			
-			//apply client filter
-            if($clientID!= null && isset($mileageCards)) {
-                $mileageCards->andFilterWhere([
-                    'and',
-                    ['ClientID' => $clientID],
-                ]);
-            }
-			
-			//get project records post client filter for project dropdown(timing for this execution is very important)
+			//get project records post user/permissions filter for project dropdown(timing for this execution is very important)
 			$projectQuery = clone $mileageCards;
 			$projectRecords = $projectQuery->select(['ProjectName', 'MileageCardProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
@@ -297,7 +286,6 @@ class MileageCardController extends BaseCardController
                     ['MileageCardProjectID' => $projectID],
                 ]);
             }
-			
 			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
 			$employeeRecordsQuery = clone $mileageCards;
 			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
@@ -327,13 +315,10 @@ class MileageCardController extends BaseCardController
 				$mileageCards->andFilterWhere($filterQueryArray);
             }
 			
-			//get project list for dropdown based on mileage cards available
-			$clientDropDown = self::extractClientFromCards($clientRecords, $allOption);
+			//get project list for dropdown based on time cards available
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectRecords, $projectAllOption);
 			
-			//get project list for dropdown based on mileage cards available
-			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectRecords, $allOption);
-			
-			//get employee list for dropdown based on mileage cards available
+			//get employee list for dropdown based on time cards available
 			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
 			
 			//check if any unapproved cards exist in project filtered records
@@ -353,7 +338,6 @@ class MileageCardController extends BaseCardController
 			
             $responseArray['assets'] = $mileageCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
-			$responseArray['clientDropDown'] = $clientDropDown;
 			$responseArray['projectDropDown'] = $projectDropDown;
             $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
@@ -370,7 +354,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 	
-	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
 		$sortField = 'ProjectName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		try{
@@ -385,10 +369,6 @@ class MileageCardController extends BaseCardController
 			//RBAC permissions check
 			PermissionsController::requirePermission('mileageCardGetAccountantView');
 
-			//create db transaction
-			$db = BaseActiveRecord::getDb();
-			$transaction = $db->beginTransaction();
-
             //format response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -396,7 +376,7 @@ class MileageCardController extends BaseCardController
 			//response array of mileage cards
             $mileageCards = [];
             $responseArray = [];
-			$allOption = [""=>"All"];
+			$projectDropDown = [""=>"All"];
 			$showProjectDropDown = true;
 			//used to get current week if date range falls in the middle of the week
 			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
@@ -419,36 +399,27 @@ class MileageCardController extends BaseCardController
                 ->orWhere(['between', 'EndDate', $startDate, $endDate])
                 ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
 
-			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
-			$clientQuery = clone $cardQuery;
-			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			//get records for project dropdown(timing for this execution is very important)
+			$projectDropdownRecords = clone $cardQuery;
 			
-			//apply client filter
-            if($clientID!= null && isset($cardQuery)) {
-                $cardQuery->andFilterWhere([
-                    'and',
-                    ['ClientID' => $clientID],
-                ]);
-            }
-			
-			//get project records post client filter for project dropdown(timing for this execution is very important)
-			$projectQuery = clone $cardQuery;
-			$projectRecords = $projectQuery->select(['ProjectName', 'ProjectID'])->distinct()->all(BaseActiveRecord::getDb());
-
-			//apply project filter
-            if($projectID!= null && isset($cardQuery)) {
+			//add project filter
+			if($projectID!= null){
                 $cardQuery->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
-            }
+				//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+				$employeeDropdownRecords = clone $cardQuery;
+            }else{
+				$employeeDropdownRecords = clone $projectDropdownRecords;
+			}
+
+			//complete queries for projects and employees
+            $projectDropdownRecords = $projectDropdownRecords->all(BaseActiveRecord::getDb());
+            $employeeDropdownRecords = $employeeDropdownRecords->addSelect(['UserFullName', 'UserID'])->all(BaseActiveRecord::getDb());
 			
-			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$employeeRecordsQuery = clone $cardQuery;
-			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
-		
 			//apply employee filter
-			if($employeeID!= null && isset($cardQuery)) {
+			if($employeeID!= null) {
                 $cardQuery->andFilterWhere([
                     'and',
                     ['UserID' => $employeeID],
@@ -472,14 +443,11 @@ class MileageCardController extends BaseCardController
 				$cardQuery->andFilterWhere($filterQueryArray);
             }
 
-			//get project list for dropdown based on mileage cards available
-			$clientDropDown = self::extractClientFromCards($clientRecords, $allOption);
+			//get project list for dropdown based on time cards available
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectDropdownRecords, $projectDropDown);
 			
-			//get project list for dropdown based on mileage cards available
-			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectRecords, $allOption);
-			
-			//get employee list for dropdown based on mileage cards available
-			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
+			//get employee list for dropdown based on time cards available
+			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
@@ -487,13 +455,10 @@ class MileageCardController extends BaseCardController
 
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
-			$projectWasSubmitted = $this->checkAllAssetsSubmitted('MileageCard', $mileageCards);
-
-			$transaction->commit();
+			$projectWasSubmitted   = $this->checkAllAssetsSubmitted('MileageCard', $mileageCards);
 
             $responseArray['assets'] = $mileageCards;
             $responseArray['pages'] = $paginationResponse['pages'];
-            $responseArray['clientDropDown'] = $clientDropDown;
             $responseArray['projectDropDown'] = $projectDropDown;
             $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
