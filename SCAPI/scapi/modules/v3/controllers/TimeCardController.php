@@ -221,7 +221,7 @@ class TimeCardController extends BaseCardController
             //build base query
             $timeCards = new Query;
             $timeCards->select('*')
-                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
+                ->from(["fnTimeCardByDate_new(:startDate, :endDate)"])
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
             //if is scct website get all or own
