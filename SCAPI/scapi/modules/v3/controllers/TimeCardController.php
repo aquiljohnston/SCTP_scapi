@@ -155,7 +155,7 @@ class TimeCardController extends BaseCardController
 
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
-				->from("fnTimeEntrysByTimeCard(:cardID)")
+				->from("fnTimeEntrysByTimeCard_new(:cardID)")
 				->addParams([':cardID' => $cardID]);
 			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
 

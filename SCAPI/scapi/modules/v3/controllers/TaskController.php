@@ -163,7 +163,7 @@ class TaskController extends Controller
 			
 			$hoursOverviewQuery = new Query;
 			$hoursOverview = $hoursOverviewQuery->select('*')
-				->from(["fnGetTaskIntervalsByTimeCard(:TimeCardID)"])
+				->from(["fnGetTaskIntervalsByTimeCard_new(:TimeCardID)"])
 				->addParams([':TimeCardID' => $timeCardID])
 				->where(['Date' => $date])
 				->all(BaseActiveRecord::getDb());
