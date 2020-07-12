@@ -155,7 +155,7 @@ class TimeEntryController extends BaseActiveController
 						// //pass time entries to function for updating pto records
 						// PtoController::updatePTO($timeEntryArray);
 					// }
-					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry_new :TimeCardID,:TimeEntryDate,:UserName,:TimeReason");
+					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :TimeCardID,:TimeEntryDate,:UserName,:TimeReason");
 					$timeCardCommand->bindParam(':TimeCardID', $timeCardID, \PDO::PARAM_INT);
 					$timeCardCommand->bindParam(':TimeEntryDate', $taskDay, \PDO::PARAM_INT);
 					$timeCardCommand->bindParam(':UserName', $username, \PDO::PARAM_STR);
