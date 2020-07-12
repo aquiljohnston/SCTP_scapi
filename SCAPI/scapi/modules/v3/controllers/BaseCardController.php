@@ -203,7 +203,7 @@ class BaseCardController extends BaseActiveController
 		
 		//determine function to use based on type
 		if($type == Constants::NOTIFICATION_TYPE_TIME){
-			$function = 'fnTimeCardByDate_new';
+			$function = 'fnTimeCardByDate';
 			$idName = 'TimeCardProjectID';
 		}elseif($type == Constants::NOTIFICATION_TYPE_MILEAGE){
 			$function = 'fnMileageCardByDatePerformance';
