@@ -27,7 +27,7 @@ class AccountantSubmit extends \app\modules\v3\models\BaseActiveRecord
      */
     public static function tableName()
     {
-        return 'vAccountantSubmit_new';
+        return 'vAccountantSubmit';
     }
 
     /**
