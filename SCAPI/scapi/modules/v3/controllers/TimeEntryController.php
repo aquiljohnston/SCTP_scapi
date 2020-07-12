@@ -29,6 +29,7 @@ class TimeEntryController extends BaseActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
 					'deactivate' => ['put'],
+					'deactivate-by-day' => ['put'],
 					'deactivate-by-task' => ['put'],
                 ],  
             ];
@@ -111,7 +112,75 @@ class TimeEntryController extends BaseActiveController
 		}
 	}
 	
-	public function actionDeactivateByTask(){		
+	public function actionDeactivateByDay(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('timeEntryDeactivate');
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$entries = json_decode($put, true)['entries'];
+
+			//create response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			
+			//get current user to set deactivated by
+			$username = BaseActiveController::getUserFromToken()->UserName;
+			
+			foreach ($entries as $entry) {
+				//SPROC has no return so just in case we need a flag.
+				$success = 0;
+				//avoid pass by reference error in prod
+				$timeCardID = $entry['timeCardID'];
+				$taskDay = $entry['day'];
+				//call SPROC to deactivateTimeEntry
+				try {
+					$connection = BaseActiveRecord::getDb();
+					$transaction = $connection->beginTransaction();
+					//if PTO get affected time entries
+					// if($taskName == '["Task OTHER [PTO]"]'){
+						// $timeEntryArray = [];
+						// $timeEntryQuery = TimeEntry::find()
+							// ->where([ 'and',
+								// ['TimeEntryTimeCardID' => $timeCardID],
+								// ['TimeEntryChartOfAccount' => Constants::PTO_PAYROLL_HOURS_ID]
+							// ]);
+						// if($taskDay != null)
+							// $timeEntryQuery->andWhere(['CAST(TimeEntryStartTime AS date)' => $taskDay]);
+						// $timeEntryArray = $timeEntryQuery->all();
+						// //pass time entries to function for updating pto records
+						// PtoController::updatePTO($timeEntryArray);
+					// }
+					$timeCardCommand = $connection->createCommand("EXECUTE spDeactivateTimeEntry :TimeCardID,:TimeEntryDate,:UserName,:TimeReason");
+					$timeCardCommand->bindParam(':TimeCardID', $timeCardID, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':TimeEntryDate', $taskDay, \PDO::PARAM_INT);
+					$timeCardCommand->bindParam(':UserName', $username, \PDO::PARAM_STR);
+					$timeCardCommand->bindParam(':TimeReason', $entry['timeReason'], \PDO::PARAM_STR);
+					$timeCardCommand->execute();
+					$transaction->commit();
+					$success = 1;
+				} catch (Exception $e) {
+					$transaction->rollBack();
+					BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				}
+			}
+			$response->data = $success; 
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	
+	//todo pending removal replaced by actionDeactivateByDay
+	public function actionDeactivateByTask(){
 		try{
 			//set db target
 			TimeEntry::setClient(BaseActiveController::urlPrefix());
