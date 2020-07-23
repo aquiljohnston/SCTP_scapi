@@ -153,11 +153,9 @@ class TimeCardController extends BaseCardController
 			
 			//TODO transaction?
 
-			$entriesQuery = new Query;
-			$entriesQuery->select('*')
-				->from("fnTimeEntrysByTimeCard(:cardID)")
-				->addParams([':cardID' => $cardID]);
-			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
+			$connection = BaseActiveRecord::getDb();
+			$entriesQuery = "SET NOCOUNT ON; EXEC spTimeEntrysByTimeCard " . $cardID;
+			$entries = $connection->createCommand($entriesQuery)->queryAll();
 
 			$cardQuery = new Query;
 			$cardQuery->select('*')
