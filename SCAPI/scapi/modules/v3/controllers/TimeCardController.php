@@ -150,10 +150,11 @@ class TimeCardController extends BaseCardController
 			PermissionsController::requirePermission('timeCardGetEntries');
 
 			$dataArray = [];
-			
-			//TODO transaction?
 
+			//create db transaction
 			$connection = BaseActiveRecord::getDb();
+			$transaction = $connection->beginTransaction();
+
 			$entriesQuery = "SET NOCOUNT ON; EXEC spTimeEntrysByTimeCard " . $cardID;
 			$entries = $connection->createCommand($entriesQuery)->queryAll();
 
@@ -161,17 +162,26 @@ class TimeCardController extends BaseCardController
 			$cardQuery->select('*')
 				->from("fnTimeCardByID(:cardID)")
 				->addParams([':cardID' => $cardID]);
-			$card = $cardQuery->one(BaseActiveRecord::getDb());
+			$card = $cardQuery->one($connection);
 			
 			$lunchQuery = new Query;
 			$lunchQuery->select('*')
 				->from("fnLunchActivityByTimeCard(:cardID)")
 				->addParams([':cardID' => $cardID]);
-			$lunchEntries = $lunchQuery->all(BaseActiveRecord::getDb());
+			$lunchEntries = $lunchQuery->all($connection);
+			
+			$hoursOverviewQuery = new Query;
+			$hoursOverview = $hoursOverviewQuery->select('*')
+				->from(["fnGetTaskIntervalsByTimeCard(:TimeCardID)"])
+				->addParams([':TimeCardID' => $cardID])
+				->all($connection);
+			
+			$transaction->commit();
 			
 			$dataArray['card'] = $card;
 			$dataArray['show-entries'] = $entries;
-			$dataArray['lunch-entries'] = $lunchEntries;			
+			$dataArray['lunch-entries'] = $lunchEntries;
+			$dataArray['hours-overview'] = $hoursOverview;
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
