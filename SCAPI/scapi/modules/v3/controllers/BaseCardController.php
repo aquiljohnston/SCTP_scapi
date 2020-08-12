@@ -21,6 +21,9 @@ use yii\db\Query;
 */
 class BaseCardController extends BaseActiveController
 {
+	//default model class to allow route access
+	public $modelClass = 'app\modules\v3\models\BaseActiveRecord';
+	
 	public function behaviors(){
         $behaviors = parent::behaviors();
         //Implements Token Authentication to check for Auth Token in Json Header
@@ -33,6 +36,7 @@ class BaseCardController extends BaseActiveController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'p-m-reset-request' => ['post'],
+					'report-summary' => ['get'],
                 ],
             ];
         return $behaviors;
@@ -101,6 +105,296 @@ class BaseCardController extends BaseActiveController
 			);
 			throw new \yii\web\HttpException(400);
 		}
+	}
+	
+	public function actionReportSummary($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
+		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
+	{
+		// try{
+			$stubUserDataArray = [
+				[
+					'UserID' => 10000,
+					'RowLabels' => 'Andrew Harris',
+					'7/5/2020' => '-',
+					'7/6/2020' => '8.4',
+					'7/7/2020' => '12',
+					'7/8/2020' => '8',
+					'7/9/2020' => '8',
+					'7/10/2020' => '10',
+					'7/11/2020' => '-',
+					'Total' => '46.4',
+					'PaidTimeOff' => '2.0',
+					'Regular' => '44.4',
+					'Overtime' => '4.4',
+					'MileageToApprove' => '136.0',
+					'SupervisorApproved' => 'Yes',
+					'PMSubmitted' => 'No',
+					'ExceptionToResove' => ''
+				],
+				[
+					'UserID' => 7286,
+					'RowLabels' => 'Angel Valdez',
+					'7/5/2020' => '-',
+					'7/6/2020' => '9',
+					'7/7/2020' => '9',
+					'7/8/2020' => '9',
+					'7/9/2020' => '10',
+					'7/10/2020' => '8.5',
+					'7/11/2020' => '-',
+					'Total' => '45.5',
+					'PaidTimeOff' => '5.0',
+					'Regular' => '40.5',
+					'Overtime' => '0.5',
+					'MileageToApprove' => '12.0',
+					'SupervisorApproved' => 'Yes',
+					'PMSubmitted' => 'No',
+					'ExceptionToResove' => 'Yes'
+				],
+				[
+					'UserID' => 11848,
+					'RowLabels' => 'Enson Nzungize',
+					'7/5/2020' => '-',
+					'7/6/2020' => '8',
+					'7/7/2020' => '9',
+					'7/8/2020' => '10',
+					'7/9/2020' => '8',
+					'7/10/2020' => '9',
+					'7/11/2020' => '-',
+					'Total' => '44',
+					'PaidTimeOff' => '4.0',
+					'Regular' => '40',
+					'Overtime' => '-',
+					'MileageToApprove' => '28.0',
+					'SupervisorApproved' => 'No',
+					'PMSubmitted' => 'No',
+					'ExceptionToResove' => ''
+				],
+				[
+					'UserID' => null,
+					'RowLabels' => 'Grand Total',
+					'7/5/2020' => '-',
+					'7/6/2020' => '90.9',
+					'7/7/2020' => '121.8',
+					'7/8/2020' => '111.5',
+					'7/9/2020' => '112.0',
+					'7/10/2020' => '93.8',
+					'7/11/2020' => '-',
+					'Total' => '529.9',
+					'PaidTimeOff' => '15.0',
+					'Regular' => '514.9',
+					'Overtime' => '7.4',
+					'MileageToApprove' => '504.2',
+					'SupervisorApproved' => '',
+					'PMSubmitted' => '',
+					'ExceptionToResove' => ''
+				]
+			];
+			
+			$stubProjDataArray = [
+				[
+					'Projects' => 'CPS',
+					'7/5/2020' => '-',
+					'7/6/2020' => '58.9',
+					'7/7/2020' => '67.3',
+					'7/8/2020' => '59.5',
+					'7/9/2020' => '56.0',
+					'7/10/2020' => '52.0',
+					'7/11/2020' => '-',
+					'Total' => '293.6',
+					'PaidTimeOff' => '15.0',
+					'Regular' => '278.6',
+					'Overtime' => '5.9',
+					'Mileage' => '344.2',
+				],
+				[
+					'Projects' => 'JBSA Lackland',
+					'7/5/2020' => '-',
+					'7/6/2020' => '32',
+					'7/7/2020' => '54.5',
+					'7/8/2020' => '52.0',
+					'7/9/2020' => '56.0',
+					'7/10/2020' => '41.8',
+					'7/11/2020' => '-',
+					'Total' => '236.3',
+					'PaidTimeOff' => '-',
+					'Regular' => '236.3',
+					'Overtime' => '1.5',
+					'Mileage' => '160.0',
+				],
+				[
+					'Projects' => 'Total',
+					'7/5/2020' => '-',
+					'7/6/2020' => '90.9',
+					'7/7/2020' => '121.8',
+					'7/8/2020' => '111.5',
+					'7/9/2020' => '112.0',
+					'7/10/2020' => '93.8',
+					'7/11/2020' => '-',
+					'Total' => '529.9',
+					'PaidTimeOff' => '15.0',
+					'Regular' => '514.9',
+					'Overtime' => '7.4',
+					'Mileage' => '504.2'
+				]
+			];
+			
+			$stubStatusDataArray = [
+				[
+					'Validations' => 'Exceptions Resolved',
+					'Status' => '85%'
+				],
+				[
+					'Validations' => 'Percent Approved',
+					'Status' => '67%'
+				]
+			];
+			
+			$responseArray = [];
+			$responseArray['UserData'] = $stubUserDataArray;
+			$responseArray['ProjData'] = $stubProjDataArray;
+			$responseArray['StatusData'] = $stubStatusDataArray;
+			
+			//format response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		// }catch(ForbiddenHttpException $e) {
+			// throw $e;
+		// }catch(\Exception $e){
+		   // throw new \yii\web\HttpException(400);
+		// }
+	}
+	
+	public function actionApprove(){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			// RBAC permission check
+			PermissionsController::requirePermission('timeCardApproveCards');
+			PermissionsController::requirePermission('mileageCardApproveCards');
+
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			//get userid
+			$approvedBy = self::getUserFromToken()->UserName;
+
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Base Card Approve', $approvedBy, BaseActiveController::urlPrefix());
+			
+			
+			// catch(\Exception $e) //if transaction fails rollback changes and send error
+			// {
+				// $transaction->rollBack();
+				// //archive error
+				// BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+				// $response->setStatusCode(400);
+				// $response->data = "Http:400 Bad Request";
+				// return $response;
+
+			// }
+		} catch (ForbiddenHttpException $e) {
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionEmployeeDetail($userID, $startDate){
+		// try{
+			$stubHoursByProject = [
+				[
+					'Label' => 'Date',
+					'Value' => '7/6/2020',
+				],
+				[
+					'Label' => 'CPS Energy 83743',
+					'Value' => '6:22',
+				],
+				[
+					'Label' => 'CPS JBSA Lackland 83643',
+					'Value' => '1:45',
+				],
+				[
+					'Label' => 'Daily Total',
+					'Value' => '8:07',
+				]
+			];
+			
+			$stubHoursBreakdown = [
+				[
+					'RowID' => 1,
+					'Project' => 'CPS Energy 83743',
+					'Task' => 'Employee Login',
+					'Start Time' => '7:51',
+					'End Time' => '',
+					'Time On Task' => ''
+				],
+				[
+					'RowID' => 2,
+					'Project' => 'CPS Energy 83743',
+					'Task' => 'Task 5 YEAR',
+					'Start Time' => '7:51',
+					'End Time' => '11:59',
+					'Time On Task' => '4:08'
+				],
+				[
+					'RowID' => 3,
+					'Project' => 'CPS Energy 83743',
+					'Task' => 'Lunch',
+					'Start Time' => '11:59',
+					'End Time' => '12:29',
+					'Time On Task' => '0:30'
+				],
+				[
+					'RowID' => 4,
+					'Project' => 'CPS JBSA Lackland 83643',
+					'Task' => 'Task 5 YEAR',
+					'Start Time' => '12:29',
+					'End Time' => '16:29',
+					'Time On Task' => '4:00'
+				],
+				[
+					'RowID' => 5,
+					'Project' => 'CPS JBSA Lackland 83643',
+					'Task' => 'Employee Logout',
+					'Start Time' => '',
+					'End Time' => '16:29',
+					'Time On Task' => ''
+				],
+			];
+			
+			$stubTotals = [
+				'Tech' => 'Andrew Harris',
+				'WeeklyTotal' => '40.2',
+				'Total' => '8:37',
+				'TotalNoLunch' => '8:07',
+			];
+			
+			$responseArray = [];
+			$responseArray['ProjectData'] = $stubHoursByProject;
+			$responseArray['BreakdownData'] = $stubHoursBreakdown;
+			$responseArray['Totals'] = $stubTotals;
+			
+			//format response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+			return $response;
+		// }catch(ForbiddenHttpException $e) {
+			// throw $e;
+		// }catch(\Exception $e){
+		   // throw new \yii\web\HttpException(400);
+		// }
 	}
 	
 	protected function extractClientFromCards($dropdownRecords, $allOption){

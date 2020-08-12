@@ -520,6 +520,14 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $timeEntryDeactivate;
         $this->permissionArray[] = $timeEntryDeactivate;
 		
+		//Report Summary Permissions///////////////////////////////////////////////////////
+		
+		$reportSummaryEmployeeDetail = $this->auth->createPermission('reportSummaryEmployeeDetail');
+        $reportSummaryEmployeeDetail->description = 'Get hours breakdown for a user on a single day.';
+        $this->permissionAssociationArray['Dispatcher'][] = $reportSummaryEmployeeDetail;
+        $this->permissionAssociationArray['Accountant'][] = $reportSummaryEmployeeDetail;
+        $this->permissionArray[] = $reportSummaryEmployeeDetail;
+		
 		//Expense Permissions//////////////////////////////////////////////////////////////
 		
 		$expenseGetOwn = $this->auth->createPermission('expenseGetOwn');
@@ -889,6 +897,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Engineer'][] = $viewEquipmentMgmt;
         $this->permissionAssociationArray['Supervisor'][] = $viewEquipmentMgmt;
         $this->permissionArray[] = $viewEquipmentMgmt;
+		
+		$viewReportSummary = $this->auth->createPermission('viewReportSummary');
+        $viewReportSummary->description = 'View time card management menu item';
+        $this->permissionAssociationArray['Dispatcher'][] = $viewReportSummary;
+        $this->permissionAssociationArray['Accountant'][] = $viewReportSummary;
+        $this->permissionArray[] = $viewReportSummary;
 
         $viewTimeCardMgmt = $this->auth->createPermission('viewTimeCardMgmt');
         $viewTimeCardMgmt->description = 'View time card management menu item';
