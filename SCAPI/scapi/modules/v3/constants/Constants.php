@@ -17,6 +17,7 @@ final class Constants
 	const BASE_EVENT = 'app\modules\v3\models\Event';
 	const BASE_ASSET = 'app\modules\v3\models\Asset';
 	const BASE_TASKOUT = 'app\modules\v3\models\TaskOut';
+	const BASE_BREADCRUMB = 'app\modules\v3\models\Breadcrumb';
 	const CLIENT_DB_MANAGER = 'app\modules\v3\rbac\ClientDbManager';
 	
 	//Time Card Submission File Locations
@@ -138,6 +139,7 @@ final class Constants
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => self::BASE_EVENT,
 		'TASKOUT' => self::BASE_TASKOUT,
+		'BREADCRUMB' => self::BASE_BREADCRUMB,
 		'USER' => 'app\modules\v3\models\SCUser'
 	];
 	
@@ -153,6 +155,7 @@ final class Constants
 		'ASSET' => self::BASE_ASSET,
 		'EVENT' => self::BASE_EVENT,
 		'TASKOUT' => self::BASE_TASKOUT,
+		'BREADCRUMB' => self::BASE_BREADCRUMB,
 		'USER' => 'app\modules\v3\models\SCUser'
 	];
 	
@@ -167,6 +170,7 @@ final class Constants
 		'ASSET' => 'app\modules\v3\modules\scana\models\Asset',
 		'EVENT' => 'app\modules\v3\modules\scana\models\Event',
 		'TASKOUT' => 'app\modules\v3\modules\scana\models\TaskOut',
+		'BREADCRUMB' => 'app\modules\v3\modules\scana\models\Breadcrumb',
 		'USER' => self::BASE_USER
 	];
 	
@@ -177,6 +181,7 @@ final class Constants
 		'ASSET' => 'app\modules\v3\models\DemoAsset',
 		'EVENT' => 'app\modules\v3\models\DemoEvent',
 		'TASKOUT' => self::BASE_TASKOUT,
+		'BREADCRUMB' => self::BASE_BREADCRUMB,
 		'USER' => self::BASE_USER
 	];
 	
