@@ -65,6 +65,12 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 		return self::getClientObj($client)['TASKOUT'];
 	}
 	
+	//returns the file path for the breadcrumb model associated to a project based on the client header
+	public static function getBreadcrumbModel($client)
+	{
+		return self::getClientObj($client)['BREADCRUMB'];
+	}
+	
 	private static function getClientObj($client)
 	{
 		//matches given client to associated client configuration 

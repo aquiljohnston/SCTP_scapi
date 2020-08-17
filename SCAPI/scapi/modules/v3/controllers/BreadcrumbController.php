@@ -11,7 +11,6 @@ use yii\filters\VerbFilter;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\BaseActiveRecord;
-use app\modules\v3\models\Breadcrumb;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\web\UnauthorizedHttpException;
@@ -77,13 +76,15 @@ class BreadcrumbController extends Controller
 					$breadcrumbs[$i]['PaceOfTravel'] = round($breadcrumbs[$i]['PaceOfTravel'], 4);
 					
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-					$breadcrumb = new Breadcrumb;
+					$baseBreadcrumbModel = BaseActiveRecord::getBreadcrumbModel(BaseActiveController::urlPrefix());
+					$breadcrumb = new $baseBreadcrumbModel;
 					$breadcrumb->attributes = $breadcrumbs[$i];
 					$breadcrumb->BreadcrumbCreatedUserUID = $userName;
 					$breadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
 
 					BaseActiveRecord::setClient($headers['X-Client']);
-					$clientBreadcrumb = new Breadcrumb;
+					$clientBreadbrumbModel =  BaseActiveRecord::getBreadcrumbModel($headers['X-Client']);
+					$clientBreadcrumb = new $clientBreadbrumbModel;
 					$clientBreadcrumb->attributes = $breadcrumbs[$i];
 					$clientBreadcrumb->BreadcrumbCreatedUserUID = $userName;
 					$clientBreadcrumb->BreadcrumbCreatedDate = BaseActiveController::getDate();
