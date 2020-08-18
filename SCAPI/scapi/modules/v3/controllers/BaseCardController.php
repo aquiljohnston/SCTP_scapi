@@ -249,10 +249,17 @@ class BaseCardController extends BaseActiveController
 				]
 			];
 			
+			$projectDropDown = [
+				'' => 'All',
+				'1' => 'CPS',
+				'2' => 'JBSA Lackland',
+			];
+			
 			$responseArray = [];
 			$responseArray['UserData'] = $stubUserDataArray;
 			$responseArray['ProjData'] = $stubProjDataArray;
 			$responseArray['StatusData'] = $stubStatusDataArray;
+			$responseArray['ProjectDropDown'] = $projectDropDown;
 			
 			//format response
 			$response = Yii::$app->response;
