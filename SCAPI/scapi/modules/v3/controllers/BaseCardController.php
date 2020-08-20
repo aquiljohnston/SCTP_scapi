@@ -107,7 +107,7 @@ class BaseCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionReportSummary($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
+	public function actionEmployeeApproval($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
 		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		// try{
@@ -126,6 +126,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '2.0',
 					'Regular' => '44.4',
 					'Overtime' => '4.4',
+					'Expense' => '10',
 					'MileageToApprove' => '136.0',
 					'SupervisorApproved' => 'Yes',
 					'PMSubmitted' => 'No',
@@ -145,6 +146,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '5.0',
 					'Regular' => '40.5',
 					'Overtime' => '0.5',
+					'Expense' => '',
 					'MileageToApprove' => '12.0',
 					'SupervisorApproved' => 'Yes',
 					'PMSubmitted' => 'No',
@@ -164,6 +166,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '4.0',
 					'Regular' => '40',
 					'Overtime' => '-',
+					'Expense' => '',
 					'MileageToApprove' => '28.0',
 					'SupervisorApproved' => 'No',
 					'PMSubmitted' => 'No',
@@ -183,6 +186,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '15.0',
 					'Regular' => '514.9',
 					'Overtime' => '7.4',
+					'Expense' => '10',
 					'MileageToApprove' => '504.2',
 					'SupervisorApproved' => '',
 					'PMSubmitted' => '',
@@ -204,6 +208,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '15.0',
 					'Regular' => '278.6',
 					'Overtime' => '5.9',
+					'Expense' => '10',
 					'Mileage' => '344.2',
 				],
 				[
@@ -219,6 +224,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '-',
 					'Regular' => '236.3',
 					'Overtime' => '1.5',
+					'Expense' => '',
 					'Mileage' => '160.0',
 				],
 				[
@@ -234,6 +240,7 @@ class BaseCardController extends BaseActiveController
 					'PaidTimeOff' => '15.0',
 					'Regular' => '514.9',
 					'Overtime' => '7.4',
+					'Expense' => '10',
 					'Mileage' => '504.2'
 				]
 			];
