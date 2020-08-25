@@ -44,9 +44,6 @@ use Yii;
  * @property string|null $SpeedAttribute
  * @property int|null $ProjectID
  * @property int|null $TaskID
- *
- * @property ProjectTb $project
- * @property RefTask $task
  */
 class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
 {
@@ -68,8 +65,6 @@ class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
             [['BreadcrumbLatitude', 'BreadcrumbLongitude', 'BreadcrumbSpeed', 'BreadcrumbSatellites', 'BreadcrumbAltitude', 'BreadcrumbBatteryLevel', 'PaceOfTravel', 'DistanceTraveled', 'OriginBreadcrumbLatitude', 'OriginBreadcrumbLongitude'], 'number'],
             [['BreadcrumbTrackingGroupID', 'BreadcrumbArchiveFlag', 'IsStationary', 'IsDistanceBased', 'ProjectID', 'TaskID'], 'integer'],
             [['BreadcrumbSrcDTLT', 'BreadcrumbSrvDTLT', 'BreadcrumbSrvDTLTOffset', 'BreadcrumbCreatedDate', 'BreadcrumbGPSTime'], 'safe'],
-            [['ProjectID'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['ProjectID' => 'ProjectID']],
-            [['TaskID'], 'exist', 'skipOnError' => true, 'targetClass' => Task::className(), 'targetAttribute' => ['TaskID' => 'TaskID']],
         ];
     }
 
@@ -117,25 +112,5 @@ class Breadcrumb extends \app\modules\v3\models\BaseActiveRecord
             'ProjectID' => 'Project ID',
             'TaskID' => 'Task ID',
         ];
-    }
-
-    /**
-     * Gets query for [[Project]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getProject()
-    {
-        return $this->hasOne(Project::className(), ['ProjectID' => 'ProjectID']);
-    }
-
-    /**
-     * Gets query for [[Task]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTask()
-    {
-        return $this->hasOne(Task::className(), ['TaskID' => 'TaskID']);
     }
 }
