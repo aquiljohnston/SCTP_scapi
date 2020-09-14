@@ -323,7 +323,7 @@ class BaseCardController extends BaseActiveController
 		}
 	}
 	
-	public function actionEmployeeDetail($userID, $startDate){
+	public function actionEmployeeDetail($userID, $date){
 		// try{
 			$stubHoursByProject = [
 				[
