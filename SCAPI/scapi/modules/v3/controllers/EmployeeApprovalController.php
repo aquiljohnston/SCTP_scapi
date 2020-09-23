@@ -83,6 +83,7 @@ class EmployeeApprovalController extends Controller
 			}
 
 			$supervisorID = BaseActiveController::getUserFromToken()->UserID;
+			Yii::trace("\nParams: " . $projectID . ', SupervisorID: ' . $supervisorID . ', startDate: ' . $startDate . ', endDate: ' . $endDate);
 			//build base query
 			$superviors = new Query;
 			$superviors->select('*')
@@ -180,7 +181,7 @@ class EmployeeApprovalController extends Controller
 			
 			$stubProjDataArray = [];
 			$stubProjDataArrayRes= $superviorsProj->all($db);
-                        
+            $projectDropdownDataArray = ['' => 'All',];
 			if(!empty($stubProjDataArrayRes)){
 				$summ_array  = array(
 					'Projects' => '',
@@ -199,6 +200,8 @@ class EmployeeApprovalController extends Controller
 					'Mileage' => 0,
 				);  
 				foreach ($stubProjDataArrayRes as $key => $value){
+					// push project to project dropdown
+					$projectDropdownDataArray[$value['ProjectID']] = $value['ProjectName'];
 					$stubProjDataArray[] = array(
 						'Projects' => $value['ProjectName'],
 						$dateHeders[0] => $value['day_1'],
@@ -262,17 +265,11 @@ class EmployeeApprovalController extends Controller
 				]
 			];
 			
-			$projectDropDown = [
-				'' => 'All',
-				'1' => 'CPS',
-				'2' => 'JBSA Lackland',
-			];
-			
 			$responseArray = [];
 			$responseArray['UserData'] = $stubUserDataArray;
 			$responseArray['ProjData'] = $stubProjDataArray;
 			$responseArray['StatusData'] = $stubStatusDataArray;
-			$responseArray['ProjectDropDown'] = $projectDropDown;
+			$responseArray['ProjectDropDown'] = $projectDropdownDataArray;
 			
 			//format response
 			$response = Yii::$app->response;
