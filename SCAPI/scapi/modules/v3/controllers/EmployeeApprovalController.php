@@ -284,8 +284,8 @@ class EmployeeApprovalController extends Controller
 		   throw new \yii\web\HttpException(400);
 		}
 	}
-        
-	public function actionApproveCards(){           
+
+	public function actionApproveTimecards(){           
 		try{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
