@@ -31,6 +31,7 @@ class EmployeeApprovalController extends Controller
 			'actions' => [
 				'get' => ['get'],
 				'create' => ['post'],
+                                'approve-cards'  => ['put'],
 			],  
 		];
 		return $behaviors;	
@@ -281,6 +282,62 @@ class EmployeeApprovalController extends Controller
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
+		}
+	}
+        
+	public function actionApproveCards(){           
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+
+			//create response
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			//get userid
+			$approvedBy = BaseActiveController::getUserFromToken()->UserName;
+			$supervisorID = BaseActiveController::getUserFromToken()->UserID;
+
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Base Card Approve', $approvedBy, BaseActiveController::urlPrefix());
+			
+                        
+			//create db transaction
+			$connection = BaseActiveRecord::getDb();
+			$transaction = $connection->beginTransaction();
+                        
+			$UserIDs = '';
+			$cardIDs = $data["cardIDArray"];
+			if(!empty($cardIDs)){
+				foreach ($cardIDs as $key=>$value){
+					$UserIDs = $value['UserID'].', ';
+				}
+			}
+                        
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spSupervisorTimeCardApproval :startDate, :endDate, :UserIDs,  :SupervisorID");
+			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':UserIDs', $UserIDs,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':SupervisorID', $supervisorID,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			$transaction->commit();
+			$status  = array();
+			$status['success'] = true;
+			$response->data = $status;
+
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+			$transaction->rollBack();
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
+			$transaction->rollBack();
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
