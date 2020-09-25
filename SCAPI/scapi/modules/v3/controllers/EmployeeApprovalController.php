@@ -31,7 +31,7 @@ class EmployeeApprovalController extends Controller
 			'actions' => [
 				'get' => ['get'],
 				'create' => ['post'],
-                                'approve-cards'  => ['put'],
+				'approve-cards'  => ['put'],
 			],  
 		];
 		return $behaviors;	
@@ -338,6 +338,79 @@ class EmployeeApprovalController extends Controller
 			//archive error
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
+		}
+	}
+
+	public function actionEmployeeDetail($userID,$date){
+		try{
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+
+			$stubHoursByProjectQuery = new Query;
+			$stubHoursByProjectQuery->select('*')
+					->from(["fnReturnDetailSummary(:UserID,:thisDate)"])
+					->addParams([':UserID' => $userID, ':thisDate' => $date]);
+
+			$stubHoursByProjectArrayRes = $stubHoursByProjectQuery->all($db);
+
+			$stubHoursByProject = [];
+			if(!empty($stubHoursByProjectArrayRes)){
+				$stubHoursByProject[] = [
+					'Label' => 'Date',
+					'Value' => $date,
+				];
+				foreach($stubHoursByProjectArrayRes as $key => $item){
+					$stubHoursByProject[] = [
+						'Label' => $item['ProjectName'],
+						'Value' => $item['Hours'],
+					];
+				}
+			}
+
+			$stubHoursBreakdownQuery = new Query;
+			$stubHoursBreakdownQuery->select('*')
+					->from(["fnReturnDetails(:UserID,:thisDate)"])
+					->addParams([':UserID' => $userID, ':thisDate' => $date]);
+
+			$stubHoursBreakdownQueryArrayRes = $stubHoursBreakdownQuery->all($db); 
+			$stubHoursBreakdown = [];
+			if(!empty($stubHoursBreakdownQueryArrayRes)){
+				$i = 0;
+				foreach ($stubHoursBreakdownQueryArrayRes as $key => $value){
+					$stubHoursBreakdown[] = [
+						'RowID' => ++$i,
+						'Project' => $value['Project'],
+						'Task' => $value['BreadCrumbID'],
+						'Start Time' => $value['StartTime'],
+						'End Time' => $value['EndTime'],
+						'Time On Task' => $value['Duration']
+					];
+				}
+			}
+
+			$stubTotals = [
+				'Tech' => 'Andrew Harris',
+				'WeeklyTotal' => '40.2',
+				'Total' => '8:37',
+				'TotalNoLunch' => '8:07',
+			];
+			
+			$responseArray = [];
+			$responseArray['ProjectData'] = $stubHoursByProject;
+			$responseArray['BreakdownData'] = $stubHoursBreakdown;
+			$responseArray['Totals'] = $stubTotals;
+			
+			//format response
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $responseArray;
+
+			return $response;
+		}catch(ForbiddenHttpException $e) {
+			throw $e;
+		}catch(\Exception $e){
+		   throw new \yii\web\HttpException(400);
 		}
 	}
 	
