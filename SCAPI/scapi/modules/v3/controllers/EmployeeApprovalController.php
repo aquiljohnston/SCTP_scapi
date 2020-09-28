@@ -347,6 +347,8 @@ class EmployeeApprovalController extends Controller
 			//create db transaction
 			$db = BaseActiveRecord::getDb();
 
+			$date = date('Y-m-d', strtotime($date));
+
 			$stubHoursByProjectQuery = new Query;
 			$stubHoursByProjectQuery->select('*')
 					->from(["fnReturnDetailSummary(:UserID,:thisDate)"])
