@@ -310,14 +310,8 @@ class EmployeeApprovalController extends Controller
 			$connection = BaseActiveRecord::getDb();
 			$transaction = $connection->beginTransaction();
                         
-			$UserIDs = '';
-			$cardIDs = $data["cardIDArray"];
-			if(!empty($cardIDs)){
-				foreach ($cardIDs as $key=>$value){
-					$UserIDs = $value['UserID'].', ';
-				}
-			}
-                        
+			$UserIDs = $data["cardIDArray"];
+			         
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spSupervisorTimeCardApproval :startDate, :endDate, :UserIDs,  :SupervisorID");
 			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
