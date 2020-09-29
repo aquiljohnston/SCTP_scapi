@@ -4,6 +4,7 @@ namespace app\modules\v3\controllers;
 
 use app\modules\v3\constants\Constants;
 use app\modules\v3\models\Alert;
+use app\modules\v3\models\SCUser;
 use Yii;
 use yii\rest\Controller;
 use yii\web\Response;
@@ -74,9 +75,9 @@ class EmployeeApprovalController extends Controller
 			$allOption = [];
 			$showProjectDropDown = false;
 
-			$dateHeders  = [];
+			$dateHeaders  = [];
 			for($i=0;$i <=7;$i++){
-				$dateHeders[$i] =  date('d/m/Y', strtotime($startDate)+$i*86400);
+				$dateHeaders[$i] =  date('m/d/Y', strtotime($startDate)+$i*86400);
 			}
 
 			if($projectID == ''){
@@ -94,16 +95,16 @@ class EmployeeApprovalController extends Controller
 			$stubUserDataArrayRes = $superviors->all($db);    
                         
 			if(!empty($stubUserDataArrayRes)){
-				$summ_array  = array(
+				$sum_array  = array(
 					'UserID' => null,
 					'RowLabels' => null,
-					$dateHeders[0] => 0,
-					$dateHeders[1] => 0,
-					$dateHeders[2] => 0,
-					$dateHeders[3] => 0,
-					$dateHeders[4] => 0,
-					$dateHeders[5] => 0,
-					$dateHeders[6] => 0,
+					$dateHeaders[0] => 0,
+					$dateHeaders[1] => 0,
+					$dateHeaders[2] => 0,
+					$dateHeaders[3] => 0,
+					$dateHeaders[4] => 0,
+					$dateHeaders[5] => 0,
+					$dateHeaders[6] => 0,
 					'Total' => 0,
 					'PaidTimeOff' => 0,
 					'Regular' => 0,
@@ -118,13 +119,13 @@ class EmployeeApprovalController extends Controller
 					$stubUserDataArray[] = array(
 						'UserID' => $value['UserID'],
 						'RowLabels' => $value['UserName'],
-						$dateHeders[0] => $value['day_1'],
-						$dateHeders[1] => $value['day_2'],
-						$dateHeders[2] => $value['day_3'],
-						$dateHeders[3] => $value['day_4'],
-						$dateHeders[4] => $value['day_5'],
-						$dateHeders[5] => $value['day_6'],
-						$dateHeders[6] => $value['day_7'],
+						$dateHeaders[0] => $value['day_1'],
+						$dateHeaders[1] => $value['day_2'],
+						$dateHeaders[2] => $value['day_3'],
+						$dateHeaders[3] => $value['day_4'],
+						$dateHeaders[4] => $value['day_5'],
+						$dateHeaders[5] => $value['day_6'],
+						$dateHeaders[6] => $value['day_7'],
 						'Total' => $value['Total_Hrs'],
 						'PaidTimeOff' => $value['PTO'],
 						'Regular' => $value['Reg_Hrs'],
@@ -136,39 +137,39 @@ class EmployeeApprovalController extends Controller
 						'ExceptionToResove' => '' 
 					);
                                 
-					$summ_array = array(
-						$dateHeders[0] => (float)$summ_array[$dateHeders[0]] + (float)$value['day_1'],
-						$dateHeders[1] => (float)$summ_array[$dateHeders[1]] + (float)$value['day_2'],
-						$dateHeders[2] => (float)$summ_array[$dateHeders[2]] + (float)$value['day_3'],
-						$dateHeders[3] => (float)$summ_array[$dateHeders[3]] + (float)$value['day_4'],
-						$dateHeders[4] => (float)$summ_array[$dateHeders[4]] + (float)$value['day_5'],
-						$dateHeders[5] => (float)$summ_array[$dateHeders[5]] + (float)$value['day_6'],
-						$dateHeders[6] => (float)$summ_array[$dateHeders[6]] + (float)$value['day_7'],
-						'Total' => $summ_array['Total'] + (float)$value['Total_Hrs'],
-						'PaidTimeOff' => $summ_array['PaidTimeOff'] + (float)$value['PTO'],
-						'Regular' => $summ_array['Regular'] + (float)$value['Reg_Hrs'],
-						'Overtime' => $summ_array['Overtime'] + (float)$value['OT'],
-						'Expense' => $summ_array['Expense'] + (float)$value['Expense'],
-						'MileageToApprove' => $summ_array['MileageToApprove'] + (float)$value['Mileage'],						
+					$sum_array = array(
+						$dateHeaders[0] => (float)$sum_array[$dateHeaders[0]] + (float)$value['day_1'],
+						$dateHeaders[1] => (float)$sum_array[$dateHeaders[1]] + (float)$value['day_2'],
+						$dateHeaders[2] => (float)$sum_array[$dateHeaders[2]] + (float)$value['day_3'],
+						$dateHeaders[3] => (float)$sum_array[$dateHeaders[3]] + (float)$value['day_4'],
+						$dateHeaders[4] => (float)$sum_array[$dateHeaders[4]] + (float)$value['day_5'],
+						$dateHeaders[5] => (float)$sum_array[$dateHeaders[5]] + (float)$value['day_6'],
+						$dateHeaders[6] => (float)$sum_array[$dateHeaders[6]] + (float)$value['day_7'],
+						'Total' => $sum_array['Total'] + (float)$value['Total_Hrs'],
+						'PaidTimeOff' => $sum_array['PaidTimeOff'] + (float)$value['PTO'],
+						'Regular' => $sum_array['Regular'] + (float)$value['Reg_Hrs'],
+						'Overtime' => $sum_array['Overtime'] + (float)$value['OT'],
+						'Expense' => $sum_array['Expense'] + (float)$value['Expense'],
+						'MileageToApprove' => $sum_array['MileageToApprove'] + (float)$value['Mileage'],						
 					);
 				}
                             
 				$stubUserDataArray[] = array(
 					'UserID' => null,
 					'RowLabels' => 'Grand Total',
-					$dateHeders[0] => $summ_array[$dateHeders[0]],
-					$dateHeders[1] => $summ_array[$dateHeders[1]],
-					$dateHeders[2] => $summ_array[$dateHeders[2]],  
-					$dateHeders[3] => $summ_array[$dateHeders[3]],  
-					$dateHeders[4] => $summ_array[$dateHeders[4]],  
-					$dateHeders[5] => $summ_array[$dateHeders[5]],  
-					$dateHeders[6] => $summ_array[$dateHeders[6]],  
-					'Total' => $summ_array['Total'],
-					'PaidTimeOff' => $summ_array['PaidTimeOff'],
-					'Regular' => $summ_array['Regular'],
-					'Overtime' => $summ_array['Overtime'],
-					'Expense' => $summ_array['Expense'],
-					'MileageToApprove' =>  $summ_array['MileageToApprove'],
+					$dateHeaders[0] => $sum_array[$dateHeaders[0]],
+					$dateHeaders[1] => $sum_array[$dateHeaders[1]],
+					$dateHeaders[2] => $sum_array[$dateHeaders[2]],  
+					$dateHeaders[3] => $sum_array[$dateHeaders[3]],  
+					$dateHeaders[4] => $sum_array[$dateHeaders[4]],  
+					$dateHeaders[5] => $sum_array[$dateHeaders[5]],  
+					$dateHeaders[6] => $sum_array[$dateHeaders[6]],  
+					'Total' => $sum_array['Total'],
+					'PaidTimeOff' => $sum_array['PaidTimeOff'],
+					'Regular' => $sum_array['Regular'],
+					'Overtime' => $sum_array['Overtime'],
+					'Expense' => $sum_array['Expense'],
+					'MileageToApprove' =>  $sum_array['MileageToApprove'],
 					'SupervisorApproved' => '',
 					'PMSubmitted' => '',
 					'ExceptionToResove' => ''
@@ -184,15 +185,15 @@ class EmployeeApprovalController extends Controller
 			$stubProjDataArrayRes= $superviorsProj->all($db);
             $projectDropdownDataArray = ['' => 'All',];
 			if(!empty($stubProjDataArrayRes)){
-				$summ_array  = array(
+				$sum_array  = array(
 					'Projects' => '',
-					$dateHeders[0] => 0,
-					$dateHeders[1] => 0,
-					$dateHeders[2] => 0,
-					$dateHeders[3] => 0,
-					$dateHeders[4] => 0,
-					$dateHeders[5] => 0,
-					$dateHeders[6] => 0,
+					$dateHeaders[0] => 0,
+					$dateHeaders[1] => 0,
+					$dateHeaders[2] => 0,
+					$dateHeaders[3] => 0,
+					$dateHeaders[4] => 0,
+					$dateHeaders[5] => 0,
+					$dateHeaders[6] => 0,
 					'Total' => 0,
 					'PaidTimeOff' => 0,
 					'Regular' => 0,
@@ -205,13 +206,13 @@ class EmployeeApprovalController extends Controller
 					$projectDropdownDataArray[$value['ProjectID']] = $value['ProjectName'];
 					$stubProjDataArray[] = array(
 						'Projects' => $value['ProjectName'],
-						$dateHeders[0] => $value['day_1'],
-						$dateHeders[1] => $value['day_2'],
-						$dateHeders[2] => $value['day_3'],  
-						$dateHeders[3] => $value['day_4'],
-						$dateHeders[4] => $value['day_5'],
-						$dateHeders[5] => $value['day_6'],  
-						$dateHeders[6] => $value['day_7'],  
+						$dateHeaders[0] => $value['day_1'],
+						$dateHeaders[1] => $value['day_2'],
+						$dateHeaders[2] => $value['day_3'],  
+						$dateHeaders[3] => $value['day_4'],
+						$dateHeaders[4] => $value['day_5'],
+						$dateHeaders[5] => $value['day_6'],  
+						$dateHeaders[6] => $value['day_7'],  
 						'Total' => $value['Total_Hrs'],
 						'PaidTimeOff' => $value['PTO'],
 						'Regular' => $value['Reg_hrs'],
@@ -219,39 +220,39 @@ class EmployeeApprovalController extends Controller
 						'Expense' => $value['Expense'],
 						'Mileage' => $value['Mileage'],
 					);
-					$summ_array = array(
+					$sum_array = array(
 						'Projects' => '',
-						$dateHeders[0] => $summ_array[$dateHeders[0]] + (float)$value['day_1'],
-						$dateHeders[1] => $summ_array[$dateHeders[1]] + (float)$value['day_2'],
-						$dateHeders[2] => $summ_array[$dateHeders[2]] + (float)$value['day_3'],
-						$dateHeders[3] => $summ_array[$dateHeders[3]] + (float)$value['day_4'],
-						$dateHeders[4] => $summ_array[$dateHeders[4]] + (float)$value['day_5'],
-						$dateHeders[5] => $summ_array[$dateHeders[5]] + (float)$value['day_6'],
-						$dateHeders[6] => $summ_array[$dateHeders[6]] + (float)$value['day_7'],
-						'Total' => $summ_array['Total'] + (float)$value['Total_Hrs'],
-						'PaidTimeOff' => $summ_array['PaidTimeOff'] + (float)$value['PTO'],
-						'Regular' => $summ_array['Regular'] + (float)$value['Reg_hrs'],
-						'Overtime' => $summ_array['Overtime'] + (float)$value['OT'],
-						'Expense' =>  $summ_array['Expense'] + (float)$value['Expense'],
-						'Mileage' => $summ_array['Mileage'] + (float)$value['Mileage'],
+						$dateHeaders[0] => $sum_array[$dateHeaders[0]] + (float)$value['day_1'],
+						$dateHeaders[1] => $sum_array[$dateHeaders[1]] + (float)$value['day_2'],
+						$dateHeaders[2] => $sum_array[$dateHeaders[2]] + (float)$value['day_3'],
+						$dateHeaders[3] => $sum_array[$dateHeaders[3]] + (float)$value['day_4'],
+						$dateHeaders[4] => $sum_array[$dateHeaders[4]] + (float)$value['day_5'],
+						$dateHeaders[5] => $sum_array[$dateHeaders[5]] + (float)$value['day_6'],
+						$dateHeaders[6] => $sum_array[$dateHeaders[6]] + (float)$value['day_7'],
+						'Total' => $sum_array['Total'] + (float)$value['Total_Hrs'],
+						'PaidTimeOff' => $sum_array['PaidTimeOff'] + (float)$value['PTO'],
+						'Regular' => $sum_array['Regular'] + (float)$value['Reg_hrs'],
+						'Overtime' => $sum_array['Overtime'] + (float)$value['OT'],
+						'Expense' =>  $sum_array['Expense'] + (float)$value['Expense'],
+						'Mileage' => $sum_array['Mileage'] + (float)$value['Mileage'],
 					);
 				}
 
 				$stubProjDataArray[] = array(
 					'Projects' => 'Total',
-					$dateHeders[0] => $summ_array[$dateHeders[0]],
-					$dateHeders[1] => $summ_array[$dateHeders[1]],
-					$dateHeders[2] => $summ_array[$dateHeders[2]],
-					$dateHeders[3] => $summ_array[$dateHeders[3]],
-					$dateHeders[4] => $summ_array[$dateHeders[4]],
-					$dateHeders[5] => $summ_array[$dateHeders[5]],
-					$dateHeders[6] => $summ_array[$dateHeders[6]],
-					'Total' => $summ_array['Total'],
-					'PaidTimeOff' =>  $summ_array['PaidTimeOff'],
-					'Regular' =>  $summ_array['Regular'],
-					'Overtime' =>  $summ_array['Overtime'],
-					'Expense' =>  $summ_array['Expense'],
-					'Mileage' =>   $summ_array['Mileage']
+					$dateHeaders[0] => $sum_array[$dateHeaders[0]],
+					$dateHeaders[1] => $sum_array[$dateHeaders[1]],
+					$dateHeaders[2] => $sum_array[$dateHeaders[2]],
+					$dateHeaders[3] => $sum_array[$dateHeaders[3]],
+					$dateHeaders[4] => $sum_array[$dateHeaders[4]],
+					$dateHeaders[5] => $sum_array[$dateHeaders[5]],
+					$dateHeaders[6] => $sum_array[$dateHeaders[6]],
+					'Total' => $sum_array['Total'],
+					'PaidTimeOff' =>  $sum_array['PaidTimeOff'],
+					'Regular' =>  $sum_array['Regular'],
+					'Overtime' =>  $sum_array['Overtime'],
+					'Expense' =>  $sum_array['Expense'],
+					'Mileage' =>   $sum_array['Mileage']
 				);
 			}
 
@@ -342,11 +343,17 @@ class EmployeeApprovalController extends Controller
 			$db = BaseActiveRecord::getDb();
 
 			$date = date('Y-m-d', strtotime($date));
+			
+			$user = SCUser::find()
+                ->where(['UserID' => $userID])
+                ->one();
+			$username = $user->UserName;
+			
 
 			$stubHoursByProjectQuery = new Query;
 			$stubHoursByProjectQuery->select('*')
 					->from(["fnReturnDetailSummary(:UserID,:thisDate)"])
-					->addParams([':UserID' => $userID, ':thisDate' => $date]);
+					->addParams([':UserID' => $username, ':thisDate' => $date]);
 
 			$stubHoursByProjectArrayRes = $stubHoursByProjectQuery->all($db);
 
@@ -367,9 +374,10 @@ class EmployeeApprovalController extends Controller
 			$stubHoursBreakdownQuery = new Query;
 			$stubHoursBreakdownQuery->select('*')
 					->from(["fnReturnDetails(:UserID,:thisDate)"])
-					->addParams([':UserID' => $userID, ':thisDate' => $date]);
+					->addParams([':UserID' => $username, ':thisDate' => $date]);
 
 			$stubHoursBreakdownQueryArrayRes = $stubHoursBreakdownQuery->all($db); 
+			yii::trace(json_encode($stubHoursBreakdownQueryArrayRes));
 			$stubHoursBreakdown = [];
 			if(!empty($stubHoursBreakdownQueryArrayRes)){
 				$i = 0;
