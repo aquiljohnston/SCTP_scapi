@@ -385,7 +385,7 @@ class EmployeeApprovalController extends Controller
 					$stubHoursBreakdown[] = [
 						'RowID' => ++$i,
 						'Project' => $value['Project'],
-						'Task' => $value['BreadCrumbID'],
+						'Task' => $value['BreadcrumbActivityType'],
 						'Start Time' => $value['StartTime'],
 						'End Time' => $value['EndTime'],
 						'Time On Task' => $value['Duration']
