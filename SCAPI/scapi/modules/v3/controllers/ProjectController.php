@@ -33,6 +33,7 @@ class ProjectController extends BaseActiveController
 					'get-all'  => ['get'],
 					'get-config'  => ['get'],
 					'update-config'  => ['put'],
+					'get-project-dropdowns'  => ['get'],
                 ],  
             ];
 		return $behaviors;	
@@ -253,5 +254,43 @@ class ProjectController extends BaseActiveController
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
             throw new \yii\web\HttpException(400);
         }
+	}
+	
+	/**
+	* Creates an associative array of project id/name pairs
+	* @returns json body of id name pairs
+	* @throws \yii\web\HttpException
+	*/
+	//added userID param when updated from v2
+	public function actionGetProjectDropdowns($userID){
+		try{
+			//set db target
+			Project::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('projectGetDropdown');
+		
+			$projects = Project::find()	
+				->innerJoin('Project_User_Tb', 'ProjectTb.ProjectID = Project_User_Tb.ProjUserProjectID')
+				->where(['ProjUserUserID' => $userID])
+				->orderBy('ProjectName')
+				->all();
+				
+			//build associative array for dropdown
+			$namePairs = [null => ''];
+			foreach($projects as $project){
+				$namePairs[$project->ProjectID]= $project->ProjectName;
+			}	
+			
+			$response = Yii::$app->response;
+			$response->format = Response::FORMAT_JSON;
+			$response->data = $namePairs;
+			
+			return $response;
+		} catch (ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+			throw new \yii\web\HttpException(400);
+		}
 	}
 }
