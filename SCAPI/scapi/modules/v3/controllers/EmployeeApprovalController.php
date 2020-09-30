@@ -383,8 +383,9 @@ class EmployeeApprovalController extends Controller
 				$i = 0;
 				foreach ($stubHoursBreakdownQueryArrayRes as $key => $value){
 					$stubHoursBreakdown[] = [
-						'RowID' => ++$i,
-						'Project' => $value['Project'],
+						'RowID' => $value['BreadCrumbID'],
+						'ProjectID' => $value['ProjectID'],
+						'Project' => $value['ProjectName'],
 						'Task' => $value['BreadcrumbActivityType'],
 						'Start Time' => $value['StartTime'],
 						'End Time' => $value['EndTime'],
