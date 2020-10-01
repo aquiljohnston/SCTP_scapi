@@ -96,8 +96,9 @@ class BaseCardController extends BaseActiveController
 			$response->data = $status;	
 			return $response;
 		} catch(ForbiddenHttpException $e) {
-            throw new ForbiddenHttpException;
-        } catch(\Exception $e) {
+			BaseActiveController::logError($e, 'Forbidden http exception');
+			throw new ForbiddenHttpException;
+		} catch(\Exception $e) {
 			BaseActiveController::archiveWebErrorJson(
 				'PM Reset Request',
 				$e,
@@ -315,6 +316,7 @@ class BaseCardController extends BaseActiveController
 
 			// }
 		} catch (ForbiddenHttpException $e) {
+			BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			//archive error

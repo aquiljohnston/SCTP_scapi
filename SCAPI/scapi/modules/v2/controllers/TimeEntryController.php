@@ -6,6 +6,7 @@ use Yii;
 use app\modules\v2\models\TimeEntry;
 use app\modules\v2\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -111,6 +112,7 @@ class TimeEntryController extends BaseActiveController
 			$response->data = $success; 
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);

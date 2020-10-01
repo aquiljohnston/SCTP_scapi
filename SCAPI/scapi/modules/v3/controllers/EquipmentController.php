@@ -100,6 +100,7 @@ class EquipmentController extends Controller
 			$response->data = (object)$responseData;
 			return $response;
 		} catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
@@ -165,6 +166,7 @@ class EquipmentController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -238,6 +240,7 @@ class EquipmentController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)

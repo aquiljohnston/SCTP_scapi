@@ -136,6 +136,7 @@ class TimeCardController extends BaseActiveController
 
 			}
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			//archive error
@@ -197,6 +198,7 @@ class TimeCardController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $dataArray;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -234,6 +236,7 @@ class TimeCardController extends BaseActiveController
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $dataArray;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -292,6 +295,7 @@ class TimeCardController extends BaseActiveController
             $response->format = Response::FORMAT_JSON;
             $response->data = $dataArray;
         } catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
             throw new \yii\web\HttpException(400);
@@ -453,6 +457,7 @@ class TimeCardController extends BaseActiveController
 			$response->setStatusCode(200);
 			return $response;
         }catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
@@ -536,6 +541,7 @@ class TimeCardController extends BaseActiveController
 			return $response;
 		}
 		catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}
 		catch(\Exception $e)
@@ -567,6 +573,7 @@ class TimeCardController extends BaseActiveController
 			$response->data = $responseArray;
 		}
 		catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}
 		catch(\Exception $e)
@@ -744,6 +751,7 @@ class TimeCardController extends BaseActiveController
 			return $response;
 			
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -977,6 +985,7 @@ class TimeCardController extends BaseActiveController
 
             return $response;
         } catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             Yii::trace('ForbiddenHttpException '.$e->getMessage());
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {

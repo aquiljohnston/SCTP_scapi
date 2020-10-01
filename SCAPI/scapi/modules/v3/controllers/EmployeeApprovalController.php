@@ -280,6 +280,7 @@ class EmployeeApprovalController extends Controller
 
 			return $response;
 		}catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
@@ -327,6 +328,7 @@ class EmployeeApprovalController extends Controller
 			return $response;
 		} catch (ForbiddenHttpException $e) {
 			$transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			$transaction->rollBack();
@@ -413,6 +415,7 @@ class EmployeeApprovalController extends Controller
 
 			return $response;
 		}catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
