@@ -2,6 +2,7 @@
 
 namespace app\modules\v2\controllers;
 
+
 use Yii;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
@@ -98,11 +99,20 @@ class LoginController extends Controller
                     $auth->AuthTimeout = time() + $timeout;
                     //Store Auth Token
                     $auth-> save();
+
+                    // log
+                    BaseActiveController::logRoute(null, $userName->UserName,"Login successful.", true);
+
                 }
                 else
                 {
                     $response->data = "Password is invalid.";
                     $response->setStatusCode(401);
+
+                    // log
+                    BaseActiveController::logRoute(null, $userName->UserName, $response->data, true);
+
+
                     return $response;
                 }
             }
@@ -110,6 +120,10 @@ class LoginController extends Controller
             {
                 $response->data = "User not found or inactive.";
                 $response->setStatusCode(401);
+
+                // log
+                BaseActiveController::logRoute(null, @$data['UserName'], $response->data, true);
+
                 return $response;
             }
 
@@ -126,6 +140,10 @@ class LoginController extends Controller
             $response->data = $authArray;
             return $response;
         }catch(\Exception $e) {
+
+	        // log
+            BaseActiveController::logRoute($e, @$data['UserName'],  'Http Exception',true);
+
             throw new \yii\web\HttpException(400);
         }
 	}
@@ -133,7 +151,9 @@ class LoginController extends Controller
 	// User logout
 	public function actionUserLogout()
 	{
+
 		try{
+
 			//get request headers
 			$headers = getallheaders();
 			$client = $headers['X-Client'];
@@ -146,9 +166,12 @@ class LoginController extends Controller
 			
 			//set target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-			
+
+			// username
+           $username =  BaseActiveController::getUserFromToken($token)->UserName;
+
 			//archive request
-			BaseActiveController::archiveWebJson(null, 'Logout', BaseActiveController::getUserFromToken($token)->UserName, $client);
+			BaseActiveController::archiveWebJson(null, 'Logout', $username, $client);
 			
 			//call CTUser\logout()
 			Yii::$app->user->logout($destroySession = true, $token);
@@ -156,12 +179,25 @@ class LoginController extends Controller
 			//create response object
 			$response = Yii::$app->response;
 			$response->data = 'Logout Successful!';
-			return $response;
+
+            // log
+            BaseActiveController::logRoute(null, $username, $response->data, true);
+
+            return $response;
 		} catch(UnauthorizedHttpException $e) {
+
+            // log
+            BaseActiveController::logRoute($e, @$username, 'Unauthorized http exception', false);
+
             BaseActiveController::logError($e, 'Unauthorized http exception');
+
             throw new UnauthorizedHttpException;
         } catch(\Exception $e) {
-			throw new \yii\web\HttpException(400);
+
+            // log
+            BaseActiveController::logRoute($e, @$username, 'Exception', false);
+
+            throw new \yii\web\HttpException(400);
 		}
 	}
 	
