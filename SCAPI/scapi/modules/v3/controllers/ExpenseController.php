@@ -79,6 +79,7 @@ class ExpenseController extends Controller{
 			//return response data
 			return $responseData;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
@@ -253,6 +254,7 @@ class ExpenseController extends Controller{
 			$response->setStatusCode(200);
 			return $response;
         }catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
@@ -316,6 +318,7 @@ class ExpenseController extends Controller{
 				return $response;
 			}
 		}catch (ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		}catch(\Exception $e) {
 			//archive error
@@ -385,6 +388,7 @@ class ExpenseController extends Controller{
 			}
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
@@ -521,6 +525,7 @@ class ExpenseController extends Controller{
 			$response->data = $responseArray;
 			return $response;
 		} catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -630,6 +635,7 @@ class ExpenseController extends Controller{
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $dataArray;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -698,6 +704,7 @@ class ExpenseController extends Controller{
 			$response->setStatusCode(200);
 			return $response;
 		}catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
@@ -750,6 +757,7 @@ class ExpenseController extends Controller{
 			//return response data
 			return $responseData;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
@@ -796,6 +804,7 @@ class ExpenseController extends Controller{
 			
             return $response;
         } catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			//archive error
@@ -852,6 +861,7 @@ class ExpenseController extends Controller{
 			$response->format = Response::FORMAT_JSON;
 			return $response;	
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);

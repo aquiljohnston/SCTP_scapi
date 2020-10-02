@@ -139,6 +139,7 @@ class MileageCardController extends BaseCardController
 				return $response;
 			}
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			//archive error
@@ -182,6 +183,7 @@ class MileageCardController extends BaseCardController
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $dataArray;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -364,6 +366,7 @@ class MileageCardController extends BaseCardController
 			$response->setStatusCode(200);
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw $e;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -502,6 +505,7 @@ class MileageCardController extends BaseCardController
 			$response->data = $responseArray;
 			return $response;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -524,6 +528,7 @@ class MileageCardController extends BaseCardController
             $response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -598,6 +603,7 @@ class MileageCardController extends BaseCardController
 				return $response;
 			}
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			//archive error
@@ -681,6 +687,7 @@ class MileageCardController extends BaseCardController
 			return $response;
 			
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -862,6 +869,7 @@ class MileageCardController extends BaseCardController
 			
             return $response;
         } catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			//archive error

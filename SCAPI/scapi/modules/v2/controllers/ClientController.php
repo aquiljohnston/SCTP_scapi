@@ -151,6 +151,7 @@ class ClientController extends BaseActiveController
             $this->redirect(['client/index']);
         } catch(ForbiddenHttpException $forbiddenHttpException) {
 	        // We want the user to see the 403 error
+            BaseActiveController::logError($forbiddenHttpException, 'Forbidden http exception');
             throw $forbiddenHttpException;
         } catch(\Exception $e) {
 	        // This should be a 500 - Internal Server Error but I'm outranked.
@@ -192,10 +193,11 @@ class ClientController extends BaseActiveController
 			
 			return $response;
 		}
-        catch(ForbiddenHttpException $e)
-        {
-            throw new ForbiddenHttpException;
-        }
+		catch(ForbiddenHttpException $e)
+		{
+			BaseActiveController::logError($e, 'Forbidden http exception');
+			throw new ForbiddenHttpException;
+		}
 		catch(\Exception $e) 
 		{
 			throw new \yii\web\HttpException(400);

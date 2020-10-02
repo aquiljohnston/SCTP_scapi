@@ -57,6 +57,7 @@ class AlertController extends Controller
 			$response->data = $data;
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
             BaseActiveController::archiveWebErrorJson('Alert Get', $e, getallheaders()['X-Client']);
@@ -112,6 +113,7 @@ class AlertController extends Controller
 			$response->data = $alertResponse;
 			return $response;
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());

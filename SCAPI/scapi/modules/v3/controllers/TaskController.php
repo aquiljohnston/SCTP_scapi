@@ -67,6 +67,7 @@ class TaskController extends Controller
 		} catch (yii\db\Exception $e) {
 			throw $e;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
             BaseActiveController::archiveWebErrorJson('Task GetByProject', $e, getallheaders()['X-Client']);
@@ -111,6 +112,7 @@ class TaskController extends Controller
             $response->data = $responseArray;
             return $response;
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson('actionGetTasks', $e, getallheaders()['X-Client']);
@@ -149,6 +151,7 @@ class TaskController extends Controller
 			$response->data = $namePairs;
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
@@ -175,6 +178,7 @@ class TaskController extends Controller
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson('actionGetHoursOverview', $e, getallheaders()['X-Client'], [$timeCardID, $date]);
@@ -237,6 +241,7 @@ class TaskController extends Controller
 			$warningMessage = $results['warningMessage'];			
 
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [

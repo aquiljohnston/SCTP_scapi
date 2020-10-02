@@ -145,6 +145,7 @@ class DispatchController extends Controller
 			$response->data = $responseArray;
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAvailable', $e, getallheaders()['X-Client']);
@@ -225,6 +226,7 @@ class DispatchController extends Controller
 			return $response;
 		}
         catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAvailableAssets', $e, getallheaders()['X-Client']);
@@ -271,6 +273,7 @@ class DispatchController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -388,6 +391,7 @@ class DispatchController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -520,6 +524,7 @@ class DispatchController extends Controller
 			$response->data = $responseArray;
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAssigned', $e, getallheaders()['X-Client']);
@@ -628,6 +633,7 @@ class DispatchController extends Controller
 			return $response;
 		}
         catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveWebErrorJson('actionGetAssignedAssets', $e, getallheaders()['X-Client']);
@@ -727,6 +733,7 @@ class DispatchController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -793,6 +800,7 @@ class DispatchController extends Controller
 			$response->data = $responseData;
 			return $response;
 		} catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
@@ -1021,6 +1029,7 @@ class DispatchController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)

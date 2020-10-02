@@ -10,6 +10,7 @@ use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * ProjectController implements the CRUD actions for Project model.
@@ -82,8 +83,10 @@ class ProjectController extends BaseActiveController
 			
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(UnauthorizedHttpException $e) {
+            BaseActiveController::logError($e, 'Unauthorized http exception');
             throw new UnauthorizedHttpException;
         }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
@@ -174,8 +177,10 @@ class ProjectController extends BaseActiveController
 			$response->data = $responseArray;
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(UnauthorizedHttpException $e) {
+            BaseActiveController::logError($e, 'Unauthorized http exception');
             throw new UnauthorizedHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
@@ -247,8 +252,10 @@ class ProjectController extends BaseActiveController
 			$response->data = $responseArray;
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(UnauthorizedHttpException $e) {
+            BaseActiveController::logError($e, 'Unauthorized http exception');
             throw new UnauthorizedHttpException;
         }catch(\Exception $e){
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());

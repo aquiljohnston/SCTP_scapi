@@ -85,7 +85,7 @@ class EmployeeApprovalController extends Controller
 			}
 
 			$supervisorID = BaseActiveController::getUserFromToken()->UserID;
-			Yii::trace("\nParams: " . $projectID . ', SupervisorID: ' . $supervisorID . ', startDate: ' . $startDate . ', endDate: ' . $endDate);
+			
 			//build base query
 			$superviors = new Query;
 			$superviors->select('*')
@@ -280,6 +280,7 @@ class EmployeeApprovalController extends Controller
 
 			return $response;
 		}catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
@@ -312,7 +313,9 @@ class EmployeeApprovalController extends Controller
 			$transaction = $connection->beginTransaction();
                         
 			$UserIDs = $data["cardIDArray"];
-			         
+			$startDate = $data["startDate"];
+			$endDate = $data["endDate"];
+			Yii::trace("Data params: " . $UserIDs . ", startDate: " . $startDate . ", endDate: " . $endDate . ", " . $supervisorID);
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spSupervisorTimeCardApproval :startDate, :endDate, :UserIDs,  :SupervisorID");
 			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
@@ -327,6 +330,7 @@ class EmployeeApprovalController extends Controller
 			return $response;
 		} catch (ForbiddenHttpException $e) {
 			$transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			$transaction->rollBack();
@@ -413,6 +417,7 @@ class EmployeeApprovalController extends Controller
 
 			return $response;
 		}catch(ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);

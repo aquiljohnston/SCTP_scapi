@@ -215,6 +215,7 @@ class ReportsController extends Controller {
 		}
 		catch(ForbiddenHttpException $e)
 		{
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		}
 		catch(Exception $e) 
@@ -265,6 +266,7 @@ class ReportsController extends Controller {
 		}
 		catch(ForbiddenHttpException $e)
 		{
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		}
 		catch(Exception $e) 
