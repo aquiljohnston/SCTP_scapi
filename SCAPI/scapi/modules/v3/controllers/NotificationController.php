@@ -141,6 +141,7 @@ class NotificationController extends Controller
 			return $response;
 			
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
@@ -203,6 +204,7 @@ class NotificationController extends Controller
 			$updateReadStatusCommand->bindParam(':appRole', $appRole,  \PDO::PARAM_STR);
 			$updateReadStatusCommand->execute();
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
 			BaseActiveController::archiveWebErrorJson(

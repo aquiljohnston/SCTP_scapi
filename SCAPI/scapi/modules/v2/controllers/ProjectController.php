@@ -94,6 +94,7 @@ class ProjectController extends BaseActiveController
 			
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -202,6 +203,7 @@ class ProjectController extends BaseActiveController
 			}
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -249,6 +251,7 @@ class ProjectController extends BaseActiveController
 			}
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -288,6 +291,7 @@ class ProjectController extends BaseActiveController
 			
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -383,6 +387,7 @@ class ProjectController extends BaseActiveController
 			$response -> format = Response::FORMAT_JSON;
 			$response -> data = $data;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -451,6 +456,7 @@ class ProjectController extends BaseActiveController
 			
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		}catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
@@ -615,6 +621,7 @@ class ProjectController extends BaseActiveController
 
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (Exception $e) {
 			throw new BadRequestHttpException;
@@ -688,6 +695,7 @@ class ProjectController extends BaseActiveController
 
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);

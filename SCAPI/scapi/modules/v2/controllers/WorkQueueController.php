@@ -93,6 +93,7 @@ class WorkQueueController extends Controller
 			$response->data = $responseArray;
 			return $response;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
@@ -161,6 +162,7 @@ class WorkQueueController extends Controller
 			$transaction->commit();
 			return $responseData;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
@@ -212,6 +214,7 @@ class WorkQueueController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)

@@ -12,7 +12,9 @@ use app\modules\v2\models\WebDataInsertArchive;
 use app\modules\v2\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v2\models\TabletJSONDataInsertError;
 use app\modules\v2\models\WebJSONDataInsertError;
+use app\modules\v2\models\HttpRequestHistory;
 use app\modules\v2\authentication\TokenAuth;
+use yii\base\Exception;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -422,4 +424,22 @@ class BaseActiveController extends ActiveController
 		$client == Constants::SCCT_CONFIG['STAGE_HEADER'] ||
 		$client == Constants::SCCT_CONFIG['PROD_HEADER']);
 	}
+
+    /**
+     * @param \Exception $exception
+     * @param string $comment
+     * @return HttpRequestHistory
+     */
+	public static function logError(\Exception $exception, string $comment = '')
+    {
+        $headers = Yii::$app->request->headers;
+        $httpRequestHistory = new HttpRequestHistory();
+        $httpRequestHistory::setClient($headers['x-client']);
+        $httpRequestHistory->setExceptionData($exception);
+        $httpRequestHistory->setRequestData();
+        $httpRequestHistory->Comments = $comment;     //e.g. Session Expired, Different Auth Token, etc.
+        $httpRequestHistory->save();
+
+        return $httpRequestHistory;
+    }
 }
