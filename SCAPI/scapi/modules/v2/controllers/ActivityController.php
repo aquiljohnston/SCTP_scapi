@@ -17,6 +17,7 @@ use app\modules\v2\controllers\EquipmentController;
 use app\modules\v2\controllers\InspectionController;
 use app\modules\v3\controllers\ExpenseController;
 use yii\data\ActiveDataProvider;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
 use yii\base\ErrorException;
