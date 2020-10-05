@@ -82,11 +82,11 @@ class HttpRequestHistory extends BaseActiveRecord
         $this->RouteType = $request->method;        //get, post, put, delete
         $this->Route = $request->url;               //route called including version
         if(!empty($request->rawBody)){
-            $this->Body = $request->rawBody;            //post body if any, url params if any
+            $this->Body = json_encode($request->rawBody);            //post body if any, url params if any
         } else {
             $getParams = $request->queryParams;
             unset($getParams['r']);
-            $this->Body = !empty($getParams) ? $getParams : '';
+            $this->Body = !empty($getParams) ? json_encode($getParams) : '';
         }
         $this->Token = $header['authorization'] ?: '';  //existing token, bearer
     }

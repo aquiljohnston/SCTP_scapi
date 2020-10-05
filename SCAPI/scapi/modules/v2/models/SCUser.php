@@ -166,6 +166,7 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
      *
      * @param string $token the token to be looked for
      * @return IdentityInterface|null the identity object that matches the given token.
+     * @throws UnauthorizedHttpException
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {

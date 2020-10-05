@@ -19,6 +19,7 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\base\ErrorException;
 use yii\data\Pagination;
+use yii\web\UnauthorizedHttpException;
 
 class BaseActiveController extends ActiveController
 {	
@@ -104,8 +105,13 @@ class BaseActiveController extends ActiveController
 	public function getDate()
 	{
 		return date(Constants::DATE_FORMAT);
-	}	
-	
+	}
+
+    /**
+     * @param null $token
+     * @return \yii\web\IdentityInterface|null
+     * @throws UnauthorizedHttpException
+     */
 	public static function getUserFromToken($token = null)
 	{
 		if ($token === null) {
@@ -114,11 +120,21 @@ class BaseActiveController extends ActiveController
 		return SCUser::findIdentityByAccessToken($token);
 	}
 
-	//function gets user from client table based on token and client header
+    /**
+     * function gets user from client table based on token and client header
+     *
+     * @param $client
+     * @return array|\yii\db\ActiveRecord|null
+     * @throws UnauthorizedHttpException
+     */
 	public static function getClientUser($client)
 	{
 		BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
-		$ctUser = self::getUserFromToken();
+        try{
+            $ctUser = self::getUserFromToken();
+        } catch (UnauthorizedHttpException $e) {
+            throw new UnauthorizedHttpException;
+        }
 		//if token is not found(replaced by another login) ctUser will be null and throw an error in where clause
 		if($ctUser !== null)
 		{

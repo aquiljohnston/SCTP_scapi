@@ -5,6 +5,7 @@ namespace app\modules\v3\models;
 use Yii;
 use yii\web\IdentityInterface;
 use app\modules\v3\models\Auth;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * This is the model class for table "UserTb".
@@ -169,20 +170,22 @@ class SCUser extends BaseActiveRecord  implements IdentityInterface
      * Finds an identity by the given token.
      *
      * @param string $token the token to be looked for
+     * @param $type
      * @return IdentityInterface|null the identity object that matches the given token.
+     * @throws UnauthorizedHttpException
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-		$auth = Auth::find()
-			->where(['AuthToken' => $token])
-			->one();
-		
-		//handle if auth record does not exist
-		if ($auth == null)
-		{
-			return null;
-		}
-		
+        $auth = Auth::find()
+            ->where(['AuthToken' => $token])
+            ->one();
+
+        //handle if auth record does not exist
+        if ($auth == null)
+        {
+            throw new UnauthorizedHttpException;
+        }
+
         return static::findOne(['UserID' => $auth->AuthUserID]);
     }
 
