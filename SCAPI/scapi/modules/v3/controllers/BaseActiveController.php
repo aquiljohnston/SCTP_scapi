@@ -101,7 +101,7 @@ class BaseActiveController extends ActiveController
 		}
     }
 	
-	public function getDate()
+	public static function getDate()
 	{
 		return date(Constants::DATE_FORMAT);
 	}	
