@@ -390,7 +390,7 @@ class EmployeeApprovalController extends Controller
 				$i = 0;
 				foreach ($stubHoursBreakdownQueryArrayRes as $key => $value){
 					$stubHoursBreakdown[] = [
-						'RowID' => $value['BreadCrumbID'],
+						'RowID' => $value['RowID'],
 						'ProjectID' => $value['ProjectID'],
 						'Project' => $value['ProjectName'],
 						'TaskID' => $value['TaskID'],
@@ -436,7 +436,6 @@ class EmployeeApprovalController extends Controller
 			
 			//capture put body
 			$put = file_get_contents("php://input");
-			yii::trace($put);
 			$data = json_decode($put, true);
 
 			//create response
@@ -459,17 +458,24 @@ class EmployeeApprovalController extends Controller
 				//skip empty rows
 				if($record['ID'] != ''){
 					//fetch original record
-					$originalRecord = BreadCrumbChanged::find($record['ID'])->one();
+					$originalRecord = BreadCrumbChanged::findOne($record['ID']);
 					//save original record to delta table
 					$deltaRecord = new BreadCrumbDelta;
-					$deltaRecord->attributes = $originalRecord->attributes;
+					$deltaRecord->OriginalRowID = $originalRecord->RowID;
+					$deltaRecord->ProjectID = $originalRecord->ProjectID;
+					$deltaRecord->BreadCrumbID = $originalRecord->BreadCrumbID;
+					$deltaRecord->BreadcrumbSrcDTLT = $originalRecord->BreadcrumbSrcDTLT;
+					$deltaRecord->EndDate = $originalRecord->EndDate;
+					$deltaRecord->TaskID = $originalRecord->TaskID;
+					$deltaRecord->Activity = $originalRecord->BreadcrumbActivityType;
+					$deltaRecord->UserName = $originalRecord->BreadcrumbCreatedUserUID;
 					$deltaRecord->ChangedBy = $changedBy;
 					$deltaRecord->ChangedOn = $changedOn;
 					if($deltaRecord->save()){
 						//update original record
 						$originalRecord->ProjectID = $record['ProjectID'];
 						$originalRecord->TaskID = $record['TaskID'];
-						if($record['Task'] != '') $originalRecord->BreadcrumbActivityType = $record['Task'];
+						if($record['TaskName'] != '') $originalRecord->BreadcrumbActivityType = $record['TaskName'];
 						$originalRecord->BreadcrumbSrcDTLT = $record['StartTime'];
 						$originalRecord->EndDate = $record['EndTime'];
 						$originalRecord->ChangedBy = $changedBy;
