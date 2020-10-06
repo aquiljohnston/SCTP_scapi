@@ -428,7 +428,7 @@ class BaseActiveController extends ActiveController
      * @param  string $comment
      * @return HttpRequestHistory
      */
-    public static function logError(\Exception $exception, string $comment = '')
+    public static function logError(\Exception $exception, string $comment = null)
     {
         $headers = Yii::$app->request->headers;
         $httpRequestHistory = new HttpRequestHistory();

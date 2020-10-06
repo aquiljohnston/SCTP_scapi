@@ -12,6 +12,8 @@ use yii\filters\VerbFilter;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\BreadCrumbChanged;
+use app\modules\v3\models\BreadCrumbDelta;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Query;
@@ -33,6 +35,7 @@ class EmployeeApprovalController extends Controller
 				'get' => ['get'],
 				'create' => ['post'],
 				'approve-cards'  => ['put'],
+				'update' => ['put'],
 			],  
 		];
 		return $behaviors;	
@@ -390,7 +393,8 @@ class EmployeeApprovalController extends Controller
 						'RowID' => $value['BreadCrumbID'],
 						'ProjectID' => $value['ProjectID'],
 						'Project' => $value['ProjectName'],
-						'Task' => $value['BreadcrumbActivityType'],
+						'TaskID' => $value['TaskID'],
+						'TaskName' => $value['BreadcrumbActivityType'],
 						'Start Time' => $value['StartTime'],
 						'End Time' => $value['EndTime'],
 						'Time On Task' => $value['Duration']
@@ -414,6 +418,7 @@ class EmployeeApprovalController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
+			$response->data = $responseArray;
 
 			return $response;
 		}catch(ForbiddenHttpException $e) {
@@ -421,6 +426,80 @@ class EmployeeApprovalController extends Controller
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionUpdate(){
+		try{
+			//set target db
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			yii::trace($put);
+			$data = json_decode($put, true);
+
+			//create response
+			$success = true;
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			//get username and current date
+			$changedBy = BaseActiveController::getUserFromToken()->UserName;
+			$changedOn = BaseActiveController::getDate();
+
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Edit', $changedBy, BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$connection = BaseActiveRecord::getDb();
+			$transaction = $connection->beginTransaction();
+			
+			foreach($data as $key=>$record){
+				//skip empty rows
+				if($record['ID'] != ''){
+					//fetch original record
+					$originalRecord = BreadCrumbChanged::find($record['ID'])->one();
+					//save original record to delta table
+					$deltaRecord = new BreadCrumbDelta;
+					$deltaRecord->attributes = $originalRecord->attributes;
+					$deltaRecord->ChangedBy = $changedBy;
+					$deltaRecord->ChangedOn = $changedOn;
+					if($deltaRecord->save()){
+						//update original record
+						$originalRecord->ProjectID = $record['ProjectID'];
+						$originalRecord->TaskID = $record['TaskID'];
+						if($record['Task'] != '') $originalRecord->BreadcrumbActivityType = $record['Task'];
+						$originalRecord->BreadcrumbSrcDTLT = $record['StartTime'];
+						$originalRecord->EndDate = $record['EndTime'];
+						$originalRecord->ChangedBy = $changedBy;
+						$originalRecord->ChangedOn = $changedOn;
+						if(!$originalRecord->update()){
+							$transaction->rollBack();
+							$success = false;
+							break;
+						}
+					}else{
+						$transaction->rollBack();
+						$success = false;
+						break;
+					}
+				}
+			}
+			$transaction->commit();
+			
+			$status['success'] = $success;
+			$response->data = $status;
+			return $response;
+		}catch(ForbiddenHttpException $e) {
+			$transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
+			throw $e;
+		}catch(\Exception $e){
+			$transaction->rollBack();
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
