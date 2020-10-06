@@ -5,18 +5,24 @@ namespace  app\modules\v3\authentication;
 use Yii;
 use yii\filters\auth\AuthMethod;
 use app\modules\v3\models\SCUser;
-use app\modules\v3\models\Auth;
-use app\modules\v3\models\HistoryAuth_Assignment;
 use app\modules\v3\models\Alert;
 use yii\base\ErrorException;
-use yii\web\Response;
 use app\modules\v3\controllers\BaseActiveController;
+use yii\web\UnauthorizedHttpException;
 
 class TokenAuth extends AuthMethod
 {
 	public $identity;
 	const AUTO_LOGOUT_ALERT_TITLE = 'Work Day Complete - Auto Logout';
-	 
+
+    /**
+     * @param \yii\web\User $user
+     * @param \yii\web\Request $request
+     * @param \yii\web\Response $response
+     * @return \yii\web\IdentityInterface|null
+     * @throws UnauthorizedHttpException
+     * @throws \yii\web\HttpException
+     */
     public function authenticate($user, $request, $response)
     {
 		SCUser::setClient(BaseActiveController::urlPrefix());
@@ -24,7 +30,12 @@ class TokenAuth extends AuthMethod
         $token = $request->getAuthUser();
 		
 		if ($token !== null && $token !== '') {
-			Yii::$app->user->checkTimeout($token);
+            try{
+                Yii::$app->user->checkTimeout($token);
+            } catch (UnauthorizedHttpException $e){
+                BaseActiveController::logError($e, 'Unauthorized http exception!');
+                throw new UnauthorizedHttpException;
+            }
 			try {
 				$identity = SCUser::findIdentityByAccessToken($token);
 				if ($identity !== null) {
@@ -40,11 +51,11 @@ class TokenAuth extends AuthMethod
 					//TODO move string to constants when version is created
 					throw new \yii\web\UnauthorizedHttpException('You are requesting with invalid credentials.');
 				}
-				
-			} catch (\Exception $e) {
-				//replace warning that was cluttering log files
-				Yii::trace("Valid token not found.");
-			}
+
+            } catch (UnauthorizedHttpException $e) {
+                BaseActiveController::logError($e, 'Unauthorized http exception!');
+                throw new UnauthorizedHttpException;
+            }
 		}
         return null;
     }

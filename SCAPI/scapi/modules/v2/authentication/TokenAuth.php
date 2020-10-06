@@ -5,47 +5,56 @@ namespace  app\modules\v2\authentication;
 use Yii;
 use yii\filters\auth\AuthMethod;
 use app\modules\v2\models\SCUser;
-use app\modules\v2\models\Auth;
-use app\modules\v2\models\HistoryAuth_Assignment;
 use app\modules\v2\models\Alert;
 use yii\base\ErrorException;
-use yii\web\Response;
 use app\modules\v2\controllers\BaseActiveController;
+use yii\web\UnauthorizedHttpException;
 
 class TokenAuth extends AuthMethod
 {
 	public $identity;
 	const AUTO_LOGOUT_ALERT_TITLE = 'Work Day Complete - Auto Logout';
-	 
+
+    /**
+     * @param \yii\web\User $user
+     * @param \yii\web\Request $request
+     * @param \yii\web\Response $response
+     * @return \yii\web\IdentityInterface|null
+     * @throws UnauthorizedHttpException
+     */
     public function authenticate($user, $request, $response)
     {
 		SCUser::setClient(BaseActiveController::urlPrefix());
-		
         $token = $request->getAuthUser();
-		
-		if ($token !== null && $token !== '') {
-			Yii::$app->user->checkTimeout($token);
-			try {
-				$identity = SCUser::findIdentityByAccessToken($token);
-				if ($identity !== null) {
-					//check for client header
-					try {
-						getAllHeaders()['X-Client'];
-					} catch(ErrorException $e) {	
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
-						throw new \yii\web\HttpException(400, 'Client Header Not Found.');
-					}
-					return $identity;
-				} else { 
-					//TODO move string to constants when version is created
-					throw new \yii\web\UnauthorizedHttpException('You are requesting with invalid credentials.');
-				}
-				
-			} catch (\Exception $e) {
-				//replace warning that was cluttering log files
-				Yii::trace("Valid token not found.");
-			}
-		}
+
+        if ($token !== null && $token !== '') {
+            try{
+                Yii::$app->user->checkTimeout($token);
+            } catch (UnauthorizedHttpException $e){
+                BaseActiveController::logError($e, 'Unauthorized http exception!');
+                throw new UnauthorizedHttpException;
+            }
+            try {
+                $identity = SCUser::findIdentityByAccessToken($token);
+                if ($identity !== null) {
+                    //check for client header
+                    try {
+                        getAllHeaders()['X-Client'];
+                    } catch(ErrorException $e) {
+                        BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+                        throw new \yii\web\HttpException(400, 'Client Header Not Found.');
+                    }
+                    return $identity;
+                } else {
+                    //TODO move string to constants when version is created
+                    throw new \yii\web\UnauthorizedHttpException('You are requesting with invalid credentials.');
+                }
+
+            } catch (UnauthorizedHttpException $e) {
+                BaseActiveController::logError($e, 'Unauthorized http exception!');
+                throw new UnauthorizedHttpException;
+            }
+        }
         return null;
     }
 	

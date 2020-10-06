@@ -9,6 +9,7 @@ use Yii;
  *
  * @property string $Token
  * @property string $Route
+ * @property string $Username
  * @property string $RouteType
  * @property string $Headers
  * @property string $Body
@@ -88,6 +89,13 @@ class HttpRequestHistory extends BaseActiveRecord
             unset($getParams['r']);
             $this->Body = !empty($getParams) ? json_encode($getParams) : '';
         }
-        $this->Token = $header['authorization'] ?: '';  //existing token, bearer
+        if(!empty($header['authorization'])){
+            $this->Token = substr(base64_decode(explode(" ", $header['authorization'])[1]), 0, -1);
+            $history = HistoryAuth_Assignment::find()->where(['Token' => $this->Token])->one();
+            $this->Username = !empty($history) ? $history->CreatedBy : '';
+        } else {
+            $this->Token = '';
+            $this->Username = '';
+        }
     }
 }

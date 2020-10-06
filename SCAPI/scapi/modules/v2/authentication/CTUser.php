@@ -25,12 +25,22 @@ class CTUser extends User
 		$this->clearTokenByToken($token);
 		parent::logout();
 	}
-	
+
+    /**
+     * @param $token
+     * @throws \Throwable
+     * @throws \yii\web\UnauthorizedHttpException
+     */
 	public function checkTimeout($token)
 	{
 		$this->renewAuthStatusWithToken($token);
 	}
-		
+
+    /**
+     * @param $token
+     * @throws \Throwable
+     * @throws \yii\web\UnauthorizedHttpException
+     */
 	protected function renewAuthStatusWithToken($token)
 	{
 		Auth::setClient(BaseActiveController::urlPrefix());

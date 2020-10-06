@@ -6,19 +6,12 @@ use Yii;
 use app\modules\v2\models\SCUser;
 use app\modules\v2\models\Auth;
 use app\modules\v2\models\Project;
-use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\models\BaseActiveRecord;
-use app\modules\v2\authentication\CTUser;
 use app\modules\v2\constants\Constants;
-use yii\data\ActiveDataProvider;
 use yii\rest\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
-use yii\helpers\Json;
-use yii\base\ErrorException;
 
 class LoginController extends Controller
 {
@@ -97,7 +90,7 @@ class LoginController extends Controller
                     $auth->AuthToken = \Yii::$app->security->generateRandomString();
                     $auth->AuthTimeout = time() + $timeout;
                     //Store Auth Token
-                    $auth-> save();
+                    $auth->save();
                 }
                 else
                 {
