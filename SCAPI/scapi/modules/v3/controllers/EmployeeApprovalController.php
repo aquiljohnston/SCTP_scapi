@@ -12,6 +12,8 @@ use yii\filters\VerbFilter;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\controllers\BaseActiveController;
 use app\modules\v3\models\BaseActiveRecord;
+use app\modules\v3\models\BreadCrumbChanged;
+use app\modules\v3\models\BreadCrumbDelta;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Query;
@@ -33,6 +35,7 @@ class EmployeeApprovalController extends Controller
 				'get' => ['get'],
 				'create' => ['post'],
 				'approve-cards'  => ['put'],
+				'update' => ['put'],
 			],  
 		];
 		return $behaviors;	
@@ -85,7 +88,7 @@ class EmployeeApprovalController extends Controller
 			}
 
 			$supervisorID = BaseActiveController::getUserFromToken()->UserID;
-			Yii::trace("\nParams: " . $projectID . ', SupervisorID: ' . $supervisorID . ', startDate: ' . $startDate . ', endDate: ' . $endDate);
+			
 			//build base query
 			$superviors = new Query;
 			$superviors->select('*')
@@ -313,7 +316,9 @@ class EmployeeApprovalController extends Controller
 			$transaction = $connection->beginTransaction();
                         
 			$UserIDs = $data["cardIDArray"];
-			         
+			$startDate = $data["startDate"];
+			$endDate = $data["endDate"];
+			Yii::trace("Data params: " . $UserIDs . ", startDate: " . $startDate . ", endDate: " . $endDate . ", " . $supervisorID);
 			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spSupervisorTimeCardApproval :startDate, :endDate, :UserIDs,  :SupervisorID");
 			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
 			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
@@ -385,10 +390,11 @@ class EmployeeApprovalController extends Controller
 				$i = 0;
 				foreach ($stubHoursBreakdownQueryArrayRes as $key => $value){
 					$stubHoursBreakdown[] = [
-						'RowID' => $value['BreadCrumbID'],
+						'RowID' => $value['RowID'],
 						'ProjectID' => $value['ProjectID'],
 						'Project' => $value['ProjectName'],
-						'Task' => $value['BreadcrumbActivityType'],
+						'TaskID' => $value['TaskID'],
+						'TaskName' => $value['BreadcrumbActivityType'],
 						'Start Time' => $value['StartTime'],
 						'End Time' => $value['EndTime'],
 						'Time On Task' => $value['Duration']
@@ -412,6 +418,7 @@ class EmployeeApprovalController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->data = $responseArray;
+			$response->data = $responseArray;
 
 			return $response;
 		}catch(ForbiddenHttpException $e) {
@@ -419,6 +426,86 @@ class EmployeeApprovalController extends Controller
 			throw $e;
 		}catch(\Exception $e){
 		   throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionUpdate(){
+		try{
+			//set target db
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//capture put body
+			$put = file_get_contents("php://input");
+			$data = json_decode($put, true);
+
+			//create response
+			$success = true;
+			$response = Yii::$app->response;
+			$response ->format = Response::FORMAT_JSON;
+
+			//get username and current date
+			$changedBy = BaseActiveController::getUserFromToken()->UserName;
+			$changedOn = BaseActiveController::getDate();
+
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Edit', $changedBy, BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$connection = BaseActiveRecord::getDb();
+			$transaction = $connection->beginTransaction();
+			
+			foreach($data as $key=>$record){
+				//skip empty rows
+				if($record['ID'] != ''){
+					//fetch original record
+					$originalRecord = BreadCrumbChanged::findOne($record['ID']);
+					//save original record to delta table
+					$deltaRecord = new BreadCrumbDelta;
+					$deltaRecord->OriginalRowID = $originalRecord->RowID;
+					$deltaRecord->ProjectID = $originalRecord->ProjectID;
+					$deltaRecord->BreadCrumbID = $originalRecord->BreadCrumbID;
+					$deltaRecord->BreadcrumbSrcDTLT = $originalRecord->BreadcrumbSrcDTLT;
+					$deltaRecord->EndDate = $originalRecord->EndDate;
+					$deltaRecord->TaskID = $originalRecord->TaskID;
+					$deltaRecord->Activity = $originalRecord->BreadcrumbActivityType;
+					$deltaRecord->UserName = $originalRecord->BreadcrumbCreatedUserUID;
+					$deltaRecord->ChangedBy = $changedBy;
+					$deltaRecord->ChangedOn = $changedOn;
+					if($deltaRecord->save()){
+						//update original record
+						$originalRecord->ProjectID = $record['ProjectID'];
+						$originalRecord->TaskID = $record['TaskID'];
+						if($record['TaskName'] != '') $originalRecord->BreadcrumbActivityType = $record['TaskName'];
+						$originalRecord->BreadcrumbSrcDTLT = $record['StartTime'];
+						$originalRecord->EndDate = $record['EndTime'];
+						$originalRecord->ChangedBy = $changedBy;
+						$originalRecord->ChangedOn = $changedOn;
+						if(!$originalRecord->update()){
+							$transaction->rollBack();
+							$success = false;
+							break;
+						}
+					}else{
+						$transaction->rollBack();
+						$success = false;
+						break;
+					}
+				}
+			}
+			$transaction->commit();
+			
+			$status['success'] = $success;
+			$response->data = $status;
+			return $response;
+		}catch(ForbiddenHttpException $e) {
+			$transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
+			throw $e;
+		}catch(\Exception $e){
+			$transaction->rollBack();
+			//archive error
+			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
+			throw new \yii\web\HttpException(400);
 		}
 	}
 	
