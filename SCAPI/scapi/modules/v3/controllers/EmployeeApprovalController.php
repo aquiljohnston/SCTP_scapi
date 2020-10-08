@@ -388,7 +388,8 @@ class EmployeeApprovalController extends Controller
 			$stubHoursBreakdownQuery = new Query;
 			$stubHoursBreakdownQuery->select('*')
 					->from(["fnReturnDetails(:UserID,:thisDate)"])
-					->addParams([':UserID' => $username, ':thisDate' => $date]);
+					->addParams([':UserID' => $username, ':thisDate' => $date])
+					->orderBy('StartTime, EndTime');
 
 			$stubHoursBreakdownQueryArrayRes = $stubHoursBreakdownQuery->all($db); 
 			yii::trace(json_encode($stubHoursBreakdownQueryArrayRes));
