@@ -500,10 +500,12 @@ class EmployeeApprovalController extends Controller
             }
 
             if (ArrayHelper::keyExists('Current', $data)) {
+
                 $originalRecord = BreadCrumbChanged::find()
                     ->where(['RowId'=>$data['Current']['ID']])
                     ->one();
 
+                // if original record exists update it, otherwise create it
                 if($originalRecord){
 
                     $deltaRecord = new BreadCrumbDelta();
@@ -534,6 +536,113 @@ class EmployeeApprovalController extends Controller
                 }
             }
 
+            // Add LogoutActivity if does not exist
+            if (ArrayHelper::keyExists('LogoutActivity', $data)) {
+
+                //
+                $breadCrumbChanged = new BreadCrumbChanged();
+                $breadCrumbChanged->OriginalRowID = 0;
+                $breadCrumbChanged->BreadCrumbID = 0;
+                $breadCrumbChanged->ProjectID = $data['LogoutActivity']['ProjectID'];
+                $breadCrumbChanged->TaskID = $data['LogoutActivity']['TaskID'];
+                $breadCrumbChanged->BreadcrumbActivityType = $data['LogoutActivity']['TaskName'];
+                $breadCrumbChanged->BreadcrumbSrcDTLT = $data['LogoutActivity']['StartTime'];
+                $breadCrumbChanged->EndDate = $data['LogoutActivity']['EndTime'];
+                $breadCrumbChanged->ChangedBy = $changedBy;
+                $breadCrumbChanged->ChangedOn = $changedOn;
+                $breadCrumbChanged->BreadcrumbCreatedUserUID = $user->UserName;
+
+                //
+                if (!$breadCrumbChanged->save()) {
+                    //  $transaction->rollBack();
+                    throw new \Exception(print_r($breadCrumbChanged->getErrors(), 1));
+                }
+            }
+
+            $transaction->commit();
+
+            $status['success'] = $success;
+            $response->data = $status;
+            return $response;
+        } catch (ForbiddenHttpException $e) {
+            $transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
+            throw $e;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            //archive error
+
+            throw $e;
+            BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e,
+                BaseActiveController::urlPrefix());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     *
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\db\Exception
+     * @throws \yii\web\HttpException
+     */
+    public function actionCreateInitial()
+    {
+        //set target db
+        BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+        //create db transaction
+        $connection = BaseActiveRecord::getDb();
+        $transaction = $connection->beginTransaction();
+
+        try {
+
+            //capture body
+            $post = file_get_contents("php://input");
+            yii::trace($post);
+            $data = json_decode($post, true);
+
+            //create response
+            $success = true;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+            //get username and current date
+            $changedBy = BaseActiveController::getUserFromToken()->UserName;
+            $changedOn = BaseActiveController::getDate();
+
+            //archive json
+            BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Create', $changedBy,
+                BaseActiveController::urlPrefix());
+
+            // Always get username from user_id
+            $user = SCUser::find()
+                ->where(['UserID' => $data['New']['UserID']])
+                ->one();
+
+            //
+            foreach ($data as $key => $dataToAdd) {
+
+                //
+                $breadCrumbChanged = new BreadCrumbChanged();
+                $breadCrumbChanged->OriginalRowID = 0;
+                $breadCrumbChanged->BreadCrumbID=0;
+                $breadCrumbChanged->ProjectID = $dataToAdd['ProjectID'];
+                $breadCrumbChanged->TaskID = $dataToAdd['TaskID'];
+                $breadCrumbChanged->BreadcrumbActivityType = $dataToAdd['TaskName'];
+                $breadCrumbChanged->BreadcrumbSrcDTLT = $dataToAdd['StartTime'];
+                $breadCrumbChanged->EndDate = $dataToAdd['EndTime'];
+                $breadCrumbChanged->ChangedBy = $changedBy;
+                $breadCrumbChanged->ChangedOn = $changedOn;
+                $breadCrumbChanged->BreadcrumbCreatedUserUID = $user->UserName;
+
+                if(!$breadCrumbChanged->save()){
+                    //  $transaction->rollBack();
+                    throw new \Exception(print_r($breadCrumbChanged->getErrors(),1));
+                }
+            }
+
+            //
             $transaction->commit();
 
             $status['success'] = $success;
