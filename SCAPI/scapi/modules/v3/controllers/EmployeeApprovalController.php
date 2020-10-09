@@ -6,6 +6,7 @@ use app\modules\v3\constants\Constants;
 use app\modules\v3\models\Alert;
 use app\modules\v3\models\SCUser;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
@@ -17,6 +18,10 @@ use app\modules\v3\models\BreadCrumbDelta;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Query;
+use function file_get_contents;
+use function json_decode;
+use function json_encode;
+use function print_r;
 
 class EmployeeApprovalController extends Controller 
 {
@@ -350,10 +355,12 @@ class EmployeeApprovalController extends Controller
 			$db = BaseActiveRecord::getDb();
 
 			$date = date('Y-m-d', strtotime($date));
-			
+
 			$user = SCUser::find()
-                ->where(['UserID' => $userID])
+                ->where(['UserID' => (int)$userID])
                 ->one();
+
+
 			$username = $user->UserName;
 			
 
@@ -381,7 +388,9 @@ class EmployeeApprovalController extends Controller
 			$stubHoursBreakdownQuery = new Query;
 			$stubHoursBreakdownQuery->select('*')
 					->from(["fnReturnDetails(:UserID,:thisDate)"])
-					->addParams([':UserID' => $username, ':thisDate' => $date]);
+					->addParams([':UserID' => $username, ':thisDate' => $date])
+					->where('EndTime is not NULL')
+					->orderBy('StartTime, EndTime');
 
 			$stubHoursBreakdownQueryArrayRes = $stubHoursBreakdownQuery->all($db); 
 			yii::trace(json_encode($stubHoursBreakdownQueryArrayRes));
@@ -425,9 +434,125 @@ class EmployeeApprovalController extends Controller
             BaseActiveController::logError($e, 'Forbidden http exception');
 			throw $e;
 		}catch(\Exception $e){
+		    throw $e;
 		   throw new \yii\web\HttpException(400);
 		}
 	}
+
+    /**
+     *
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\db\Exception
+     * @throws \yii\web\HttpException
+     */
+    public function actionCreate()
+    {
+        //set target db
+        BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+        //create db transaction
+        $connection = BaseActiveRecord::getDb();
+        $transaction = $connection->beginTransaction();
+
+        try {
+
+            //capture body
+            $put = file_get_contents("php://input");
+            yii::trace($put);
+            $data = json_decode($put, true);
+
+            //create response
+            $success = true;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+            //get username and current date
+            $changedBy = BaseActiveController::getUserFromToken()->UserName;
+            $changedOn = BaseActiveController::getDate();
+
+            //archive json
+            BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Create', $changedBy,
+                BaseActiveController::urlPrefix());
+
+            // Always get username from user_id
+            $user = SCUser::find()
+                ->where(['UserID'=>$data['New']['UserID']])
+                ->one();
+
+            //
+            $breadCrumbChanged = new BreadCrumbChanged();
+            $breadCrumbChanged->OriginalRowID = 0;
+            $breadCrumbChanged->BreadCrumbID=0;
+            $breadCrumbChanged->ProjectID = $data['New']['ProjectID'];
+            $breadCrumbChanged->TaskID = $data['New']['TaskID'];
+            $breadCrumbChanged->BreadcrumbActivityType = $data['New']['TaskName'];
+            $breadCrumbChanged->BreadcrumbSrcDTLT = $data['New']['StartTime'];
+            $breadCrumbChanged->EndDate = $data['New']['EndTime'];
+            $breadCrumbChanged->ChangedBy = $changedBy;
+            $breadCrumbChanged->ChangedOn = $changedOn;
+            $breadCrumbChanged->BreadcrumbCreatedUserUID = $user->UserName;
+
+
+            if(!$breadCrumbChanged->save()){
+                //  $transaction->rollBack();
+               throw new \Exception(print_r($breadCrumbChanged->getErrors(),1));
+            }
+
+            if (ArrayHelper::keyExists('Current', $data)) {
+                $originalRecord = BreadCrumbChanged::find()
+                    ->where(['RowId'=>$data['Current']['ID']])
+                    ->one();
+
+                if($originalRecord){
+
+                    $deltaRecord = new BreadCrumbDelta();
+                    $deltaRecord->OriginalRowID = $originalRecord->RowID;
+                    $deltaRecord->ProjectID = $originalRecord->ProjectID;
+                    $deltaRecord->BreadCrumbID = $originalRecord->BreadCrumbID;
+                    $deltaRecord->BreadcrumbSrcDTLT = $originalRecord->BreadcrumbSrcDTLT;
+                    $deltaRecord->EndDate = $originalRecord->EndDate;
+                    $deltaRecord->TaskID = $originalRecord->TaskID;
+                    $deltaRecord->Activity = $originalRecord->BreadcrumbActivityType;
+                    $deltaRecord->UserName = $originalRecord->BreadcrumbCreatedUserUID;
+                    $deltaRecord->ChangedBy = $changedBy;
+                    $deltaRecord->ChangedOn = $changedOn;
+
+                    if (!$deltaRecord->save()) {
+                        throw new \Exception(print_r($deltaRecord->getErrors(),true));
+                    }
+
+                    //
+                    $originalRecord->BreadcrumbSrcDTLT = $data['Current']['StartTime'];
+                    $originalRecord->EndDate = $data['Current']['EndTime'];
+                    $originalRecord->ChangedBy = $changedBy;
+                    $originalRecord->ChangedOn = $changedOn;
+
+                    if(!$originalRecord->save()){
+                        throw new \Exception(print_r($originalRecord->getErrors(),true));
+                    }
+                }
+            }
+
+            $transaction->commit();
+
+            $status['success'] = $success;
+            $response->data = $status;
+            return $response;
+        } catch (ForbiddenHttpException $e) {
+            $transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
+            throw $e;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            //archive error
+
+            throw $e;
+            BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e,
+                BaseActiveController::urlPrefix());
+            throw new \yii\web\HttpException(400);
+        }
+    }
 	
 	public function actionUpdate(){
 		try{

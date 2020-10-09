@@ -15,12 +15,15 @@ use app\modules\v2\models\WebJSONDataInsertError;
 use app\modules\v2\models\HttpRequestHistory;
 use app\modules\v2\authentication\TokenAuth;
 use yii\base\Exception;
+use yii\helpers\Json;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\base\ErrorException;
 use yii\data\Pagination;
-use yii\web\UnauthorizedHttpException;
+use function file_get_contents;
+use function getallheaders;
+use function json_decode;
 
 class BaseActiveController extends ActiveController
 {	
@@ -456,5 +459,40 @@ class BaseActiveController extends ActiveController
         $httpRequestHistory->save();
 
         return $httpRequestHistory;
+    }
+
+    /**
+     * @param null $exception
+     * @param string $username
+     * @param string $comments
+     * @param false $ignoreBody
+     */
+    public static function logRoute($exception = null, $username = '', $comments = '', $ignoreBody=false) {
+
+        HttpRequestHistory::setClient(BaseActiveController::urlPrefix());
+        $httpRequestHistory = new HttpRequestHistory();
+        //  $httpRequestHistory->Token = $token;
+        $httpRequestHistory->Username = $username;
+
+
+        if($exception != null) {
+            $httpRequestHistory->setExceptionData($exception);
+        }
+        // $httpRequestHistory->Body = ($skipBody == true ? '' : $body);
+        // $httpRequestHistory->Route = Yii::$app->controller->route;
+        // $httpRequestHistory->RouteType = Yii::$app->request->getMethod();
+        // $httpRequestHistory->Headers = Json::encode(getallheaders());
+
+        // if applicable
+        $httpRequestHistory->Comments = $comments;
+        $httpRequestHistory->ignoreBody = $ignoreBody;
+
+        // set in model w/ exception passed
+        //  $httpRequestHistory->Miscellaneous = $miscellaneous;
+        // $httpRequestHistory->Reason = $reason;
+
+        $httpRequestHistory->setRequestData();
+
+        $httpRequestHistory->save(false);
     }
 }

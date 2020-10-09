@@ -9,3 +9,11 @@ SCAPI/scapi/config/dev_config_override.php
 SCAPI/scapi/web/jar/mapQuestBigDistanceMatrixLog.txt
 SCAPI/scapi/web/jar/routeOptimizerLogOutput.txt
 sh.exe.stackdump
+.idea/encodings.xml
+.idea/modules.xml
+.idea/scapi.iml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/codeStyles/codeStyleConfig.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml

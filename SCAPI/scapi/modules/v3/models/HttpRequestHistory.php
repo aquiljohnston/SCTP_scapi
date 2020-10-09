@@ -3,6 +3,9 @@
 namespace app\modules\v3\models;
 
 use Yii;
+use function base64_decode;
+use function json_encode;
+use function str_replace;
 
 /**
  * This is the model class for table "HttpRequestHistory".
@@ -15,10 +18,16 @@ use Yii;
  * @property string $Body
  * @property string $Comments
  * @property string $Miscellaneous
+ * @property string $Username
  * @property integer $Reason
  */
-class HttpRequestHistory extends BaseActiveRecord
+class HttpRequestHistory extends \app\modules\v2\models\BaseActiveRecord
 {
+    /**
+     * @var bool
+     */
+    public $ignoreBody = false;
+
     /**
      * @inheritdoc
      */
@@ -33,8 +42,8 @@ class HttpRequestHistory extends BaseActiveRecord
     public function rules()
     {
         return [
-            [['Token', 'Route', 'RouteType', 'Headers', 'Body', 'Comments', 'Miscellaneous'], 'string'],
-            [['Reason'], 'integer'],
+            [['Token', 'Route', 'RouteType', 'Headers', 'Body', 'Comments', 'Miscellaneous', 'Username'], 'string'],
+            [['Reason', 'ignoreBody'], 'integer'],
         ];
     }
 
@@ -73,29 +82,13 @@ class HttpRequestHistory extends BaseActiveRecord
         $header = $request->headers;
 
         $headerData = [
-            'x-client'          => $header['x-client'] ?: '',
-            'content-type'      => $header['content-type'] ?: '',
-            'content-length'    => $header['content-length'] ?: '',
-            'accept'            => $header['accept'] ?: '',
+            'x-client'       => $header['x-client'] ?: '',
+            'content-type'   => $header['content-type'] ?: '',
+            'content-length' => $header['content-length'] ?: '',
+            'accept'         => $header['accept'] ?: '',
         ];
 
         $this->Headers = json_encode($headerData);  //x-client, auth token, etc.
         $this->RouteType = $request->method;        //get, post, put, delete
         $this->Route = $request->url;               //route called including version
-        if(!empty($request->rawBody)){
-            $this->Body = json_encode($request->rawBody);            //post body if any, url params if any
-        } else {
-            $getParams = $request->queryParams;
-            unset($getParams['r']);
-            $this->Body = !empty($getParams) ? json_encode($getParams) : '';
-        }
-        if(!empty($header['authorization'])){
-            $this->Token = substr(base64_decode(explode(" ", $header['authorization'])[1]), 0, -1);
-            $history = HistoryAuth_Assignment::find()->where(['Token' => $this->Token])->one();
-            $this->Username = !empty($history) ? $history->CreatedBy : '';
-        } else {
-            $this->Token = '';
-            $this->Username = '';
-        }
-    }
 }
