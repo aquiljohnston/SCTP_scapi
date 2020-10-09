@@ -389,6 +389,7 @@ class EmployeeApprovalController extends Controller
 			$stubHoursBreakdownQuery->select('*')
 					->from(["fnReturnDetails(:UserID,:thisDate)"])
 					->addParams([':UserID' => $username, ':thisDate' => $date])
+					->where('EndTime is not NULL')
 					->orderBy('StartTime, EndTime');
 
 			$stubHoursBreakdownQueryArrayRes = $stubHoursBreakdownQuery->all($db); 
