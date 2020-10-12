@@ -412,7 +412,7 @@ class EmployeeApprovalController extends Controller
 			}
 
 			$stubTotals = [
-				'Tech' => 'Andrew Harris',
+				'Tech' => $user->UserFirstName . ' ' . $user->UserLastName,
 				'WeeklyTotal' => '40.2',
 				'Total' => '8:37',
 				'TotalNoLunch' => '8:07',
