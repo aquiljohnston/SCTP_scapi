@@ -906,8 +906,7 @@ class RbacController extends Controller
 
         $viewTimeCardMgmt = $this->auth->createPermission('viewTimeCardMgmt');
         $viewTimeCardMgmt->description = 'View time card management menu item';
-        $this->permissionAssociationArray['Dispatcher'][] = $viewTimeCardMgmt;
-        $this->permissionAssociationArray['Accountant'][] = $viewTimeCardMgmt;
+        $this->permissionAssociationArray['Admin'][] = $viewTimeCardMgmt;
         $this->permissionArray[] = $viewTimeCardMgmt;
 
         $viewMileageCardMgmt = $this->auth->createPermission('viewMileageCardMgmt');
