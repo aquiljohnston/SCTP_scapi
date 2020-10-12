@@ -528,6 +528,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $employeeApprovalDetail;
         $this->permissionArray[] = $employeeApprovalDetail;
 		
+		$employeeApprovalDetailEdit = $this->auth->createPermission('employeeApprovalDetailEdit');
+        $employeeApprovalDetailEdit->description = 'Edit Employee Detail Data';
+        $this->permissionAssociationArray['Supervisor'][] = $employeeApprovalDetailEdit;
+        $this->permissionAssociationArray['Accountant'][] = $employeeApprovalDetailEdit;
+        $this->permissionArray[] = $employeeApprovalDetailEdit;
+		
 		//Expense Permissions//////////////////////////////////////////////////////////////
 		
 		$expenseGetOwn = $this->auth->createPermission('expenseGetOwn');
