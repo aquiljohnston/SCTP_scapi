@@ -9,6 +9,7 @@ use app\modules\v3\models\MileageRate;
 use app\modules\v3\models\MileageEntryEventHistory;
 use app\modules\v3\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -84,6 +85,7 @@ class MileageEntryController extends BaseActiveController
 			$processJSONCommand->execute();
 			$successFlag = 1;			
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], [
@@ -153,6 +155,7 @@ class MileageEntryController extends BaseActiveController
 			$response->data = $responseData;
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
 			BaseActiveController::archiveWebErrorJson('MileageEntryID: ' . $entryID, $e, BaseActiveController::urlPrefix());
@@ -201,6 +204,7 @@ class MileageEntryController extends BaseActiveController
 			$response->data = $dataArray; 
 			return $response;
 		}catch (ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		}catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
@@ -263,6 +267,7 @@ class MileageEntryController extends BaseActiveController
 			$response->data = $responseData;
 			return $response;
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);

@@ -155,6 +155,7 @@ class InspectionController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -538,6 +539,7 @@ class InspectionController extends Controller
 			];
 			return $responseData;
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e){
             throw new \yii\web\HttpException(400);
@@ -642,6 +644,7 @@ class InspectionController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -718,6 +721,7 @@ class InspectionController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -785,6 +789,7 @@ class InspectionController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -873,6 +878,7 @@ class InspectionController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)
@@ -906,6 +912,7 @@ class InspectionController extends Controller
 		}
         catch(ForbiddenHttpException $e)
         {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }
         catch(\Exception $e)

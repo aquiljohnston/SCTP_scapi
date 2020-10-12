@@ -12,6 +12,7 @@ use app\modules\v3\models\WebDataInsertArchive;
 use app\modules\v3\models\TabletDataInsertBreadcrumbArchive;
 use app\modules\v3\models\TabletJSONDataInsertError;
 use app\modules\v3\models\WebJSONDataInsertError;
+use app\modules\v3\models\HttpRequestHistory;
 use app\modules\v3\authentication\TokenAuth;
 use yii\rest\ActiveController;
 use yii\filters\VerbFilter;
@@ -100,7 +101,7 @@ class BaseActiveController extends ActiveController
 		}
     }
 	
-	public function getDate()
+	public static function getDate()
 	{
 		return date(Constants::DATE_FORMAT);
 	}	
@@ -421,4 +422,57 @@ class BaseActiveController extends ActiveController
 		$client == Constants::SCCT_CONFIG['STAGE_HEADER'] ||
 		$client == Constants::SCCT_CONFIG['PROD_HEADER']);
 	}
+
+    /**
+     * @param \Exception $exception
+     * @param  string $comment
+     * @return HttpRequestHistory
+     */
+    public static function logError(\Exception $exception, string $comment = null)
+    {
+        $headers = Yii::$app->request->headers;
+        $httpRequestHistory = new HttpRequestHistory();
+        $httpRequestHistory::setClient($headers['x-client']);
+        $httpRequestHistory->setExceptionData($exception);
+        $httpRequestHistory->setRequestData();
+        $httpRequestHistory->Comments = $comment;     //e.g. Session Expired, Different Auth Token, etc.
+        $httpRequestHistory->save();
+
+        return $httpRequestHistory;
+    }
+
+    /**
+     * @param null $exception
+     * @param string $username
+     * @param string $comments
+     * @param false $ignoreBody
+     */
+    public static function logRoute($exception = null, $username = '', $comments = '', $ignoreBody=false) {
+
+        HttpRequestHistory::setClient(\app\modules\v2\controllers\BaseActiveController::urlPrefix());
+        $httpRequestHistory = new HttpRequestHistory();
+        //  $httpRequestHistory->Token = $token;
+        $httpRequestHistory->Username = $username;
+
+
+        if($exception != null) {
+            $httpRequestHistory->setExceptionData($exception);
+        }
+        // $httpRequestHistory->Body = ($skipBody == true ? '' : $body);
+        // $httpRequestHistory->Route = Yii::$app->controller->route;
+        // $httpRequestHistory->RouteType = Yii::$app->request->getMethod();
+        // $httpRequestHistory->Headers = Json::encode(getallheaders());
+
+        // if applicable
+        $httpRequestHistory->Comments = $comments;
+        $httpRequestHistory->ignoreBody = $ignoreBody;
+
+        // set in model w/ exception passed
+        //  $httpRequestHistory->Miscellaneous = $miscellaneous;
+        // $httpRequestHistory->Reason = $reason;
+
+        $httpRequestHistory->setRequestData();
+
+        $httpRequestHistory->save(false);
+    }
 }

@@ -211,6 +211,7 @@ class UserController extends BaseActiveController
 			$response->setStatusCode(200);
 			$response->data = $responseArray;
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);
@@ -447,6 +448,7 @@ class UserController extends BaseActiveController
             $response->format = Response::FORMAT_JSON;
             $response->data = $dataArray;
         } catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch (\Exception $e) {
             throw new \yii\web\HttpException(400);

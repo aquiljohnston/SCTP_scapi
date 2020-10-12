@@ -288,6 +288,7 @@ class MileageCardController extends BaseActiveController
 				return $response;
 			}
 		} catch (ForbiddenHttpException $e) {
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
 			throw new \yii\web\HttpException(400);
@@ -374,6 +375,7 @@ class MileageCardController extends BaseActiveController
             return '';
         } catch(ForbiddenHttpException $e) {
             //Yii::trace('ForbiddenHttpException '.$e->getMessage());
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         } catch(\Exception $e) {
             //Yii::trace('Exception '.$e->getMessage());

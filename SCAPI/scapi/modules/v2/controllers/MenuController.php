@@ -206,6 +206,7 @@ class MenuController extends Controller {
 		}
 		catch(ForbiddenHttpException $e) 
 		{
+            BaseActiveController::logError($e, 'Forbidden http exception');
 			throw new ForbiddenHttpException;
 		}
 		catch(\Exception $e) 

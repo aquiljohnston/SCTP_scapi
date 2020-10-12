@@ -520,6 +520,20 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $timeEntryDeactivate;
         $this->permissionArray[] = $timeEntryDeactivate;
 		
+		//Employee Approval Permissions///////////////////////////////////////////////////////
+		
+		$employeeApprovalDetail = $this->auth->createPermission('employeeApprovalDetail');
+        $employeeApprovalDetail->description = 'Get hours breakdown for a user on a single day.';
+        $this->permissionAssociationArray['Dispatcher'][] = $employeeApprovalDetail;
+        $this->permissionAssociationArray['Accountant'][] = $employeeApprovalDetail;
+        $this->permissionArray[] = $employeeApprovalDetail;
+		
+		$employeeApprovalDetailEdit = $this->auth->createPermission('employeeApprovalDetailEdit');
+        $employeeApprovalDetailEdit->description = 'Edit Employee Detail Data';
+        $this->permissionAssociationArray['Supervisor'][] = $employeeApprovalDetailEdit;
+        $this->permissionAssociationArray['Accountant'][] = $employeeApprovalDetailEdit;
+        $this->permissionArray[] = $employeeApprovalDetailEdit;
+		
 		//Expense Permissions//////////////////////////////////////////////////////////////
 		
 		$expenseGetOwn = $this->auth->createPermission('expenseGetOwn');
@@ -889,11 +903,16 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Engineer'][] = $viewEquipmentMgmt;
         $this->permissionAssociationArray['Supervisor'][] = $viewEquipmentMgmt;
         $this->permissionArray[] = $viewEquipmentMgmt;
+		
+		$viewEmployeeApproval = $this->auth->createPermission('viewEmployeeApproval');
+        $viewEmployeeApproval->description = 'View time card management menu item';
+        $this->permissionAssociationArray['Dispatcher'][] = $viewEmployeeApproval;
+        $this->permissionAssociationArray['Accountant'][] = $viewEmployeeApproval;
+        $this->permissionArray[] = $viewEmployeeApproval;
 
         $viewTimeCardMgmt = $this->auth->createPermission('viewTimeCardMgmt');
         $viewTimeCardMgmt->description = 'View time card management menu item';
-        $this->permissionAssociationArray['Dispatcher'][] = $viewTimeCardMgmt;
-        $this->permissionAssociationArray['Accountant'][] = $viewTimeCardMgmt;
+        $this->permissionAssociationArray['Admin'][] = $viewTimeCardMgmt;
         $this->permissionArray[] = $viewTimeCardMgmt;
 
         $viewMileageCardMgmt = $this->auth->createPermission('viewMileageCardMgmt');

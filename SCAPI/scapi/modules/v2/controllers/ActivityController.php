@@ -17,6 +17,7 @@ use app\modules\v2\controllers\EquipmentController;
 use app\modules\v2\controllers\InspectionController;
 use app\modules\v3\controllers\ExpenseController;
 use yii\data\ActiveDataProvider;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
 use yii\base\ErrorException;
@@ -385,6 +386,7 @@ class ActivityController extends BaseActiveController
 			$response->data = $responseData; 
 			return $response;
 		} catch(UnauthorizedHttpException $e) {
+            BaseActiveController::logError($e, 'Unauthorized http exception');
             throw new UnauthorizedHttpException;
         } catch(\Exception $e) {
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);
@@ -475,6 +477,7 @@ class ActivityController extends BaseActiveController
 			return $response;
 			
 		}catch(ForbiddenHttpException $e){
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(\Exception $e) {
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client']);

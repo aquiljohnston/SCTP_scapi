@@ -97,12 +97,30 @@ class QuestionController extends Controller{
 
 			//return response data
 			$response->data = $responseData;
+
+			// logs
+            BaseActiveController::logRoute(null, $createdBy, 'Question created');
+
 			return $response;
 		}catch(ForbiddenHttpException $e){
+
+            // logs
+            BaseActiveController::logRoute($e, $createdBy, 'Forbidden http exception');
+
+            BaseActiveController::logError($e, 'Forbidden http exception');
             throw new ForbiddenHttpException;
         }catch(UnauthorizedHttpException $e) {
+
+            // logs
+            BaseActiveController::logRoute($e, $createdBy, 'Unauthorized http exception');
+
+            BaseActiveController::logError($e, 'Unauthorized http exception');
             throw new UnauthorizedHttpException;
         }catch(\Exception $e){
+
+            // logs
+            BaseActiveController::logRoute($e, $createdBy, 'Exception');
+
 			BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix());
             throw new \yii\web\HttpException(400);
         }
