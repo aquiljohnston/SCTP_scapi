@@ -476,35 +476,6 @@ class EmployeeApprovalController extends Controller
             //archive json
             BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Create', $changedBy,
                 BaseActiveController::urlPrefix());
-				
-			//if account type is set create task record to support current implementation
-			if($data['New']['AccountType'] != null){
-				//fetch relevant timecard id by userid, projectid, and date.
-				$timeCard = TimeCard::find()
-					->select('TimeCardID')
-					->where(['TimeCardTechID' => $data['New']['UserID']])
-					->andWhere(['TimeCardProjectID' => $data['New']['ProjectID']])
-					->andWhere(['<=', 'TimeCardStartDate', explode(' ', $data['New']['StartTime'])[0]])
-					->andWhere(['>=', 'TimeCardEndDate', explode(' ', $data['New']['StartTime'])[0]])
-					->one();
-				//build data object
-				$taskData = [];
-				$taskData['TimeCardID'] = $timeCard->TimeCardID;
-				$taskData['TaskName'] = $data['New']['TaskName'];
-				//split out date and time
-				$taskData['Date'] = explode(' ', $data['New']['StartTime'])[0];
-				$taskData['StartTime'] = explode(' ', $data['New']['StartTime'])[1];
-				$taskData['EndTime'] = explode(' ', $data['New']['EndTime'])[1];
-				$taskData['CreatedByUserName'] = $changedBy;
-				$taskData['ChargeOfAccountType'] = $data['New']['AccountType'];
-				$taskData['TimeReason'] = '';
-				
-				$taskResult = TaskController::addActivityAndTime($taskData);
-				
-				if($taskResult['successFlag'] == 0){
-					throw new \Exception($taskResult['warningMessage']);
-				}
-			}
 
             // Always get username from user_id
             $user = SCUser::find()
