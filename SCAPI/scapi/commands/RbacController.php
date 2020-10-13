@@ -528,6 +528,12 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Accountant'][] = $employeeApprovalDetail;
         $this->permissionArray[] = $employeeApprovalDetail;
 		
+		$employeeApprovalDetailEdit = $this->auth->createPermission('employeeApprovalDetailEdit');
+        $employeeApprovalDetailEdit->description = 'Edit Employee Detail Data';
+        $this->permissionAssociationArray['Supervisor'][] = $employeeApprovalDetailEdit;
+        $this->permissionAssociationArray['Accountant'][] = $employeeApprovalDetailEdit;
+        $this->permissionArray[] = $employeeApprovalDetailEdit;
+		
 		//Expense Permissions//////////////////////////////////////////////////////////////
 		
 		$expenseGetOwn = $this->auth->createPermission('expenseGetOwn');
@@ -906,8 +912,7 @@ class RbacController extends Controller
 
         $viewTimeCardMgmt = $this->auth->createPermission('viewTimeCardMgmt');
         $viewTimeCardMgmt->description = 'View time card management menu item';
-        $this->permissionAssociationArray['Dispatcher'][] = $viewTimeCardMgmt;
-        $this->permissionAssociationArray['Accountant'][] = $viewTimeCardMgmt;
+        $this->permissionAssociationArray['Admin'][] = $viewTimeCardMgmt;
         $this->permissionArray[] = $viewTimeCardMgmt;
 
         $viewMileageCardMgmt = $this->auth->createPermission('viewMileageCardMgmt');

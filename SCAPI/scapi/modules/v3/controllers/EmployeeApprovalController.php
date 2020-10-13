@@ -12,9 +12,11 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\modules\v3\authentication\TokenAuth;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\TaskController;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\BreadCrumbChanged;
 use app\modules\v3\models\BreadCrumbDelta;
+use app\modules\v3\models\TimeCard;
 use yii\web\ForbiddenHttpException;
 use yii\web\BadRequestHttpException;
 use yii\db\Query;
@@ -412,7 +414,7 @@ class EmployeeApprovalController extends Controller
 			}
 
 			$stubTotals = [
-				'Tech' => 'Andrew Harris',
+				'Tech' => $user->UserFirstName . ' ' . $user->UserLastName,
 				'WeeklyTotal' => '40.2',
 				'Total' => '8:37',
 				'TotalNoLunch' => '8:07',
@@ -474,6 +476,35 @@ class EmployeeApprovalController extends Controller
             //archive json
             BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Create', $changedBy,
                 BaseActiveController::urlPrefix());
+				
+			//if account type is set create task record to support current implementation
+			if($data['New']['AccountType'] != null){
+				//fetch relevant timecard id by userid, projectid, and date.
+				$timeCard = TimeCard::find()
+					->select('TimeCardID')
+					->where(['TimeCardTechID' => $data['New']['UserID']])
+					->andWhere(['TimeCardProjectID' => $data['New']['ProjectID']])
+					->andWhere(['<=', 'TimeCardStartDate', explode(' ', $data['New']['StartTime'])[0]])
+					->andWhere(['>=', 'TimeCardEndDate', explode(' ', $data['New']['StartTime'])[0]])
+					->one();
+				//build data object
+				$taskData = [];
+				$taskData['TimeCardID'] = $timeCard->TimeCardID;
+				$taskData['TaskName'] = $data['New']['TaskName'];
+				//split out date and time
+				$taskData['Date'] = explode(' ', $data['New']['StartTime'])[0];
+				$taskData['StartTime'] = explode(' ', $data['New']['StartTime'])[1];
+				$taskData['EndTime'] = explode(' ', $data['New']['EndTime'])[1];
+				$taskData['CreatedByUserName'] = $changedBy;
+				$taskData['ChargeOfAccountType'] = $data['New']['AccountType'];
+				$taskData['TimeReason'] = '';
+				
+				$taskResult = TaskController::addActivityAndTime($taskData);
+				
+				if($taskResult['successFlag'] == 0){
+					throw new \Exception($taskResult['warningMessage']);
+				}
+			}
 
             // Always get username from user_id
             $user = SCUser::find()
@@ -495,15 +526,16 @@ class EmployeeApprovalController extends Controller
 
 
             if(!$breadCrumbChanged->save()){
-                //  $transaction->rollBack();
                throw new \Exception(print_r($breadCrumbChanged->getErrors(),1));
             }
 
             if (ArrayHelper::keyExists('Current', $data)) {
+
                 $originalRecord = BreadCrumbChanged::find()
                     ->where(['RowId'=>$data['Current']['ID']])
                     ->one();
 
+                // if original record exists update it, otherwise create it
                 if($originalRecord){
 
                     $deltaRecord = new BreadCrumbDelta();
@@ -534,6 +566,29 @@ class EmployeeApprovalController extends Controller
                 }
             }
 
+            // Add LogoutActivity if does not exist
+            if (ArrayHelper::keyExists('LogoutActivity', $data)) {
+
+                //
+                $breadCrumbChanged = new BreadCrumbChanged();
+                $breadCrumbChanged->OriginalRowID = 0;
+                $breadCrumbChanged->BreadCrumbID = 0;
+                $breadCrumbChanged->ProjectID = $data['LogoutActivity']['ProjectID'];
+                $breadCrumbChanged->TaskID = $data['LogoutActivity']['TaskID'];
+                $breadCrumbChanged->BreadcrumbActivityType = $data['LogoutActivity']['TaskName'];
+                $breadCrumbChanged->BreadcrumbSrcDTLT = $data['LogoutActivity']['StartTime'];
+                $breadCrumbChanged->EndDate = $data['LogoutActivity']['EndTime'];
+                $breadCrumbChanged->ChangedBy = $changedBy;
+                $breadCrumbChanged->ChangedOn = $changedOn;
+                $breadCrumbChanged->BreadcrumbCreatedUserUID = $user->UserName;
+
+                //
+                if (!$breadCrumbChanged->save()) {
+                    //  $transaction->rollBack();
+                    throw new \Exception(print_r($breadCrumbChanged->getErrors(), 1));
+                }
+            }
+
             $transaction->commit();
 
             $status['success'] = $success;
@@ -548,6 +603,88 @@ class EmployeeApprovalController extends Controller
             //archive error
 
             throw $e;
+            BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e,
+                BaseActiveController::urlPrefix());
+            throw new \yii\web\HttpException(400);
+        }
+    }
+
+    /**
+     *
+     * @return \yii\console\Response|Response
+     * @throws ForbiddenHttpException
+     * @throws \yii\db\Exception
+     * @throws \yii\web\HttpException
+     */
+    public function actionCreateInitial()
+    {
+        //set target db
+        BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+        //create db transaction
+        $connection = BaseActiveRecord::getDb();
+        $transaction = $connection->beginTransaction();
+
+        try {
+
+            //capture body
+            $post = file_get_contents("php://input");
+            yii::trace($post);
+            $data = json_decode($post, true);
+
+            //create response
+            $success = true;
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+            //get username and current date
+            $changedBy = BaseActiveController::getUserFromToken()->UserName;
+            $changedOn = BaseActiveController::getDate();
+
+            //archive json
+            BaseActiveController::archiveWebJson(json_encode($data), 'Employee Detail Create', $changedBy,
+                BaseActiveController::urlPrefix());
+
+            // Always get username from user_id
+            $user = SCUser::find()
+                ->where(['UserID' => $data['New']['UserID']])
+                ->one();
+
+            //
+            foreach ($data as $key => $dataToAdd) {
+
+                //
+                $breadCrumbChanged = new BreadCrumbChanged();
+                $breadCrumbChanged->OriginalRowID = 0;
+                $breadCrumbChanged->BreadCrumbID=0;
+                $breadCrumbChanged->ProjectID = $dataToAdd['ProjectID'];
+                $breadCrumbChanged->TaskID = $dataToAdd['TaskID'];
+                $breadCrumbChanged->BreadcrumbActivityType = $dataToAdd['TaskName'];
+                $breadCrumbChanged->BreadcrumbSrcDTLT = $dataToAdd['StartTime'];
+                $breadCrumbChanged->EndDate = $dataToAdd['EndTime'];
+                $breadCrumbChanged->ChangedBy = $changedBy;
+                $breadCrumbChanged->ChangedOn = $changedOn;
+                $breadCrumbChanged->BreadcrumbCreatedUserUID = $user->UserName;
+
+                if(!$breadCrumbChanged->save()){
+                    //  $transaction->rollBack();
+                    throw new \Exception(print_r($breadCrumbChanged->getErrors(),1));
+                }
+            }
+
+            //
+            $transaction->commit();
+
+            $status['success'] = $success;
+            $response->data = $status;
+            return $response;
+        } catch (ForbiddenHttpException $e) {
+            $transaction->rollBack();
+            BaseActiveController::logError($e, 'Forbidden http exception');
+            throw $e;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            //archive error
             BaseActiveController::archiveWebErrorJson(file_get_contents("php://input"), $e,
                 BaseActiveController::urlPrefix());
             throw new \yii\web\HttpException(400);
