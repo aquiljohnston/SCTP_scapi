@@ -12,6 +12,7 @@ use app\modules\v3\models\TimeCardEventHistory;
 use app\modules\v3\models\AccountantSubmit;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
@@ -49,6 +50,7 @@ class TimeCardController extends BaseCardController
 					'get-accountant-details' => ['get'],
 					'p-m-submit' => ['put'],
 					'accountant-submit' => ['put'],
+					'accountant-reset' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -139,10 +141,8 @@ class TimeCardController extends BaseCardController
 		}
 	}
 
-	public function actionShowEntries($cardID)
-	{
-		try
-		{
+	public function actionShowEntries($cardID){
+		try{
 			//set db target
 			TimeCard::setClient(BaseActiveController::urlPrefix());
 
@@ -150,6 +150,8 @@ class TimeCardController extends BaseCardController
 			PermissionsController::requirePermission('timeCardGetEntries');
 
 			$dataArray = [];
+			
+			//TODO transaction?
 
 			$entriesQuery = new Query;
 			$entriesQuery->select('*')
@@ -162,9 +164,16 @@ class TimeCardController extends BaseCardController
 				->from("fnTimeCardByID(:cardID)")
 				->addParams([':cardID' => $cardID]);
 			$card = $cardQuery->one(BaseActiveRecord::getDb());
-
-			$dataArray['show-entries'] = $entries;
+			
+			$lunchQuery = new Query;
+			$lunchQuery->select('*')
+				->from("fnLunchActivityByTimeCard(:cardID)")
+				->addParams([':cardID' => $cardID]);
+			$lunchEntries = $lunchQuery->all(BaseActiveRecord::getDb());
+			
 			$dataArray['card'] = $card;
+			$dataArray['show-entries'] = $entries;
+			$dataArray['lunch-entries'] = $lunchEntries;			
 
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
@@ -176,7 +185,7 @@ class TimeCardController extends BaseCardController
 		}
 	}
 
-    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+    public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
 		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
     {
         // RBAC permission check is embedded in this action
@@ -194,6 +203,10 @@ class TimeCardController extends BaseCardController
 
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 
             //format response
             $response = Yii::$app->response;
@@ -202,8 +215,7 @@ class TimeCardController extends BaseCardController
             //response array of time cards//
             $timeCardsArr = [];
             $responseArray = [];
-			$projectAllOption = [];
-			$allTheProjects = [];
+			$allOption = [];
 			$showProjectDropDown = false;
 
             //build base query
@@ -213,55 +225,38 @@ class TimeCardController extends BaseCardController
                 ->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 
             //if is scct website get all or own
-            if(BaseActiveController::isSCCT($client))
-            {
+            if(BaseActiveController::isSCCT($client)){
+				//set project dropdown to true for scct
 				$showProjectDropDown = true;
-				/*
-                 * Check if user can get their own cards
-                 */
-                if (!PermissionsController::can('timeCardGetAllCards') && PermissionsController::can('timeCardGetOwnCards'))
-                {
+				//rbac permission check
+				if (PermissionsController::can('timeCardGetAllCards')){
+					$allOption = [""=>"All"];
+				}elseif(PermissionsController::can('timeCardGetOwnCards')){
                     $userID = self::getUserFromToken()->UserID;
                     //get user project relations array
                     $projects = ProjectUser::find()
                         ->where("ProjUserUserID = $userID")
                         ->all();
                     $projectsSize = count($projects);
-                    if($projectsSize > 0)
-                    {
+                    if($projectsSize > 0){
                         $timeCards->where(['TimeCardProjectID' => $projects[0]->ProjUserProjectID]);
-                    }
-					else
-					{
+                    }else{
 						//can only get own but has no project relations
 						throw new ForbiddenHttpException;
-					}
-                    if($projectsSize > 1)
-                    {
+					}if($projectsSize > 1){
 						//add all option to project dropdown if there will be more than one option
-						$projectAllOption = [""=>"All"];
-                        for($i=1; $i < $projectsSize; $i++)
-                        {
+						$allOption = [""=>"All"];
+                        for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
+							//could be an 'IN' instead
                             $timeCards->orWhere(['TimeCardProjectID'=>$relatedProjectID]);
                         }
-                    }
-                }
-				/*
-                 * Check if user can get all cards
-                 */
-                elseif (PermissionsController::can('timeCardGetAllCards'))
-                {
-					$projectAllOption = [""=>"All"];
-                }
-				else
-				{
+                    }	
+                }else{
 					//no permissions to get cards
                     throw new ForbiddenHttpException;
 				}
-            }
-            else // get only cards for the current project.
-            {
+            }else{ // get only cards for the current project.
                 //get project based on client header
                 $project = Project::find()
                     ->where(['ProjectUrlPrefix' => $client])
@@ -269,9 +264,22 @@ class TimeCardController extends BaseCardController
                 //add project where to query
                 $timeCards->where(['TimeCardProjectID' => $project->ProjectID]);
             }
+			
+			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
+			$clientQuery = clone $timeCards;
+			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply client filter
+            if($clientID!= null && isset($timeCards)) {
+                $timeCards->andFilterWhere([
+                    'and',
+                    ['ClientID' => $clientID],
+                ]);
+            }
 
-			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$projectDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			//get project records post client filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $timeCards;
+			$projectRecords = $projectQuery->select(['ProjectName', 'TimeCardProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
 			//apply project filter
             if($projectID!= null && isset($timeCards)) {
@@ -280,9 +288,13 @@ class TimeCardController extends BaseCardController
                     ['TimeCardProjectID' => $projectID],
                 ]);
             }
-
+			
 			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$employeeDropdownRecords = $timeCards->all(BaseActiveRecord::getDb());
+			$employeeRecordsQuery = clone $timeCards;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
+			$approvedStatusQuery = clone $timeCards;
+			$approvedStatus = $employeeRecordsQuery->select('TimeCardApprovedFlag')->distinct()->all(BaseActiveRecord::getDb());
+			
 			
 			//apply employee filter
 			if($employeeID!= null && isset($timeCards)) {
@@ -296,8 +308,7 @@ class TimeCardController extends BaseCardController
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
-				for($i = 0; $i < count($filterArray); $i++)
-				{
+				for($i = 0; $i < count($filterArray); $i++){
 					//remove leading space from filter string
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
@@ -309,24 +320,34 @@ class TimeCardController extends BaseCardController
             }
 			
 			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromCards('TimeCard', $projectDropdownRecords, $projectAllOption);
+			$clientDropDown = self::extractClientFromCards($clientRecords, $allOption);
+			
+			//get project list for dropdown based on time cards available
+			$projectDropDown = self::extractProjectsFromCards('TimeCard', $projectRecords, $allOption);
 			
 			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
+			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
+			
+			//check if any unapproved cards exist in project filtered records
+			$unapprovedTimeCardInProject = $this->checkUnapprovedCardExist('TimeCard', $approvedStatus);
 
             $paginationResponse = self::paginationProcessor($timeCards, $page, $listPerPage);
             $timeCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
             //check if approved time card exist in the data
-            $unapprovedTimeCardExist = $this->checkUnapprovedCardExist('TimeCard', $timeCardsArr);
+            $unapprovedTimeCardVisible = $this->checkUnapprovedCardExist('TimeCard', $timeCardsArr);
             $projectWasSubmitted   = $this->checkAllAssetsSubmitted('TimeCard', $timeCardsArr);
             
-            $responseArray['assets'] 				= $timeCardsArr;
-            $responseArray['pages'] 				= $paginationResponse['pages'];
-            $responseArray['projectDropDown'] 		= $projectDropDown;
-            $responseArray['employeeDropDown'] 		= $employeeDropDown;
-            $responseArray['showProjectDropDown'] 	= $showProjectDropDown;
-			$responseArray['unapprovedTimeCardExist'] = $unapprovedTimeCardExist;
-            $responseArray['projectSubmitted'] 		= $projectWasSubmitted;
+			$transaction->commit();
+			
+            $responseArray['assets'] = $timeCardsArr;
+            $responseArray['pages'] = $paginationResponse['pages'];
+			$responseArray['clientDropDown'] = $clientDropDown;
+            $responseArray['projectDropDown'] = $projectDropDown;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
+            $responseArray['showProjectDropDown'] = $showProjectDropDown;
+			$responseArray['unapprovedTimeCardInProject'] = $unapprovedTimeCardInProject;
+			$responseArray['unapprovedTimeCardVisible'] = $unapprovedTimeCardVisible;
+            $responseArray['projectSubmitted'] = $projectWasSubmitted;
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
 			return $response;
@@ -337,8 +358,8 @@ class TimeCardController extends BaseCardController
 		}
     }
 
-	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
-		$sortField = 'ProjectName', $sortOrder = 'ASC')
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
+		$sortField = 'ProjectName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		try{
 			//url decode filter value
@@ -351,6 +372,10 @@ class TimeCardController extends BaseCardController
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('timeCardGetAccountantView');
+			
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
 
             //format response
             $response = Yii::$app->response;
@@ -359,42 +384,90 @@ class TimeCardController extends BaseCardController
 			//response array of time cards
             $timeCards = [];
             $responseArray = [];
-			$allTheProjects = [""=>"All"];
+			$allOption = [""=>"All"];
 			$showProjectDropDown = true;
 			//used to get current week if date range falls in the middle of the week
 			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
 
 			//build base query
             $cardQuery = AccountantSubmit::find()
+				->select(['ProjectName', 
+					'ProjectManager',
+					'StartDate',
+					'EndDate',
+					'ApprovedBy',
+					'[Total Time Cards]',
+					'[Approved Time Cards]',
+					'MSDynamicsSubmitted',
+					'OasisSubmitted',
+					'ADPSubmitted',
+					'ProjectID'])
+				->distinct()
 				->where(['between', 'StartDate', $startDate, $endDate])
                 ->orWhere(['between', 'EndDate', $startDate, $endDate])
                 ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
 
-			//get records for project dropdown(timing for this execution is very important)
-			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
+			$clientQuery = clone $cardQuery;
+			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply client filter
+            if($clientID!= null && isset($cardQuery)) {
+                $cardQuery->andFilterWhere([
+                    'and',
+                    ['ClientID' => $clientID],
+                ]);
+            }
 
-			//add project filter
-			if($projectID!= null)
-			{
+			//get project records post client filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $cardQuery;
+			$projectRecords = $projectQuery->select(['ProjectName', 'ProjectID'])->distinct()->all(BaseActiveRecord::getDb());
+
+			//apply project filter
+            if($projectID!= null && isset($cardQuery)) {
                 $cardQuery->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
             }
-
-			//add search filter
-			if($filter != null)
-			{
+			
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeRecordsQuery = clone $cardQuery;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply employee filter
+			if($employeeID!= null && isset($cardQuery)) {
                 $cardQuery->andFilterWhere([
-                    'or',
-                    ['like', 'ProjectName', $filter],
-                    ['like', 'ProjectManager', $filter],
-                    ['like', 'ApprovedBy', $filter],
+                    'and',
+                    ['UserID' => $employeeID],
                 ]);
+            }
+			
+			if($filterArray!= null){
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++){
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'ProjectName', $trimmedFilter],
+						['like', 'ProjectManager', $trimmedFilter],
+						['like', 'ApprovedBy', $trimmedFilter],
+						['like', 'UserFullName', $trimmedFilter]
+					);
+				}
+				$cardQuery->andFilterWhere($filterQueryArray);
             }
 
 			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjectsFromCards('TimeCard', $dropdownRecords, $allTheProjects);
+			$clientDropDown = self::extractClientFromCards($clientRecords, $allOption);
+			
+			//get project list for dropdown based on time cards available
+			$projectDropDown = self::extractProjectsFromCards('TimeCard', $projectRecords, $allOption);
+			
+			//get employee list for dropdown based on time cards available
+			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
@@ -404,9 +477,13 @@ class TimeCardController extends BaseCardController
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
 			$projectWasSubmitted   = $this->checkAllAssetsSubmitted('TimeCard', $timeCards);
 
+			$transaction->commit();
+	
             $responseArray['assets'] = $timeCards;
             $responseArray['pages'] = $paginationResponse['pages'];
-            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['clientDropDown'] = $clientDropDown;
+            $responseArray['projectDropDown'] = $projectDropDown;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
 
@@ -419,21 +496,14 @@ class TimeCardController extends BaseCardController
 		}
 	}
 
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
-	{
-		try
-		{
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null, $employeeID = null){
+		try{
 			//set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('timeCardGetAccountantDetails');
 
-			$detailsQuery = new Query;
-            $timeCards = $detailsQuery->select('*')
-                ->from(["fnTimeCardByDate(:startDate, :endDate)"])
-                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-				->where(['TimeCardProjectID' => $projectID])
-				->all(BaseActiveRecord::getDb());
+			$timeCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME, $filter, $employeeID);
 
 			//format response
 			$responseArray['details'] = $timeCards;
@@ -478,8 +548,8 @@ class TimeCardController extends BaseCardController
 			$queryResults = [];
 			for ($x = 0; $x < $max; $x++) {
 				$queryString = "Select TimeCardID from [dbo].[TimeCardTb] tc
-								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = tc.TimeCardTechID
-								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and tc.TimeCardActiveFlag = 1 and TimeCardPMApprovedFlag != 1";
+								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod in ('H', 'C')) u on u.UserID = tc.TimeCardTechID
+								Where tc.TimeCardStartDate = '" . $data["dateRangeArray"][0] . "' and tc.TimeCardProjectID = " . $cardIDs[$x] . " and tc.TimeCardApprovedFlag = 1 and TimeCardPMApprovedFlag != 1";
 				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();
 			}
 			//try to approve time cards
@@ -751,51 +821,51 @@ class TimeCardController extends BaseCardController
             $headers = getallheaders();
             //get client header
             $client = $headers['X-Client'];
-			
             //set db target
             TimeCard::setClient(BaseActiveController::urlPrefix());
+			
+			//default check to false
+			$submitButtonStatus = 0;
 			//RBAC permissions check
-			PermissionsController::requirePermission('checkSubmitButtonStatus');
+			if(PermissionsController::can('checkSubmitButtonStatus')){
+				//get body data
+				$data = file_get_contents("php://input");
+				$submitCheckData = json_decode($data, true)['submitCheck'];
+				$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
+				//if is not scct project name will always be the current client
+				if(BaseActiveController::isSCCT($client)){
+					$projectName  = $submitCheckData['ProjectName'];
+				}else{
+					$project = Project::find()
+						->where(['ProjectUrlPrefix' => $client])
+						->one();
+					$projectName = array($project->ProjectID);
+				}
 
-            //get body data
-            $data = file_get_contents("php://input");
-			$submitCheckData = json_decode($data, true)['submitCheck'];
-			$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
-			//if is not scct project name will always be the current client
-			if(BaseActiveController::isSCCT($client))
-			{
-				$projectName  = $submitCheckData['ProjectName'];
-			}else{
-				$project = Project::find()
-					->where(['ProjectUrlPrefix' => $client])
-					->one();
-				$projectName = array($project->ProjectID);
-			}
-
-            //build base query
-			$responseArray = new Query;
-			if($isAccountant) {
-	            $responseArray->select('*')
-					->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+				//build base query
+				$checkQuery = new Query;
+				if($isAccountant) {
+					$checkQuery->select('*')
+						->from(["fnSubmitAccountant(:StartDate , :EndDate)"])
+						->addParams([
+							//':ProjectName' => json_encode($projectName), 
+							':StartDate' => $submitCheckData['StartDate'], 
+							':EndDate' => $submitCheckData['EndDate']]);
+				} else {
+					$checkQuery->select('*')
+					->from(["fnSubmitPM(:ProjectName, :StartDate , :EndDate)"])
 					->addParams([
-						//':ProjectName' => json_encode($projectName), 
-						':StartDate' => $submitCheckData['StartDate'], 
-						':EndDate' => $submitCheckData['EndDate']]);
-			} else {
-				$responseArray->select('*')
-                ->from(["fnSubmitPM(:ProjectName, :StartDate , :EndDate)"])
-                ->addParams([
-					':ProjectName' => json_encode($projectName), 
-					':StartDate' => $submitCheckData['StartDate'], 
-					':EndDate' => $submitCheckData['EndDate']
-					]);
+							':ProjectName' => json_encode($projectName), 
+							':StartDate' => $submitCheckData['StartDate'], 
+							':EndDate' => $submitCheckData['EndDate']
+						]);
+				}
+				$submitButtonStatus = $checkQuery->one(BaseActiveRecord::getDb());
 			}
-            $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
-            $responseArray = $submitButtonStatus;
 
             $response = Yii::$app ->response;
             $response -> format = Response::FORMAT_JSON;
-            $response -> data = $responseArray;
+            $response -> data = $submitButtonStatus;
 
             return $response;
         } catch(ForbiddenHttpException $e) {
@@ -806,7 +876,105 @@ class TimeCardController extends BaseCardController
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionAccountantReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			$startDate = $params['dates']['startDate'];
+			$endDate = $params['dates']['endDate'];
+		
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spResetTimeCardSubmitFlag :startDate, :endDate");
+			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			
+			//log submission
+			self::logTimeCardHistory(Constants::TIME_CARD_ACCOUNTANT_RESET, null, $startDate, $endDate);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'accountantResetTime',
+				$e,
+				getallheaders()['X-Client'],
+				'Start Date: ' . $startDate,
+				'End Date: ' . $endDate
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionPMReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$jsonArray = json_decode($put, true);
+			$data = $jsonArray['data'];
+			
+			//set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			$timeCardIDs = [];
+			//get user
+			$user = self::getUserFromToken();
+			$username = $user->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson($put, Constants::TIME_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
+			
+			//fetch all time cards for selected rows
+			for($i = 0; $i < count($data); $i++){
+				$projectID = $data[$i]['ProjectID'];
+				$startDate = $data[$i]['StartDate'];
+				$endDate = $data[$i]['EndDate'];
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_TIME);
+				$newCards = array_column($newCards, 'TimeCardID');
+				$timeCardIDs = array_merge($timeCardIDs, $newCards);
+			}
+			//encode array to pass to sp
+			$timeCardIDs = json_encode($timeCardIDs);
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spTimeCardResetPMApprovedFlag :TimeCardIDJSON, :RequestedBy");
+			$resetCommand->bindParam(':TimeCardIDJSON', $timeCardIDs,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
+			$resetCommand->execute(); 
+
+			//create new notification
+			NotificationController::create(
+				Constants::NOTIFICATION_TYPE_TIME,
+				$timeCardIDs,
+				Constants::NOTIFICATION_DESCRIPTION_RESET_PM_TIME,
+				Constants::APP_ROLE_PROJECT_MANAGER,
+				$username);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				Constants::TIME_CARD_PM_RESET,
+				$e,
+				getallheaders()['X-Client']
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
 	private function logTimeCardHistory($type, $timeCardID = null, $startDate = null, $endDate = null, $comments = null)
 	{
 		try

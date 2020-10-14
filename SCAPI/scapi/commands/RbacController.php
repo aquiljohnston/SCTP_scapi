@@ -46,8 +46,7 @@ class RbacController extends Controller
 		//generate array of all permissions to add
 		$this->createBasePermissions();
 		//if client is not scct add survey permissions, may be able to alter this based on project type in the future
-		if(!BaseActiveController::isSCCT($this->client))
-		{
+		if(!BaseActiveController::isSCCT($this->client)){
 			$this->createSurveyPermissions();
 		}
 		//bulk insert permissions from permissionArray
@@ -248,7 +247,7 @@ class RbacController extends Controller
 
         $mileageCardGetOwnCards = $this->auth->createPermission('mileageCardGetOwnCards');
         $mileageCardGetOwnCards->description = 'Get an array of mileage cards for associated projects';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageCardGetOwnCards;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageCardGetOwnCards;
         $this->permissionAssociationArray['Accountant'][] = $mileageCardGetOwnCards;
         $this->permissionArray[] = $mileageCardGetOwnCards;
 		
@@ -270,7 +269,7 @@ class RbacController extends Controller
 		
         $mileageCardView = $this->auth->createPermission('mileageCardView');
         $mileageCardView->description = 'View a mileage card';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageCardView;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageCardView;
         $this->permissionArray[] = $mileageCardView;
 		
         $mileageCardGetCard = $this->auth->createPermission('mileageCardGetCard');
@@ -280,7 +279,7 @@ class RbacController extends Controller
 
         $mileageCardGetEntries = $this->auth->createPermission('mileageCardGetEntries');
         $mileageCardGetEntries->description = 'Get all mileage entries for a mileage card';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageCardGetEntries;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageCardGetEntries;
         $this->permissionAssociationArray['Accountant'][] = $mileageCardGetEntries;
         $this->permissionArray[] = $mileageCardGetEntries;
 		
@@ -303,25 +302,25 @@ class RbacController extends Controller
 		
         $mileageEntryView = $this->auth->createPermission('mileageEntryView');
         $mileageEntryView->description = 'View a mileage entry';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryView;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageEntryView;
         $this->permissionAssociationArray['Accountant'][] = $mileageEntryView;
         $this->permissionArray[] = $mileageEntryView;
 		
         $mileageEntryCreate = $this->auth->createPermission('mileageEntryCreate');
         $mileageEntryCreate->description = 'Create a mileage entry';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryCreate;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageEntryCreate;
         $this->permissionAssociationArray['Accountant'][] = $mileageEntryCreate;
         $this->permissionArray[] = $mileageEntryCreate;
 		
 		$mileageEntryUpdate = $this->auth->createPermission('mileageEntryUpdate');
         $mileageEntryUpdate->description = 'Update a mileage entry';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryUpdate;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageEntryUpdate;
         $this->permissionAssociationArray['Accountant'][] = $mileageEntryUpdate;
         $this->permissionArray[] = $mileageEntryUpdate;
 		
         $mileageEntryDeactivate = $this->auth->createPermission('mileageEntryDeactivate');
         $mileageEntryDeactivate->description = 'Deactivate a mileage entry';
-        $this->permissionAssociationArray['Supervisor'][] = $mileageEntryDeactivate;
+        $this->permissionAssociationArray['Dispatcher'][] = $mileageEntryDeactivate;
         $this->permissionAssociationArray['Accountant'][] = $mileageEntryDeactivate;
         $this->permissionArray[] = $mileageEntryDeactivate;
 		
@@ -331,7 +330,7 @@ class RbacController extends Controller
         $notificationsGet->description = 'Get notifications';
         $this->permissionAssociationArray['Engineer'][] = $notificationsGet;
         $this->permissionAssociationArray['Analyst'][] = $notificationsGet;
-        $this->permissionAssociationArray['Supervisor'][] = $notificationsGet;
+        $this->permissionAssociationArray['Dispatcher'][] = $notificationsGet;
         $this->permissionAssociationArray['Accountant'][] = $notificationsGet;
         $this->permissionArray[] = $notificationsGet;
 		
@@ -390,6 +389,16 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Admin'][] = $projectAddRemoveModules;
         $this->permissionArray[] = $projectAddRemoveModules;
 		
+		$projectViewConfig = $this->auth->createPermission('projectViewConfig');
+        $projectViewConfig->description = 'View a project configuration';
+        $this->permissionAssociationArray['ProjectManager'][] = $projectViewConfig;
+        $this->permissionArray[] = $projectViewConfig;
+		
+		$projectUpdateConfig = $this->auth->createPermission('projectUpdateConfig');
+        $projectUpdateConfig->description = 'Update a project configuration';
+        $this->permissionAssociationArray['ProjectManager'][] = $projectUpdateConfig;
+        $this->permissionArray[] = $projectUpdateConfig;
+		
 		//State Code permissions/////////////////////////////////////////////////////////////////
 
         $stateCodeGetDropdown = $this->auth->createPermission('stateCodeGetDropdown');
@@ -401,7 +410,7 @@ class RbacController extends Controller
 
         $timeCardGetOwnCards = $this->auth->createPermission('timeCardGetOwnCards');
         $timeCardGetOwnCards->description = 'Get an array of multiple time cards for associated projects';
-        $this->permissionAssociationArray['Supervisor'][] = $timeCardGetOwnCards;
+        $this->permissionAssociationArray['Dispatcher'][] = $timeCardGetOwnCards;
         $this->permissionAssociationArray['Accountant'][] = $timeCardGetOwnCards;
         $this->permissionArray[] = $timeCardGetOwnCards;
 		
@@ -423,7 +432,7 @@ class RbacController extends Controller
 		
         $timeCardView = $this->auth->createPermission('timeCardView');
         $timeCardView->description = 'View a time card';
-        $this->permissionAssociationArray['Supervisor'][] = $timeCardView;
+        $this->permissionAssociationArray['Dispatcher'][] = $timeCardView;
         $this->permissionAssociationArray['Accountant'][] = $timeCardView;
         $this->permissionArray[] = $timeCardView;
 		
@@ -439,7 +448,7 @@ class RbacController extends Controller
 		
         $timeCardGetEntries = $this->auth->createPermission('timeCardGetEntries');
         $timeCardGetEntries->description = 'Get all time entries for a time card';
-        $this->permissionAssociationArray['Supervisor'][] = $timeCardGetEntries;
+        $this->permissionAssociationArray['Dispatcher'][] = $timeCardGetEntries;
         $this->permissionAssociationArray['Accountant'][] = $timeCardGetEntries;
         $this->permissionArray[] = $timeCardGetEntries;
 		
@@ -463,30 +472,31 @@ class RbacController extends Controller
 
         $getAllTask = $this->auth->createPermission('getAllTask');
         $getAllTask->description = 'Get all Task Types';
-        $this->permissionAssociationArray['Supervisor'][] = $getAllTask;
+        $this->permissionAssociationArray['Dispatcher'][] = $getAllTask;
         $this->permissionAssociationArray['Accountant'][] = $getAllTask;
         $this->permissionArray[] = $getAllTask;
 		
         $getChargeOfAccount = $this->auth->createPermission('getChargeOfAccount');
         $getChargeOfAccount->description = 'Get charge of account types';
-        $this->permissionAssociationArray['Supervisor'][] = $getChargeOfAccount;
+        $this->permissionAssociationArray['Dispatcher'][] = $getChargeOfAccount;
         $this->permissionAssociationArray['Accountant'][] = $getChargeOfAccount;
         $this->permissionArray[] = $getChargeOfAccount;
 		
         $createTaskEntry = $this->auth->createPermission('createTaskEntry');
         $createTaskEntry->description = 'Create a Task Entry';
-        $this->permissionAssociationArray['Supervisor'][] = $createTaskEntry;
+        $this->permissionAssociationArray['Dispatcher'][] = $createTaskEntry;
         $this->permissionAssociationArray['Accountant'][] = $createTaskEntry;
         $this->permissionArray[] = $createTaskEntry;
 		
 		$taskGetByProject = $this->auth->createPermission('taskGetByProject');
         $taskGetByProject->description = 'Get task types for given project';
+		$this->permissionAssociationArray['Dispatcher'][] = $taskGetByProject;
         $this->permissionAssociationArray['Technician'][] = $taskGetByProject;
         $this->permissionArray[] = $taskGetByProject;
 		
 		$taskGetHoursOverview = $this->auth->createPermission('taskGetHoursOverview');
         $taskGetHoursOverview->description = 'Get all existing task for given week';
-        $this->permissionAssociationArray['Supervisor'][] = $taskGetHoursOverview;
+        $this->permissionAssociationArray['Dispatcher'][] = $taskGetHoursOverview;
         $this->permissionAssociationArray['Accountant'][] = $taskGetHoursOverview;
         $this->permissionArray[] = $taskGetHoursOverview;
 		
@@ -494,21 +504,78 @@ class RbacController extends Controller
 
         $timeEntryView = $this->auth->createPermission('timeEntryView');
         $timeEntryView->description = 'View a time entry';
-        $this->permissionAssociationArray['Supervisor'][] = $timeEntryView;
+        $this->permissionAssociationArray['Dispatcher'][] = $timeEntryView;
         $this->permissionAssociationArray['Accountant'][] = $timeEntryView;
         $this->permissionArray[] = $timeEntryView;
 		
         $timeEntryCreate = $this->auth->createPermission('timeEntryCreate');
         $timeEntryCreate->description = 'Create a time entry';
-        $this->permissionAssociationArray['Supervisor'][] = $timeEntryCreate;
+        $this->permissionAssociationArray['Dispatcher'][] = $timeEntryCreate;
         $this->permissionAssociationArray['Accountant'][] = $timeEntryCreate;
         $this->permissionArray[] = $timeEntryCreate;
 		
         $timeEntryDeactivate = $this->auth->createPermission('timeEntryDeactivate');
         $timeEntryDeactivate->description = 'Deactivate a time entry';
-        $this->permissionAssociationArray['Supervisor'][] = $timeEntryDeactivate;
+        $this->permissionAssociationArray['Dispatcher'][] = $timeEntryDeactivate;
         $this->permissionAssociationArray['Accountant'][] = $timeEntryDeactivate;
         $this->permissionArray[] = $timeEntryDeactivate;
+		
+		//Expense Permissions//////////////////////////////////////////////////////////////
+		
+		$expenseGetOwn = $this->auth->createPermission('expenseGetOwn');
+        $expenseGetOwn->description = 'View expenses for associated projects';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseGetOwn;
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetOwn;
+        $this->permissionArray[] = $expenseGetOwn;
+		
+		$expenseGetAll = $this->auth->createPermission('expenseGetAll');
+        $expenseGetAll->description = 'View all expenses';
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetAll;
+        $this->permissionAssociationArray['Admin'][] = $expenseGetAll;
+        $this->permissionArray[] = $expenseGetAll;
+		
+		$expenseGetEntries = $this->auth->createPermission('expenseGetEntries');
+        $expenseGetEntries->description = 'Get expense entries for a user, project, and date range';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseGetEntries;
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetEntries;
+        $this->permissionArray[] = $expenseGetEntries;
+		
+		$expenseCreate = $this->auth->createPermission('expenseCreate');
+        $expenseCreate->description = 'Create an expense entry';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseCreate;
+        $this->permissionAssociationArray['Accountant'][] = $expenseCreate;
+        $this->permissionArray[] = $expenseCreate;
+		
+		$expenseDeactivate = $this->auth->createPermission('expenseDeactivate');
+        $expenseDeactivate->description = 'Deactiavte expense entries';
+        $this->permissionAssociationArray['Dispatcher'][] = $expenseDeactivate;
+        $this->permissionAssociationArray['Accountant'][] = $expenseDeactivate;
+        $this->permissionArray[] = $expenseDeactivate;
+		
+		$expenseApprove = $this->auth->createPermission('expenseApprove');
+        $expenseApprove->description = 'Approve expense records';
+        $this->permissionAssociationArray['Supervisor'][] = $expenseApprove;
+        $this->permissionArray[] = $expenseApprove;
+		
+		$expenseSubmit = $this->auth->createPermission('expenseSubmit');
+        $expenseSubmit->description = 'Submit expenses and generate output file';
+        $this->permissionAssociationArray['Accountant'][] = $expenseSubmit;
+        $this->permissionArray[] = $expenseSubmit;
+		
+		$expenseGetAccountantView = $this->auth->createPermission('expenseGetAccountantView');
+        $expenseGetAccountantView->description = 'View the Accountant flavor of the expense screen';
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetAccountantView;
+        $this->permissionArray[] = $expenseGetAccountantView;
+		
+		$expenseGetAccountantDetails = $this->auth->createPermission('expenseGetAccountantDetails');
+        $expenseGetAccountantDetails->description = 'View expanded section details on the Accountant flavor of the expense screen';
+        $this->permissionAssociationArray['Accountant'][] = $expenseGetAccountantDetails;
+        $this->permissionArray[] = $expenseGetAccountantDetails;
+		
+		$expenseTestPerDiem = $this->auth->createPermission('expenseTestPerDiem');
+        $expenseTestPerDiem->description = 'Route to test execution on php script to create weekly per diem records.';
+        $this->permissionAssociationArray['Admin'][] = $expenseTestPerDiem;
+        $this->permissionArray[] = $expenseTestPerDiem;
 		
 		//User permissions/////////////////////////////////////////////////////////////////
 
@@ -528,26 +595,59 @@ class RbacController extends Controller
         $this->permissionArray[] = $userView;
 		
 		//User Create Permissions
-
-        $userCreate = $this->auth->createPermission('userCreate');
-        $userCreate->description = 'Create a user';
-        $this->permissionAssociationArray['Supervisor'][] = $userCreate;
-        $this->permissionArray[] = $userCreate;
 		
-        $userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
-        $userCreateTechnician->description = 'Create user of role type technician';
-        $this->permissionAssociationArray['Supervisor'][] = $userCreateTechnician;
-        $this->permissionArray[] = $userCreateTechnician;
-		
-        $userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
-        $userCreateSupervisor->description = 'Create user of role type supervisor';
-        $this->permissionAssociationArray['Supervisor'][] = $userCreateSupervisor;
-        $this->permissionArray[] = $userCreateSupervisor;
-		
-        $userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
-        $userCreateProjectManager->description = 'Create user of role type project manager';
-        $this->permissionAssociationArray['ProjectManager'][] = $userCreateProjectManager;
-        $this->permissionArray[] = $userCreateProjectManager;
+		//temp change user create permissions for admin only in scct
+		if(BaseActiveController::isSCCT($this->client)){
+			$userCreate = $this->auth->createPermission('userCreate');
+			$userCreate->description = 'Create a user';
+			$this->permissionAssociationArray['Admin'][] = $userCreate;
+			$this->permissionArray[] = $userCreate;
+			
+			$userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
+			$userCreateTechnician->description = 'Create user of role type technician';
+			$this->permissionAssociationArray['Admin'][] = $userCreateTechnician;
+			$this->permissionArray[] = $userCreateTechnician;
+			
+			$userCreateDispatcher = $this->auth->createPermission('userCreateDispatcher');
+			$userCreateDispatcher->description = 'Create user of role type dispatcher';
+			$this->permissionAssociationArray['Admin'][] = $userCreateDispatcher;
+			$this->permissionArray[] = $userCreateDispatcher;
+			
+			$userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
+			$userCreateSupervisor->description = 'Create user of role type supervisor';
+			$this->permissionAssociationArray['Admin'][] = $userCreateSupervisor;
+			$this->permissionArray[] = $userCreateSupervisor;
+			
+			$userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
+			$userCreateProjectManager->description = 'Create user of role type project manager';
+			$this->permissionAssociationArray['Admin'][] = $userCreateProjectManager;
+			$this->permissionArray[] = $userCreateProjectManager;
+		}else{
+			$userCreate = $this->auth->createPermission('userCreate');
+			$userCreate->description = 'Create a user';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreate;
+			$this->permissionArray[] = $userCreate;
+			
+			$userCreateTechnician = $this->auth->createPermission('userCreateTechnician');
+			$userCreateTechnician->description = 'Create user of role type technician';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreateTechnician;
+			$this->permissionArray[] = $userCreateTechnician;
+			
+			$userCreateDispatcher = $this->auth->createPermission('userCreateDispatcher');
+			$userCreateDispatcher->description = 'Create user of role type dispatcher';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreateDispatcher;
+			$this->permissionArray[] = $userCreateDispatcher;
+			
+			$userCreateSupervisor = $this->auth->createPermission('userCreateSupervisor');
+			$userCreateSupervisor->description = 'Create user of role type supervisor';
+			$this->permissionAssociationArray['Supervisor'][] = $userCreateSupervisor;
+			$this->permissionArray[] = $userCreateSupervisor;
+			
+			$userCreateProjectManager = $this->auth->createPermission('userCreateProjectManager');
+			$userCreateProjectManager->description = 'Create user of role type project manager';
+			$this->permissionAssociationArray['ProjectManager'][] = $userCreateProjectManager;
+			$this->permissionArray[] = $userCreateProjectManager;
+		}
 		
         $userCreateAnalyst = $this->auth->createPermission('userCreateAnalyst');
         $userCreateAnalyst->description = 'Create user of role type analyst';
@@ -576,6 +676,11 @@ class RbacController extends Controller
         $this->permissionAssociationArray['Supervisor'][] = $userUpdateTechnician;
         $this->permissionArray[] = $userUpdateTechnician;
 		
+		$userUpdateDispatcher = $this->auth->createPermission('userUpdateDispatcher');
+        $userUpdateDispatcher->description = 'Update user of role type dispatcher';
+        $this->permissionAssociationArray['Supervisor'][] = $userUpdateDispatcher;
+        $this->permissionArray[] = $userUpdateDispatcher;
+		
         $userUpdateSupervisor = $this->auth->createPermission('userUpdateSupervisor');
         $userUpdateSupervisor->description = 'Update user of role type supervisor';
         $this->permissionAssociationArray['Supervisor'][] = $userUpdateSupervisor;
@@ -603,7 +708,7 @@ class RbacController extends Controller
 		
         $userDeactivate = $this->auth->createPermission('userDeactivate');
         $userDeactivate->description = 'Deactivate user';
-        $this->permissionAssociationArray['Supervisor'][] = $userDeactivate;
+        $this->permissionAssociationArray['Admin'][] = $userDeactivate;
         $this->permissionArray[] = $userDeactivate;
 		
         $userReactivate = $this->auth->createPermission('userReactivate');
@@ -615,6 +720,7 @@ class RbacController extends Controller
         $userGetMe->description = 'Get equipment and project data for a user';
 		$this->permissionAssociationArray['Technician'][] = $userGetMe;
 		$this->permissionAssociationArray['Engineer'][] = $userGetMe;
+		$this->permissionAssociationArray['Dispatcher'][] = $userGetMe;
 		$this->permissionArray[] = $userGetMe;
 		
 		//Breadcrumb permissions/////////////////////////////////////////////////////////////////
@@ -654,28 +760,28 @@ class RbacController extends Controller
 		$reportGetDropdown = $this->auth->createPermission('reportGetDropdown');
         $reportGetDropdown->description = 'Get dropdown for available reports.';
         $this->permissionAssociationArray['Analyst'][] = $reportGetDropdown;
-        $this->permissionAssociationArray['Supervisor'][] = $reportGetDropdown;
+        $this->permissionAssociationArray['Dispatcher'][] = $reportGetDropdown;
         $this->permissionAssociationArray['Accountant'][] = $reportGetDropdown;
         $this->permissionArray[] = $reportGetDropdown;
 		
 		$reportGet = $this->auth->createPermission('reportGet');
         $reportGet->description = 'Get report data.';
         $this->permissionAssociationArray['Analyst'][] = $reportGet;
-        $this->permissionAssociationArray['Supervisor'][] = $reportGet;
+        $this->permissionAssociationArray['Dispatcher'][] = $reportGet;
         $this->permissionAssociationArray['Accountant'][] = $reportGet;
         $this->permissionArray[] = $reportGet;
 		
 		$reportGetParmDropdown = $this->auth->createPermission('reportGetParmDropdown');
         $reportGetParmDropdown->description = 'Get dropdown for current report paramaters.';
         $this->permissionAssociationArray['Analyst'][] = $reportGetParmDropdown;
-        $this->permissionAssociationArray['Supervisor'][] = $reportGetParmDropdown;
+        $this->permissionAssociationArray['Dispatcher'][] = $reportGetParmDropdown;
         $this->permissionAssociationArray['Accountant'][] = $reportGetParmDropdown;
         $this->permissionArray[] = $reportGetParmDropdown;
 		
 		$reportGetInspectorDropdown = $this->auth->createPermission('reportGetInspectorDropdown');
         $reportGetInspectorDropdown->description = 'Get dropdown of available inspectors for a report.';
         $this->permissionAssociationArray['Analyst'][] = $reportGetInspectorDropdown;
-        $this->permissionAssociationArray['Supervisor'][] = $reportGetInspectorDropdown;
+        $this->permissionAssociationArray['Dispatcher'][] = $reportGetInspectorDropdown;
         $this->permissionAssociationArray['Accountant'][] = $reportGetInspectorDropdown;
         $this->permissionArray[] = $reportGetInspectorDropdown;
 		
@@ -690,6 +796,18 @@ class RbacController extends Controller
         $alertCreate->description = 'Create an array of alerts.';
         $this->permissionAssociationArray['Technician'][] = $alertCreate;
         $this->permissionArray[] = $alertCreate;
+		
+		////// ABC Codes Controller Permissions //////
+		$abcCodesCreateTaskOut = $this->auth->createPermission('abcCodesCreateTaskOut');
+        $abcCodesCreateTaskOut->description = 'Create ABCTaskOut records.';
+        $this->permissionAssociationArray['Technician'][] = $abcCodesCreateTaskOut;
+        $this->permissionArray[] = $abcCodesCreateTaskOut;
+		
+		////// Question Controller Permissions //////
+		$questionCreate = $this->auth->createPermission('questionCreate');
+        $questionCreate->description = 'Create question records.';
+        $this->permissionAssociationArray['Technician'][] = $questionCreate;
+        $this->permissionArray[] = $questionCreate;
 		
 		////// Route Controller Permissions //////
 		
@@ -708,14 +826,14 @@ class RbacController extends Controller
 		$viewAdministrationMenu = $this->auth->createPermission('viewAdministrationMenu');
         $viewAdministrationMenu->description = 'View Administration Menu';
         $this->permissionAssociationArray['Engineer'][] = $viewAdministrationMenu;
-        $this->permissionAssociationArray['Supervisor'][] = $viewAdministrationMenu;
+        $this->permissionAssociationArray['Dispatcher'][] = $viewAdministrationMenu;
         $this->permissionAssociationArray['Accountant'][] = $viewAdministrationMenu;
         $this->permissionArray[] = $viewAdministrationMenu;
 		
 		$viewReportsMenu = $this->auth->createPermission('viewReportsMenu');
         $viewReportsMenu->description = 'View Reports Menu';
         $this->permissionAssociationArray['Analyst'][] = $viewReportsMenu;
-        $this->permissionAssociationArray['Supervisor'][] = $viewReportsMenu;
+        $this->permissionAssociationArray['Dispatcher'][] = $viewReportsMenu;
         $this->permissionAssociationArray['Accountant'][] = $viewReportsMenu;
         $this->permissionArray[] = $viewReportsMenu;
 		
@@ -723,7 +841,7 @@ class RbacController extends Controller
         $viewHomeMenu->description = 'View Home Menu';
         $this->permissionAssociationArray['Engineer'][] = $viewHomeMenu;
         $this->permissionAssociationArray['Analyst'][] = $viewHomeMenu;
-        $this->permissionAssociationArray['Supervisor'][] = $viewHomeMenu;
+        $this->permissionAssociationArray['Dispatcher'][] = $viewHomeMenu;
         $this->permissionAssociationArray['Accountant'][] = $viewHomeMenu;
         $this->permissionArray[] = $viewHomeMenu;
 		
@@ -746,7 +864,7 @@ class RbacController extends Controller
 
         $viewProjectMgmt = $this->auth->createPermission('viewProjectMgmt');
         $viewProjectMgmt->description = 'View project management  menu item';
-        $this->permissionAssociationArray['Admin'][] = $viewProjectMgmt;
+        $this->permissionAssociationArray['ProjectManager'][] = $viewProjectMgmt;
         $this->permissionArray[] = $viewProjectMgmt;
 
         $viewUserMgmt = $this->auth->createPermission('viewUserMgmt');
@@ -762,15 +880,26 @@ class RbacController extends Controller
 
         $viewTimeCardMgmt = $this->auth->createPermission('viewTimeCardMgmt');
         $viewTimeCardMgmt->description = 'View time card management menu item';
-        $this->permissionAssociationArray['Supervisor'][] = $viewTimeCardMgmt;
+        $this->permissionAssociationArray['Dispatcher'][] = $viewTimeCardMgmt;
         $this->permissionAssociationArray['Accountant'][] = $viewTimeCardMgmt;
         $this->permissionArray[] = $viewTimeCardMgmt;
 
         $viewMileageCardMgmt = $this->auth->createPermission('viewMileageCardMgmt');
         $viewMileageCardMgmt->description = 'View mileage card management menu item';
-        $this->permissionAssociationArray['Supervisor'][] = $viewMileageCardMgmt;
+        $this->permissionAssociationArray['Dispatcher'][] = $viewMileageCardMgmt;
         $this->permissionAssociationArray['Accountant'][] = $viewMileageCardMgmt;
         $this->permissionArray[] = $viewMileageCardMgmt;
+		
+		$viewExpenseMgmt = $this->auth->createPermission('viewExpenseMgmt');
+        $viewExpenseMgmt->description = 'View expense management menu item';
+        $this->permissionAssociationArray['Supervisor'][] = $viewExpenseMgmt;
+        $this->permissionAssociationArray['Accountant'][] = $viewExpenseMgmt;
+        $this->permissionArray[] = $viewExpenseMgmt;
+		
+		$viewBreadcrumbDisplay = $this->auth->createPermission('viewBreadcrumbDisplay');
+        $viewBreadcrumbDisplay->description = 'View breadcrumb display menu item';
+        $this->permissionAssociationArray['Dispatcher'][] = $viewBreadcrumbDisplay;
+        $this->permissionArray[] = $viewBreadcrumbDisplay;
 		
 		echo "Base Permissions Array Created.\n";		
 	}
@@ -925,12 +1054,18 @@ class RbacController extends Controller
         $this->auth->add($analyst);
 		//add children
 		$this->auth->addChildren($analyst, array_merge([$technician], $this->permissionAssociationArray['Analyst']));
+		
+		// add "dispatcher" role and give this role CRUD permissions
+        $dispatcher = $this->auth->createRole('Dispatcher');
+        $this->auth->add($dispatcher);
+		//add children
+		$this->auth->addChildren($dispatcher, $this->permissionAssociationArray['Dispatcher']);
 
         // add "supervisor" role and give this role CRUD permissions
         $supervisor = $this->auth->createRole('Supervisor');
         $this->auth->add($supervisor);
 		//add children
-		$this->auth->addChildren($supervisor, array_merge([$technician], $this->permissionAssociationArray['Supervisor']));
+		$this->auth->addChildren($supervisor, array_merge([$technician, $dispatcher], $this->permissionAssociationArray['Supervisor']));
 
         // add "projectManager" role and give this role the permissions of the "supervisor"
         $projectManager = $this->auth->createRole('ProjectManager');
@@ -962,42 +1097,35 @@ class RbacController extends Controller
 				->all();
 		
 		$userSize = count($users);
-		//get vals for progress check
-		$userSize25 = intval(($userSize*.25));
-		$userSize50 = intval(($userSize*.50));
-		$userSize75 = intval(($userSize*.75));
 		$userRoleTypes = $this->auth->getRoles();
-		$bulkUserInsertArray = array();
+		$maxChunkSize = 500;
+		$chunkCount = ceil($userSize/$maxChunkSize);
 		
-		echo "Preparing Bulk Assignment of Roles to Users.\n";
-		//assign roles to users already in the system
-		for($i = 0; $i < $userSize; $i++)
-		{
-			//switch to log percentage progress. This may not be necessary with new performance enhancements.
-			switch($i)
+		echo "Preparing Bulk Assignment of Roles to Users for $userSize Users in $chunkCount User Groups.\n";
+		
+		//loop chunks of users to avoid error on 1000+ row insert
+		for($j = 0; $j < $chunkCount; $j++){		
+			$bulkUserInsertArray = array();
+			$chunkStartIndex = $maxChunkSize * $j;
+			$chunkSize = ($j < $chunkCount -1) ? $maxChunkSize : $userSize - ($maxChunkSize * $j);
+			echo "Preparing Bulk Assignment of Roles to Users for $chunkSize Users in Group " . ($j+1) . ".\n";
+			//assign roles to users already in the system
+			for($i = $chunkStartIndex; $i < $maxChunkSize * $j + $chunkSize; $i++)
 			{
-				case $userSize25:
-					echo "Preparing Bulk Assignment of Roles to Users 25% complete.\n";
-					break;
-				case $userSize50:
-					echo "Preparing Bulk Assignment of Roles to Users 50% complete.\n";
-					break;
-				case $userSize75:
-					echo "Preparing Bulk Assignment of Roles to Users 75% complete.\n";
-					break;
+				$userRole = $users[$i]['UserAppRoleType'];
+				if(array_key_exists($userRole, $userRoleTypes))
+				{
+					$bulkUserInsertArray[] = [
+						'user_id' => $users[$i]['UserID'],
+						'item_name' => $userRole,
+						'created_at' => time()
+					];
+				}
 			}
-			$userRole = $users[$i]['UserAppRoleType'];
-			if(array_key_exists($userRole, $userRoleTypes))
-			{
-				$bulkUserInsertArray[] = [
-					'user_id' => $users[$i]['UserID'],
-					'item_name' => $userRole,
-					'created_at' => time()
-				];
-			}
+			echo "Execute Bulk Assignment of Roles to Users for Group " . ($j+1) . ".\n";
+			$this->auth->bulkAssign($bulkUserInsertArray);
 		}
-		echo "Execute Bulk Assignment of Roles to Users.\n";
-		$this->auth->bulkAssign($bulkUserInsertArray);
+		
 		echo "Users Roles Assigned.\n";
     }
 }

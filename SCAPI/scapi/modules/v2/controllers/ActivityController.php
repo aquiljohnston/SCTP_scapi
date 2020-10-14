@@ -6,13 +6,16 @@ use Yii;
 use app\modules\v2\constants\Constants;
 use app\modules\v2\models\BaseActiveRecord;
 use app\modules\v2\models\Activity;
+use app\modules\v2\models\TimeCard;
 use app\modules\v2\models\TimeEntry;
-use app\modules\v2\models\MileageEntry;	
+use app\modules\v3\models\MileageEntry;	
+use app\modules\v2\models\MileageCard;	
 use app\modules\v2\models\SCUser;
 use app\modules\v2\controllers\BaseActiveController;
 use app\modules\v2\controllers\WorkQueueController;
 use app\modules\v2\controllers\EquipmentController;
 use app\modules\v2\controllers\InspectionController;
+use app\modules\v3\controllers\ExpenseController;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
@@ -101,10 +104,8 @@ class ActivityController extends BaseActiveController
 	 * @return \yii\console\Response|Response
 	 * @throws \yii\web\HttpException
 	 */
-	public function actionCreate($data = null)
-	{		
-		try
-		{
+	public function actionCreate($data = null){		
+		try{
 			//set db target
 			$headers = getallheaders();
 			
@@ -117,8 +118,7 @@ class ActivityController extends BaseActiveController
 			// RBAC permission check
 			PermissionsController::requirePermission('activityCreate');
 			
-			if($data == null)
-			{
+			if($data == null){
 				//capture and decode the input json
 				$post = file_get_contents("php://input");
 				$data = json_decode(utf8_decode($post), true);
@@ -133,47 +133,36 @@ class ActivityController extends BaseActiveController
 			$responseData = [];
 			
 			//handle activity data
-			if ($data != null)
-			{
+			if ($data != null){
 				//get number of activities
 				$activitySize = count($data['activity']);
 				
-				for($i = 0; $i < $activitySize; $i++)
-				{
+				for($i = 0; $i < $activitySize; $i++){
 					//wrap individual activity in try catch for error logging
-					try
-					{
+					try{
 						//save json to archive
 						BaseActiveController::archiveJson(json_encode($data['activity'][$i]), $data['activity'][$i]['ActivityTitle'], $createdBy, $headers['X-Client']);
 
 						//handle app version from tablet TODO fix this later so it is consistent between web and tablet
-						if(array_key_exists('AppVersion', $data['activity'][$i]))
-						{
+						if(array_key_exists('AppVersion', $data['activity'][$i])){
 							$data['activity'][$i]['ActivityAppVersion'] = $data['activity'][$i]['AppVersion'];
-						}
-						if(array_key_exists('AppVersionName', $data['activity'][$i]))
-						{
+						}if(array_key_exists('AppVersionName', $data['activity'][$i])){
 							$data['activity'][$i]['ActivityAppVersionName'] = $data['activity'][$i]['AppVersionName'];
 						}
 						//check array data
 						$timeLength = 0;
 						$mileageLength = 0;
-						if ($data['activity'][$i]['timeEntry'] != null)
-						{
+						if ($data['activity'][$i]['timeEntry'] != null){
 							$timeArray = $data['activity'][$i]['timeEntry'];
 							//Get first and last time entry from timeArray and pass to ActivityStartTime and ActivityEndTime
 							$timeLength = count($timeArray);
-							if(array_key_exists('TimeEntryStartTime', $timeArray[0]))
-							{
+							if(array_key_exists('TimeEntryStartTime', $timeArray[0])){
 								$data['activity'][$i]['ActivityStartTime'] = $timeArray[0]['TimeEntryStartTime'];
-							}
-							if(array_key_exists('TimeEntryEndTime', $timeArray[$timeLength-1]))
-							{
+							}if(array_key_exists('TimeEntryEndTime', $timeArray[$timeLength-1])){
 								$data['activity'][$i]['ActivityEndTime'] = $timeArray[$timeLength-1]['TimeEntryEndTime'];
 							}
 						}
-						if ($data['activity'][$i]['mileageEntry'] != null)
-						{
+						if ($data['activity'][$i]['mileageEntry'] != null){
 							$mileageArray = $data['activity'][$i]['mileageEntry'];
 							$mileageLength = count($mileageArray);
 						}
@@ -188,8 +177,7 @@ class ActivityController extends BaseActiveController
 						$activity->ActivityCreatedUserUID = (string)$createdBy;
 						
 						//if client is not SCCT create client activity model and load data
-						if(!BaseActiveController::isScct($headers['X-Client']))
-						{
+						if(!BaseActiveController::isScct($headers['X-Client'])){
 							$clientActivity = new Activity();
 							$clientActivity->attributes = $data['activity'][$i];
 							$clientActivity->ActivityCreatedUserUID = (string)$createdBy;
@@ -197,15 +185,39 @@ class ActivityController extends BaseActiveController
 
 						Activity::setClient(BaseActiveController::urlPrefix());
 						//save activity to ct
-						if($activity->save())
-						{
+						if($activity->save()){
 							//change db path to save on client db
 							Activity::setClient($headers['X-Client']);
 							//save client activity and log error
-							if(isset($clientActivity) && !$clientActivity->save())
-							{
+							if(isset($clientActivity) && !$clientActivity->save()){
 								$e = BaseActiveController::modelValidationException($clientActivity);
 								BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+								
+								//if activity id is not available try and get the record that should have saved
+								if($clientActivity->ActivityID == null){
+									$existingActivity = Activity::find()
+										->where(['ActivityUID' => $data['activity'][$i]['ActivityUID']])
+										->andWhere(['ActivitySrcDTLT' => $data['activity'][$i]['ActivitySrcDTLT']])
+										->one();
+									if($existingActivity != null){
+										$clientActivity->ActivityID = $existingActivity->ActivityID;
+									}else{
+										//if no activity is found create a new activity and attempt to save again
+										try{
+											$reAttemptActivity = new Activity();
+											$reAttemptActivity->attributes = $data['activity'][$i];
+											$reAttemptActivity->ActivityCreatedUserUID = (string)$createdBy;
+											if($reAttemptActivity->save()){
+												$clientActivity->ActivityID = $reAttemptActivity->ActivityID;
+											}else{
+												$e = BaseActiveController::modelValidationException($clientActivity);
+												BaseActiveController::archiveErrorJson('Activity Reattempt ' . file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+											}
+										}catch(\Exception $e){
+											BaseActiveController::archiveErrorJson('Activity Reattempt ' . file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+										}
+									}
+								}
 							}
 
 							//set success flag for activity
@@ -213,9 +225,9 @@ class ActivityController extends BaseActiveController
 							//client data parse
 							if(BaseActiveController::isScct($headers['X-Client']))
 							{
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $activity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $userID, $activity->ActivityID);
 							} else {
-								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $clientActivity->ActivityID);
+								$clientData = self::parseActivityData($data['activity'][$i], $headers['X-Client'],$createdBy, $userID, $clientActivity->ActivityID);
 							}
 							$responseData['activity'][$i] = array_merge($responseData['activity'][$i], $clientData);
 						
@@ -227,112 +239,127 @@ class ActivityController extends BaseActiveController
 							$responseData['activity'][$i]['timeEntry'] = array();
 							$responseData['activity'][$i]['mileageEntry'] = array();
 							
+							//redirect to base db for time and mileage processing
+							BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+							TimeEntry::setClient(BaseActiveController::urlPrefix());
+							MileageEntry::setClient(BaseActiveController::urlPrefix());
+							
 							//add activityID to corresponding time entries
-							if($timeLength > 0)
-							{
-								for($t = 0; $t < $timeLength; $t++)
-								{
-									Activity::setClient(BaseActiveController::urlPrefix());
+							if($timeLength > 0){
+								//create timeCardTransaction
+								$db = BaseActiveRecord::getDb();
+								$timeCardTransaction = $db->beginTransaction();
+								for($t = 0; $t < $timeLength; $t++){
 									$timeArray[$t]['TimeEntryActivityID'] = $activity->ActivityID;
 									$timeEntry = new TimeEntry();
 									$timeEntry->attributes = $timeArray[$t];
 									$timeEntry->TimeEntryUserID = $userID;
 									$timeEntry->TimeEntryCreatedBy = (string)$createdBy;
 									try{
-										if($timeEntry->save())
-										{
+										//fetch current time card id if none is provided
+										if($timeEntry->TimeEntryTimeCardID == null && $timeEntry->TimeEntryStartTime != null){
+											//get last sunday
+											$tcLastSunday = date('Y-m-d H:i:s', strtotime('last Sunday', strtotime($timeEntry->TimeEntryStartTime)));
+											$timeCard = TimeCard::find()
+											->where([
+												'TimeCardTechID' => $userID,
+												'TimeCardStartDate' => $tcLastSunday
+											])
+											->one();
+											$timeEntry->TimeEntryTimeCardID = $timeCard->TimeCardID;
+										}
+										if($timeEntry->save()){
 											$response->setStatusCode(201);
 											//set success flag for time entry
 											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
-										}
-										else
-										{
+										}else{
 											//log validation error
 											$e = BaseActiveController::modelValidationException($timeEntry);
 											//SQL Constraint
 											if(strpos($e, TimeEntry::SQL_CONSTRAINT_MESSAGE)){
 												//set success flag for time entry to success if validation was a sql constraint
 												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>1];
-											} else {
+											}else{
 												BaseActiveController::archiveErrorJson(
 													file_get_contents("php://input"),
 													$e,
-													getallheaders()['X-Client'],
+													BaseActiveController::urlPrefix(),
 													$data['activity'][$i],
 													$data['activity'][$i]['timeEntry'][$t]);
 												//set success flag for time entry
 												$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
 											}
 										}
-									}
-									catch(yii\db\Exception $e)
-									{
+									}catch(yii\db\Exception $e){
 										//return $e->errorInfo;
 										//if db exception is 2601, duplicate contraint then success
-										if(in_array($e->errorInfo[1], array(2601, 2627)))
-										{
+										if(in_array($e->errorInfo[1], array(2601, 2627))){
 											$responseData['activity'][$i]['timeEntry'][$t] = $timeEntry;
-										}
-										else //log other errors and retrun failure
-										{
+										}else{ 
+											//log other errors and retrun failure
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
-												getallheaders()['X-Client'],
+												BaseActiveController::urlPrefix(),
 												$data['activity'][$i],
 												$data['activity'][$i]['timeEntry'][$t]);
 											$responseData['activity'][$i]['timeEntry'][$t] = ['SuccessFlag'=>0];
 										}
 									}
 								}
+								$timeCardTransaction->commit();
 							}
-													
 							
 							//add activityID to corresponding mileage entries
-							if($mileageLength > 0)
-							{	
-								for($m = 0; $m < $mileageLength; $m++)
-								{
-									Activity::setClient(BaseActiveController::urlPrefix());
+							if($mileageLength > 0){	
+								//create mileageCardTransaction
+								$db = BaseActiveRecord::getDb();
+								$mileageCardTransaction = $db->beginTransaction();
+								for($m = 0; $m < $mileageLength; $m++){
 									$mileageArray[$m]['MileageEntryActivityID']= $activity->ActivityID;
 									$mileageEntry = new MileageEntry();
 									$mileageEntry->attributes = $mileageArray[$m];
 									$mileageEntry->MileageEntryCreatedBy = (string)$createdBy;
+									$mileageEntry->CreatedDate = $mileageEntry->MileageEntrySrcDTLT;
 									try{
-										if($mileageEntry->save())
-										{
+										//fetch current mileage card id if none is provided
+										if($mileageEntry->MileageEntryMileageCardID == null && $mileageEntry->MileageEntryStartDate != null){
+											//get last sunday
+											$mcLastSunday = date('Y-m-d H:i:s', strtotime('last Sunday', strtotime($mileageEntry->MileageEntryStartDate)));
+											$mileageCard = MileageCard::find()
+											->where([
+												'MileageCardTechID' => $userID,
+												'MileageStartDate' => $mcLastSunday
+											])
+											->one();
+											$mileageEntry->MileageEntryMileageCardID = $mileageCard->MileageCardID;
+										}
+										if($mileageEntry->save()){
 											$response->setStatusCode(201);
 											//set success flag for mileage entry
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
-										}
-										else
-										{
+										}else{
 											//log validation error
 											$e = BaseActiveController::modelValidationException($mileageEntry);
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
-												getallheaders()['X-Client'],
+												BaseActiveController::urlPrefix(),
 												$data['activity'][$i],
 												$data['activity'][$i]['mileageEntry'][$m]);
 											//set success flag for mileage entry
 											$responseData['activity'][$i]['mileageEntry'][$m] = ['SuccessFlag'=>0];
-
 										}
-									}
-									catch(yii\db\Exception $e)
-									{
+									}catch(yii\db\Exception $e){
 										//if db exception is 2601, duplicate contraint then success
-										if(in_array($e->errorInfo[1], array(2601, 2627)))
-										{
+										if(in_array($e->errorInfo[1], array(2601, 2627))){
 											$responseData['activity'][$i]['mileageEntry'][$m] = $mileageEntry;
-										}
-										else //log other errors and return failure
-										{
+										}else{ 
+											//log other errors and return failure
 											BaseActiveController::archiveErrorJson(
 												file_get_contents("php://input"),
 												$e,
-												getallheaders()['X-Client'],
+												BaseActiveController::urlPrefix(),
 												$data['activity'][$i],
 												$data['activity'][$i]['mileageEntry'][$m]
 												);
@@ -340,18 +367,15 @@ class ActivityController extends BaseActiveController
 										}
 									}
 								}
+								$mileageCardTransaction->commit();
 							}
-						}
-						else
-						{
+						}else{
 							//activity model validation exception
 							throw BaseActiveController::modelValidationException($activity);
 						}
-					}
-					catch(\Exception $e)
-					{
+					}catch(\Exception $e){
 						//log activity error
-						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $data['activity'][$i]);
+						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, BaseActiveController::urlPrefix(), $data['activity'][$i]);
 						//set success flag for activity
 						$responseData['activity'][$i] = ['ActivityUID'=>$data['activity'][$i]['ActivityUID'], 'SuccessFlag'=>0];
 					}
@@ -369,33 +393,34 @@ class ActivityController extends BaseActiveController
 	}
 	
 	//helper method, to parse activity data and send to appropriate controller.
-	public static function parseActivityData($activityData, $client, $createdBy, $clientActivityID)
+	public static function parseActivityData($activityData, $client, $createdBy, $userID, $clientActivityID)
 	{	
 		$responseData = [];
 	
 		//handle accepting work queue
-		if (array_key_exists('WorkQueue', $activityData))
-		{
+		if (array_key_exists('WorkQueue', $activityData)){
 			$workQueueResponse = WorkQueueController::accept($activityData['WorkQueue'], $client);
 			$responseData['WorkQueue'] = $workQueueResponse;
 		}
 		//handle creation of new calibration records
-		if (array_key_exists('Calibration', $activityData))
-		{
+		if (array_key_exists('Calibration', $activityData)){
 			$calibrationResponse = EquipmentController::processCalibration($activityData['Calibration'], $client, $clientActivityID);
 			$responseData['Calibration'] = $calibrationResponse;
 		}
 		//handle creation of new inspection records
-		if (array_key_exists('Inspection', $activityData))
-		{
+		if (array_key_exists('Inspection', $activityData)){
 			$inspectionResponse = InspectionController::processInspection($activityData['Inspection'], $client, $clientActivityID);
 			$responseData['Inspection'] = $inspectionResponse;
 		}
 		//handle creation of new task out records
-		if (array_key_exists('TaskOut', $activityData))
-		{
+		if (array_key_exists('TaskOut', $activityData)){
 			$taskOutResponse = TaskOutController::processTaskOut($activityData['TaskOut'], $client, $clientActivityID);
 			$responseData['TaskOut'] = $taskOutResponse;
+		}
+		//handle creation of new expense records
+		if (array_key_exists('Expense', $activityData)){
+			$expenseResponse = ExpenseController::processExpense($activityData['Expense'], $client, $userID);
+			$responseData['Expense'] = $expenseResponse;
 		}
 		
 		return $responseData;
@@ -428,11 +453,16 @@ class ActivityController extends BaseActiveController
 			//create db transaction
 			$db = BaseActiveRecord::getDb();
 			$transaction = $db->beginTransaction();
-			
-			for($i = 0; $i<$activityCount; $i++)
-			{
-				$responseData['activity'][$i]['ActivityUID'] = $data[$i]['ActivityUID'];
-				$responseData['activity'][$i]['timeEntry'] = self::saveTimeEntry($data[$i]['timeEntry'], $data[$i]['ActivityUID'], $user);
+			try{
+				for($i = 0; $i<$activityCount; $i++)
+				{
+					$responseData['activity'][$i]['ActivityUID'] = $data[$i]['ActivityUID'];
+					$responseData['activity'][$i]['timeEntry'] = self::saveTimeEntry($data[$i]['timeEntry'], $data[$i]['ActivityUID'], $user);
+				}
+			}catch(\Exception $e){
+				//if an exception that cannot be handled gracefully occurs rollback to break transaction and rethrow to log
+				$transaction->rollback();
+				throw $e;
 			}
 			
 			//commit transaction

@@ -7,16 +7,18 @@ use Yii;
 /**
  * This is the model class for table "vTaskAndProject".
  *
- * @property integer $TaskID
+ * @property int $TaskID
  * @property string $TaskName
- * @property integer $ProjectID
- * @property integer $GPSInterval
+ * @property int $ProjectID
+ * @property int $GPSInterval
  * @property string $TaskQBReferenceID
+ * @property string $Category
+ * @property string $TaskReferenceID
  */
 class TaskAndProject extends \app\modules\v2\models\BaseActiveRecord
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -24,19 +26,19 @@ class TaskAndProject extends \app\modules\v2\models\BaseActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
             [['TaskID'], 'required'],
             [['TaskID', 'ProjectID', 'GPSInterval'], 'integer'],
-            [['TaskName', 'TaskQBReferenceID'], 'string'],
+            [['TaskName', 'TaskQBReferenceID', 'Category', 'TaskReferenceID'], 'string'],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
@@ -46,6 +48,8 @@ class TaskAndProject extends \app\modules\v2\models\BaseActiveRecord
             'ProjectID' => 'Project ID',
             'GPSInterval' => 'Gpsinterval',
             'TaskQBReferenceID' => 'Task Qbreference ID',
+            'Category' => 'Category',
+            'TaskReferenceID' => 'Task Reference ID',
         ];
     }
 }

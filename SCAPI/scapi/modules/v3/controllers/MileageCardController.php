@@ -17,6 +17,7 @@ use app\modules\v3\models\MileageCardAccountantSubmit;
 use app\modules\v3\models\MileageCardEventHistory;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\controllers\BaseActiveController;
+use app\modules\v3\controllers\NotificationController;
 use app\modules\v3\authentication\TokenAuth;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -52,7 +53,7 @@ class MileageCardController extends BaseCardController
 					'get-accountant-details' => ['get'],
 					'p-m-submit' => ['put'],
 					'accountant-submit' => ['put'],
-					'get-cards-export' => ['get'],
+					'accountant-reset' => ['put'],
                 ],  
             ];
 		return $behaviors;	
@@ -146,8 +147,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 	
-	public function actionShowEntries($cardID)
-	{		
+	public function actionShowEntries($cardID){		
 		try{
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -188,7 +188,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 	
-	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
+	public function actionGetCards($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
 		$sortField = 'UserFullName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		// RBAC permission check is embedded in this action	
@@ -204,6 +204,11 @@ class MileageCardController extends BaseCardController
 			//TODO consider adding global delimiter constant
 			$delimiter = ',';
 			$filterArray = explode($delimiter, $filter);
+			//set start date to last Sunday add a day to prevent issue occuring if current day is sunday
+			$startDate = date('Y-m-d',strtotime($startDate . '+1 day'));
+			$startDate = date('Y-m-d',strtotime($startDate . 'last sunday'));
+			$endDate = date('Y-m-d',strtotime($endDate . '-1 day'));
+			$endDate = date('Y-m-d',strtotime($endDate . 'next saturday'));
 			
 			//set db target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -219,58 +224,48 @@ class MileageCardController extends BaseCardController
 			//response array of mileage cards
             $mileageCardsArr = [];
             $responseArray = [];
-			$projectAllOption = [];
-			$allProjects = [];
+			$allOption = [];
 			$showProjectDropDown = false;
 			
 			//build base query
 			$mileageCards = new Query;
 			$mileageCards->select('*')
-				->from(["fnMileageCardByDate(:startDate, :endDate)"])
+				->from(["fnMileageCardByDatePerformance(:startDate, :endDate)"])
 				->addParams([':startDate' => $startDate, ':endDate' => $endDate]);
 			
 			//if is scct website get all or own
-			if(BaseActiveController::isSCCT($client))
-			{
+			if(BaseActiveController::isSCCT($client)){
 				//set project dropdown to true for scct
 				$showProjectDropDown = true;
 				//rbac permission check
-				if (PermissionsController::can('mileageCardGetAllCards'))
-                {
-					$projectAllOption = [""=>"All"];
-                }
-				elseif(PermissionsController::can('mileageCardGetOwnCards'))		
-				{
+				if (PermissionsController::can('mileageCardGetAllCards')){
+					$allOption = [""=>"All"];
+                }elseif(PermissionsController::can('mileageCardGetOwnCards')){
 					$userID = self::getUserFromToken()->UserID;
 					//get user project relations array
 					$projects = ProjectUser::find()
 						->where("ProjUserUserID = $userID")
 						->all();
 					$projectsSize = count($projects);
-					if($projectsSize > 0)
-					{
+					if($projectsSize > 0){
 						$mileageCards->where(['MileageCardProjectID' => $projects[0]->ProjUserProjectID]);
-					} else {
+					}else{
 						//can only get own but has no project relations
 						throw new ForbiddenHttpException;
-					}
-                    if($projectsSize > 1)
-                    {
+					}if($projectsSize > 1){
 						//add all option to project dropdown if there will be more than one option
-						$projectAllOption = [""=>"All"];
-                        for($i=1; $i < $projectsSize; $i++)
-                        {
+						$allOption = [""=>"All"];
+                        for($i=1; $i < $projectsSize; $i++){
                             $relatedProjectID = $projects[$i]->ProjUserProjectID;
+							//could be an 'IN' instead
                             $mileageCards->orWhere(['MileageCardProjectID'=>$relatedProjectID]);
                         }
                     }
-				} else{
+				}else{
 					//no permissions for any cards
 					throw new ForbiddenHttpException;
 				}
-			}
-			else // get only cards for the current project.
-			{
+			}else{ // get only cards for the current project.
 				//get project based on client header
 				$project = Project::find()
 					->where(['ProjectUrlPrefix' => $client])
@@ -279,8 +274,21 @@ class MileageCardController extends BaseCardController
 				$mileageCards->where(['MileageCardProjectID' => $project->ProjectID]);
 			}
 			
-			//get records post user/permissions filter for project dropdown(timing for this execution is very important)
-			$projectDropdownRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
+			$clientQuery = clone $mileageCards;
+			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply client filter
+            if($clientID!= null && isset($mileageCards)) {
+                $mileageCards->andFilterWhere([
+                    'and',
+                    ['ClientID' => $clientID],
+                ]);
+            }
+			
+			//get project records post client filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $mileageCards;
+			$projectRecords = $projectQuery->select(['ProjectName', 'MileageCardProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
 			//apply project filter
             if($projectID!= null && isset($mileageCards)) {
@@ -289,9 +297,12 @@ class MileageCardController extends BaseCardController
                     ['MileageCardProjectID' => $projectID],
                 ]);
             }
-
+			
 			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
-			$employeeDropdownRecords = $mileageCards->all(BaseActiveRecord::getDb());
+			$employeeRecordsQuery = clone $mileageCards;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
+			$approvedStatusQuery = clone $mileageCards;
+			$approvedStatus = $employeeRecordsQuery->select('MileageCardApprovedFlag')->distinct()->all(BaseActiveRecord::getDb());
 			
 			//apply employee filter
 			if($employeeID!= null && isset($mileageCards)) {
@@ -305,8 +316,7 @@ class MileageCardController extends BaseCardController
 				//initialize array for filter query values
 				$filterQueryArray = array('or');
 				//loop for multi search
-				for($i = 0; $i < count($filterArray); $i++)
-				{
+				for($i = 0; $i < count($filterArray); $i++){
 					//remove leading space from filter string
 					$trimmedFilter = trim($filterArray[$i]);
 					array_push($filterQueryArray,
@@ -317,18 +327,25 @@ class MileageCardController extends BaseCardController
 				$mileageCards->andFilterWhere($filterQueryArray);
             }
 			
-			//get project list for dropdown based on time cards available
-			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectDropdownRecords, $projectAllOption);
+			//get project list for dropdown based on mileage cards available
+			$clientDropDown = self::extractClientFromCards($clientRecords, $allOption);
 			
-			//get employee list for dropdown based on time cards available
-			$employeeDropDown = self::extractEmployeesFromCards($employeeDropdownRecords);
+			//get project list for dropdown based on mileage cards available
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectRecords, $allOption);
+			
+			//get employee list for dropdown based on mileage cards available
+			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
+			
+			//check if any unapproved cards exist in project filtered records
+            $unapprovedMileageCardInProject = $this->checkUnapprovedCardExist('MileageCard', $approvedStatus);
 			
 			//add pagination and fetch mileage card data
             $paginationResponse = BaseActiveController::paginationProcessor($mileageCards, $page, $listPerPage);
             $mileageCardsArr = $paginationResponse['Query']->orderBy("$sortField $sortOrder")->all(BaseActiveRecord::getDb());
 			
 			//check mileage card submission statuses
-            $unapprovedMileageCardExist = $this->checkUnapprovedCardExist('MileageCard', $mileageCardsArr);
+            $unapprovedMileageCardVisible = $this->checkUnapprovedCardExist('MileageCard', $mileageCardsArr);
+
 			//unsure of business rules for mileage submission
             $projectWasSubmitted = $this->checkAllAssetsSubmitted('MileageCard', $mileageCardsArr);
 			
@@ -336,10 +353,12 @@ class MileageCardController extends BaseCardController
 			
             $responseArray['assets'] = $mileageCardsArr;
             $responseArray['pages'] = $paginationResponse['pages'];
+			$responseArray['clientDropDown'] = $clientDropDown;
 			$responseArray['projectDropDown'] = $projectDropDown;
             $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
-			$responseArray['unapprovedMileageCardExist'] = $unapprovedMileageCardExist;
+			$responseArray['unapprovedMileageCardInProject'] = $unapprovedMileageCardInProject;
+			$responseArray['unapprovedMileageCardVisible'] = $unapprovedMileageCardVisible;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
 			$response->data = $responseArray;
 			$response->setStatusCode(200);
@@ -351,8 +370,8 @@ class MileageCardController extends BaseCardController
 		}
 	}
 	
-	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $projectID = null,
-		$sortField = 'ProjectName', $sortOrder = 'ASC')
+	public function actionGetAccountantView($startDate, $endDate, $listPerPage = 10, $page = 1, $filter = null, $clientID = null, $projectID = null,
+		$sortField = 'ProjectName', $sortOrder = 'ASC', $employeeID = null)
 	{
 		try{
 			//url decode filter value
@@ -366,49 +385,101 @@ class MileageCardController extends BaseCardController
 			//RBAC permissions check
 			PermissionsController::requirePermission('mileageCardGetAccountantView');
 
+			//create db transaction
+			$db = BaseActiveRecord::getDb();
+			$transaction = $db->beginTransaction();
+
             //format response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
-			//response array of time cards
+			//response array of mileage cards
             $mileageCards = [];
             $responseArray = [];
-			$allTheProjects = [""=>"All"];
+			$allOption = [""=>"All"];
 			$showProjectDropDown = true;
 			//used to get current week if date range falls in the middle of the week
 			$sevenDaysPriorToEnd = date('m/d/Y', strtotime($endDate . ' -7 days'));
 
 			//build base query
             $cardQuery = MileageCardAccountantSubmit::find()
+				->select(['ProjectName', 
+					'ProjectManager',
+					'StartDate',
+					'EndDate',
+					'ApprovedBy',
+					'[Total Mileage Cards]',
+					'[Approved Mileage Cards]',
+					'MSDynamicsSubmitted',
+					'OasisSubmitted',
+					'ADPSubmitted',
+					'ProjectID'])
+				->distinct()
 				->where(['between', 'StartDate', $startDate, $endDate])
                 ->orWhere(['between', 'EndDate', $startDate, $endDate])
                 ->orWhere(['between', 'StartDate', $sevenDaysPriorToEnd, $endDate]);
 
-			//get records for project dropdown(timing for this execution is very important)
-			$dropdownRecords = $cardQuery->all(BaseActiveRecord::getDb());
+			//get client records post user/permissions filter for client dropdown(timing for this execution is very important)
+			$clientQuery = clone $cardQuery;
+			$clientRecords = $clientQuery->select(['ClientName', 'ClientID'])->distinct()->all(BaseActiveRecord::getDb());
+			
+			//apply client filter
+            if($clientID!= null && isset($cardQuery)) {
+                $cardQuery->andFilterWhere([
+                    'and',
+                    ['ClientID' => $clientID],
+                ]);
+            }
+			
+			//get project records post client filter for project dropdown(timing for this execution is very important)
+			$projectQuery = clone $cardQuery;
+			$projectRecords = $projectQuery->select(['ProjectName', 'ProjectID'])->distinct()->all(BaseActiveRecord::getDb());
 
-			//add project filter
-			if($projectID!= null)
-			{
+			//apply project filter
+            if($projectID!= null && isset($cardQuery)) {
                 $cardQuery->andFilterWhere([
                     'and',
                     ['ProjectID' => $projectID],
                 ]);
             }
-
-			//add search filter
-			if($filter != null)
-			{
+			
+			//get records post user/permissions/project filter for employee dropdown(timing for this execution is very important)
+			$employeeRecordsQuery = clone $cardQuery;
+			$employeeRecords = $employeeRecordsQuery->select(['UserID', 'UserFullName'])->distinct()->all(BaseActiveRecord::getDb());
+		
+			//apply employee filter
+			if($employeeID!= null && isset($cardQuery)) {
                 $cardQuery->andFilterWhere([
-                    'or',
-                    ['like', 'ProjectName', $filter],
-                    ['like', 'ProjectManager', $filter],
-                    ['like', 'ApprovedBy', $filter],
+                    'and',
+                    ['UserID' => $employeeID],
                 ]);
             }
+			
+			if($filterArray!= null){
+				//initialize array for filter query values
+				$filterQueryArray = array('or');
+				//loop for multi search
+				for($i = 0; $i < count($filterArray); $i++){
+					//remove leading space from filter string
+					$trimmedFilter = trim($filterArray[$i]);
+					array_push($filterQueryArray,
+						['like', 'ProjectName', $trimmedFilter],
+						['like', 'ProjectManager', $trimmedFilter],
+						['like', 'ApprovedBy', $trimmedFilter],
+						['like', 'UserFullName', $trimmedFilter]
+					);
+				}
+				$cardQuery->andFilterWhere($filterQueryArray);
+            }
 
-			//get project list for dropdown based on time cards available
-			$allTheProjects = self::extractProjectsFromCards('MileageCard', $dropdownRecords, $allTheProjects);
+			//get project list for dropdown based on mileage cards available
+			$clientDropDown = self::extractClientFromCards($clientRecords, $allOption);
+			
+			//get project list for dropdown based on mileage cards available
+			$projectDropDown = self::extractProjectsFromCards('MileageCard', $projectRecords, $allOption);
+			
+			//get employee list for dropdown based on mileage cards available
+			$employeeDropDown = self::extractEmployeesFromCards($employeeRecords);
 
 			//paginate
 			$paginationResponse = self::paginationProcessor($cardQuery, $page, $listPerPage);
@@ -416,11 +487,15 @@ class MileageCardController extends BaseCardController
 
 			//copying this functionality from get cards route, want to look into a way to integrate this with the regular submit check
 			//this check seems to have some issue and is only currently being applied to the post filter data set.
-			$projectWasSubmitted   = $this->checkAllAssetsSubmitted('MileageCard', $mileageCards);
+			$projectWasSubmitted = $this->checkAllAssetsSubmitted('MileageCard', $mileageCards);
+
+			$transaction->commit();
 
             $responseArray['assets'] = $mileageCards;
             $responseArray['pages'] = $paginationResponse['pages'];
-            $responseArray['projectDropDown'] = $allTheProjects;
+            $responseArray['clientDropDown'] = $clientDropDown;
+            $responseArray['projectDropDown'] = $projectDropDown;
+            $responseArray['employeeDropDown'] = $employeeDropDown;
             $responseArray['showProjectDropDown'] = $showProjectDropDown;
             $responseArray['projectSubmitted'] = $projectWasSubmitted;
 
@@ -433,7 +508,7 @@ class MileageCardController extends BaseCardController
 		}
 	}
 
-	public function actionGetAccountantDetails($projectID, $startDate, $endDate)
+	public function actionGetAccountantDetails($projectID, $startDate, $endDate, $filter = null, $employeeID = null)
 	{
 		try{
 			//set db target
@@ -441,12 +516,7 @@ class MileageCardController extends BaseCardController
 			//RBAC permissions check
 			PermissionsController::requirePermission('mileageCardGetAccountantDetails');
 
-			$detailsQuery = new Query;
-            $mileageCards = $detailsQuery->select('*')
-                ->from(["fnMileageCardByDate(:startDate, :endDate)"])
-                ->addParams([':startDate' => $startDate, ':endDate' => $endDate])
-				->where(['MileageCardProjectID' => $projectID])
-				->all(BaseActiveRecord::getDb());
+			$mileageCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_MILEAGE, $filter, $employeeID);
 
 			//format response
 			$responseArray['details'] = $mileageCards;
@@ -491,8 +561,8 @@ class MileageCardController extends BaseCardController
 			$queryResults = [];
 			for ($x = 0; $x < $max; $x++) {
 				$queryString = "Select MileageCardID from [dbo].[MileageCardTb] mc
-								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod = 'H') u on u.UserID = mc.MileageCardTechID
-								Where mc.MileageStartDate = '" . $data["dateRangeArray"][0] . "' and mc.MileageCardProjectID = " . $cardIDs[$x] . " and mc.MileageCardActiveFlag = 1 and MileageCardPMApprovedFlag != 1";
+								Join (Select * from UserTb where UserAppRoleType not in ('Admin', 'ProjectManager', 'Supervisor') and UserActiveFlag = 1 and UserPayMethod in ('H', 'C')) u on u.UserID = mc.MileageCardTechID
+								Where mc.MileageStartDate = '" . $data["dateRangeArray"][0] . "' and mc.MileageCardProjectID = " . $cardIDs[$x] . " and mc.MileageCardApprovedFlag = 1 and MileageCardPMApprovedFlag != 1";
 				$queryResults[$x] = $connection->createCommand($queryString)->queryAll();	
 			}
 			//try to approve mileage cards
@@ -743,51 +813,52 @@ class MileageCardController extends BaseCardController
             $headers = getallheaders();
             //get client header
             $client = $headers['X-Client'];
-			
             //set db target
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//default check to false
+			$submitButtonStatus = 0;
 			//RBAC permissions check
-			PermissionsController::requirePermission('checkSubmitButtonStatus');
+			if(PermissionsController::can('checkSubmitButtonStatus')){
+				//get body data
+				$data = file_get_contents("php://input");
+				$submitCheckData = json_decode($data, true)['submitCheck'];
+				$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
+				//if is not scct project name will always be the current client
+				if(BaseActiveController::isSCCT($client))
+				{
+					$projectName  = $submitCheckData['ProjectName'];
+				}else{
+					$project = Project::find()
+						->where(['ProjectUrlPrefix' => $client])
+						->one();
+					$projectName = array($project->ProjectID);
+				}
 
-            //get body data
-            $data = file_get_contents("php://input");
-			$submitCheckData = json_decode($data, true)['submitCheck'];
-			$isAccountant = isset($submitCheckData['isAccountant']) ? $submitCheckData['isAccountant'] : FALSE;
-			//if is not scct project name will always be the current client
-			if(BaseActiveController::isSCCT($client))
-			{
-				$projectName  = $submitCheckData['ProjectName'];
-			}else{
-				$project = Project::find()
-					->where(['ProjectUrlPrefix' => $client])
-					->one();
-				$projectName = array($project->ProjectID);
-			}
-
-            //build base query
-			$responseArray = new Query;
-			if($isAccountant) {
-	            $responseArray->select('*')
-					->from(["fnMileageCardSubmitAccountant(:StartDate , :EndDate)"])
+				//build base query
+				$checkQuery = new Query;
+				if($isAccountant) {
+					$checkQuery->select('*')
+						->from(["fnMileageCardSubmitAccountant(:StartDate , :EndDate)"])
+						->addParams([
+							//':ProjectName' => json_encode($projectName), 
+							':StartDate' => $submitCheckData['StartDate'], 
+							':EndDate' => $submitCheckData['EndDate']]);
+				} else {
+					$checkQuery->select('*')
+					->from(["fnMileageCardSubmitPM(:ProjectName, :StartDate , :EndDate)"])
 					->addParams([
-						//':ProjectName' => json_encode($projectName), 
+						':ProjectName' => json_encode($projectName), 
 						':StartDate' => $submitCheckData['StartDate'], 
-						':EndDate' => $submitCheckData['EndDate']]);
-			} else {
-				$responseArray->select('*')
-                ->from(["fnMileageCardSubmitPM(:ProjectName, :StartDate , :EndDate)"])
-                ->addParams([
-					':ProjectName' => json_encode($projectName), 
-					':StartDate' => $submitCheckData['StartDate'], 
-					':EndDate' => $submitCheckData['EndDate']
-					]);
+						':EndDate' => $submitCheckData['EndDate']
+						]);
+				}
+				$submitButtonStatus = $checkQuery->one(BaseActiveRecord::getDb());
 			}
-            $submitButtonStatus = $responseArray->one(BaseActiveRecord::getDb());
-            $responseArray = $submitButtonStatus;
 
             $response = Yii::$app ->response;
             $response -> format = Response::FORMAT_JSON;
-            $response -> data = $responseArray;
+            $response -> data = $submitButtonStatus;
 			
             return $response;
         } catch(ForbiddenHttpException $e) {
@@ -798,6 +869,104 @@ class MileageCardController extends BaseCardController
             throw new \yii\web\HttpException(400);
         }
     }
+	
+	public function actionAccountantReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$params = json_decode($put, true);
+			$startDate = $params['dates']['startDate'];
+			$endDate = $params['dates']['endDate'];
+		
+            //set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+
+            //format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spResetMileageCardSubmitFlag :startDate, :endDate");
+			$resetCommand->bindParam(':startDate', $startDate,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':endDate', $endDate,  \PDO::PARAM_STR);
+			$resetCommand->execute();  
+			
+			//log submission
+			self::logMileageCardHistory(Constants::MILEAGE_CARD_ACCOUNTANT_RESET, null, $startDate, $endDate);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				'accountantResetMileage',
+				$e,
+				getallheaders()['X-Client'],
+				'Start Date: ' . $startDate,
+				'End Date: ' . $endDate
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
+	
+	public function actionPMReset(){
+		try{			
+			$put = file_get_contents("php://input");
+			$jsonArray = json_decode($put, true);
+			$data = $jsonArray['data'];
+			
+			//set db target headers
+          	BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//format response
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_JSON;
+			
+			$mileageCardIDs = [];
+			//get user
+			$user = self::getUserFromToken();
+			$username = $user->UserName;
+			
+			//archive json
+			BaseActiveController::archiveWebJson($put, Constants::MILEAGE_CARD_PM_RESET, $username, BaseActiveController::urlPrefix());
+			
+			//fetch all time cards for selected rows
+			for($i = 0; $i < count($data); $i++){
+				$projectID = $data[$i]['ProjectID'];
+				$startDate = $data[$i]['StartDate'];
+				$endDate = $data[$i]['EndDate'];
+				$newCards = self::getCardsByProject($projectID, $startDate, $endDate, Constants::NOTIFICATION_TYPE_MILEAGE);
+				$newCards = array_column($newCards, 'MileageCardID');
+				$mileageCardIDs = array_merge($mileageCardIDs, $newCards);
+			}
+			//encode array to pass to sp
+			$mileageCardIDs = json_encode($mileageCardIDs);
+
+			$connection = BaseActiveRecord::getDb();
+			$resetCommand = $connection->createCommand("SET NOCOUNT ON EXECUTE spMileageCardResetPMApprovedFlag  :MileageCardIDJSON, :RequestedBy");
+			$resetCommand->bindParam(':MileageCardIDJSON', $mileageCardIDs,  \PDO::PARAM_STR);
+			$resetCommand->bindParam(':RequestedBy', $username,  \PDO::PARAM_STR);
+			$resetCommand->execute();
+			
+			//create new notification
+			NotificationController::create(
+			Constants::NOTIFICATION_TYPE_MILEAGE,
+			$mileageCardIDs,
+			Constants::NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE,
+			Constants::APP_ROLE_PROJECT_MANAGER,
+			$username);
+			
+			$status['success'] = true;
+			$response->data = $status;	
+			return $response;
+		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson(
+				Constants::MILEAGE_CARD_PM_RESET,
+				$e,
+				getallheaders()['X-Client']
+			);
+			throw new \yii\web\HttpException(400);
+		}
+	}
 	
 	//inserts records into historical tables
 	private function logMileageCardHistory($type, $mileageCardID = null, $startDate = null, $endDate = null, $comments = null)

@@ -132,7 +132,12 @@ class LoginController extends Controller
 			//get request headers
 			$headers = getallheaders();
 			$client = $headers['X-Client'];
-			$token = substr(base64_decode(explode(" ", $headers['Authorization'])[1]), 0, -1);
+			if(array_key_exists('Authorization', $headers))
+				$token = substr(base64_decode(explode(" ", $headers['Authorization'])[1]), 0, -1);
+			else
+				throw new UnauthorizedHttpException;
+			
+			yii::trace('TOKEN? ' . $token);
 			
 			//set target
 			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());

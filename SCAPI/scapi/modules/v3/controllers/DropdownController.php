@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use yii\rest\Controller;
 use app\modules\v3\models\EmployeeType;
 use app\modules\v3\models\DropDown;
+use app\modules\v3\models\AppRoles;
 use app\modules\v3\models\StateCode;
 use app\modules\v3\controllers\BaseActiveController;
 use yii\web\Response;
@@ -170,4 +171,47 @@ class DropdownController extends Controller
         $response -> format = Response::FORMAT_JSON;
         $response -> data = $processedResults;
     }
+	
+	//return
+	/**
+	 * Route to get the dropdown
+	 * 
+	 * The pairing of equal Strings for both key and value is done because the front end expects
+	 * an associative array. We use the display name as the key for convenience.
+	 *
+	 * @return Response A JSON associative array containing pairs of AppRoleNames
+	 * @throws \yii\web\HttpException
+	 */
+	public function actionGetRolesDropdowns($type){
+		try{
+			//set db target
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			// RBAC permission check
+			PermissionsController::requirePermission('appRoleGetDropdown');
+		
+			$roles = AppRoles::find()
+				->all();
+			$namePairs = [];
+			$rolesSize = count($roles);
+			
+			//get active client db to check create permissions
+			$client = getallheaders()['X-Client'];
+			
+			for($i=0; $i < $rolesSize; $i++){
+				if(PermissionsController::can('user' . $type . $roles[$i]->AppRoleName, null, $client))
+					$namePairs[$roles[$i]->AppRoleName]= $roles[$i]->AppRoleName;
+			}
+			
+			$response = Yii::$app ->response;
+			$response -> format = Response::FORMAT_JSON;
+			$response -> data = $namePairs;
+			
+			return $response;
+		} catch(ForbiddenHttpException $e) {
+            throw new ForbiddenHttpException;
+        } catch(\Exception $e) {
+            throw new \yii\web\HttpException(400);
+        }
+	}
 }

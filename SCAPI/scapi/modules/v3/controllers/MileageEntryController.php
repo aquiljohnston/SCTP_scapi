@@ -5,6 +5,7 @@ namespace app\modules\v3\controllers;
 use Yii;
 use app\modules\v3\models\BaseActiveRecord;
 use app\modules\v3\models\MileageEntry;
+use app\modules\v3\models\MileageRate;
 use app\modules\v3\models\MileageEntryEventHistory;
 use app\modules\v3\controllers\BaseActiveController;
 use yii\data\ActiveDataProvider;
@@ -69,14 +70,17 @@ class MileageEntryController extends BaseActiveController
             $body = file_get_contents("php://input");
             $data = json_decode($body, true);
 			
+			$mileageRate = (float)$data['MileageRate'];
+			
 			// set up db connection
 			$connection = BaseActiveRecord::getDb();
-			$processJSONCommand = $connection->createCommand("EXECUTE spAddMileage :MileageCardID , :Date, :TotalMiles, :MileageType, :CreatedByUserName");
+			$processJSONCommand = $connection->createCommand("EXECUTE spAddMileage :MileageCardID , :Date, :TotalMiles, :MileageType, :CreatedByUserName, :MileageRate");
 			$processJSONCommand->bindParam(':MileageCardID', $data['MileageCardID'], \PDO::PARAM_INT);
 			$processJSONCommand->bindParam(':Date', $data['Date'], \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':TotalMiles', $data['TotalMiles']);
 			$processJSONCommand->bindParam(':MileageType', $data['MileageType'], \PDO::PARAM_STR);
 			$processJSONCommand->bindParam(':CreatedByUserName', $data['CreatedByUserName'], \PDO::PARAM_STR);
+			$processJSONCommand->bindParam(':MileageRate', $mileageRate, \PDO::PARAM_STR);
 			$processJSONCommand->execute();
 			$successFlag = 1;			
         } catch (ForbiddenHttpException $e) {
@@ -148,40 +152,15 @@ class MileageEntryController extends BaseActiveController
 			];
 			$response->data = $responseData;
 			return $response;
-			
-			//old deactivate
-			// foreach ($entries as $entry) {
-				// //SPROC has no return so just in case we need a flag.
-				// $success = 0;
-				// //add variables to avoid pass by reference error
-				// $taskString = json_encode($entry['taskName']);
-				// $day = array_key_exists('day', $entry) ? $entry['day'] : null;
-				// //call SPROC to deactivateTimeEntry
-				// try {
-					// $connection = BaseActiveRecord::getDb();
-					// //TODO may want to move the transaction outside of the loop to allow full rollback of the request
-					// $transaction = $connection->beginTransaction(); 
-					// $timeCardCommand = $connection->createCommand("EXECUTE spDeactivateMileageEntry :PARAMETER1,:PARAMETER2,:PARAMETER3,:PARAMETER4");
-					// $timeCardCommand->bindParam(':PARAMETER1', $entry['mileageCardID'], \PDO::PARAM_INT);
-					// $timeCardCommand->bindParam(':PARAMETER2', $taskString, \PDO::PARAM_STR);
-					// $timeCardCommand->bindParam(':PARAMETER3', $day, \PDO::PARAM_STR);
-					// $timeCardCommand->bindParam(':PARAMETER4', $username, \PDO::PARAM_STR);
-					// $timeCardCommand->execute();
-					// $transaction->commit();
-					// $success = 1;
-				// } catch (Exception $e) {
-					// $transaction->rollBack();
-				// }
-			// }
 		} catch (ForbiddenHttpException $e) {
 			throw new ForbiddenHttpException;
 		} catch(\Exception $e) {
+			BaseActiveController::archiveWebErrorJson('MileageEntryID: ' . $entryID, $e, BaseActiveController::urlPrefix());
 			throw new \yii\web\HttpException(400);
 		}
 	}
 	
-	public function actionViewEntries($cardID, $date)
-	{
+	public function actionViewEntries($cardID, $date){
 		try{
 			//set db target
 			MileageEntry::setClient(BaseActiveController::urlPrefix());
@@ -203,15 +182,27 @@ class MileageEntryController extends BaseActiveController
 				->addParams([':cardID' => $cardID, ':date' => $date]);
 			$entries = $entriesQuery->all(BaseActiveRecord::getDb());
 			
+			$mileageRate = MileageRate::find()
+				->select(["concat(MileageType, '(' , Rate , ')') as MileageType", 'Rate'])
+				->all();
+				
+			$rates = [];
+			$rates[''] = 'Select';
+			//loop data to format response
+			foreach($mileageRate as $rate){
+				$rates[(string)$rate->Rate] = $rate->MileageType;
+			}
+			
 			$transaction->commit();
 
 			$dataArray['entries'] = $entries;
+			$dataArray['rates'] = $rates;
 				
 			$response->data = $dataArray; 
 			return $response;
-		} catch (ForbiddenHttpException $e) {
+		}catch (ForbiddenHttpException $e){
 			throw new ForbiddenHttpException;
-		} catch(\Exception $e) {
+		}catch(\Exception $e){
 			throw new \yii\web\HttpException(400);
 		}
 	}
@@ -243,6 +234,10 @@ class MileageEntryController extends BaseActiveController
 			//get current record
 			$mileageEntry = MileageEntry::findOne($data['MileageEntryID']);
 			$successFlag = 0;
+			
+			//unset milegerate if value is blank to not override data
+			if($data['MileageRate'] == null)
+				unset($data['MileageRate']);
 			
 			try{
 				//pass current data to new history record

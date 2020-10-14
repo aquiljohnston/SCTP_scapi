@@ -31,13 +31,18 @@ final class Constants
 	const PROD_DEFAULT_OASIS_PATH = 'C:\\ClientShare\\Oasis\\';
 	const PROD_DEFAULT_QB_PATH = 'C:\\ClientShare\\QuickBooks\\';
 	const PROD_DEFAULT_ADP_PATH = 'C:\\ClientShare\\ADP\\';
+	
+	//COA Values
+	const OT_PAYROLL_HOURS_ID = 4005;
+	const HOLIDAY_BEREAVEMENT_PAYROLL_HOURS_ID = 5015;
+	const PTO_PAYROLL_HOURS_ID = 5020;
+	const PERDIEM_EXPENSE_ID = 4450;
 
 	//Time Card File Types
 	const OASIS = 'OASIS';
 	//need to change to payroll instead of quickbooks
 	const MSDYNAMICS_TIMECARD = 'tcMSDynamics';
 	const ADP = 'ADP';
-	const OT_PAYROLL_HOURS_ID = 5110;
 	
 	//Payment Method
 	const PAY_METHOD_SALARY = 'S';
@@ -55,17 +60,22 @@ final class Constants
 	const TIME_CARD_SUBMISSION_MSDYNAMICS = 'MS Dynamics Submission';
 	const TIME_CARD_SUBMISSION_ADP = 'ADP Submission';
 	const TIME_CARD_SUBMISSION_RESET = 'Reset Submission';
+	const TIME_CARD_ACCOUNTANT_RESET = 'Accountant Reset Time';
+	const TIME_CARD_PM_RESET = 'PM Reset Time';
 	
 	//Mileage Card Submission File Name
 	const OASIS_MILEAGE_FILE_NAME = 'oasis_mileage_history_';
 	const MSDYNAMICS_MILEAGE_FILE_NAME = 'msdynamics_mileage_history';
 	
 	//Mileage Card Event History Types
+	//growing crossover with time card type may want to consolidate.
 	const MILEAGE_CARD_APPROVAL = 'Supervisor Approval';
 	const MILEAGE_CARD_PM_APPROVAL = 'PM Approval';
 	const MILEAGE_CARD_SUBMISSION_OASIS = 'Oasis Submission';
 	const MILEAGE_CARD_SUBMISSION_MSDYNAMICS = 'MS Dynamics Submission';
 	const MILEAGE_CARD_SUBMISSION_RESET = 'Reset Submission';
+	const MILEAGE_CARD_ACCOUNTANT_RESET = 'Accountant Reset Mileage';
+	const MILEAGE_CARD_PM_RESET = 'PM Reset Mileage';
 	
 	//Mileage Card File Types
 	const MILEAGE_CARD_OASIS = 'mcOASIS';
@@ -80,6 +90,38 @@ final class Constants
 	
 	const PROD_DEFAULT_MILEAGE_OASIS_PATH = 'C:\\ClientShare\\MileageCardOasis\\';
 	const PROD_DEFAULT_MILEAGE_ADP_PATH = 'C:\\ClientShare\\MileageCardADP\\';
+	
+	//Expense Submission file namespace
+	const EXPENSE_FILE_NAME = 'expense_history_';
+	
+	//Exepnse Event History Types
+	const EXPENSE_APPROVAL = 'PM/Supervisor Approval';
+	const EXPENSE_SUBMISSION = 'Submission';
+	const EXPENSE_DEACTIVATE = 'Deactivate';
+	
+	//Expense File Types
+	const EXPENSE_OUTPUT = 'expense';
+	
+	//Expense Submission File Locations
+	const DEV_DEFAULT_EXPENSE_PATH = 'C:\\ClientShare\\ExpenseDev\\';
+	const STAGE_DEFAULT_EXPENSE_PATH = 'C:\\ClientShare\\ExpenseStage\\';
+	const PROD_DEFAULT_EXPENSE_PATH = 'C:\\ClientShare\\Expense\\';
+	
+	//Notifications
+	const NOTIFICATION_TYPE_TIME = 'Time Card';
+	const NOTIFICATION_TYPE_MILEAGE = 'Mileage Card';
+	const NOTIFICATION_DESCRIPTION_RESET_PM_TIME = 'Reset PM Time Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_PM_MILEAGE = 'Reset PM Mileage Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_TIME = 'Request to Reset PM Time Submission';
+	const NOTIFICATION_DESCRIPTION_RESET_REQUEST_PM_MILEAGE = 'Request to Reset PM Mileage Submission';
+	
+	//App Role
+	const APP_ROLE_ADMIN = 'Admin';
+	const APP_ROLE_PROJECT_MANAGER = 'ProjectManager';
+	const APP_ROLE_SUPERVISOR = 'Supervisor';
+	const APP_ROLE_TECHNICIAN = 'Technician';
+	const APP_ROLE_ACCOUNTANT = 'Accountant';
+	const APP_ROLE_ANALYST = 'Analyst';
 	
 	const API_CONFIG = [
 		'DEV_HEADER' => 'apidev',

@@ -28,7 +28,7 @@ class Module extends \yii\base\Module
 				'class' => 'app\modules\v2\authentication\CTUser',
 				'identityClass' => 'app\modules\v2\models\SCUser',
 				'enableAutoLogin' => false,
-				'authTimeout' => 36000,
+				'authTimeout' => 43200,
 				//'authTimeout' => 30,
 				'loginUrl' => null
 			]

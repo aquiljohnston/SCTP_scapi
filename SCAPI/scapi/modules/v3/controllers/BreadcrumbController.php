@@ -40,10 +40,15 @@ class BreadcrumbController extends Controller
 	{
 		//TODO handle SCCT as client header and avoid double save
 		//Consider implementing constraints similar to pge and reworking format as such
-		try
-		{
+		try{
 			//get http headers
 			$headers = getallheaders();
+			
+			//set db
+			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
+			//get user before execution to prevent toke replacement
+			$userName = BaseActiveController::getUserFromToken()->UserName;
 			
 			//get post data
 			$post = file_get_contents("php://input");
@@ -53,11 +58,8 @@ class BreadcrumbController extends Controller
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			
-			BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			//RBAC permissions check
 			PermissionsController::requirePermission('breadcrumbCreate');
-			
-			$userName = BaseActiveController::getUserFromToken()->UserName;
 			
 			//save json to archive
 			BaseActiveController::archiveBreadcrumbJson($post, $userName, $headers['X-Client']);
@@ -67,12 +69,12 @@ class BreadcrumbController extends Controller
 			$responseArray = [];
 			
 			//traverse breadcrumb array
-			for($i = 0; $i < $breadcrumbCount; $i++)
-			{
+			for($i = 0; $i < $breadcrumbCount; $i++){
 				//try catch to log individual breadcrumb errors
-				try
-				{	
+				try{	
 					$successFlag = 0;
+					//fix to prevent scientific notation pace of travel from causing errors
+					$breadcrumbs[$i]['PaceOfTravel'] = round($breadcrumbs[$i]['PaceOfTravel'], 4);
 					
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 					$breadcrumb = new Breadcrumb;
@@ -102,21 +104,14 @@ class BreadcrumbController extends Controller
 						throw BaseActiveController::modelValidationException($clientBreadcrumb);
 					}
 					$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => $successFlag];
-				}
-				catch(yii\db\Exception $e)
-				{
-					if(in_array($e->errorInfo[1], array(2601, 2627)))
-					{
+				}catch(yii\db\Exception $e){
+					if(in_array($e->errorInfo[1], array(2601, 2627))){
 						$responseArray[] = ['BreadcrumbUID' => $clientBreadcrumb->BreadcrumbUID, 'SuccessFlag' => 1];
-					}
-					else
-					{
+					}else{
 						BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
 						$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 					}
-				}
-				catch(\Exception $e)
-				{
+				}catch(\Exception $e){
 					BaseActiveController::archiveErrorJson(file_get_contents("php://input"), $e, getallheaders()['X-Client'], $breadcrumbs[$i]);
 					$responseArray[] = ['BreadcrumbUID' => $breadcrumbs[$i]['BreadcrumbUID'], 'SuccessFlag' => 0];
 				}

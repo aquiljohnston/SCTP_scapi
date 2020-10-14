@@ -117,7 +117,6 @@ class DispatchController extends Controller
 							['like', 'ComplianceStart', $trimmedFilter],
 							['like', 'ComplianceEnd', $trimmedFilter],
 							['like', 'AvailableWorkOrderCount', $trimmedFilter],
-							['like', 'Frequency', $trimmedFilter],
 							['like', 'Division', $trimmedFilter],
 							['like', 'InspectionType', $trimmedFilter],
 							['like', 'BillingCode', $trimmedFilter],
@@ -373,7 +372,7 @@ class DispatchController extends Controller
 						$createdBy,
 						array_key_exists('IsCge', $data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['IsCge'] : false,
 						null,
-						$data['dispatchAsset'][$i]['SectionNumber'],
+						array_key_exists('SectionNumber',$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['SectionNumber'] : null,
 						$data['dispatchAsset'][$i]['WorkOrderID'],
 						array_key_exists('ScheduledDate',$data['dispatchAsset'][$i]) ? $data['dispatchAsset'][$i]['ScheduledDate'] : null
 					);
@@ -478,8 +477,8 @@ class DispatchController extends Controller
 							['like', 'OfficeName', $trimmedFilter],
 							['like', 'BillingCode', $trimmedFilter],
 							['like', 'InspectionType', $trimmedFilter],
-							['like', 'Cast(ComplianceStartDate as varchar(10))', $trimmedFilter],
-							['like', 'Cast(CompliancenEndDate as varchar(10))', $trimmedFilter]
+							['like', 'ComplianceStart', $trimmedFilter],
+							['like', 'ComplianceEnd', $trimmedFilter],
 						]);
 						$assetQuery->andFilterWhere($filterQueryArray);
 					}

@@ -100,10 +100,8 @@ class UserController extends BaseActiveController
         try {
 			//get client header
 			$client = getallheaders()['X-Client'];
-            //set db target
-            SCUser::setClient(BaseActiveController::urlPrefix());
-
-            PermissionsController::requirePermission('userCreate');
+			
+            PermissionsController::requirePermission('userCreate', $client);
 
             //read the post input (use this technique if you have no post variable name):
             $post = file_get_contents("php://input");
@@ -112,12 +110,15 @@ class UserController extends BaseActiveController
 			
 			$currentRole = $data['UserAppRoleType'];
 
-            PermissionsController::requirePermission('userCreate' . $currentRole);
+            PermissionsController::requirePermission('userCreate' . $currentRole, $client);
 
             //create response
             $response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
 
+			//set db target to base to handle scct user creation
+            SCUser::setClient(BaseActiveController::urlPrefix());
+			
             $existingUser = SCUser::find()
                 ->where(['UserName' => $data['UserName']])
                 ->all();
@@ -389,6 +390,9 @@ class UserController extends BaseActiveController
     public function actionDeactivate($username)
 		{
         try {
+			//set db target
+            BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
+			
 			//create response object
 			$response = Yii::$app->response;
             $response->format = Response::FORMAT_JSON;
@@ -396,7 +400,10 @@ class UserController extends BaseActiveController
 			//get client header
 			$client = getallheaders()['X-Client'];
 			
-			 //set db target
+			//archive json
+			BaseActiveController::archiveWebJson($username, 'User Deactivate', self::getUserFromToken()->UserName, $client);
+			
+			//reset db target after external call
             BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
 			
 			//get scct user
@@ -415,9 +422,7 @@ class UserController extends BaseActiveController
 			{
 				//if ct user call function to handle sp call and deactivation propagation
 				$responseData = self::deactivateInScct($user);
-			}
-			else
-			{
+			}else{
 				//if client user use helper method to deactivate only given client
 				$responseData['DeactivatedProjects'] = self::deactivateInProjects($user, $client);
 			} 
@@ -451,6 +456,9 @@ class UserController extends BaseActiveController
             $put = file_get_contents("php://input");
             //decode json post input as php array:
             $data = json_decode(utf8_decode($put), true);
+			
+			//archive json
+			BaseActiveController::archiveWebJson(json_encode($data), 'ReactivateUser', BaseActiveController::getClientUser($client)->UserName, $client);
 
             //create response
             $response = Yii::$app->response;
@@ -685,7 +693,7 @@ class UserController extends BaseActiveController
 				
 				//error handling to avoid breaking get me if task are not avaliable.
 				try{
-					$projectTask = Yii::$app->runAction('v2/task/get-by-project', ['projectID'=>$projectID])->data['assets'];
+					$projectTask = TaskController::getTask($projectID);
 				}catch(\Exception $e){
 					//set client back to ct after external call, logging of error will retarget db
 					BaseActiveRecord::setClient(BaseActiveController::urlPrefix());
@@ -742,7 +750,7 @@ class UserController extends BaseActiveController
      * @returns json body of users
      * @throws \yii\web\HttpException
      */
-    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = 'all')
+    public function actionGetActive($listPerPage = null, $page = null, $filter = null, $projectID = 'all', $sortField = 'UserLastName', $sortOrder = 'ASC')
     {
         try {
 			//get headers
@@ -808,11 +816,11 @@ class UserController extends BaseActiveController
 			if($filter != null)
 			{
 				$userQuery->andFilterWhere([
-				'or',
-				['like', 'UserName', $filter],
-				['like', 'UserFirstName', $filter],
-				['like', 'UserLastName', $filter],
-				['like', 'UserAppRoleType', $filter],
+					'or',
+					['like', 'UserName', $filter],
+					['like', 'UserFirstName', $filter],
+					['like', 'UserLastName', $filter],
+					['like', 'UserAppRoleType', $filter],
 				]);
 			}
 			
@@ -823,13 +831,13 @@ class UserController extends BaseActiveController
 				$paginationResponse = BaseActiveController::paginationProcessor($userQuery, $page, $listPerPage);
 				//use updated query with pagination clause to get data
 				$usersArr = $paginationResponse['Query']
-					->orderBy('UserLastName, UserFirstName')
+					->orderBy("$sortField $sortOrder")
 					->all();
 				$responseArray['pages'] = $paginationResponse['pages'];
 			}else{
 				//if no pagination params were sent use base query
 				$usersArr = $userQuery
-					->orderBy('UserLastName, UserFirstName')
+					->orderBy("$sortField $sortOrder")
 					->all();
 			}
 			
@@ -844,10 +852,21 @@ class UserController extends BaseActiveController
 				$dropdownPairs[$project->ProjectID]= $project->ProjectName;
 			}
 			
+			//get project data for add user modal
+			foreach($projects as $project)
+			{
+				$addUserProjects[]= [
+					"ProjectID" => $project->ProjectID,
+					"ProjectName" => $project->ProjectName,
+					"ProjectReferenceID" => $project->ProjectReferenceID
+				];
+			}
+			
 			//populate response array
             $responseArray['assets'] = $usersArr;
             $responseArray['showProjectDropdown'] = $showProjectDropdown;
-			$responseArray['projects'] = $dropdownPairs;
+			$responseArray['projectDropdown'] = $dropdownPairs;
+			$responseArray['addUserProjects'] = $addUserProjects;
 			$response = Yii::$app->response;
 			$response->format = Response::FORMAT_JSON;
 			$response->setStatusCode(200);
@@ -1065,7 +1084,7 @@ class UserController extends BaseActiveController
 	}
 	
 	//deactivate user in all accociated non PG&E clients or given non pge client based on optional param
-	private static function deactivateInProjects($user, $client = null)
+	public static function deactivateInProjects($user, $client = null)
 	{
 		try {
 			$response = [];
